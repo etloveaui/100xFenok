@@ -12,8 +12,12 @@ from typing import Any, Mapping
 
 from data_supply_policy import DomainPolicy, get_domain_policy
 from stockanalysis_recovery_state import (
+    archived_etf_history,
+    _etf_component_clocks,
+    _etf_history_date_set,
     _etf_provider_source,
     _valid_payload,
+    validate_etf_history_archive,
 )
 from data_supply_state import (
     DataSupplyStateStore,
@@ -22,6 +26,7 @@ from data_supply_state import (
     is_same_provider_refresh,
     restate_selection,
     validate_observation,
+    _validate_selection,
 )
 
 
@@ -135,7 +140,7 @@ class DataSupplyResolver:
         except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError, SchemaError):
             return False
 
-    def _complete_etf_primary(self, row: Mapping[str, Any], decided: dt.datetime, floor: str) -> bool:
+    def _complete_etf_primary(self, row: Mapping[str, Any], decided: dt.datetime, prior: Mapping[str, Any]) -> bool:
         """Apply the complete ETF payload and honest provider date contract."""
         try:
             raw = (self.store.root / _provider_object_path(row)).read_bytes()
@@ -151,15 +156,76 @@ class DataSupplyResolver:
                 or not isinstance(normalized.get("holdings"), list) or not normalized["holdings"]
                 or payload.get("source_as_of") != row["source_as_of"]
                 or payload.get("fetched_at") != row["observed_at"]
-                or source != _etf_provider_source(payload) or not _timestamp(floor) <= source <= fetched <= decided
+                or source != _etf_provider_source(payload) or not source <= fetched <= decided
+                or not validate_etf_history_archive(payload)
             ):
                 return False
+            # An already selected immutable object is the preservation floor.
+            # Its current canonical provider files may have advanced independently.
+            _validate_selection(prior)
+            prior_ref = prior["payload_ref"]
+            if prior_ref["kind"] not in {"provider_object", "provider_lkg"}:
+                return False
+            yahoo_bytes = self.store._inside_root(self.store.root / prior_ref["path"]).read_bytes()
+            if hashlib.sha256(yahoo_bytes).hexdigest() != prior["payload_sha256"]:
+                return False
+            yahoo = json.loads(yahoo_bytes)
+            prior_source, prior_fetched = _timestamp(prior["source_as_of"]), _timestamp(prior["observed_at"])
+            if not prior_source <= prior_fetched <= decided or yahoo.get("ticker") != row["entity"]:
+                return False
+            yahoo_data = (yahoo.get("raw") or {}).get("yf") or {}
+            if yahoo.get("schema_version") is not None:
+                info, funds = yahoo_data.get("info") or {}, yahoo_data.get("funds_data") or {}
+                value = info.get("regularMarketTime")
+                if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+                    seconds = value / 1000 if abs(value) >= 100_000_000_000 else value
+                    proven_source = dt.datetime.fromtimestamp(seconds, dt.timezone.utc).replace(microsecond=0)
+                else:
+                    days = _etf_history_date_set(yahoo_data.get("history_1y"))
+                    proven_source = _timestamp(max(days) + "T00:00:00Z") if days else None
+                if (yahoo.get("schema_version") != "yf-etf-detail/v1"
+                        or yahoo.get("source_provider") != "yahoo_finance"
+                        or str(info.get("symbol") or funds.get("symbol") or "").strip().upper() != row["entity"]
+                        or str(info.get("quoteType") or funds.get("quote_type") or "").upper() not in {"ETF", "MUTUALFUND"}
+                        or _timestamp(yahoo["source_as_of"]) != prior_source
+                        or proven_source != prior_source
+                        or _timestamp(yahoo["fetched_at"]) != prior_fetched):
+                    return False
+            elif set(yahoo) - {"ticker", "suffix"}:
+                # Legacy metadata-only objects cannot provide unverified price history.
+                return False
+            yahoo_history = yahoo_data.get("history_1y")
+            yahoo_days = _etf_history_date_set(yahoo_history) if yahoo_history is not None else set()
+            if yahoo_days is None:
+                return False
+            native_periods = payload.get("raw", {}).get("history_periods") or {}
+            native_history = native_periods.get("daily_1y")
+            native_days = _etf_history_date_set(native_history) if native_history is not None else set()
+            if native_days is None:
+                return False
+            # Historical archives preserve old dates; they cannot excuse a
+            # regression of the currently displayed native daily-history tail.
+            if yahoo_days and (not native_days or max(native_days) < max(yahoo_days)):
+                return False
+            archive_days = archived_etf_history(payload)
+            if archive_days is None or not yahoo_days <= native_days | archive_days:
+                return False
+            clocks = _etf_component_clocks(payload)
+            if clocks is None or "quote" not in clocks or "history" not in clocks:
+                if source < _timestamp(prior["source_as_of"]):
+                    return False
+            else:
+                # Yahoo's quote can be newer than issuer holdings. Compare like
+                # components while the aggregate remains the oldest raw clock.
+                if (clocks["quote"] < _timestamp(prior["source_as_of"])
+                        or clocks["history"].date() < _timestamp(prior["source_as_of"]).date()):
+                    return False
             truth_root = self.store.provider_truth_root
             if truth_root is not None and row["provider_path"] == f"data/stockanalysis/etfs/{row['entity']}.json":
                 if raw != (truth_root / row["provider_path"]).read_bytes():
                     return False
             return True
-        except (OSError, ValueError, KeyError, TypeError, AttributeError, SchemaError):
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError, SchemaError):
             return False
 
 
@@ -236,7 +302,7 @@ class DataSupplyResolver:
         reason_code: str
         primary_complete = (domain != "etf_detail" or not primary_fresh or prior is None
             or prior["provider"] != fallback_provider
-            or self._complete_etf_primary(primary, decided, prior["source_as_of"]))
+            or self._complete_etf_primary(primary, decided, prior))
 
         if prior is not None and not primary_fresh and not fallback_fresh:
             if set(latest) != set(policy.provider_names):

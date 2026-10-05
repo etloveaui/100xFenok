@@ -22,6 +22,7 @@ _SURFACE_DATE_KEYS = {
     "as_of", "date", "event_date", "filing_date", "filingdate",
     "ipo_date", "priced_date", "trade_date", "updated", "week_of",
 }
+MAX_ETF_HISTORY_ARCHIVE_BYTES = 2_000_000
 
 SYSTEMIC_FAILURE_MARKERS = {
     "authentication": (
@@ -99,53 +100,59 @@ def _bounded_error(value: Any, limit: int = 240) -> str:
 
 
 
+def _etf_component_clocks(payload: dict) -> dict[str, datetime] | None:
+    """Read independent official-holdings, raw quote and raw daily-history clocks."""
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    official = raw.get("official_holdings") if isinstance(raw.get("official_holdings"), dict) else None
+    endpoints = payload.get("endpoints") if isinstance(payload.get("endpoints"), dict) else {}
+    requested = endpoints.get("history_periods") if isinstance(endpoints.get("history_periods"), dict) else {}
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    native_holdings = raw.get("holdings") if isinstance(raw.get("holdings"), dict) else {}
+    holdings = _iso_timestamp(official.get("source_as_of")) if official else _iso_timestamp(
+        native_holdings.get("date") or normalized.get("holdings_updated"))
+    fetched = _iso_timestamp(payload.get("fetched_at"))
+    if fetched is None or (official and holdings is None):
+        return None
+    clocks = {"holdings": holdings} if holdings is not None else {}
+    quote = raw.get("quote") if isinstance(raw.get("quote"), dict) else {}
+    quote_day = _iso_timestamp(quote.get("td"))
+    value = quote.get("ts")
+    quote_stamp = None
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+        try:
+            parsed = datetime.fromtimestamp(value / 1000 if abs(value) >= 100_000_000_000 else value, timezone.utc)
+            if quote_day is None or parsed.date() == quote_day.date():
+                quote_stamp = parsed
+        except (ValueError, OverflowError, OSError):
+            pass
+    quote_stamp = quote_stamp or quote_day
+    if endpoints.get("quote") and quote_stamp is None:
+        return None
+    if quote_stamp is not None:
+        clocks["quote"] = quote_stamp
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    periods = (raw.get("history_periods") if isinstance(raw.get("history_periods"), dict)
+               else normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {})
+    daily = periods.get("daily_1y")
+    history_dates = [stamp for row in daily if isinstance(row, dict)
+                     if (stamp := _iso_timestamp(row.get("date") or row.get("t") or row.get("time"))) is not None] if isinstance(daily, list) else []
+    history_stamp = max(history_dates) if history_dates else None
+    if requested.get("daily_1y") and history_stamp is None:
+        return None
+    if history_stamp is not None:
+        clocks["history"] = history_stamp
+    return clocks if all(stamp <= fetched for stamp in clocks.values()) else None
+
+
 def _etf_provider_source(payload: dict) -> datetime | None:
     raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
     normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
     official_holdings = raw.get("official_holdings") if isinstance(raw.get("official_holdings"), dict) else None
     if official_holdings:
         # A mixed-source detail is only as fresh as its oldest required surface.
-        # Missing quote/daily-history clocks cannot be hidden by a newer CSV.
-        source = _iso_timestamp(official_holdings.get("source_as_of"))
-        fetched = _iso_timestamp(payload.get("fetched_at"))
-        if source is None or fetched is None:
-            return None
-        clocks = [source]
-        endpoints = payload.get("endpoints") if isinstance(payload.get("endpoints"), dict) else {}
-        quote = raw.get("quote") if isinstance(raw.get("quote"), dict) else {}
-        quote_day = _iso_timestamp(quote.get("td"))
-        quote_value = quote.get("ts")
-        quote_stamp = None
-        if isinstance(quote_value, (int, float)) and not isinstance(quote_value, bool) and math.isfinite(quote_value):
-            try:
-                parsed = datetime.fromtimestamp(
-                    quote_value / 1000 if abs(quote_value) >= 100_000_000_000 else quote_value,
-                    timezone.utc,
-                )
-                if quote_day is None or parsed.date() == quote_day.date():
-                    quote_stamp = parsed
-            except (ValueError, OverflowError, OSError):
-                pass
-        quote_stamp = quote_stamp or quote_day
-        if endpoints.get("quote") and quote_stamp is None:
-            return None
-        if quote_stamp is not None:
-            clocks.append(quote_stamp)
-        periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
-        daily = periods.get("daily_1y")
-        daily_dates = [
-            stamp for row in daily if isinstance(row, dict)
-            if (stamp := _iso_timestamp(row.get("date") or row.get("t") or row.get("time"))) is not None
-        ] if isinstance(daily, list) else []
-        history_stamp = max(daily_dates) if daily_dates else None
-        requested_periods = endpoints.get("history_periods") if isinstance(endpoints.get("history_periods"), dict) else {}
-        if requested_periods.get("daily_1y") and history_stamp is None:
-            return None
-        if history_stamp is not None:
-            clocks.append(history_stamp)
-        if any(clock > fetched for clock in clocks):
-            return None
-        return min(clocks).replace(microsecond=0)
+        # The retained normalized Yahoo series cannot substitute for raw provider evidence.
+        clocks = _etf_component_clocks(payload)
+        return min(clocks.values()).replace(microsecond=0) if clocks else None
     for quote in (raw.get("quote"), normalized.get("quote")):
         if not isinstance(quote, dict):
             continue
@@ -174,6 +181,119 @@ def _etf_provider_source(payload: dict) -> datetime | None:
     return max(dates) if dates else None
 
 
+def _etf_history_dates(rows: Any) -> tuple[datetime, datetime] | None:
+    if not isinstance(rows, list) or not rows:
+        return None
+    dates = []
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        stamp = _iso_timestamp(row.get("date") or row.get("t") or row.get("time"))
+        close = row.get("close", row.get("Close", row.get("c")))
+        if stamp is None or not isinstance(close, (int, float)) or isinstance(close, bool) or not math.isfinite(close):
+            return None
+        dates.append(stamp)
+    return min(dates), max(dates)
+
+
+def _etf_history_date_set(rows: Any) -> set[str] | None:
+    if _etf_history_dates(rows) is None:
+        return None
+    dates = [str(row.get("date") or row.get("t") or row.get("time"))[:10] for row in rows]
+    return set(dates) if len(set(dates)) == len(dates) else None
+
+
+def _archive_record_dates(archive: dict, ticker: str) -> set[str] | None:
+    if (archive.get("provider") != "yahoo_finance" or archive.get("price_basis") != "yahoo_adjusted"
+            or not isinstance(archive.get("payload_sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", archive["payload_sha256"])
+            or not isinstance(archive.get("source_payload"), str)):
+        return None
+    try:
+        object_bytes = archive["source_payload"].encode("utf-8")
+        if len(object_bytes) > MAX_ETF_HISTORY_ARCHIVE_BYTES or _sha256(object_bytes) != archive["payload_sha256"]:
+            return None
+        source = json.loads(archive["source_payload"])
+        if not isinstance(source, dict) or source.get("schema_version") != "yf-etf-detail/v1":
+            return None
+        if (source.get("ticker") != ticker or source.get("source_provider") != "yahoo_finance"
+                or source.get("source_as_of") != archive.get("source_as_of")
+                or source.get("fetched_at") != archive.get("fetched_at")):
+            return None
+        data = (source.get("raw") or {}).get("yf")
+        if not isinstance(data, dict):
+            return None
+        info = data.get("info") or {}
+        funds = data.get("funds_data") or {}
+        if (str(info.get("symbol") or funds.get("symbol") or "").strip().upper() != ticker
+                or str(info.get("quoteType") or funds.get("quote_type") or "").upper() not in {"ETF", "MUTUALFUND"}):
+            return None
+        yahoo_series = data.get("history_1y")
+        dates = _etf_history_dates(yahoo_series)
+        date_set = _etf_history_date_set(yahoo_series)
+        if dates is None or date_set is None:
+            return None
+        source_stamp, fetched_stamp = _iso_timestamp(source.get("source_as_of")), _iso_timestamp(source.get("fetched_at"))
+        if source_stamp is None or fetched_stamp is None or source_stamp > fetched_stamp:
+            return None
+        value = info.get("regularMarketTime")
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+            quote_stamp = datetime.fromtimestamp(value / 1000 if abs(value) >= 100_000_000_000 else value, timezone.utc)
+            if quote_stamp.replace(microsecond=0) != source_stamp.replace(microsecond=0):
+                return None
+        elif dates[1].date() != source_stamp.date():
+            return None
+        if (archive.get("history_first") != dates[0].date().isoformat()
+                or archive.get("history_last") != dates[1].date().isoformat()):
+            return None
+        return date_set
+    except (ValueError, TypeError, AttributeError, OverflowError, OSError):
+        return None
+
+
+def archived_etf_history(payload: dict) -> set[str] | None:
+    """Return archived historical dates without mixing provider price rows."""
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    archives = normalized.get("history_archive")
+    if archives is None:
+        return set()
+    ticker = payload.get("ticker")
+    if not isinstance(archives, list) or not archives or not isinstance(ticker, str):
+        return None
+    all_dates = set()
+    for archive in archives:
+        if not isinstance(archive, dict):
+            return None
+        dates = _archive_record_dates(archive, ticker)
+        if dates is None:
+            return None
+        all_dates.update(dates)
+    return all_dates
+
+
+def validate_etf_history_archive(payload: dict) -> bool:
+    """Keep native daily prices separate from bounded exact Yahoo records."""
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    normalized_periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
+    raw_periods = raw.get("history_periods") if isinstance(raw.get("history_periods"), dict) else {}
+    archives = normalized.get("history_archive")
+    if ((raw_periods.get("daily_1y") is not None or archives is not None)
+            and normalized_periods.get("daily_1y") != raw_periods.get("daily_1y")):
+        return False
+    if archives is None:
+        return True
+    ticker = payload.get("ticker")
+    if (not isinstance(ticker, str) or not _ENTITY_RE.fullmatch(ticker) or ticker != ticker.upper()
+            or not isinstance(archives, list) or not archives or any(not isinstance(item, dict) for item in archives)):
+        return False
+    digests = [item.get("payload_sha256") for item in archives]
+    if any(not isinstance(value, str) for value in digests) or len(set(digests)) != len(digests):
+        return False
+    if sum(len(item.get("source_payload", "").encode("utf-8")) for item in archives
+           if isinstance(item.get("source_payload"), str)) > 8_000_000:
+        return False
+    return all(_archive_record_dates(item, ticker) is not None for item in archives)
 
 
 def _validate_identity(kind: str, entity: str) -> None:
@@ -441,6 +561,10 @@ class StockAnalysisRecoveryStateStore:
         state = _read_json(self._state_path(kind, entity))
         return bool(state and state.get("retry") is True)
 
+    def is_tracked(self, kind: str, entity: str) -> bool:
+        _validate_identity(kind, entity)
+        return self._state_path(kind, entity).is_file()
+
     def reconcile_current_payload_sha256(self, kind: str, entity: str) -> bool:
         """Align a fresh current digest with canonical raw bytes."""
         _validate_identity(kind, entity)
@@ -504,6 +628,27 @@ class StockAnalysisRecoveryStateStore:
         state = self._load_state(kind, entity)
         prior = state.get("lkg") if state.get("retry") is True else state.get("current")
         before = _iso_timestamp((prior or {}).get("source_as_of"))
+        if kind == "etf" and prior:
+            prior_path = self._lkg_path(kind, entity) if state.get("retry") is True else self.canonical_path(kind, entity)
+            bound = self._valid_bytes(kind, entity, prior_path)
+            new_clocks = _etf_component_clocks(payload)
+            old_official = bool(bound and isinstance(bound[1].get("raw"), dict)
+                                and isinstance(bound[1]["raw"].get("official_holdings"), dict))
+            if new_clocks or old_official:
+                if not (bound and prior.get("path") == self._relative(prior_path)
+                        and _sha256(bound[0]) == prior.get("payload_sha256")):
+                    return False
+                old_clocks = _etf_component_clocks(bound[1])
+                # A prior aggregate alone cannot prove which component advanced.
+                if old_clocks:
+                    if (new_clocks is None
+                            or (old_official and not {"quote", "history"} <= old_clocks.keys())
+                            or not old_clocks.keys() <= new_clocks.keys()
+                            or any(new_clocks[key] < old_clocks[key] for key in old_clocks)):
+                        return False
+                    return True
+                if old_official:
+                    return False
         if kind == "surface" and entity in {"earnings_calendar", "ipos_calendar"} and prior:
             # Older metadata derived the marker from scheduled events. Re-read
             # only its exact bound bytes when this calendar is touched.
@@ -568,10 +713,13 @@ class StockAnalysisRecoveryStateStore:
         return state
 
 
-    def record_success(self, kind: str, entity: str, payload: dict, run: dict) -> dict:
+    def record_success(self, kind: str, entity: str, payload: dict, run: dict,
+                       *, prevalidated_etf: bool = False) -> dict:
         _validate_identity(kind, entity)
         state = self._load_state(kind, entity)
-        if not self.recovery_candidate_advances(kind, entity, payload):
+        if prevalidated_etf and kind != "etf":
+            raise ValueError("prevalidated ETF write flag is ETF-only")
+        if not prevalidated_etf and not self.recovery_candidate_advances(kind, entity, payload):
             raise ValueError(f"candidate source date regresses or is invalid for {kind}:{entity}")
         canonical_path = self.canonical_path(kind, entity)
         valid = self._valid_bytes(kind, entity, canonical_path)

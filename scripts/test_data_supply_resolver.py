@@ -202,6 +202,29 @@ class DataSupplyResolverTests(unittest.TestCase):
         self.store.record_observation(row)
         return row
 
+    def test_complete_primary_recovers_after_mutable_yahoo_pair_advances(self):
+        self.store.provider_truth_root = self.root / "truth"
+        fallback = self.bound_yahoo_etf(source="2026-07-14T00:00:00Z")
+        self.resolver.resolve_etf_detail(entity="VYMI", observations=[fallback], decided_at="2026-07-15T23:04:00Z")
+        for rel in ("data/yf/etf-details/VYMI.json", "data/yf/finance/VYMI.json"):
+            (self.store.provider_truth_root / rel).write_text('{"newer":true}')
+        primary = self.manual_etf("advance", 5)
+        active = self.resolve_manual(primary, fallback)
+        self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis")
+
+    def test_metadata_only_legacy_recovery_rejects_unbound_history(self):
+        fallback, _ = observation(provider="yahoo_finance", suffix="unbound-history",
+                                  source_as_of="2026-07-14T00:00:00Z", observed_at="2026-07-15T22:00:00Z")
+        raw = canonical_json_bytes({"ticker": "VYMI", "normalized": {"history": [{"date": "2026-07-14", "Close": 1}]}})
+        fallback["payload_sha256"] = hashlib.sha256(raw).hexdigest()
+        fallback["event_id"] = deterministic_event_id("observation", fallback)
+        self.store.store_provider_object(observation=fallback, payload=raw)
+        self.store.record_observation(fallback)
+        self.resolver.resolve_etf_detail(entity="VYMI", observations=[fallback], decided_at="2026-07-15T22:01:00Z")
+        primary = self.manual_etf("legacy-history", 5)
+        active = self.resolve_manual(primary, fallback)
+        self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance")
+
     def test_partial_primary_refreshes_selected_yahoo_without_primary_recovery_credit(self):
         self.seed_manual_fallback()
         primary = self.manual_etf("901", 1, payload_changes={"detail_status": "stockanalysis_partial"})

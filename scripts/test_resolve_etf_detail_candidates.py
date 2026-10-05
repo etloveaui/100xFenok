@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import datetime as dt
 import hashlib
 import json
 from pathlib import Path
@@ -80,6 +81,10 @@ def observation(
         "source_as_of": source_as_of,
         "ticker": entity,
     }
+    if provider == "yahoo_finance" and source_as_of:
+        epoch = int(dt.datetime.fromisoformat(source_as_of.replace("Z", "+00:00")).timestamp())
+        payload.update({"fetched_at": observed_at,
+                        "raw": {"yf": {"info": {"symbol": entity, "quoteType": "ETF", "regularMarketTime": epoch}}}})
     row = {
         "schema_version": "data-supply-observation/v1",
         "provider": provider,

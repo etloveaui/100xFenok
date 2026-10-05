@@ -186,7 +186,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         ibim_cash = [*holdings["IBIM"], ("USD CASH", "Cash", "-", "0.00")]
         with self.assertRaises(ValueError):
             fetch("IBIM", document("IBIM", positions=ibim_cash))
-        for ticker in ("IBIL", "TLTW"):
+        for ticker in ("IBIZ", "UNVERIFIED"):
             with self.assertRaisesRegex(ValueError, "no verified official holdings fallback"):
                 self.fetcher.fetch_official_etf_holdings(ticker, 1)
 

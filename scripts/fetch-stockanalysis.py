@@ -51,11 +51,16 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
-from data_supply_resolver import _ETF_DETAIL_POLICY
+from data_supply_resolver import _ETF_DETAIL_POLICY, _provider_object_path
 from stockanalysis_recovery_state import (
     StockAnalysisRecoveryStateStore,
+    archived_etf_history,
     _etf_provider_source,
+    _etf_component_clocks,
+    _etf_history_dates,
+    _etf_history_date_set,
     _valid_payload,
+    validate_etf_history_archive,
 )
 
 
@@ -1374,12 +1379,15 @@ OFFICIAL_HOLDINGS_FALLBACKS = {
     "ABXB": "https://abacusfcf.com/abxb/",
     "ESUM": "https://www.eventideinvestments.com/etfs/esum",
     "HBIL": "https://www.harborcapital.com/etf/hbil/",
+    "IBIL": "https://www.ishares.com/ch/professionals/en/products/342148/fund/1495092304805.ajax?dataType=fund&fileName=IBIL_holdings&fileType=csv",
+    "TLTW": "https://www.ishares.com/us/products/329118/ishares-20%2B-year-treasury-bond-buywrite-strategy-etf/latest-holdings.csv",
     "IBIC": "https://www.ishares.com/us/products/333118/ishares-ibonds-oct-2026-term-tips-etf/latest-holdings.csv",
     "IBIH": "https://www.ishares.com/us/products/333121/ishares-ibonds-oct-2031-term-tips-etf/latest-holdings.csv",
     "IBIJ": "https://www.ishares.com/us/products/333076/ishares-ibonds-oct-2033-term-tips-etf/latest-holdings.csv",
     "IBIK": "https://www.ishares.com/us/products/337462/ishares-ibonds-oct-2034-term-tips-etf/latest-holdings.csv",
     "IBIM": "https://www.ishares.com/us/products/350034/ishares-ibonds-oct-2036-term-tips-etf/latest-holdings.csv",
 }
+ISHARES_TWO_CANDIDATES = frozenset({"IBIL", "TLTW"})
 ISHARES_TERM_TIPS_YEARS = {"IBIC": 2026, "IBIH": 2031, "IBIJ": 2033, "IBIK": 2034, "IBIM": 2036}
 ISHARES_TERM_TIPS_WITH_PRICE = frozenset({"IBIC", "IBIH", "IBIJ", "IBIK"})
 SVELTE_FAILURE_SIGNATURE_SCHEMA_VERSION = "svelte-contract-failure-signature/v1"
@@ -1729,6 +1737,115 @@ def parse_hbil_official_page(body: bytes, source_page: str) -> tuple[datetime, l
                             "cash_weight_pct": cash_weight, "net_assets_weight_pct": net_weight}
 
 
+def parse_ishares_two_candidate_csv(ticker: str, body: bytes) -> tuple[datetime, list[dict], list[dict], float]:
+    """Read original-fund positions only; TLTW's second table is look-through exposure."""
+    if ticker not in ISHARES_TWO_CANDIDATES:
+        raise ValueError("unsupported iShares original-fund CSV")
+    rows = list(csv.reader(StringIO(body.decode("utf-8-sig"))))
+    titles = {
+        "IBIL": "iShares® iBonds® Oct 2035 Term TIPS ETF",
+        "TLTW": "iShares 20+ Year Treasury Bond BuyWrite Strategy ETF",
+    }
+    title = titles[ticker]
+    if len(rows) < 12 or rows[0] != [title] or len(rows[1]) != 2 or rows[1][0] != "Fund Holdings as of":
+        raise ValueError(f"{ticker} official CSV fund identity or date is invalid")
+    if ticker == "IBIL":
+        match = re.fullmatch(r"(\d{2})/([A-Za-z]{3})/(\d{4})", rows[1][1])
+        month = MONTH_NAME_TO_NUMBER.get(match.group(2).lower()) if match else None
+        try:
+            date = datetime(int(match.group(3)), month, int(match.group(1)), tzinfo=timezone.utc) if month else None
+        except ValueError:
+            date = None
+    else:
+        date = parse_stockanalysis_date(rows[1][1])
+    if date is None:
+        raise ValueError(f"{ticker} official CSV date is invalid")
+    age = (datetime.now(timezone.utc).date() - date.date()).days
+    if not 0 <= age <= 7:
+        raise ValueError(f"{ticker} official CSV date is future or stale")
+    common_tail = ["Location", "Exchange", "Currency", "Duration", "YTM (%)", "FX Rate", "Maturity",
+                   "Coupon (%)", "Mod. Duration", "Yield to Call (%)", "Yield to Worst (%)",
+                   "Real Duration", "Real YTM (%)", "Market Currency", "Accrual Date", "Effective Date"]
+    if ticker == "IBIL":
+        header = ["Name", "Sector", "Asset Class", "Market Value", "Weight (%)", "Notional Value",
+                  "Par Value", "CUSIP", "ISIN", "SEDOL", "Price", *common_tail]
+    else:
+        header = ["Name", "Type", "Sector", "Asset Class", "Market Value", "Weight (%)",
+                  "Notional Value", "Par Value", "Price", "Strike price", *common_tail]
+    if rows.count(header) != 1:
+        raise ValueError(f"{ticker} original-fund table schema is invalid")
+    first = rows.index(header) + 1
+    last = first
+    while last < len(rows) and rows[last] and any(cell.strip() for cell in rows[last]):
+        last += 1
+    position_rows = rows[first:last]
+    if not position_rows or any(len(row) != len(header) for row in position_rows):
+        raise ValueError(f"{ticker} original-fund position coverage is invalid")
+    # The following TLTW table aggregates the TLT fund's underlying bonds. It is
+    # not another set of TLTW positions, so it must not enter the holdings list.
+    if ticker == "TLTW":
+        lookthrough_header = ["Name", "Sector", "Asset Class", "Market Value", "Weight (%)",
+                              "Notional Value", "Par Value", "Price", *common_tail, "Strike price"]
+        rest = rows[last + 1:]
+        if (len(rest) < 11 or rest[0] != [title]
+                or rest[1] != ["Fund Holdings as of", rows[1][1]]
+                or rest.count([title]) != 1 or rest.count(lookthrough_header) != 1):
+            raise ValueError("TLTW look-through table boundary or date is invalid")
+        second = rest.index(lookthrough_header) + 1
+        underlying = [row for row in rest[second:] if row and any(cell.strip() for cell in row)]
+        if not underlying or any(len(row) != len(lookthrough_header) for row in underlying):
+            raise ValueError("TLTW look-through table is incomplete")
+    elif any(row and any(cell.strip() for cell in row) for row in rows[last + 1:]):
+        raise ValueError("IBIL official CSV has unexpected content after fund holdings")
+    holdings = []
+    country_weights = {}
+    total_weight = 0.0
+    asset_rows = 0
+    option_rows = 0
+    for fields in position_rows:
+        row = dict(zip(header, fields))
+        name, asset_class = row["Name"].strip(), row["Asset Class"].strip()
+        location = row["Location"].strip()
+        try:
+            weight = float(row["Weight (%)"].replace(",", "").replace("’", ""))
+            market = float(row["Market Value"].replace(",", "").replace("’", ""))
+        except ValueError as exc:
+            raise ValueError(f"{ticker} original-fund number is invalid") from exc
+        if (not name or location != "United States" or not math.isfinite(weight)
+                or not math.isfinite(market) or not -100 <= weight <= 100
+                or not market or (market * weight < 0)
+                or (weight < 0 and asset_class not in {"Cash", "Other Derivatives"})):
+            raise ValueError(f"{ticker} original-fund identity, location, or signed value is invalid")
+        if ticker == "IBIL":
+            cusip = row["CUSIP"].strip()
+            issuer_cash = (name, asset_class, cusip) == ("USD CASH", "Cash", "-")
+            if not issuer_cash and not re.fullmatch(r"[A-Z0-9]{9}", cusip):
+                raise ValueError("IBIL original-fund CUSIP is invalid")
+            if asset_class == "Fixed Income":
+                asset_rows += 1
+            holding = {"n": name, "as": weight, "cusip": None if issuer_cash else cusip, "raw": row}
+        else:
+            row_type = row["Type"].strip()
+            if (row_type, asset_class) == ("EQUITY", "Fixed Income") and name == "ISHARES 20+ YEAR TREASURY BOND ETF":
+                asset_rows += 1
+            elif (row_type, asset_class) == ("OPTION", "Other Derivatives"):
+                option_rows += 1
+                if row["Strike price"].strip() in {"", "-"}:
+                    raise ValueError("TLTW original-fund option strike is missing")
+            elif (row_type, asset_class) not in {("FUND", "Money Market"), ("CASH", "Cash")}:
+                raise ValueError("TLTW original-fund position type is invalid")
+            # This table provides no holding ticker or CUSIP. Keep both absent.
+            holding = {"n": name, "as": weight, "raw": row}
+        holdings.append(holding)
+        country_weights[location] = country_weights.get(location, 0.0) + weight
+        total_weight += weight
+    if not 95 <= total_weight <= 105 or asset_rows < 1 or (ticker == "TLTW" and option_rows < 1):
+        raise ValueError(f"{ticker} original-fund positions do not reconcile")
+    countries = [{"code": "US", "country": "United States",
+                  "weight": round(country_weights["United States"], 4)}]
+    return date, holdings, countries, round(total_weight, 4)
+
+
 def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, dict]:
     """Fill verified StockAnalysis holdings gaps from issuer holdings tables and CSVs."""
     if ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
@@ -1776,8 +1893,17 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
     else:
         csv_url = source_page
     hostname = ({"ABXB": "abacusfcf.com", "ESUM": "www.eventideinvestments.com"}
-                | {symbol: "www.ishares.com" for symbol in ISHARES_TERM_TIPS_YEARS})[ticker]
+                | {symbol: "www.ishares.com" for symbol in set(ISHARES_TERM_TIPS_YEARS) | ISHARES_TWO_CANDIDATES})[ticker]
     body = official_bytes(csv_url, hostname)
+    if ticker in ISHARES_TWO_CANDIDATES:
+        date, holdings, countries, total_weight = parse_ishares_two_candidate_csv(ticker, body)
+        data = {"holdings": holdings, "count": len(holdings), "date": date.date().isoformat(),
+                "countries": countries}
+        provenance = {"provider": "ishares", "landing_page": source_page, "csv_url": csv_url,
+                      "csv_sha256": hashlib.sha256(body).hexdigest(), "source_as_of": data["date"],
+                      "weight_sum_pct": total_weight, "country_coverage": "issuer_csv_location",
+                      "position_scope": "original_fund"}
+        return csv_url, data, provenance
     rows = list(csv.reader(StringIO(body.decode("utf-8-sig"))))
     if ticker == "ESUM":
         if (len(rows) < 3 or rows[0] != ["Product", "Eventide US Market ETF"]
@@ -3466,6 +3592,81 @@ def validate_aware_timestamp(value, label: str) -> str:
     return value
 
 
+def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
+    """Archive a selected Yahoo series without changing native normalized prices."""
+    if payload.get("detail_status") == "stockanalysis_partial":
+        return
+    normalized = payload.get("normalized")
+    if not isinstance(normalized, dict):
+        return
+    selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
+    prior = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+    archives = []
+    if (isinstance(prior, dict) and isinstance(prior.get("normalized"), dict)
+            and prior["normalized"].get("history_archive") is not None):
+        if not validate_etf_history_archive(prior):
+            raise ValueError("prior ETF history archive lost its source binding")
+        archives = list(prior["normalized"]["history_archive"])
+    if selected and selected["provider"] == "yahoo_finance":
+        expected = f"data/yf/etf-details/{ticker}.json"
+        if selected.get("provider_path") != expected:
+            raise ValueError("selected Yahoo ETF path is invalid")
+        ref = selected.get("payload_ref") or {}
+        if ref and ref.get("kind") not in {"provider_object", "provider_lkg"}:
+            raise ValueError("selected Yahoo ETF reference is not immutable")
+        object_path = ref.get("path") or _provider_object_path(selected)
+        digest = selected["payload_sha256"]
+        object_file = DATA_SUPPLY_STATE_ROOT / object_path
+        if not object_file.resolve().is_relative_to(DATA_SUPPLY_STATE_ROOT.resolve()):
+            raise ValueError("selected Yahoo ETF reference escaped its state root")
+        if object_file.is_symlink():
+            raise ValueError("selected Yahoo ETF source is a symlink")
+        object_bytes = object_file.read_bytes()
+        if len(object_bytes) > 2_000_000 or hashlib.sha256(object_bytes).hexdigest() != digest:
+            raise ValueError("selected Yahoo ETF immutable object lost its hash binding")
+        source = json.loads(object_bytes)
+        yahoo_data = (source.get("raw") or {}).get("yf")
+        if (source.get("schema_version") != "yf-etf-detail/v1"
+                or source.get("ticker") != ticker or source.get("source_provider") != "yahoo_finance"
+                or source.get("source_as_of") != selected["source_as_of"]
+                or source.get("fetched_at") != selected["observed_at"]
+                or not isinstance(yahoo_data, dict)
+                or yahoo_detail_source_timestamp(source) != selected["source_as_of"]):
+            raise ValueError("selected Yahoo ETF immutable source is invalid")
+        yahoo_daily = yahoo_data.get("history_1y")
+        if yahoo_daily is not None:
+            dates = _etf_history_dates(yahoo_daily)
+            if dates is None or _etf_history_date_set(yahoo_daily) is None:
+                raise ValueError("selected Yahoo ETF daily series is invalid")
+            yahoo_days = _etf_history_date_set(yahoo_daily)
+            raw_periods = payload.get("raw", {}).get("history_periods") or {}
+            raw_daily = raw_periods.get("daily_1y")
+            native_days = _etf_history_date_set(raw_daily) if raw_daily is not None else set()
+            if native_days is None:
+                raise ValueError("StockAnalysis ETF native daily history is invalid")
+            prior_days = archived_etf_history({"ticker": ticker, "normalized": {"history_archive": archives}}) if archives else set()
+            if prior_days is None:
+                raise ValueError("prior ETF history archive dates are invalid")
+            if yahoo_days - prior_days:
+                # A whole newer record may subsume older records. Keep every
+                # old record with at least one historical day absent from it.
+                archives = [item for item in archives if not _etf_history_date_set(
+                    json.loads(item["source_payload"])["raw"]["yf"]["history_1y"]) <= yahoo_days]
+                if digest not in {item["payload_sha256"] for item in archives}:
+                    archives.append({
+                        "provider": "yahoo_finance", "price_basis": "yahoo_adjusted",
+                        "source_payload": object_bytes.decode("utf-8"),
+                        "payload_sha256": digest, "source_as_of": source["source_as_of"],
+                        "fetched_at": source["fetched_at"],
+                        "history_first": dates[0].date().isoformat(),
+                        "history_last": dates[1].date().isoformat(),
+                    })
+    if archives:
+        normalized["history_archive"] = archives
+    if not validate_etf_history_archive(payload):
+        raise ValueError("StockAnalysis ETF history archive is invalid")
+
+
 def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
     if payload.get("schema_version") != SCHEMA_VERSION:
         raise ValueError("StockAnalysis ETF detail schema mismatch")
@@ -3475,6 +3676,8 @@ def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
         or payload.get("ticker") != ticker
     ):
         raise ValueError("StockAnalysis ETF detail identity mismatch")
+    if not validate_etf_history_archive(payload):
+        raise ValueError("StockAnalysis ETF history archive is not bound")
     provider_source = stockanalysis_detail_source_timestamp(payload)
     if provider_source is None:
         if (
@@ -6949,6 +7152,7 @@ def run_one(
                     and recovery_store.has_pending_recovery("etf", ticker)
                 )
                 try:
+                    retain_yahoo_etf_history_archive(ticker, payload)
                     validate_stockanalysis_etf_payload(ticker, payload)
                     provider_time = parse_iso_timestamp(payload.get("source_as_of"))
                     if provider_time is not None and provider_time > parse_iso_timestamp(now_iso()):
@@ -7129,11 +7333,14 @@ def run_one(
                 recovery_store.record_success("stock", ticker, payload, recovery_run)
             if (
                 kind == "etf"
-                and etf_recovery_pending
+                and (etf_recovery_pending or recovery_store is not None
+                     and recovery_store.is_tracked("etf", ticker))
                 and recovery_store is not None
                 and recovery_run is not None
             ):
-                recovery_store.record_success("etf", ticker, payload, etf_run)
+                # The pre-write recovery_candidate_advances check above bound the
+                # prior bytes; after write, the old canonical hash no longer exists.
+                recovery_store.record_success("etf", ticker, payload, etf_run, prevalidated_etf=True)
             if pair_publish:
                 publish_stock_financial_pair(
                     ticker,

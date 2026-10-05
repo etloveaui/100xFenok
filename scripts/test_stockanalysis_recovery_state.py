@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,7 +21,9 @@ if str(SCRIPT_DIR) not in sys.path:
 from stockanalysis_recovery_state import (  # noqa: E402
     StockAnalysisRecoveryStateError,
     StockAnalysisRecoveryStateStore,
+    archived_etf_history,
     payload_source_fields,
+    validate_etf_history_archive,
 )
 
 
@@ -139,6 +143,208 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             "natural": False,
             "observed_at": "2026-07-15T08:00:00Z",
         }
+
+    def test_official_etf_same_aggregate_rejects_component_regression(self):
+        from datetime import datetime, timezone
+        def detail(day: str) -> dict:
+            epoch = int(datetime.fromisoformat(f"{day}T20:00:00+00:00").timestamp())
+            rows = [{"t": day, "c": 25.6}]
+            return {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                "asset_type": "etf", "ticker": "IBIC", "source_as_of": "2026-10-01T00:00:00Z",
+                "fetched_at": "2026-10-05T02:14:14Z",
+                "endpoints": {"quote": "/api/quotes/e/IBIC", "history_periods": {"daily_1y": "/history"}},
+                "raw": {"official_holdings": {"source_as_of": "2026-10-01"},
+                        "quote": {"td": day, "ts": epoch}, "history_periods": {"daily_1y": rows}},
+                "normalized": {"overview": {}, "holdings": [{"symbol": "TIP", "weight_pct": 100}],
+                               "history_periods": {"daily_1y": rows}},
+            }
+        prior = detail("2026-10-02")
+        path = self.store.canonical_path("etf", "IBIC")
+        original = write_json(path, prior)
+        write_json(self.state_root / "states/etf/IBIC.json", {
+            "current": {"path": "data/stockanalysis/etfs/IBIC.json",
+                        "payload_sha256": hashlib.sha256(original).hexdigest(),
+                        "source_as_of": prior["source_as_of"]},
+            "retry": False,
+        })
+        self.assertTrue(self.store.recovery_candidate_advances("etf", "IBIC", detail("2026-10-02")))
+        self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", detail("2026-10-01")))
+        prior["raw"].pop("history_periods")
+        prior["normalized"].pop("history_periods")
+        missing_bytes = write_json(path, prior)
+        write_json(self.state_root / "states/etf/IBIC.json", {
+            "current": {"path": "data/stockanalysis/etfs/IBIC.json",
+                        "payload_sha256": hashlib.sha256(missing_bytes).hexdigest(),
+                        "source_as_of": prior["source_as_of"]}, "retry": False})
+        self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", detail("2026-10-02")))
+
+    def test_archived_yahoo_daily_series_requires_exact_embedded_bytes(self):
+        from datetime import datetime
+        raw_rows = [{"t": "2025-10-02", "c": 25.69}, {"t": "2026-10-02", "c": 25.64}]
+        yahoo_rows = [{"date": "2025-09-26", "Close": 24.78},
+                      {"date": "2026-10-02", "Close": 25.64}]
+        source = {"schema_version": "yf-etf-detail/v1", "ticker": "IBIC",
+                  "source_provider": "yahoo_finance", "source_as_of": "2026-10-02T19:51:28Z",
+                  "fetched_at": "2026-10-05T02:14:14Z", "raw": {"yf": {
+                      "info": {"symbol": "IBIC", "quoteType": "ETF", "regularMarketTime": int(
+                          datetime.fromisoformat("2026-10-02T19:51:28+00:00").timestamp())},
+                      "history_1y": yahoo_rows}}}
+        source_bytes = (json.dumps(source) + "\n").encode()
+        digest = hashlib.sha256(source_bytes).hexdigest()
+        payload = {"ticker": "IBIC", "raw": {"history_periods": {"daily_1y": raw_rows}},
+                   "normalized": {"history_periods": {"daily_1y": raw_rows},
+                                  "history_archive": [{"provider": "yahoo_finance", "price_basis": "yahoo_adjusted",
+                                       "source_payload": source_bytes.decode(),
+                                       "payload_sha256": digest, "source_as_of": source["source_as_of"],
+                                       "fetched_at": source["fetched_at"], "history_first": "2025-09-26",
+                                       "history_last": "2026-10-02"}]}}
+        self.assertTrue(validate_etf_history_archive(payload))
+        payload["normalized"]["history_periods"]["daily_1y"] = yahoo_rows
+        self.assertFalse(validate_etf_history_archive(payload))
+        payload["normalized"]["history_periods"]["daily_1y"] = raw_rows
+        payload["normalized"]["history_archive"][0]["source_payload"] += " "
+        self.assertFalse(validate_etf_history_archive(payload))
+
+    def test_archive_keeps_ordinary_primary_native_history_and_survives_rolling_tail(self):
+        from datetime import datetime
+        spec = importlib.util.spec_from_file_location("stockanalysis_archive_fixture", SCRIPT_DIR / "fetch-stockanalysis.py")
+        fetcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fetcher)
+        stamp = "2026-10-02T19:51:28Z"
+        epoch = int(datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp())
+        yahoo_rows = [{"date": day, "Close": 24.0 + index} for index, day in enumerate(
+            ("2025-09-26", "2025-10-02", "2026-09-30", "2026-10-02"))]
+        yahoo_data = {"info": {"symbol": "IBIC", "quoteType": "ETF", "regularMarketTime": epoch},
+                      "history_1y": yahoo_rows}
+        source = {"schema_version": "yf-etf-detail/v1", "source": "yahoo_finance",
+                  "source_provider": "yahoo_finance", "ticker": "IBIC", "source_as_of": stamp,
+                  "fetched_at": "2026-10-05T02:14:14Z", "raw": {"yf": yahoo_data}}
+        source_bytes = (json.dumps(source) + "\n").encode()
+        digest = hashlib.sha256(source_bytes).hexdigest()
+        state_root = self.root / "state"
+        object_file = state_root / f"providers/yahoo_finance/etf_detail/objects/IBIC/{digest}.json"
+        canonical_file = self.root / "truth/data/yf/etf-details/IBIC.json"
+        canonical_file.parent.mkdir(parents=True)
+        canonical_file.write_bytes(source_bytes)
+        object_file.parent.mkdir(parents=True)
+        object_file.write_bytes(source_bytes)
+        finance = {"schema_version": "yf-finance/v2", "source": "yahoo_finance", "ticker": "IBIC",
+                   "source_as_of": stamp, "fetched_at": source["fetched_at"], "data": yahoo_data}
+        write_json(self.root / "truth/data/yf/finance/IBIC.json", finance)
+        selected = {"provider": "yahoo_finance", "domain": "etf_detail", "entity": "IBIC",
+                    "provider_path": "data/yf/etf-details/IBIC.json", "payload_sha256": digest,
+                    "source_as_of": stamp, "observed_at": source["fetched_at"]}
+        class FakeStore:
+            def read_active_domain(self, _domain):
+                return {"current": {"IBIC": selected}}
+        def primary(rows):
+            periods = {"daily_1y": rows, "monthly_1y": [{"t": "2026-10-01", "c": 25.0}]}
+            return {"ticker": "IBIC", "raw": {"history_periods": periods},
+                    "normalized": {"history_periods": periods, "overview": {}}}
+        native = [{"t": "2025-10-02", "c": 25.69}, {"t": "2026-10-02", "c": 25.64}]
+        first = primary(native)
+        with (patch.object(fetcher, "DATA_SUPPLY_STATE_ROOT", state_root),
+              patch.object(fetcher, "STORAGE_ROOT", self.root / "truth"),
+              patch.object(fetcher, "OUT_DIR", self.root / "truth/data/stockanalysis"),
+              patch.object(fetcher, "data_supply_store", return_value=FakeStore())):
+            fetcher.retain_yahoo_etf_history_archive("IBIC", first)
+            self.assertIs(first["raw"]["history_periods"], first["normalized"]["history_periods"])
+            self.assertEqual(first["normalized"]["history_periods"]["daily_1y"], native)
+            self.assertEqual(first["normalized"]["history_periods"]["monthly_1y"], [{"t": "2026-10-01", "c": 25.0}])
+            self.assertEqual(first["normalized"]["history_archive"][0]["source_payload"].encode(), source_bytes)
+            self.assertTrue(validate_etf_history_archive(first))
+            write_json(fetcher.OUT_DIR / "etfs/IBIC.json", first)
+            selected["provider"] = "stockanalysis"
+            # The native tail advances and omits an interior Yahoo date. Its
+            # current price basis remains native while the old archive persists.
+            later = primary([{"t": "2025-10-03", "c": 25.71}, {"t": "2026-10-05", "c": 25.66}])
+            fetcher.retain_yahoo_etf_history_archive("IBIC", later)
+            self.assertEqual(later["normalized"]["history_archive"], first["normalized"]["history_archive"])
+            self.assertEqual(later["normalized"]["history_periods"]["daily_1y"], later["raw"]["history_periods"]["daily_1y"])
+            self.assertTrue(validate_etf_history_archive(later))
+            write_json(fetcher.OUT_DIR / "etfs/IBIC.json", later)
+            next_stamp = "2026-10-03T19:51:28Z"
+            next_rows = [{"date": day, "Close": 25.0 + index} for index, day in enumerate(
+                ("2025-10-03", "2026-10-02", "2026-10-03"))]
+            next_source = json.loads(json.dumps(source))
+            next_source["source_as_of"] = next_stamp
+            next_source["raw"]["yf"]["info"]["regularMarketTime"] = int(
+                datetime.fromisoformat(next_stamp.replace("Z", "+00:00")).timestamp())
+            next_source["raw"]["yf"]["history_1y"] = next_rows
+            next_bytes = (json.dumps(next_source) + "\n").encode()
+            next_digest = hashlib.sha256(next_bytes).hexdigest()
+            next_object = state_root / f"providers/yahoo_finance/etf_detail/objects/IBIC/{next_digest}.json"
+            next_object.write_bytes(next_bytes)
+            canonical_file.write_bytes(next_bytes)
+            finance["source_as_of"] = next_stamp
+            finance["data"] = next_source["raw"]["yf"]
+            write_json(self.root / "truth/data/yf/finance/IBIC.json", finance)
+            selected.update({"provider": "yahoo_finance", "payload_sha256": next_digest,
+                             "source_as_of": next_stamp})
+            canonical_file.write_text('{"ticker": "IBIC", "newer": true}')
+            write_json(self.root / "truth/data/yf/finance/IBIC.json", {"newer": True})
+            third = primary([{"t": row["date"], "c": row["Close"]} for row in next_rows])
+            fetcher.retain_yahoo_etf_history_archive("IBIC", third)
+            self.assertEqual(len(third["normalized"]["history_archive"]), 2)
+            self.assertTrue({"2025-09-26", "2026-09-30", "2026-10-03"} <= archived_etf_history(third))
+            self.assertEqual(third["normalized"]["history_periods"]["daily_1y"], third["raw"]["history_periods"]["daily_1y"])
+
+    def test_two_tracked_etf_refreshes_rebind_each_written_hash(self):
+        from datetime import datetime
+        path = self.store.canonical_path("etf", "IBIC")
+        def candidate(day):
+            epoch = int(datetime.fromisoformat(f"{day}T20:00:00+00:00").timestamp())
+            rows = [{"t": day, "c": 25.6}]
+            return {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                    "ticker": "IBIC", "source_as_of": "2026-10-01T00:00:00Z", "fetched_at": "2026-10-05T02:14:14Z",
+                    "endpoints": {"quote": "/quote", "history_periods": {"daily_1y": "/history"}},
+                    "raw": {"official_holdings": {"source_as_of": "2026-10-01"},
+                            "quote": {"td": day, "ts": epoch}, "history_periods": {"daily_1y": rows}},
+                    "normalized": {"overview": {}, "holdings": [{"symbol": "TIP"}],
+                                   "history_periods": {"daily_1y": rows}}}
+        first = candidate("2026-10-01")
+        original = write_json(path, first)
+        write_json(self.state_root / "states/etf/IBIC.json", {
+            "current": {"path": "data/stockanalysis/etfs/IBIC.json",
+                        "payload_sha256": hashlib.sha256(original).hexdigest(),
+                        "source_as_of": first["source_as_of"]}, "retry": False})
+        self.assertTrue(self.store.is_tracked("etf", "IBIC"))
+        for day in ("2026-10-02", "2026-10-03"):
+            payload = candidate(day)
+            self.assertTrue(self.store.recovery_candidate_advances("etf", "IBIC", payload))
+            written = write_json(path, payload)
+            state = self.store.record_success("etf", "IBIC", payload, {}, prevalidated_etf=True)
+            self.assertEqual(state["current"]["payload_sha256"], hashlib.sha256(written).hexdigest())
+        self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", candidate("2026-10-01")))
+
+    def test_ordinary_quote_only_etf_can_gain_daily_history(self):
+        def candidate(day, history):
+            payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                       "ticker": "IBIC", "source_as_of": day + "T00:00:00Z", "fetched_at": "2026-10-05T02:14:14Z",
+                       "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "TIP"}]},
+                       "raw": {"quote": {"td": day}}}
+            if history:
+                payload["raw"]["history_periods"] = {"daily_1y": [{"t": day, "c": 25.6}]}
+                payload["normalized"]["history_periods"] = payload["raw"]["history_periods"]
+            return payload
+        old = candidate("2026-10-01", False)
+        write_json(self.store.canonical_path("etf", "IBIC"), old)
+        self.store.record_failure("etf", "IBIC", "HTTP 503", {})
+        self.assertTrue(self.store.recovery_candidate_advances("etf", "IBIC", candidate("2026-10-02", True)))
+        self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", candidate("2026-09-30", True)))
+
+    def test_ordinary_aggregate_floor_applies_when_component_clocks_are_empty(self):
+        old = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+               "ticker": "IBIH", "source_as_of": "2026-10-02T00:00:00Z", "fetched_at": "2026-10-05T02:14:14Z",
+               "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "TIP"}],
+                              "history": [{"t": "2026-10-02", "c": 25.6}]}, "raw": {}}
+        write_json(self.store.canonical_path("etf", "IBIH"), old)
+        self.store.record_failure("etf", "IBIH", "HTTP 503", {})
+        candidate = json.loads(json.dumps(old))
+        candidate["source_as_of"] = "2026-10-01T00:00:00Z"
+        candidate["raw"]["quote"] = {"td": "2026-10-01"}
+        self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIH", candidate))
 
     def test_same_source_date_recovers_for_any_execution_context(self):
         payload = stock_payload("AAPL", "2026-07-14T20:00:00Z")
