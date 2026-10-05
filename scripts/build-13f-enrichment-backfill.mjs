@@ -446,7 +446,7 @@ function buildBySector(investorDocs) {
       const sector = holding.sector || "Other";
       const source = holding.enrichment_source || "unknown";
       const weight = numberOrNull(holding.weight) ?? 0;
-      const ticker = holding.ticker || holding.name || "UNKNOWN";
+      const ticker = resolver.resolveHoldingSymbol(holding).symbol || holding.name || "UNKNOWN";
       sourceMix.set(source, (sourceMix.get(source) ?? 0) + 1);
       if (!sectors.has(sector)) {
         sectors.set(sector, {
