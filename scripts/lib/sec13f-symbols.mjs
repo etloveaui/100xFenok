@@ -413,7 +413,8 @@ export function loadTickerResolver(rootPath) {
       if (hit?.symbol && confirmed(hit.symbol, rawName)) return result(hit.symbol, rawName, normalizedName, hit.source);
     }
 
-    return result(null, rawKey, normalizedKey, "unmapped");
+    // A rejected stored ticker is not an identity key for the unmapped audit list.
+    return result(null, rawName || rawCusip || rawTicker, normalizedName || rawCusip || rawTicker, "unmapped");
   }
 
   return {
