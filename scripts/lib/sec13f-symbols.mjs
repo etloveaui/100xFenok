@@ -63,6 +63,7 @@ const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
   ["G6700G107", { symbol: "NVT", source: "sec-issuer-2026-nvt-ordinary-shares" }],
   ["42824C109", { symbol: "HPE", source: "issuer-hpe-common-stock-identifiers" }],
   ["H25662182", { symbol: "CFRHF", source: "sec-nport-2026-richemont-ordinary-shares" }],
+  ["00508Y102", { symbol: "AYI", source: "sec-13g-2026-acuity-issuer-current-common" }],
 ]);
 const LIBERTY_LIVE_NAME = "LIBERTY LIVE";
 const AUTHORITATIVE_ALIAS_SOURCES = new Set(

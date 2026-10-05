@@ -116,6 +116,7 @@ try {
     ["G6700G107", "NVT"],
     ["42824C109", "HPE"],
     ["H25662182", "CFRHF"],
+    ["00508Y102", "AYI"],
   ];
   for (const [cusip, symbol] of exactPrimaryIdentities) {
     const exact = resolver.resolveHoldingSymbol({ ticker: "WRONG", cusip, name: "Unrelated fixture name" });
@@ -127,6 +128,7 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ name: "Unrelated fixture name" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "464286772", name: "Unknown iShares class" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "42824C208", name: "HEWLETT PACKARD ENTERPRISE C" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000", name: "ACUITY INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "21874A106", name: "CORE SCIENTIFIC INC", put_call: "Call" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "21874A114", name: "CORE SCIENTIFIC INC NEW" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000" }).symbol, null);
