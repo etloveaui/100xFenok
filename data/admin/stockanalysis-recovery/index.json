@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-05T03:50:16Z",
+  "generated_at": "2026-10-05T12:31:16Z",
   "counts": {
     "tracked": 914,
-    "fresh": 817,
-    "lkg": 86,
+    "fresh": 815,
+    "lkg": 88,
     "unavailable": 11,
-    "retry": 97,
-    "failed": 0
+    "retry": 99,
+    "failed": 4
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 796,
-      "fresh": 701,
-      "lkg": 85,
+      "fresh": 699,
+      "lkg": 87,
       "unavailable": 10,
-      "retry": 95
+      "retry": 97
     },
     "surface": {
       "tracked": 25,
@@ -229,7 +229,19 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "IBIL"
+      "entity": "IBIC"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIH"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIJ"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIK"
     },
     {
       "artifact_kind": "etf",
@@ -362,10 +374,6 @@
     {
       "artifact_kind": "etf",
       "entity": "TLDR"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "TLTW"
     },
     {
       "artifact_kind": "etf",
@@ -889,12 +897,42 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "IBIL",
+      "entity": "IBIC",
       "resolution_state": "lkg_primary",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-05T02:05:23Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 2,
+      "source_as_of": "2026-10-01T00:00:00Z",
+      "failure_observed_at": "2026-10-05T12:31:16Z",
+      "error": "ValueError: official holdings CSV has an invalid weight",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIH",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-01T00:00:00Z",
+      "failure_observed_at": "2026-10-05T12:31:16Z",
+      "error": "ValueError: official holdings CSV has an invalid weight",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIJ",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-01T00:00:00Z",
+      "failure_observed_at": "2026-10-05T12:31:16Z",
+      "error": "ValueError: official holdings CSV has an invalid weight",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIK",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-01T00:00:00Z",
+      "failure_observed_at": "2026-10-05T12:31:16Z",
+      "error": "ValueError: official holdings CSV has an invalid weight",
+      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -1229,16 +1267,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "TLTW",
-      "resolution_state": "lkg_primary",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-05T02:05:23Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 2,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "TSLO",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
@@ -1409,8 +1437,33 @@
     }
   ],
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "failed": 4,
+    "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIC",
+        "error": "ValueError: official holdings CSV has an invalid weight",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIH",
+        "error": "ValueError: official holdings CSV has an invalid weight",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIJ",
+        "error": "ValueError: official holdings CSV has an invalid weight",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIK",
+        "error": "ValueError: official holdings CSV has an invalid weight",
+        "data_loss": false
+      }
+    ]
   },
   "degraded_tickers": [],
   "degraded_etfs": [
@@ -1459,7 +1512,10 @@
     "GRN",
     "HDLB",
     "HYSA",
-    "IBIL",
+    "IBIC",
+    "IBIH",
+    "IBIJ",
+    "IBIK",
     "IFED",
     "IWDL",
     "IWFL",
@@ -1493,7 +1549,6 @@
     "TBLL",
     "TGLR",
     "TLDR",
-    "TLTW",
     "TSLO",
     "TSYW",
     "UCIB",
