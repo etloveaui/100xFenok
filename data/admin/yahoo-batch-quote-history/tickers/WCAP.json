@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 471,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:42:59Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/WCAP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WCAP.json",
     "payload_sha256": "9f9b3ee2f8c487733593d4a7e95db265f07c380fb94b2e06a1b027ccf4d49e41",
     "quote_as_of": "2026-09-24T16:16:45Z",
     "source_as_of": "2026-09-24T16:16:45Z"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 471,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T06:42:59Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "cb3d54a40cddacda601036e22beced711a0269d13a1a4bbed412a4a1fee18b35",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WCAP.json",
+    "payload_sha256": "9f9b3ee2f8c487733593d4a7e95db265f07c380fb94b2e06a1b027ccf4d49e41",
     "quote_as_of": "2026-09-24T16:16:45Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T16:16:45Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "WCAP holds LKG because Yahoo source date 2026-09-24T16:16:45Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-24T16:16:45Z"
+  },
   "ticker": "WCAP",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:31:25Z"
 }

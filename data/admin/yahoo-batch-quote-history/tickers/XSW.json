@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 850,
-      "natural": true,
-      "observed_at": "2026-08-06T05:27:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31074084652",
-      "schedule": "7 2 * * 0-5",
-      "shard": "49/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 512,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:47:50Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:58:08Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XSW.json",
-    "payload_sha256": "f927ba529dbadd94307bc79a07db1d3c7653a735b41a07ba7eb98373ea8a2dfc",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "8c902b07b3dcbd7c27f9157b7ff185039e29996e19877a7abce23d66ff71c6a7",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 512,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 621,
+    "observed_at": "2026-10-05T05:58:08Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T05:30:26Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-05T20:00:00Z",
     "source_as_of": "2026-08-05"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "69f36871afeb74d8381e1111be769b63b50161dd5ba780b3b49c342404fe12f7",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "XSW holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "XSW",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:58:08Z"
 }

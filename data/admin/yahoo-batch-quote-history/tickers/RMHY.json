@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 537,
-      "natural": true,
-      "observed_at": "2026-08-11T15:09:25Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31505333713",
-      "schedule": "7 14 * * 0-5",
-      "shard": "31/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 448,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:11:19Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:51:32Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/RMHY.json",
-    "payload_sha256": "6c33189adb4249ea92b6f3eca19e0e4ff4518a61a48ef1494826f2e58e239ccf",
-    "quote_as_of": "2026-09-25T18:34:43Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "23be316347b9a50245cb27c02899b689bfdbbc605caa45e83f9adf2a79736757",
+    "quote_as_of": "2026-10-02T18:33:27Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 448,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 441,
+    "observed_at": "2026-10-05T05:51:32Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T15:12:20Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-11T14:00:09Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "1b0e13fb7bde9b7ed49c63f652cdeea48d5129365d1c0e09364f54bc78beaa88",
-    "quote_as_of": "2026-09-25T18:34:43Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "RMHY holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "RMHY",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-05T05:51:32Z"
 }

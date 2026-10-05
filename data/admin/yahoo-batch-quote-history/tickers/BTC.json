@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1280,
-      "natural": true,
-      "observed_at": "2026-07-21T23:04:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29875696340",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 838,
-      "natural": true,
-      "observed_at": "2026-08-09T14:44:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31319162316",
-      "schedule": "7 14 * * 0-5",
-      "shard": "7/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 527,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:32:12Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:35:11Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/BTC.json",
-    "payload_sha256": "ee0290b9ca784ee7be5c032f1ed574a5d088db479ec263f8c363d7db5f68f484",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "cdba9e02d22e9916ba73b5d628e3d12e0f528e73d99f742c59c6aef40f72e717",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 527,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 531,
+    "observed_at": "2026-10-05T05:35:11Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T14:46:25Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "a7e3fe2b9bc221c6e5696cccffa6239d06413887cf7553c373a5f0fb4dba9f58",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "BTC holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "BTC",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:35:11Z"
 }

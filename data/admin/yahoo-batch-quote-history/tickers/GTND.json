@@ -1,49 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 519,
-      "natural": true,
-      "observed_at": "2026-08-07T00:55:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31136222210",
-      "schedule": "7 20 * * 0-5",
-      "shard": "70/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 718,
-      "natural": true,
-      "observed_at": "2026-08-07T20:49:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31217379411",
-      "schedule": "7 20 * * 0-5",
-      "shard": "70/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 476,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T04:44:07Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/GTND.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GTND.json",
     "payload_sha256": "3090b8b93acf9d7c2311d00d4877ec43d4851d8d60895f8c9be33605d6644620",
     "quote_as_of": "2026-09-24T18:12:34Z",
     "source_as_of": "2026-09-24T18:12:34Z"
@@ -51,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 476,
-    "natural": false,
     "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T20:52:19Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GTND.json",
-    "payload_sha256": "0857c3c2abb97fb861f58e18fb5131959e60c7c011e69bf8049d15e5a4b1bac3",
-    "quote_as_of": "2026-08-06T18:47:55Z",
-    "source_as_of": "2026-08-06"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T04:44:07Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "ba8adc131257c24caf3f12bc9c8f46dafe21a3833a8ee64b7c511517fcce5457",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GTND.json",
+    "payload_sha256": "3090b8b93acf9d7c2311d00d4877ec43d4851d8d60895f8c9be33605d6644620",
     "quote_as_of": "2026-09-24T18:12:34Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T18:12:34Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "GTND holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GTND holds LKG because Yahoo source date 2026-09-24T18:12:34Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-24T18:12:34Z"
   },
   "ticker": "GTND",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-05T05:31:25Z"
 }

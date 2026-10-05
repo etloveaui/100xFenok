@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 669,
-      "natural": true,
-      "observed_at": "2026-08-07T04:33:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31147671265",
-      "schedule": "7 2 * * 0-5",
-      "shard": "61/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 488,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:20:52Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:53:22Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/SQLV.json",
-    "payload_sha256": "e371d4407bb1f57ca5e5df0d75b79e139928127c5b69dbe742159246a76a4aea",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "8cb21fa828eaa5c9174b8cca56882aa899ff4f3428df2a55f13ff820118418de",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 488,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 596,
+    "observed_at": "2026-10-05T05:53:22Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T04:35:41Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "46f03980cc5ecf14f235c1efc4ace8316237e9f98244d130041be23b0a1a92b3",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "SQLV holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "SQLV",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-05T05:53:22Z"
 }

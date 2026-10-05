@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 537,
-      "natural": true,
-      "observed_at": "2026-08-11T03:59:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31456720047",
-      "schedule": "7 2 * * 0-5",
-      "shard": "25/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 513,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:39:34Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:48:53Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/OPEX.json",
-    "payload_sha256": "41784a301b31d6cdbbd3dad2b098bc3e3921606a06e67c3dddb5b8cdb5e0602e",
-    "quote_as_of": "2026-09-25T19:56:42Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "52dd9912d7b8a37de63c6767d9c3b09917ecd1ff54d41aa22fa0d9a399675df2",
+    "quote_as_of": "2026-10-02T19:58:21Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 513,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 527,
+    "observed_at": "2026-10-05T05:48:53Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T04:01:50Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-10T19:57:12Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "ca1c26f4c4bfeb6bf1e776e381639e69bcd9d8d4b020f7813b6539d26b2c1e18",
-    "quote_as_of": "2026-09-25T19:56:42Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "OPEX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "OPEX",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-05T05:48:53Z"
 }

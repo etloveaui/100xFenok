@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 518,
-      "natural": true,
-      "observed_at": "2026-08-01T18:21:41Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711922590",
-      "schedule": "",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 664,
-      "natural": true,
-      "observed_at": "2026-08-05T16:06:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31023479262",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 629,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 464,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:26:49Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:39:26Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/FCXG.json",
-    "payload_sha256": "0f594193832fff98bb5d76f487aecd63b6816a91e89b5ada78a571a2c105313e",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "fccd2dce774b674d4268e16c8be7e22978207b3d0c4abbbfe1ecc8fbdaa1b6b1",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 464,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 554,
+    "observed_at": "2026-10-05T05:39:26Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T15:10:26Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-12T15:04:47Z",
     "source_as_of": "2026-08-12"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "d6a2bd393b6419f1fd30a0696efef654030c9501a469d66c96c4083a9fb1c012",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "FCXG holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "FCXG",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-05T05:39:26Z"
 }

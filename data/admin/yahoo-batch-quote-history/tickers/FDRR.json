@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 784,
-      "natural": true,
-      "observed_at": "2026-08-01T18:21:41Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711922590",
-      "schedule": "",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1291,
-      "natural": true,
-      "observed_at": "2026-08-11T02:24:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31452163623",
-      "schedule": "7 0 * * 0-5",
-      "shard": "24/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 599,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 519,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:27:20Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:39:41Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/FDRR.json",
-    "payload_sha256": "61b754bedb43050186236ac74690fbb1df60cbd6187df1528832048d1da13451",
-    "quote_as_of": "2026-09-25T19:50:01Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "4fc797239426121ab2e91a46bc6b5575e096a0ce85a44776728ff923517b01d6",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 519,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 663,
+    "observed_at": "2026-10-05T05:39:41Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:19:22Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-11T19:58:19Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "f511a1b89163c14956a03e5907e3763e41ff6d587db185c6fa31486826803020",
-    "quote_as_of": "2026-09-25T19:50:01Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "FDRR holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "FDRR",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-05T05:39:41Z"
 }

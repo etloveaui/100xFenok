@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 573,
-      "natural": true,
-      "observed_at": "2026-07-27T22:58:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30312518312",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 568,
-      "natural": true,
-      "observed_at": "2026-08-07T05:49:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31151738848",
-      "schedule": "7 4 * * 0-5",
-      "shard": "62/72"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-07T15:04:20Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31190633378",
-      "schedule": "7 14 * * 0-5",
-      "shard": "67/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 474,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:31:38Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:34:54Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/BSJU.json",
-    "payload_sha256": "2e7a8424422cac7e5cc0eef640ac5fea39ceed7e27f0968232a46d41a82ef986",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "602819cee57234732842cf6a201feb2c72632fca8d9a7bd5b2b382cdabfb246f",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 474,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 577,
+    "observed_at": "2026-10-05T05:34:54Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T05:50:19Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "56de85d6d0e6ceb1f86030fec1faf341f8d81331852098062265108ec7746dd4",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "BSJU holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "BSJU",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:34:54Z"
 }

@@ -1,95 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 675,
-      "natural": true,
-      "observed_at": "2026-08-01T18:48:56Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711926935",
-      "schedule": "",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1089,
-      "natural": true,
-      "observed_at": "2026-08-09T02:25:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31290251671",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/72"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-09T03:52:19Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31293276520",
-      "schedule": "7 2 * * 0-5",
-      "shard": "1/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 492,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:38:40Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:55:54Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/USFR.json",
-    "payload_sha256": "a590b43b0d8465eccd0bda0f53ebd8a9ddc389e276f8e1f5c1a39282d0ff3103",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "462ccebbb6e5ec39861b60d5f3504c186968a7b1c7b452abdb7830431598db3c",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 492,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 630,
+    "observed_at": "2026-10-05T05:55:54Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:26:29Z",
@@ -99,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "c35347931f6682e441c6dc0c45b6c1d98b1407efd5cabb3d4757763dee8ff1dd",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "USFR holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -125,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "USFR",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:55:54Z"
 }

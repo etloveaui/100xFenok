@@ -1,87 +1,29 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 759,
-      "natural": true,
-      "observed_at": "2026-08-05T16:06:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31023479262",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 405,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 495,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:48:11Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:58:16Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XUSP.json",
-    "payload_sha256": "5f3c13406620ea17fab61f48967753b08fb18aceb3d7492c04e14a5656d660a1",
-    "quote_as_of": "2026-09-24T19:54:40Z",
-    "source_as_of": "2026-09-24T19:54:40Z"
+    "payload_sha256": "d46961b9e6397223a55f38ba7085787b70b4195fdaf4751b2ecc7e42ddbcf534",
+    "quote_as_of": "2026-10-02T18:34:49Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 495,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 553,
+    "observed_at": "2026-10-05T05:58:16Z",
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T15:11:46Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XUSP.json",
-    "payload_sha256": "8ca2bb511127a7057454223812f439df3fae9fe6f6b0cb2c08499402f36daa37",
-    "quote_as_of": "2026-08-12T13:46:10Z",
-    "source_as_of": "2026-08-12"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:48:11Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "0e86396846d3d8df3731b4fc70c3abf20829be8735e859c574c96de2808af187",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XUSP.json",
+    "payload_sha256": "5f3c13406620ea17fab61f48967753b08fb18aceb3d7492c04e14a5656d660a1",
     "quote_as_of": "2026-09-24T19:54:40Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T19:54:40Z"
   },
   "resolution_state": "fresh_primary",
@@ -89,14 +31,13 @@
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "XUSP holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XUSP holds LKG because Yahoo source date 2026-09-24T19:54:40Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-09-24T19:54:40Z"
   },
   "ticker": "XUSP",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:58:16Z"
 }

@@ -1,153 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 510,
-      "natural": true,
-      "observed_at": "2026-08-07T11:06:01Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31172586227",
-      "schedule": "7 10 * * 0-5",
-      "shard": "65/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 539,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "foreign_writer_conflict",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 594,
-      "natural": true,
-      "observed_at": "2026-08-12T07:59:44Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "schedule": "7 6 * * 0-5",
-      "shard": "39/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 873,
-      "natural": true,
-      "observed_at": "2026-08-12T11:11:11Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31590557839",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "foreign_writer_conflict",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 367,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 625,
-      "natural": true,
-      "observed_at": "2026-08-12T17:16:04Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31620820614",
-      "schedule": "7 16 * * 0-5",
-      "shard": "44/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1080,
-      "natural": true,
-      "observed_at": "2026-08-12T19:14:55Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31631524598",
-      "schedule": "7 18 * * 0-5",
-      "shard": "45/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 979,
-      "natural": true,
-      "observed_at": "2026-08-12T20:54:05Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "schedule": "7 20 * * 0-5",
-      "shard": "46/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for TAPR despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 388,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 462,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:30:44Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/TAPR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
     "payload_sha256": "7e61df1cd5762fc05a7b7cb9ba2f556e4959b3198a6b84e0007b115f74297791",
     "quote_as_of": "2026-09-24T16:06:22Z",
     "source_as_of": "2026-09-24T16:06:22Z"
@@ -155,75 +10,34 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 462,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
-  },
-  "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for TAPR despite available history",
-    "failure_kind": "systemic_rate_limit",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-12T22:55:30Z",
-    "run_attempt": 1,
-    "run_id": "31648785047"
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T04:17:52Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
-    "payload_sha256": "f02f4d44caf815c9cc9a3ac1764f3c474b34198d1e805a49a468cb7966570cc9",
-    "quote_as_of": "2026-08-03T15:10:54Z",
-    "source_as_of": "2026-08-03T15:10:54Z"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:30:44Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "54bdde1e22a27569b3eabdf776ec6a5cb48a59f0c24747f580134baa1cab500f",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
+    "payload_sha256": "7e61df1cd5762fc05a7b7cb9ba2f556e4959b3198a6b84e0007b115f74297791",
     "quote_as_of": "2026-09-24T16:06:22Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T16:06:22Z"
   },
   "recovered_at": "2026-09-28T06:30:00Z",
-  "recovered_from_run_id": "31648785047",
-  "recovery_event_name": "workflow_dispatch",
-  "recovery_run_attempt": 1,
-  "recovery_run_id": "36367836615",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-12T05:45:23Z",
-    "classified_run_id": "31567478446",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "TAPR holds LKG because Yahoo source date 2026-08-03T15:10:54Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TAPR holds LKG because Yahoo source date 2026-09-24T16:06:22Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-03T15:10:54Z"
+    "source_as_of": "2026-09-24T16:06:22Z"
   },
   "ticker": "TAPR",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:31:25Z"
 }

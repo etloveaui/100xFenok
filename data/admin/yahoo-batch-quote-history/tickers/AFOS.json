@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 507,
-      "natural": true,
-      "observed_at": "2026-07-27T22:58:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30312518312",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 514,
-      "natural": true,
-      "observed_at": "2026-08-07T04:33:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31147671265",
-      "schedule": "7 2 * * 0-5",
-      "shard": "61/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 661,
-      "natural": true,
-      "observed_at": "2026-08-11T15:09:25Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31505333713",
-      "schedule": "7 14 * * 0-5",
-      "shard": "31/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 510,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:20:25Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:32:58Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/AFOS.json",
-    "payload_sha256": "56cf438c591786d9311d30740eca9e839f112d32535d2155b229ad91c74d463d",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "d31a1658bbd4b402b92897a26e6ee8143ef9ed4595b134fc2fdfbf74f729df07",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 510,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 522,
+    "observed_at": "2026-10-05T05:32:58Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T15:11:00Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-11T15:08:05Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "78a667d557adc7d9487af6448f4d6046941c9fa76c4b2489071c93afe1deb962",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "AFOS holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "AFOS",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:32:58Z"
 }

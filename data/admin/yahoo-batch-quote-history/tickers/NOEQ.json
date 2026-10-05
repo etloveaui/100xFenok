@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:39:11Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/NOEQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NOEQ.json",
     "payload_sha256": "d47990691da469fd4798360d7ab3b4432cb3413689848fcd94c360541737b0e1",
     "quote_as_of": "2026-09-30T13:46:06Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for NOEQ: quote_as_of",
     "failures": [],
-    "latency_ms": 594,
-    "observed_at": "2026-09-30T14:39:11Z",
-    "outcome": "fresh"
+    "latency_ms": 532,
+    "observed_at": "2026-10-05T05:48:03Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for NOEQ: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-05T05:48:03Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:36:27Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:39:11Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NOEQ.json",
-    "payload_sha256": "a05ce967ab724459873a2cebf6edf99dfab5ec6ada23adf39be25286cc24f3e8",
-    "quote_as_of": "2026-09-21T16:00:02Z",
-    "source_as_of": "2026-09-21T16:00:02Z"
+    "payload_sha256": "d47990691da469fd4798360d7ab3b4432cb3413689848fcd94c360541737b0e1",
+    "quote_as_of": "2026-09-30T13:46:06Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-21T16:00:02Z"
   },
   "ticker": "NOEQ",
-  "updated_at": "2026-09-30T14:39:11Z"
+  "updated_at": "2026-10-05T05:48:03Z"
 }

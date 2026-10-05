@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 443,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:37:39Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/UMCU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UMCU.json",
     "payload_sha256": "950bff6fc70d60fe94c87d7ac497c4f30a746876b66d50d0ab4647f72e408ff7",
     "quote_as_of": "2026-09-24T14:47:16Z",
     "source_as_of": "2026-09-24T14:47:16Z"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 443,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T06:37:39Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "00589ea3879afef6a71c24703f59d421ca5085a2639e675992959fb0dd9f3d54",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UMCU.json",
+    "payload_sha256": "950bff6fc70d60fe94c87d7ac497c4f30a746876b66d50d0ab4647f72e408ff7",
     "quote_as_of": "2026-09-24T14:47:16Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T14:47:16Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "UMCU holds LKG because Yahoo source date 2026-09-24T14:47:16Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-24T14:47:16Z"
+  },
   "ticker": "UMCU",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:31:25Z"
 }

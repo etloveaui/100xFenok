@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-18T00:37:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-18T00:42:07Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-18T00:49:31Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 458,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 449,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:46:22Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:57:40Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XLRI.json",
-    "payload_sha256": "62a7af84297d04a6381703cdf7509cf3fdc12966ddc74d223af022d8269bebf8",
-    "quote_as_of": "2026-09-25T19:32:36Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "a873ede8b3f4938f766a4f0aec71af551e3fbcf6a459bd8564f3c0d93a9f1cea",
+    "quote_as_of": "2026-10-02T19:48:49Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 449,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 492,
+    "observed_at": "2026-10-05T05:57:40Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:20:43Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-08-11T19:56:42Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "0a407dbd77896f4811d130ae47916f18ecc08e630bc57f43d2327be458fdc75d",
-    "quote_as_of": "2026-09-25T19:32:36Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "XLRI holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "XLRI",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:57:40Z"
 }

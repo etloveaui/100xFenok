@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 515,
-      "natural": true,
-      "observed_at": "2026-07-27T22:58:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30312518312",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 568,
-      "natural": true,
-      "observed_at": "2026-08-07T05:49:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31151738848",
-      "schedule": "7 4 * * 0-5",
-      "shard": "62/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 442,
-      "natural": true,
-      "observed_at": "2026-08-10T15:10:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31401948552",
-      "schedule": "7 14 * * 0-5",
-      "shard": "19/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 483,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:29:53Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:34:41Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/BLUX.json",
-    "payload_sha256": "725dce7c1cee10e4635e28ffa427577984304a75fbfbc95523038fd753a4cae3",
-    "quote_as_of": "2026-09-25T19:59:51Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "13f463b86644cc27ff65748b6f71b3ad1c62531ef2357c9db19de0fd034f214f",
+    "quote_as_of": "2026-10-02T19:59:51Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 483,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 544,
+    "observed_at": "2026-10-05T05:34:41Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:12:09Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-10T14:58:48Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "b16da62b6947391201cda0bce5bceb6729e315434390d7433874f7c9f17cdfe0",
-    "quote_as_of": "2026-09-25T19:59:51Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "BLUX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "BLUX",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:34:41Z"
 }

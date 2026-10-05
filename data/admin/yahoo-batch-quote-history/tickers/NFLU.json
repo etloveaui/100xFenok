@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 641,
-      "natural": true,
-      "observed_at": "2026-08-07T15:04:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31190633378",
-      "schedule": "7 14 * * 0-5",
-      "shard": "67/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 459,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:35:43Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:47:50Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/NFLU.json",
-    "payload_sha256": "71e3e3c582dd88ad49d7c25e42df5ca19a33c145bf6224376bb4f53d38fe63a7",
-    "quote_as_of": "2026-09-25T19:59:47Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "51a31705689c4cbbef5a3dda2200e2e2eec2c65e5d64490db73dfc448c9b7a01",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 459,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 521,
+    "observed_at": "2026-10-05T05:47:50Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T15:06:59Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-07T15:03:25Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "d2d7cdb91e73d4746e6a6b50282cb0fe0c5f3131b223b10306afa4d36e864213",
-    "quote_as_of": "2026-09-25T19:59:47Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "NFLU holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "NFLU",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-05T05:47:50Z"
 }

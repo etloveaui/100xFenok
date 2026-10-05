@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 403,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 432,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:03:54Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:49:39Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/PQUS.json",
-    "payload_sha256": "ced5aec8bae39c22ae49cdff80fd4a55ca0c2073d87f8e94952ae1bf1453dc65",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "83c36b7b03b6f04087f34b5833b1c5a88fb2b2ad44e57a61ad2aed7bcc8f975a",
+    "quote_as_of": "2026-10-02T19:59:46Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 432,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 427,
+    "observed_at": "2026-10-05T05:49:39Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:19:59Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-11T19:59:46Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "5bea610ad0a7d092d2a94d07c5d53d48d8f559d3de765f5ce28902d22c4380cd",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "PQUS holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "PQUS",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-05T05:49:39Z"
 }

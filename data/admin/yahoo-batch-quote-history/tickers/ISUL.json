@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 513,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 488,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:53:05Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:43:57Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/ISUL.json",
-    "payload_sha256": "5a3a1bee32badf8455defbb3d8620ffda8bc3d7cee4932abbc3bab80c8e1b1a2",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "e16dfe109dbf30edc4c725a16d87ae3d7daf0a1bc400ae8150b8fec311c4cb74",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 488,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 520,
+    "observed_at": "2026-10-05T05:43:57Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:19:35Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-11T20:00:00Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "cf545a631172acfbe3ab2325966f4f26df4e41604747e6f1f7492e48aee6e1d9",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "ISUL holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "ISUL",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-05T05:43:57Z"
 }

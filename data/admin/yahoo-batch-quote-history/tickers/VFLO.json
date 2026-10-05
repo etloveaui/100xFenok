@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 599,
-      "natural": true,
-      "observed_at": "2026-08-07T04:33:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31147671265",
-      "schedule": "7 2 * * 0-5",
-      "shard": "61/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 493,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:40:51Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:56:15Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/VFLO.json",
-    "payload_sha256": "a9488d12507e0ba4b0912af817e2ed0e26719aa91bf6e0ef50b8ce4a5ba59530",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "bf5cc5c4b8ff1becc1a86977a0d202d9319baae11568bfcaf4b61eb19883beda",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 493,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 564,
+    "observed_at": "2026-10-05T05:56:15Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T04:35:59Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "9d2f1ef02d4a96a07561611d24aa941efc964343e645efd6edc1961f9c804ca0",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "VFLO holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "VFLO",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:56:15Z"
 }

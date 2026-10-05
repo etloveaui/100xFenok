@@ -1,58 +1,57 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 409,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:48:10Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:58:15Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XUSM.json",
-    "payload_sha256": "7e6193c862f09b919849d7e0acabdbee287e4f154b02255dc7cccc3c074f1edc",
-    "quote_as_of": "2026-09-25T19:58:51Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "45f889bf79fe0102beac3a074a65f8df4f7514c0b388f461b4355f29114f759d",
+    "quote_as_of": "2026-10-02T19:57:11Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 409,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "eb71cf53f8875ffd2815a37b6a0167db692e0b9580f495a031fa88ec7aea7528",
-    "quote_as_of": "2026-09-25T19:58:51Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 641,
+    "observed_at": "2026-10-05T05:58:15Z",
+    "outcome": "fresh"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "XUSM",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:58:15Z"
 }

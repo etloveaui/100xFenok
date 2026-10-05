@@ -1,81 +1,23 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 944,
-      "natural": true,
-      "observed_at": "2026-07-20T23:03:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29785605821",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1353,
-      "natural": true,
-      "observed_at": "2026-08-05T16:06:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31023479262",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 617,
-      "natural": true,
-      "observed_at": "2026-08-07T15:04:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31190633378",
-      "schedule": "7 14 * * 0-5",
-      "shard": "67/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 463,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:36:55Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:36:22Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/CMDT.json",
-    "payload_sha256": "6f442f5885c3c26aac5f9c64eadb27d022bbda0b69643e91d87ef4fa1a63577c",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "a2cef7bf0eb47888b2e198929831f28e335724b72a877670af237a63ea0864e5",
+    "quote_as_of": "2026-10-02T19:59:53Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
+    "core_daily_basket",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 463,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 549,
+    "observed_at": "2026-10-05T05:36:22Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T15:05:52Z",
@@ -85,25 +27,12 @@
     "quote_as_of": "2026-08-07T14:37:36Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "eb6c4b0c903487945cc2404d94e03c1b25b4d99d68278cfcc6d5a87536ba9047",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "CMDT holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +40,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "CMDT",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:36:22Z"
 }
