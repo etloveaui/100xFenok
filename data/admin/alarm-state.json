@@ -1,12 +1,36 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-05T16:11:10.003Z",
+  "generated_at": "2026-10-05T18:50:21.113Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 4,
   "open_incidents": [
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -25,8 +49,8 @@
       "stopped_sets": [
         "gdelt_news_tone"
       ],
-      "latest_generated_at": "2026-10-05T15:48:00.810Z",
-      "previous_generated_at": "2026-10-05T14:43:39.927Z"
+      "latest_generated_at": "2026-10-05T18:44:26.164Z",
+      "previous_generated_at": "2026-10-05T18:28:20.527Z"
     }
   ],
   "watched_workflows": [
@@ -369,12 +393,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37338388530",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37338388530",
-    "observed_at": "2026-10-05T16:11:10.003Z",
-    "event": "schedule",
+    "run_id": "37358458710",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37358458710",
+    "observed_at": "2026-10-05T18:50:21.113Z",
+    "event": "workflow_run",
     "workflows": [
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
+      "worker-request-budget-alarm.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
