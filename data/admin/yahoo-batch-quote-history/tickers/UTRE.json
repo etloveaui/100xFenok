@@ -1,69 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 401,
-      "natural": true,
-      "observed_at": "2026-07-14T00:11:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 355,
-      "natural": true,
-      "observed_at": "2026-07-17T00:21:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    }
-  ],
   "current": {
-    "fetched_at": "2026-07-17T00:24:18Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-10-05T12:50:38Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/UTRE.json",
-    "payload_sha256": "c0b7346b86e401aaa6fd050e666a4a45483ed2d8ef915643d486403c7eba959f",
-    "quote_as_of": "2026-07-16T20:00:00Z",
-    "source_as_of": "2026-07-16"
+    "payload_sha256": "c18a74c7ea55096f8bea393431ce9e9695209a32ffce3208cea6406b049db025",
+    "quote_as_of": "2026-10-02T20:00:00Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 355,
-    "natural": true,
-    "observed_at": "2026-07-17T00:21:09Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "latency_ms": 862,
+    "observed_at": "2026-10-05T12:50:38Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-06-18T16:18:25Z",
@@ -73,25 +26,12 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-17"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:21:09Z",
-    "payload_sha256": "1e792a8781a9c3710017f3170fa0ba27593cd20a267cdf6f7d209135a6a88e28",
-    "quote_as_of": "2026-07-16T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "29544227703",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 16,
     "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "UTRE holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -99,5 +39,5 @@
     "source_as_of": "2026-06-17"
   },
   "ticker": "UTRE",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-10-05T12:50:38Z"
 }
