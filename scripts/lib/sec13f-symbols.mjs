@@ -7,6 +7,13 @@ export const SYMBOL_RE = /^[A-Z0-9][A-Z0-9.-]{0,11}$/;
 // CUSIP/ticker source pairs are recorded in the platform's data-recovery receipt.
 // Trust shares (SLV) retain their security identity; this map assigns no sector.
 const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
+  // SEC Alphabet 13G covers identify these classes; the June 2026 10-Q
+  // identifies Class A as GOOGL and Class C as GOOG.
+  ["02079K305", { symbol: "GOOGL", source: "sec-alphabet-13g-2025-10q-2026-class-a" }],
+  ["02079K107", { symbol: "GOOG", source: "sec-alphabet-13g-2021-10q-2026-class-c" }],
+  ["023135106", { symbol: "AMZN", source: "sec-amazon-13g-2026-common" }],
+  ["580135101", { symbol: "MCD", source: "sec-mcdonalds-13g-2026-common" }],
+  ["04626A103", { symbol: "ALAB", source: "sec-astera-labs-13g-2026-common" }],
   ["530909100", { symbol: "LLYVA", source: "sec-liberty-live-2025-annual-report" }],
   ["530909308", { symbol: "LLYVK", source: "sec-liberty-live-2025-annual-report" }],
   ["025537101", { symbol: "AEP", source: "issuer-aep-2025-cdp-security-identifiers" }],
@@ -396,13 +403,46 @@ function identityTokens(value) {
 
 // Stored 13F tickers and the aliases generated from them are not identity
 // evidence: historical rows carry tickers such as ATI for IBM or Philip Morris.
-// Full normalized names must agree and identify one symbol. Shared descriptors,
-// prefixes, abbreviations, and ambiguous issuer names are not security proof.
-// Exact primary CUSIP identities remain the earlier authoritative route.
-function issuerNameConfirms(issuerSymbols, symbol, issuerName) {
-  if (!identityTokens(issuerName).length) return false;
-  const matches = issuerSymbols.get(normalizeCompanyName(issuerName));
-  return matches?.size === 1 && matches.has(String(symbol ?? "").replace(/-/g, "."));
+// Confirm the candidate's issuer, not uniqueness across its listed share classes.
+// Filing abbreviations may omit letters after an exact identifying word;
+// every remaining word still has to agree. One shared word cannot confirm an issuer.
+function issuerNameConfirms(symbolNames, symbol, issuerName) {
+  // The common normalizer already removes abbreviated corporate descriptors.
+  // Treat their expanded and filing-truncated forms the same here.
+  const descriptors = new Set(["FINANCIAL", "INTERNATIONAL", "MANAGEMENT", "BANCORPORATION",
+    "INCORPORATED", "LIMITED", "HLDNGS", "HOLD", "HOLDI", "IN", "PL", "CLASS"]);
+  const words = (name) => normalizeCompanyName(String(name ?? "")
+    .replace(/['’]/g, "")
+    .replace(/\s*\/[A-Z]{2}\/?\s*$/i, "")
+    .replace(/\s+-\s+US\b/gi, ""))
+    .split(" ").filter((word) => word.length >= 2 && word !== "AND" && word !== "OF" && !descriptors.has(word));
+  const issuerWords = words(issuerName);
+  const first = issuerWords.find(word => !NON_IDENTIFYING_WORDS.has(word));
+  if (!first) return false;
+  for (const name of symbolNames.get(symbol) ?? []) {
+    const candidateWords = words(name);
+    if (!candidateWords.includes(first)) continue;
+    if (issuerWords.length !== candidateWords.length) continue;
+    const remaining = [...candidateWords];
+    const abbreviated = [];
+    for (const word of issuerWords) {
+      const exact = remaining.indexOf(word);
+      if (exact >= 0) remaining.splice(exact, 1);
+      else abbreviated.push(word);
+    }
+    for (const word of abbreviated) {
+      const index = remaining.findIndex(ownWord => {
+        if (word.length < 3 || word.length >= ownWord.length || word[0] !== ownWord[0]) return false;
+        let matched = 0;
+        for (const letter of ownWord) if (letter === word[matched]) matched += 1;
+        return matched === word.length;
+      });
+      if (index < 0) break;
+      remaining.splice(index, 1);
+    }
+    if (!remaining.length) return true;
+  }
+  return false;
 }
 
 function addSymbolName(symbolNames, symbol, name) {
@@ -414,6 +454,7 @@ function addSymbolName(symbolNames, symbol, name) {
 function addMapValue(map, key, value) {
   if (!key || !value?.symbol) return;
   if (!map.has(key)) map.set(key, value);
+  else if (map.get(key).symbol?.replace(/-/g, ".") !== value.symbol.replace(/-/g, ".")) map.set(key, { symbol: null });
 }
 
 function addSymbol(symbols, value) {
@@ -493,7 +534,7 @@ function loadSecIssuerNames(root, symbolNames) {
   }
 }
 
-function loadExistingAliases(root, aliasMap, nameMap, issuerSymbols) {
+function loadExistingAliases(root, aliasMap, nameMap, symbolNames) {
   const aliasDoc = readJson(path.join(root, "data/sec-13f/analytics/ticker_aliases.json"), {});
 
   if (Array.isArray(aliasDoc.aliases)) {
@@ -503,7 +544,7 @@ function loadExistingAliases(root, aliasMap, nameMap, issuerSymbols) {
       if (AUTHORITATIVE_ALIAS_SOURCES.has(alias.source) || Array.isArray(alias.cusips) && alias.cusips.some(
         (cusip) => AUTHORITATIVE_CUSIP_SYMBOLS.has(normalizeCusip(cusip)),
       )) continue;
-      if (!issuerNameConfirms(issuerSymbols, normalizeSymbol(alias.symbol), alias.raw_key)) continue;
+      if (!issuerNameConfirms(symbolNames, normalizeSymbol(alias.symbol), alias.raw_key)) continue;
       addAlias(aliasMap, alias.raw_key, alias.normalized_key, alias.symbol, alias.source ?? "alias-history");
       addName(nameMap, alias.raw_key, alias.symbol, alias.source ?? "alias-history");
     }
@@ -512,14 +553,14 @@ function loadExistingAliases(root, aliasMap, nameMap, issuerSymbols) {
 
   if (aliasDoc.aliases && typeof aliasDoc.aliases === "object") {
     for (const [rawKey, symbol] of Object.entries(aliasDoc.aliases)) {
-      if (!issuerNameConfirms(issuerSymbols, normalizeSymbol(symbol), rawKey)) continue;
+      if (!issuerNameConfirms(symbolNames, normalizeSymbol(symbol), rawKey)) continue;
       addAlias(aliasMap, rawKey, rawKey, symbol, "alias-history");
       addName(nameMap, rawKey, symbol, "alias-history");
     }
   }
 }
 
-function loadInvestorHistory(root, symbols, nameMap, cusipMap, issuerSymbols) {
+function loadInvestorHistory(root, symbols, nameMap, cusipMap, symbolNames) {
   const investorsDir = path.join(root, "data/sec-13f/investors");
   if (!fs.existsSync(investorsDir)) return;
 
@@ -536,13 +577,11 @@ function loadInvestorHistory(root, symbols, nameMap, cusipMap, issuerSymbols) {
           continue;
         }
         const symbol = normalizeSymbol(holding?.ticker);
-        if (!symbol || !issuerNameConfirms(issuerSymbols, symbol, holding?.name)) continue;
+        if (!symbol || !issuerNameConfirms(symbolNames, symbol, holding?.name)) continue;
         addSymbol(symbols, symbol);
 
         addName(nameMap, holding?.name, symbol, "13f-history");
-        if (cusip && !cusipMap.has(cusip)) {
-          cusipMap.set(cusip, { symbol, source: "13f-history" });
-        }
+        if (cusip) addMapValue(cusipMap, cusip, { symbol, source: "13f-history" });
       }
     }
   }
@@ -559,20 +598,9 @@ export function loadTickerResolver(rootPath) {
   loadStockUniverse(root, symbols, nameMap, symbolNames);
   loadYfUniverse(root, symbols, nameMap, symbolNames);
   loadSecIssuerNames(root, symbolNames);
-  const issuerSymbols = new Map();
-  for (const [symbol, names] of symbolNames) {
-    for (const name of names) {
-      const normalized = normalizeCompanyName(name);
-      if (!normalized) continue;
-      if (!issuerSymbols.has(normalized)) issuerSymbols.set(normalized, new Set());
-      // SEC/Yahoo already support dot and dash spellings of the same class.
-      // Count them once; genuinely different class symbols remain ambiguous.
-      issuerSymbols.get(normalized).add(symbol.replace(/-/g, "."));
-    }
-  }
-  loadExistingAliases(root, aliasMap, nameMap, issuerSymbols);
-  loadInvestorHistory(root, symbols, nameMap, cusipMap, issuerSymbols);
-  const confirmed = (symbol, issuerName) => issuerNameConfirms(issuerSymbols, normalizeSymbol(symbol), issuerName);
+  loadExistingAliases(root, aliasMap, nameMap, symbolNames);
+  loadInvestorHistory(root, symbols, nameMap, cusipMap, symbolNames);
+  const confirmed = (symbol, issuerName) => issuerNameConfirms(symbolNames, normalizeSymbol(symbol), issuerName);
 
   function result(symbol, rawKey, normalizedKey, source, authoritative = false) {
     return {
@@ -599,30 +627,34 @@ export function loadTickerResolver(rootPath) {
     if (normalizedName === LIBERTY_LIVE_NAME) {
       return result(null, rawKey, normalizedKey, "unmapped-liberty-live-without-exact-cusip");
     }
+    const history = cusipMap.get(rawCusip);
+    // A known or conflicting security identifier cannot be bypassed by a name
+    // fallback or a stored ticker belonging to another security.
+    const confirmsCandidate = (symbol) => confirmed(symbol, rawName)
+      && (!cusipMap.has(rawCusip) || history?.symbol?.replace(/-/g, ".") === normalizeSymbol(symbol)?.replace(/-/g, "."));
 
     if (rawTicker) {
       const direct = normalizeSymbol(rawTicker);
-      if (direct && confirmed(direct, rawName)) return result(direct, rawTicker, rawTicker, "ticker-direct");
+      if (direct && confirmsCandidate(direct)) return result(direct, rawTicker, rawTicker, "ticker-direct");
 
       const alias = aliasMap.get(rawTicker) ?? aliasMap.get(normalizeCompanyName(rawTicker));
-      if (alias?.symbol && confirmed(alias.symbol, rawName)) {
+      if (alias?.symbol && confirmsCandidate(alias.symbol)) {
         return result(alias.symbol, rawTicker, normalizeCompanyName(rawTicker), alias.source);
       }
     }
 
     if (rawName) {
       const alias = aliasMap.get(rawName.toUpperCase()) ?? aliasMap.get(normalizedName);
-      if (alias?.symbol && confirmed(alias.symbol, rawName)) return result(alias.symbol, rawName, normalizedName, alias.source);
+      if (alias?.symbol && confirmsCandidate(alias.symbol)) return result(alias.symbol, rawName, normalizedName, alias.source);
     }
 
     if (rawCusip) {
-      const hit = cusipMap.get(rawCusip);
-      if (hit?.symbol && confirmed(hit.symbol, rawName)) return result(hit.symbol, rawKey, normalizedKey, hit.source);
+      if (history?.symbol && confirmsCandidate(history.symbol)) return result(history.symbol, rawKey, normalizedKey, history.source);
     }
 
     if (rawName) {
       const hit = nameMap.get(normalizedName);
-      if (hit?.symbol && confirmed(hit.symbol, rawName)) return result(hit.symbol, rawName, normalizedName, hit.source);
+      if (hit?.symbol && confirmsCandidate(hit.symbol)) return result(hit.symbol, rawName, normalizedName, hit.source);
     }
 
     // A rejected stored ticker is not an identity key for the unmapped audit list.

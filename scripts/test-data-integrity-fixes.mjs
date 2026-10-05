@@ -53,7 +53,12 @@ try {
       filings: [{
         holdings: [{ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" },
           { ticker: "ATI", cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" },
-          { ticker: "IBM", cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }],
+          { ticker: "IBM", cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" },
+          { ticker: "DUPA", cusip: "999000111", name: "DUPLICATE ISSUER INC" },
+          { ticker: "DUPB", cusip: "999000111", name: "DUPLICATE ISSUER INC" },
+          { ticker: "ONE-A", cusip: "333000111", name: "UNIQUE PUNCTUATION ISSUER INC" },
+          { ticker: "ONE.A", cusip: "333000111", name: "UNIQUE PUNCTUATION ISSUER INC" },
+          { ticker: "SPY", cusip: "111000111", name: "STATE STREET SPDR S&P 500 ETF TRUST" }],
       }],
     },
   }));
@@ -69,6 +74,18 @@ try {
     { ticker: "DUPA", title: "DUPLICATE ISSUER INC" },
     { ticker: "DUPB", title: "DUPLICATE ISSUER CORP" },
     { ticker: "ONE-A", title: "UNIQUE PUNCTUATION ISSUER INC" },
+    { ticker: "BAC", title: "BANK OF AMERICA CORP" },
+    { ticker: "AMAT", title: "APPLIED MATERIALS INC" },
+    { ticker: "CSCO", title: "CISCO SYSTEMS INC" },
+    { ticker: "GOOG", title: "ALPHABET INC" },
+    { ticker: "GOOGL", title: "ALPHABET INC" },
+    { ticker: "COF", title: "CAPITAL ONE FINANCIAL CORP" },
+    { ticker: "DIS", title: "Walt Disney Co" },
+    { ticker: "HOOD", title: "Robinhood Markets, Inc." },
+    { ticker: "STX", title: "Seagate Technology Holdings plc" },
+    { ticker: "MCO", title: "Moody's Corporation" },
+    { ticker: "SPY", title: "STATE STREET SPDR S&P 500 ETF TRUST" },
+    { ticker: "STT", title: "STATE STREET CORP" },
   ] }));
   const aliasesDir = path.join(resolverRoot, "data/sec-13f/analytics");
   fs.mkdirSync(aliasesDir, { recursive: true });
@@ -359,16 +376,39 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "01741R102", name: "ATI INC" }).symbol, "ATI");
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }).symbol, "IBM");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", name: "AT&T INC" }).symbol, "T");
-  // A descriptor, prefix, or issuer shared by two symbols cannot confirm a security.
+  // Shared descriptors and prefixes cannot confirm a different issuer.
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", cusip: "000000009", name: "AT HOME GROUP INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "BETA ENERGY INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "ALPHABET ENERGY INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "ALPHA ENERGY CORP" }).symbol, "GEN");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GE", name: "PORTLAND GEN ELEC CO" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GE", cusip: "736508847", name: "PORTLAND GEN ELEC CO" }).symbol, "POR");
-  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DUPA", name: "DUPLICATE ISSUER INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DUPA", name: "DUPLICATE ISSUER INC" }).symbol, "DUPA");
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "999000111", name: "DUPLICATE ISSUER INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DUPA", cusip: "999000111", name: "DUPLICATE ISSUER INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "111000111", name: "STATE STREET CORP" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "STT", cusip: "111000111", name: "STATE STREET CORP" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "BAC", name: "BANK OF AMER CORP" }).symbol, "BAC");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "AMAT", name: "APPLIED MATLS INC" }).symbol, "AMAT");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "CSCO", name: "CISCO SYS INC" }).symbol, "CSCO");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GOOG", name: "ALPHABET INC" }).symbol, "GOOG");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GOOGL", name: "ALPHABET INC" }).symbol, "GOOGL");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GOOGL", cusip: "02079K107", name: "ALPHABET INC" }).symbol, "GOOG");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GOOG", cusip: "02079K305", name: "ALPHABET INC" }).symbol, "GOOGL");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ALAB", cusip: "023135106", name: "ASTERA LABS INC" }).symbol, "AMZN");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "AMZN", cusip: "04626A103", name: "AMAZON COM INC" }).symbol, "ALAB");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "MSFT", cusip: "580135101", name: "MICROSOFT CORP" }).symbol, "MCD");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "COF", name: "CAPITAL ONE FINL CORP" }).symbol, "COF");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DIS", name: "DISNEY WALT CO" }).symbol, "DIS");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "HOOD", name: "ROBINHOOD MKTS INC" }).symbol, "HOOD");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "STX", name: "SEAGATE TECHNOLOGY HLDNGS PL" }).symbol, "STX");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "MCO", name: "MOODYS CORP" }).symbol, "MCO");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DIS", name: "Disney Financial Services Corp" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DIS", name: "Disney Energy Corp" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ name: "ALPHABET INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ONE-A", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol, "ONE-A");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ONE.A", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol, "ONE.A");
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "333000111", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol?.replace(/-/g, "."), "ONE.A");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287999", name: "ISHARES TR" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287432", name: "ISHARES TR" }).symbol, "TLT");
   assert.equal(resolver.confirmed("ATI", "SPACE EXPLORATION TECHN CORP"), false);
@@ -383,6 +423,12 @@ try {
   );
   calls.length = 0;
   assert.equal(resolveProfile({ ticker: "ATI", cusip: "000000009", name: "PHILIP MORRIS INTL INC" }), null);
+  assert.deepEqual(calls, []);
+  calls.length = 0;
+  assert.equal(resolveProfile({ cusip: "111000111", name: "STATE STREET CORP" }), null);
+  assert.deepEqual(calls, []);
+  calls.length = 0;
+  assert.equal(resolveProfile({ ticker: "STT", cusip: "111000111", name: "STATE STREET CORP" }), null);
   assert.deepEqual(calls, []);
   for (const [cusip, symbol] of exactPrimaryIdentities) {
     calls.length = 0;

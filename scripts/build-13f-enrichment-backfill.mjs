@@ -18,7 +18,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   loadTickerResolver,
-  normalizeCompanyName,
   SYMBOL_RE,
 } from "./lib/sec13f-symbols.mjs";
 import {
@@ -297,13 +296,11 @@ function resolveProfile(holding) {
     // leave enrichment empty instead of falling back to an unrelated raw alias.
     return resolved.symbol ? profileForSymbol(resolved.symbol) : null;
   }
-  // A stored filing ticker is not identity evidence; enrich only symbols whose
-  // own universe name confirms the filing issuer.
-  const candidates = [];
-  for (const symbol of [resolved.symbol, resolver.nameMap.get(normalizeCompanyName(holding?.name))?.symbol]) {
-    if (!symbol || !resolver.confirmed(symbol, holding?.name)) continue;
-    candidates.push(symbol, symbol.replace(".", "-"), symbol.replace("-", "."));
-  }
+  // The resolver owns every identity route, including names and CUSIP conflicts.
+  // Profile lookup may vary punctuation, but may not select another security.
+  const symbol = resolved.symbol;
+  if (!symbol) return null;
+  const candidates = new Set([symbol, symbol.replace(".", "-"), symbol.replace("-", ".")]);
 
   for (const candidate of candidates) {
     const profile = profileForSymbol(candidate);
