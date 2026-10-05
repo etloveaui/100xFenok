@@ -1,107 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1194,
-      "natural": true,
-      "observed_at": "2026-07-19T22:59:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29707016827",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 427,
-      "natural": true,
-      "observed_at": "2026-08-10T15:10:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31401948552",
-      "schedule": "7 14 * * 0-5",
-      "shard": "19/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 646,
-      "natural": true,
-      "observed_at": "2026-08-23T01:57:37Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32611566838",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 947,
-      "natural": true,
-      "observed_at": "2026-08-24T01:55:37Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32681249468",
-      "schedule": "7 0 * * 0-5",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 415,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:21:35Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:33:12Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/AJUL.json",
-    "payload_sha256": "a6b3bf17c5733ae195cb5228f5ebb86627e26c67ef997b20e6f3c16749126dd4",
-    "quote_as_of": "2026-09-25T17:18:02Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "9ce574d82bee6d8bdd08995512de20af1f5dff0d569e4a88bcb08eee5422ecbe",
+    "quote_as_of": "2026-10-02T19:46:42Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 415,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 525,
+    "observed_at": "2026-10-05T05:33:12Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-24T01:55:39Z",
@@ -111,25 +26,12 @@
     "quote_as_of": "2026-08-21T19:39:59Z",
     "source_as_of": "2026-08-21"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "784f1b1e5a1dbb9b2bb4f476b36c358b4cd7a715ddc289b4c185b41d21506a1a",
-    "quote_as_of": "2026-09-25T17:18:02Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-09-01T01:52:51Z",
-    "classified_run_id": "33460327385",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "AJUL holds LKG because Yahoo source date 2026-08-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -137,5 +39,5 @@
     "source_as_of": "2026-08-21"
   },
   "ticker": "AJUL",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:33:12Z"
 }

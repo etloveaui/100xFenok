@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 735,
-      "natural": true,
-      "observed_at": "2026-08-09T03:52:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31293276520",
-      "schedule": "7 2 * * 0-5",
-      "shard": "1/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 484,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:47:27Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:57:58Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/XRPM.json",
-    "payload_sha256": "a8df54088fc19227f87c69fe884f9a21f1b9f420f526514acfe85cfa6cb2a7ff",
-    "quote_as_of": "2026-09-25T19:47:54Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "b9e0dae17b532133690708dae5b9643e3b598477d36c52195b3bb1ec6bebb323",
+    "quote_as_of": "2026-10-02T19:59:52Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 484,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 549,
+    "observed_at": "2026-10-05T05:57:58Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:56:20Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-07T19:35:42Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "86908dc180086faf388b671ef7b3f3a3b0e5c6417b2762e8c307b8fffcacd419",
-    "quote_as_of": "2026-09-25T19:47:54Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "XRPM holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "XRPM",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:57:58Z"
 }

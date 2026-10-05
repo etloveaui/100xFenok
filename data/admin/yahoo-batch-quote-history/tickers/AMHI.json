@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:32:32Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/AMHI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AMHI.json",
     "payload_sha256": "09d5d03f784d610d9ddf74372e30497bb38d3de6c1005ba766b9de364a3cdd7d",
     "quote_as_of": "2026-09-30T13:46:01Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for AMHI: quote_as_of",
     "failures": [],
-    "latency_ms": 3029,
-    "observed_at": "2026-09-30T14:32:32Z",
-    "outcome": "fresh"
+    "latency_ms": 511,
+    "observed_at": "2026-10-05T05:33:16Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for AMHI: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-05T05:33:16Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T01:22:08Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:32:32Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AMHI.json",
-    "payload_sha256": "46858141f89fb9e502cfa1e3ce6f84a578a3c748542e8ff85b1163de98da7e62",
-    "quote_as_of": "2026-08-19T19:06:27Z",
-    "source_as_of": "2026-08-19T19:06:27Z"
+    "payload_sha256": "09d5d03f784d610d9ddf74372e30497bb38d3de6c1005ba766b9de364a3cdd7d",
+    "quote_as_of": "2026-09-30T13:46:01Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 27,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-08-19T19:06:27Z"
   },
   "ticker": "AMHI",
-  "updated_at": "2026-09-30T14:32:32Z"
+  "updated_at": "2026-10-05T05:33:16Z"
 }

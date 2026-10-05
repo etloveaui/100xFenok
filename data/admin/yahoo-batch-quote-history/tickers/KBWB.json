@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 916,
-      "natural": true,
-      "observed_at": "2026-08-07T15:04:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31190633378",
-      "schedule": "7 14 * * 0-5",
-      "shard": "67/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 489,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T05:25:05Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:45:06Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/KBWB.json",
-    "payload_sha256": "36c502fa36c3aea7d1b82507c3ace28c33f3ae3c137801f8eefad6e22ce0fed9",
-    "quote_as_of": "2026-09-25T20:00:01Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "994f0c43e76deea4bc5b02c749333083a131ec15a434407b73df2275b482da3d",
+    "quote_as_of": "2026-10-02T20:00:01Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 489,
-    "natural": false,
-    "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 631,
+    "observed_at": "2026-10-05T05:45:06Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T15:06:40Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-07T15:06:20Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "9020b2ca8dbff4bd5a87ff221e4ba869a083350a7667fb275e668aaeab11e8f5",
-    "quote_as_of": "2026-09-25T20:00:01Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "KBWB holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "KBWB",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-05T05:45:06Z"
 }

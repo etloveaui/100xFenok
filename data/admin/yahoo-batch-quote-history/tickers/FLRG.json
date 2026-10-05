@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 606,
-      "natural": true,
-      "observed_at": "2026-08-01T18:21:41Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711922590",
-      "schedule": "",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1301,
-      "natural": true,
-      "observed_at": "2026-08-11T02:24:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31452163623",
-      "schedule": "7 0 * * 0-5",
-      "shard": "24/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 490,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:30:24Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:40:26Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/FLRG.json",
-    "payload_sha256": "3e5559323d76d0004796ab77abe2c30f71730839139820724652c434c0113d7c",
-    "quote_as_of": "2026-09-25T19:37:12Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "1068fa8677ec561b730eed17fe959d3c89d580e7f706b55e1b3549ffa979caf0",
+    "quote_as_of": "2026-10-02T19:45:25Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 490,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 613,
+    "observed_at": "2026-10-05T05:40:26Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T02:25:56Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-10T19:46:50Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "bfaeb4b7891789a95fd12126def9fa7492bbaf22f92653aa8c03cbba3ca8729d",
-    "quote_as_of": "2026-09-25T19:37:12Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "FLRG holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "FLRG",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-05T05:40:26Z"
 }

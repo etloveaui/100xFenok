@@ -1,100 +1,29 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1165,
-      "natural": true,
-      "observed_at": "2026-07-21T23:04:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29875696340",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 639,
-      "natural": true,
-      "observed_at": "2026-08-05T21:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31047972318",
-      "schedule": "7 20 * * 0-5",
-      "shard": "46/72"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-06T06:42:20Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31078091927",
-      "schedule": "7 4 * * 0-5",
-      "shard": "50/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 422,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:24:09Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:31:50Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/ASIA.json",
-    "payload_sha256": "d195ec4f5b9e4579cf92cb0610bfd29b3781e56c1da76eb276f7dbff5366230a",
-    "quote_as_of": "2026-09-24T17:21:09Z",
-    "source_as_of": "2026-09-24T17:21:09Z"
+    "payload_sha256": "1b79ea304d01251860c0f461f174c31a2f4f69c00d351cae782c8f431fdc2a83",
+    "quote_as_of": "2026-10-01T19:40:54Z",
+    "source_as_of": "2026-10-01T19:40:54Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 422,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 585,
+    "observed_at": "2026-10-05T05:31:50Z",
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T21:19:51Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ASIA.json",
-    "payload_sha256": "3143703fe65c300fac90ffd76cdb0f597beda9256111f7ef0eb443a39b116050",
-    "quote_as_of": "2026-08-04T19:59:59Z",
-    "source_as_of": "2026-08-04"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:24:09Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "39370209b72621ff132d1a85d0d895ab01bdf82e4d7c3b7f53e22f4da8d08f8d",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ASIA.json",
+    "payload_sha256": "d195ec4f5b9e4579cf92cb0610bfd29b3781e56c1da76eb276f7dbff5366230a",
     "quote_as_of": "2026-09-24T17:21:09Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T17:21:09Z"
   },
   "resolution_state": "fresh_primary",
@@ -102,14 +31,13 @@
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-13T00:06:17Z",
-    "classified_run_id": "31652949582",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "ASIA holds LKG because Yahoo source date 2026-08-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ASIA holds LKG because Yahoo source date 2026-09-24T17:21:09Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-04"
+    "source_as_of": "2026-09-24T17:21:09Z"
   },
   "ticker": "ASIA",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:31:50Z"
 }

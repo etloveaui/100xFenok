@@ -1,81 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 770,
-      "natural": true,
-      "observed_at": "2026-07-20T23:03:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29785605821",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 538,
-      "natural": true,
-      "observed_at": "2026-08-05T17:51:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31031814422",
-      "schedule": "7 16 * * 0-5",
-      "shard": "44/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 568,
-      "natural": true,
-      "observed_at": "2026-08-07T15:04:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31190633378",
-      "schedule": "7 14 * * 0-5",
-      "shard": "67/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 569,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:18:19Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:38:01Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/DRES.json",
-    "payload_sha256": "3250df3d50c40ee237e9bbb8212bccce51f63cdfd85c7ad487325340aa1b3159",
-    "quote_as_of": "2026-09-25T14:05:55Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "7afad375673287c6f01c1a37fa0f75168f640238125fb58d48d8be492cf7b999",
+    "quote_as_of": "2026-10-01T19:59:45Z",
+    "source_as_of": "2026-10-01T19:59:45Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 569,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 517,
+    "observed_at": "2026-10-05T05:38:01Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T15:06:04Z",
@@ -85,25 +26,12 @@
     "quote_as_of": "2026-08-06T19:59:45Z",
     "source_as_of": "2026-08-06"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "5f348abe39d7a17ff36235212cc58e2085331290e1b2c7137355768ba173cde9",
-    "quote_as_of": "2026-09-25T14:05:55Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "DRES holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -111,5 +39,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "DRES",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-05T05:38:01Z"
 }

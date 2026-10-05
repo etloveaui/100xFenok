@@ -1,95 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 718,
-      "natural": true,
-      "observed_at": "2026-08-01T18:28:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711923637",
-      "schedule": "",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 492,
-      "natural": true,
-      "observed_at": "2026-08-07T19:09:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31210066712",
-      "schedule": "7 18 * * 0-5",
-      "shard": "69/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 677,
-      "natural": true,
-      "observed_at": "2026-08-09T14:44:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31319162316",
-      "schedule": "7 14 * * 0-5",
-      "shard": "7/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 477,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:08:41Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:50:53Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/QTJA.json",
-    "payload_sha256": "e8b0abd83eabb7f2457617c3f03d3a2bd9f224275ca9cf4c19fc90a1aa10037e",
-    "quote_as_of": "2026-09-25T15:05:30Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "13d6288ac906342a456c45616511aea06fdfea539a4b859a6192e381432fc4bd",
+    "quote_as_of": "2026-10-02T18:27:22Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 477,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 562,
+    "observed_at": "2026-10-05T05:50:53Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T14:48:14Z",
@@ -99,25 +26,12 @@
     "quote_as_of": "2026-08-07T16:21:30Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "f4b4a402cc6cbf28376551f9f6c8deb6b22f37ae234afae22bdb7bc78f51c976",
-    "quote_as_of": "2026-09-25T15:05:30Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "QTJA holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -125,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "QTJA",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-05T05:50:53Z"
 }

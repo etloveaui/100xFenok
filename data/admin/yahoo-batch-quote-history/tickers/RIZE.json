@@ -1,135 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 503,
-      "natural": true,
-      "observed_at": "2026-08-01T18:28:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711923637",
-      "schedule": "",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 454,
-      "natural": true,
-      "observed_at": "2026-08-07T19:09:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31210066712",
-      "schedule": "7 18 * * 0-5",
-      "shard": "69/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: source timestamp regression for RIZE: quote_as_of 2026-08-07T14:32:22Z < 2026-08-07T14:45:01Z",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 500,
-      "natural": true,
-      "observed_at": "2026-08-11T03:59:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31456720047",
-      "schedule": "7 2 * * 0-5",
-      "shard": "25/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "foreign_writer_conflict",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 525,
-      "natural": true,
-      "observed_at": "2026-08-11T11:03:07Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31484759300",
-      "schedule": "7 10 * * 0-5",
-      "shard": "29/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 584,
-      "natural": true,
-      "observed_at": "2026-08-11T15:09:25Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31505333713",
-      "schedule": "7 14 * * 0-5",
-      "shard": "31/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 437,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:11:02Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:51:28Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/RIZE.json",
-    "payload_sha256": "21fad67cbadf743b7769ef6fdcc1cbdc12d4af35b8d569afbc8207c186834405",
-    "quote_as_of": "2026-09-25T14:25:18Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "08f169e6d9bd53d6ef342de13ad782bf6fcad3d2c76da20c6848bb1cd1a00fde",
+    "quote_as_of": "2026-10-01T19:46:35Z",
+    "source_as_of": "2026-10-01T19:46:35Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 437,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
-  },
-  "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: source timestamp regression for RIZE: quote_as_of 2026-08-07T14:32:22Z < 2026-08-07T14:45:01Z",
-    "failure_kind": "unexpected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-11T03:59:23Z",
-    "run_attempt": 1,
-    "run_id": "31456720047"
+    "latency_ms": 511,
+    "observed_at": "2026-10-05T05:51:28Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T15:10:25Z",
@@ -139,30 +26,13 @@
     "quote_as_of": "2026-08-11T13:46:08Z",
     "source_as_of": "2026-08-11"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "7f67eba4de73ebd2f4f9c26dd74887966996ab99383931530aaa6ccd91561bda",
-    "quote_as_of": "2026-09-25T14:25:18Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "recovered_at": "2026-08-11T15:09:25Z",
-  "recovered_from_run_id": "31456720047",
-  "recovery_event_name": "schedule",
-  "recovery_run_attempt": 1,
-  "recovery_run_id": "31505333713",
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "RIZE holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -170,5 +40,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "RIZE",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-05T05:51:28Z"
 }

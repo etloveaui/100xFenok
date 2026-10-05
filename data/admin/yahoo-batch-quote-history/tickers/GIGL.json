@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 889,
-      "natural": true,
-      "observed_at": "2026-08-03T22:58:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30860500094",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 563,
-      "natural": true,
-      "observed_at": "2026-08-11T03:59:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31456720047",
-      "schedule": "7 2 * * 0-5",
-      "shard": "25/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 482,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:41:45Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:41:38Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/GIGL.json",
-    "payload_sha256": "15b4eb5f9ec5332e2c2a26cf93b57a81d9abc23d7e1a831068d3cc9c39871d2e",
-    "quote_as_of": "2026-09-25T18:58:52Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "81023bde19cccd5f76d33d8a0e37e225c90deeb95b3529febe6e20975cd859eb",
+    "quote_as_of": "2026-10-02T19:57:24Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 482,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 528,
+    "observed_at": "2026-10-05T05:41:38Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T04:01:16Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-10T19:35:51Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "80c6ec9522fdb1dff445fb85ce3967bea7244d9b4c662eaaee0acb4714e304ba",
-    "quote_as_of": "2026-09-25T18:58:52Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "GIGL holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "GIGL",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-05T05:41:38Z"
 }

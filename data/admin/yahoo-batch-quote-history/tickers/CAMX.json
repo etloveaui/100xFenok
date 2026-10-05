@@ -1,100 +1,29 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 558,
-      "natural": true,
-      "observed_at": "2026-07-28T23:07:58Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30406712544",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 524,
-      "natural": true,
-      "observed_at": "2026-08-07T09:14:45Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31164940276",
-      "schedule": "7 8 * * 0-5",
-      "shard": "64/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 579,
-      "natural": true,
-      "observed_at": "2026-08-10T17:04:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31411954324",
-      "schedule": "7 16 * * 0-5",
-      "shard": "20/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 464,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T01:33:43Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:32:03Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/CAMX.json",
-    "payload_sha256": "25b2bcc6bdf5669710c6ef0f3c81fae350fff824c5b4f28bbc7b1a4ea457d40e",
+    "payload_sha256": "cb50220b2cb04b522f677fec7c3cbe40c36987b8f8bb9c797aac20751ffad7f5",
     "quote_as_of": "2026-09-24T13:39:41Z",
     "source_as_of": "2026-09-24T13:39:41Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 464,
-    "natural": false,
-    "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 565,
+    "observed_at": "2026-10-05T05:32:03Z",
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T17:06:25Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CAMX.json",
-    "payload_sha256": "d946651c83c532dd75336e3c2c9a613abe0f24fdf26bfe784c207b589bccdab9",
-    "quote_as_of": "2026-08-10T13:46:02Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:33:43Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "a7de7de85ded7ae001049866cd323e7eb24ad29b3cae72c543f20071d2f145ef",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CAMX.json",
+    "payload_sha256": "25b2bcc6bdf5669710c6ef0f3c81fae350fff824c5b4f28bbc7b1a4ea457d40e",
     "quote_as_of": "2026-09-24T13:39:41Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T13:39:41Z"
   },
   "resolution_state": "fresh_primary",
@@ -102,14 +31,13 @@
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "CAMX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CAMX holds LKG because Yahoo source date 2026-09-24T13:39:41Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-24T13:39:41Z"
   },
   "ticker": "CAMX",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-05T05:32:03Z"
 }

@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 800,
-      "natural": true,
-      "observed_at": "2026-08-06T05:27:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31074084652",
-      "schedule": "7 2 * * 0-5",
-      "shard": "49/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 480,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:36:32Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:55:09Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/TYLD.json",
-    "payload_sha256": "765d33295fafcd9ae0931069abaf04149cf9e61971384e19b850bdc2bfe3f602",
-    "quote_as_of": "2026-09-25T19:59:56Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "6a48e2eb4d8ec99c5a7b6afc2e33587cc6bc643177b0e9a946a822e94080f9c9",
+    "quote_as_of": "2026-10-02T19:59:46Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 480,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 613,
+    "observed_at": "2026-10-05T05:55:09Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-06T05:30:09Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-05T15:42:03Z",
     "source_as_of": "2026-08-05"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "e2feb9e0d2d90bfc8d1baa104bfd9350c065b772348f9667ba883e383c4697e7",
-    "quote_as_of": "2026-09-25T19:59:56Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "TYLD holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "TYLD",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:55:09Z"
 }

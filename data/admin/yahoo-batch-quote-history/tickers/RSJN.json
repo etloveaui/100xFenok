@@ -1,82 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 527,
-      "natural": true,
-      "observed_at": "2026-08-01T18:28:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711923637",
-      "schedule": "",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 433,
-      "natural": true,
-      "observed_at": "2026-08-07T19:09:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31210066712",
-      "schedule": "7 18 * * 0-5",
-      "shard": "69/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 446,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:12:05Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:51:42Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/RSJN.json",
-    "payload_sha256": "bca9c0f7d43574b8cc858bd1121b29f3f87b03e6cf667eb6fc993d3332db0a5f",
-    "quote_as_of": "2026-09-25T19:50:21Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "718f2bc2d96c3f6896e4d16ebb92559b63d7df93d2f9a54fe2fcaae2eb602d9b",
+    "quote_as_of": "2026-10-02T18:45:47Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 446,
-    "natural": false,
-    "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 544,
+    "observed_at": "2026-10-05T05:51:42Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T19:10:21Z",
@@ -86,25 +26,12 @@
     "quote_as_of": "2026-08-07T19:00:33Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "2d4cd8223b1db42e5016e401f0168ed721e08e0dff649c0d319f4cd16d4d123c",
-    "quote_as_of": "2026-09-25T19:50:21Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "RSJN holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -112,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "RSJN",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-05T05:51:42Z"
 }

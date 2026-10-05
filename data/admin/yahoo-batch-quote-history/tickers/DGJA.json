@@ -1,115 +1,43 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 531,
-      "natural": true,
-      "observed_at": "2026-07-23T23:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30051682457",
-      "schedule": "0 22 * * 4",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 984,
-      "natural": true,
-      "observed_at": "2026-08-06T10:49:28Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31094670683",
-      "schedule": "7 8 * * 0-5",
-      "shard": "52/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 681,
-      "natural": true,
-      "observed_at": "2026-08-07T09:14:45Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31164940276",
-      "schedule": "7 8 * * 0-5",
-      "shard": "64/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 554,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:16:41Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:32:24Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/DGJA.json",
-    "payload_sha256": "83cb5c1f7a3d390c4fb0fc0a5b633a212e8fa49b54b7a76a8624baffa8ac9ac1",
+    "payload_sha256": "532f105c9d52a89ba5d00f7c3d091b735d37d31624ff27d193d543bd64382fbb",
     "quote_as_of": "2026-09-24T19:42:30Z",
     "source_as_of": "2026-09-24T19:42:30Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 554,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 536,
+    "observed_at": "2026-10-05T05:32:24Z",
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T09:16:26Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DGJA.json",
-    "payload_sha256": "f36dc8a5dfdf7bc01c1ae161106249287dee232ee71e3e4bd64e39a95239bbb9",
-    "quote_as_of": "2026-08-06T14:10:31Z",
-    "source_as_of": "2026-08-06"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:16:41Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "fd7eafe369fd74ef2d324efb0c6baecb25398407c2e462f1b7306355c9c3b03e",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DGJA.json",
+    "payload_sha256": "83cb5c1f7a3d390c4fb0fc0a5b633a212e8fa49b54b7a76a8624baffa8ac9ac1",
     "quote_as_of": "2026-09-24T19:42:30Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-24T19:42:30Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-05T05:31:25Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "DGJA holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DGJA holds LKG because Yahoo source date 2026-09-24T19:42:30Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-24T19:42:30Z"
   },
   "ticker": "DGJA",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-05T05:32:24Z"
 }

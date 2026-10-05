@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:34:15Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/CJUN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CJUN.json",
     "payload_sha256": "8e99ae98eb3bb106791b5d63ae473402f49b7e9b341cdc8a3d24a1223da800ad",
     "quote_as_of": "2026-09-30T13:46:02Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for CJUN: quote_as_of",
     "failures": [],
-    "latency_ms": 697,
-    "observed_at": "2026-09-30T14:34:15Z",
-    "outcome": "fresh"
+    "latency_ms": 554,
+    "observed_at": "2026-10-05T05:36:11Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for CJUN: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-05T05:36:11Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T01:36:23Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:34:15Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CJUN.json",
-    "payload_sha256": "53967b33aa1c8f6435fee5af47dccf131dc2bca4b02a3ef12b1f1a7e757df547",
-    "quote_as_of": "2026-09-01T17:21:56Z",
-    "source_as_of": "2026-09-01T17:21:56Z"
+    "payload_sha256": "8e99ae98eb3bb106791b5d63ae473402f49b7e9b341cdc8a3d24a1223da800ad",
+    "quote_as_of": "2026-09-30T13:46:02Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 18,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-01T17:21:56Z"
   },
   "ticker": "CJUN",
-  "updated_at": "2026-09-30T14:34:15Z"
+  "updated_at": "2026-10-05T05:36:11Z"
 }

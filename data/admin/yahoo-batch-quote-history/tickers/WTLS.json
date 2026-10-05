@@ -1,55 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 410,
-      "natural": true,
-      "observed_at": "2026-08-10T15:10:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31401948552",
-      "schedule": "7 14 * * 0-5",
-      "shard": "19/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 495,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:44:13Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:56:59Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/WTLS.json",
-    "payload_sha256": "63df1af874053a84cb87a1c065cb30827760c5e539487dd5c5f9dca9c33f3c7a",
-    "quote_as_of": "2026-09-25T19:57:27Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "f46a392c52968132a923f515f565576fd89f65f2a364476b5c7aedb9fbb69631",
+    "quote_as_of": "2026-10-02T19:59:55Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 495,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 533,
+    "observed_at": "2026-10-05T05:56:59Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:13:57Z",
@@ -59,25 +26,12 @@
     "quote_as_of": "2026-08-10T13:46:08Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "8a7b37b1f7910628d60fc90ff1e604557b3ba781ed03bb2e73faf95281e05163",
-    "quote_as_of": "2026-09-25T19:57:27Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "WTLS holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -85,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "WTLS",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-05T05:56:59Z"
 }

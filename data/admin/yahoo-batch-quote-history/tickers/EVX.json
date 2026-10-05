@@ -1,68 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 731,
-      "natural": true,
-      "observed_at": "2026-08-01T18:21:41Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711922590",
-      "schedule": "",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1473,
-      "natural": true,
-      "observed_at": "2026-08-11T02:24:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31452163623",
-      "schedule": "7 0 * * 0-5",
-      "shard": "24/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 555,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T03:24:55Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-05T05:39:04Z",
+    "history_as_of": "2026-10-02",
     "path": "data/yf/finance/EVX.json",
-    "payload_sha256": "bfdfb83f0bfb0a298ba0f43c56878be6edc0efe821198689fbdec456e97be515",
-    "quote_as_of": "2026-09-25T18:42:36Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "8de809d43ff25568f2f0502a650cc560c08667612bf85e300b5a0f75328adf7f",
+    "quote_as_of": "2026-10-02T19:00:39Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 555,
-    "natural": false,
-    "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 679,
+    "observed_at": "2026-10-05T05:39:04Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-11T02:25:18Z",
@@ -72,25 +26,12 @@
     "quote_as_of": "2026-08-10T18:34:05Z",
     "source_as_of": "2026-08-10"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "f90954d36f00e91f5a8cc3f395da76a0c5bcde7a0d78d2c015200c74e3ea5024",
-    "quote_as_of": "2026-09-25T18:42:36Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "EVX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -98,5 +39,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "EVX",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-05T05:39:04Z"
 }
