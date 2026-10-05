@@ -2,18 +2,13 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-10-05T00:01:21Z",
+  "generated_at": "2026-10-05T02:15:22Z",
   "source_date_summary": {
-    "total_members": 5700,
+    "total_members": 5701,
     "newest_source_date": "2026-10-04",
     "oldest_source_date": "2026-06-19",
-    "oldest_source_member": "REAI",
+    "oldest_source_member": "MEME",
     "source_date_histogram": [
-      {
-        "date": null,
-        "basis": null,
-        "count": 1
-      },
       {
         "date": "2026-06-19",
         "basis": "collected",
@@ -33,11 +28,6 @@
         "date": "2026-07-19",
         "basis": "collected",
         "count": 2
-      },
-      {
-        "date": "2026-09-01",
-        "basis": "source",
-        "count": 1
       },
       {
         "date": "2026-09-02",
@@ -92,17 +82,17 @@
       {
         "date": "2026-09-30",
         "basis": "source",
-        "count": 5038
+        "count": 5032
       },
       {
         "date": "2026-10-01",
         "basis": "source",
-        "count": 19
+        "count": 16
       },
       {
         "date": "2026-10-02",
         "basis": "source",
-        "count": 160
+        "count": 172
       },
       {
         "date": "2026-10-04",
@@ -111,7 +101,7 @@
       }
     ]
   },
-  "status": "warn",
+  "status": "pass",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
     "detail_file": "data/stockanalysis/etfs/{TICKER}.json",
@@ -125,67 +115,41 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5700,
+    "candidate_total": 5701,
     "source_breakdown": {
-      "etf_universe": 5700,
+      "etf_universe": 5701,
       "etf_screener": 20,
       "new_etfs": 100
     },
-    "detail_files": 5871,
-    "covered_detail_files": 5699,
-    "missing_detail_files": 1,
-    "extra_detail_files": 172,
-    "stockanalysis_detail_files": 5871,
+    "detail_files": 5872,
+    "covered_detail_files": 5701,
+    "missing_detail_files": 0,
+    "extra_detail_files": 171,
+    "stockanalysis_detail_files": 5872,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.98,
-    "primary_stockanalysis_pct": 99.98,
+    "coverage_pct": 100.0,
+    "primary_stockanalysis_pct": 100.0,
     "missing_by_source": {
-      "etf_universe": 1,
+      "etf_universe": 0,
       "etf_screener": 0,
-      "new_etfs": 1
+      "new_etfs": 0
     },
-    "missing_status_breakdown": {
-      "retry_pending": 1
-    },
-    "missing_failure_breakdown": {
-      "other_error": 1
-    },
-    "missing_availability_breakdown": {
-      "unresolved": 1
-    },
-    "pending_tracked": 134,
-    "pending_cooldown": 11,
-    "pending_tracked_missing": 1,
+    "missing_status_breakdown": {},
+    "missing_failure_breakdown": {},
+    "missing_availability_breakdown": {},
+    "pending_tracked": 132,
+    "pending_cooldown": 36,
+    "pending_tracked_missing": 0,
     "provider_coverage_gaps": 27
   },
-  "missing_reason_summary": {
-    "other_error": 1
-  },
-  "missing_status_summary": {
-    "retry_pending": 1
-  },
-  "missing_availability_summary": {
-    "unresolved": 1
-  },
-  "missing_reason_samples": {
-    "other_error": [
-      "XX"
-    ]
-  },
-  "missing_status_samples": {
-    "retry_pending": [
-      "XX"
-    ]
-  },
-  "missing_availability_samples": {
-    "unresolved": [
-      "XX"
-    ]
-  },
-  "missing_tickers": [
-    "XX"
-  ],
+  "missing_reason_summary": {},
+  "missing_status_summary": {},
+  "missing_availability_summary": {},
+  "missing_reason_samples": {},
+  "missing_status_samples": {},
+  "missing_availability_samples": {},
+  "missing_tickers": [],
   "provider_absent_tickers": [],
   "yahoo_fallback_tickers": [],
   "invalid_detail_tickers": [],
@@ -292,7 +256,6 @@
     "MAGO",
     "MAPP",
     "MARB",
-    "MEME",
     "MGKX",
     "MLPB",
     "MLPR",
@@ -364,15 +327,7 @@
     "ZETX"
   ],
   "samples": {
-    "missing": [
-      "XX"
-    ],
-    "missing_retry_pending": [
-      "XX"
-    ],
-    "missing_other_error": [
-      "XX"
-    ],
+    "missing": [],
     "yahoo_fallback": [],
     "extra": [
       "AAUM",

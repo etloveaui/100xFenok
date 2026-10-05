@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-05T00:00:56Z",
+  "generated_at": "2026-10-05T02:05:23Z",
   "counts": {
-    "tracked": 912,
-    "fresh": 809,
-    "lkg": 91,
-    "unavailable": 12,
-    "retry": 103,
-    "failed": 0
+    "tracked": 914,
+    "fresh": 813,
+    "lkg": 90,
+    "unavailable": 11,
+    "retry": 101,
+    "failed": 29
   },
   "counts_by_kind": {
     "stock": {
@@ -25,11 +25,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 794,
-      "fresh": 693,
-      "lkg": 90,
-      "unavailable": 11,
-      "retry": 101
+      "tracked": 796,
+      "fresh": 697,
+      "lkg": 89,
+      "unavailable": 10,
+      "retry": 99
     },
     "surface": {
       "tracked": 25,
@@ -49,14 +49,6 @@
   "retry_artifacts": [
     {
       "artifact_kind": "etf",
-      "entity": "ACBE"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "AEMG"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "AMJB"
     },
     {
@@ -66,6 +58,10 @@
     {
       "artifact_kind": "etf",
       "entity": "ATMP"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AVNC"
     },
     {
       "artifact_kind": "etf",
@@ -321,6 +317,10 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "PFRX"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "PLOO"
     },
     {
@@ -342,10 +342,6 @@
     {
       "artifact_kind": "etf",
       "entity": "RCLY"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "REAI"
     },
     {
       "artifact_kind": "etf",
@@ -448,10 +444,6 @@
       "entity": "VYLD"
     },
     {
-      "artifact_kind": "etf",
-      "entity": "XX"
-    },
-    {
       "artifact_kind": "surface",
       "entity": "actions_recent"
     },
@@ -461,26 +453,6 @@
     }
   ],
   "degraded_details": [
-    {
-      "artifact_kind": "etf",
-      "entity": "ACBE",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-30T14:28:04Z",
-      "failure_observed_at": "2026-09-30T15:41:18Z",
-      "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
-      "failure_count": 2,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "AEMG",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-30T14:27:50Z",
-      "failure_observed_at": "2026-09-30T15:41:18Z",
-      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-      "failure_count": 2,
-      "data_loss": false
-    },
     {
       "artifact_kind": "etf",
       "entity": "AMJB",
@@ -513,6 +485,16 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "AVNC",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-04T00:00:00Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
+      "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "BDCX",
       "resolution_state": "lkg_primary",
       "source_as_of": "2025-11-01T00:00:00Z",
@@ -536,9 +518,9 @@
       "entity": "BLST",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -546,9 +528,9 @@
       "entity": "BLTD",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -556,9 +538,9 @@
       "entity": "BNDW",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -576,9 +558,9 @@
       "entity": "BUCK",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -606,9 +588,9 @@
       "entity": "CPAG",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -626,9 +608,9 @@
       "entity": "DEFI",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-07-09T00:00:00Z",
-      "failure_observed_at": "2026-09-24T14:09:27Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -916,9 +898,9 @@
       "entity": "HYSA",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -926,9 +908,9 @@
       "entity": "IBIC",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -936,9 +918,9 @@
       "entity": "IBIH",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -946,9 +928,9 @@
       "entity": "IBIJ",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -956,9 +938,9 @@
       "entity": "IBIK",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -966,9 +948,9 @@
       "entity": "IBIL",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1036,9 +1018,9 @@
       "entity": "LVIG",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 3,
+      "failure_count": 4,
       "data_loss": false
     },
     {
@@ -1126,9 +1108,9 @@
       "entity": "OPER",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1139,6 +1121,16 @@
       "failure_observed_at": "2026-09-24T16:48:32Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_count": 0,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "PFRX",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-04T00:00:00Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
+      "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
+      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -1199,16 +1191,6 @@
       "failure_observed_at": "2026-10-04T15:26:04Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_count": 3,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "REAI",
-      "resolution_state": "lkg_primary",
-      "source_as_of": null,
-      "failure_observed_at": "2026-09-30T15:41:18Z",
-      "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
-      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -1276,9 +1258,9 @@
       "entity": "TBLL",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1296,9 +1278,9 @@
       "entity": "TLDR",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 3,
+      "failure_count": 4,
       "data_loss": false
     },
     {
@@ -1306,9 +1288,9 @@
       "entity": "TLTW",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1326,9 +1308,9 @@
       "entity": "TSYW",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 3,
+      "failure_count": 4,
       "data_loss": false
     },
     {
@@ -1346,9 +1328,9 @@
       "entity": "UFIV",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1376,9 +1358,9 @@
       "entity": "USVN",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1386,9 +1368,9 @@
       "entity": "UTEN",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1396,9 +1378,9 @@
       "entity": "UTHY",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1406,9 +1388,9 @@
       "entity": "UTRE",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1416,9 +1398,9 @@
       "entity": "UTWO",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1426,9 +1408,9 @@
       "entity": "UTWY",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T15:26:04Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 1,
+      "failure_count": 2,
       "data_loss": false
     },
     {
@@ -1462,23 +1444,13 @@
       "data_loss": false
     },
     {
-      "artifact_kind": "etf",
-      "entity": "XX",
-      "resolution_state": "unavailable",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-04T11:59:59Z",
-      "error": "ValueError: StockAnalysis ETF provider source date is in the future",
-      "failure_count": 1,
-      "data_loss": false
-    },
-    {
       "artifact_kind": "surface",
       "entity": "actions_recent",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-07-10T00:00:00Z",
-      "failure_observed_at": "2026-10-04T09:28:38Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-      "failure_count": 4,
+      "failure_count": 5,
       "data_loss": false
     },
     {
@@ -1486,23 +1458,197 @@
       "entity": "actions_splits",
       "resolution_state": "unavailable",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-04T09:28:38Z",
+      "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-      "failure_count": 4,
+      "failure_count": 5,
       "data_loss": false
     }
   ],
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "failed": 29,
+    "errors": [
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DEFI",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LVIG",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TLDR",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TSYW",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BLST",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BLTD",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CPAG",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYSA",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIC",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIH",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIJ",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIK",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBIL",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TBLL",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TLTW",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UFIV",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "USVN",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTEN",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTHY",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTRE",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTWO",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTWY",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BNDW",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BUCK",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "OPER",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AVNC",
+        "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PFRX",
+        "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
+        "data_loss": false
+      }
+    ]
   },
   "degraded_tickers": [],
   "degraded_etfs": [
-    "ACBE",
-    "AEMG",
     "AMJB",
     "AMUB",
     "ATMP",
+    "AVNC",
     "BDCX",
     "BDCZ",
     "BLST",
@@ -1566,13 +1712,13 @@
     "NVDO",
     "OPER",
     "PFFL",
+    "PFRX",
     "PLOO",
     "QULL",
     "RAAR",
     "RAAY",
     "RCLR",
     "RCLY",
-    "REAI",
     "RMHY",
     "SCDL",
     "SLVO",
@@ -1597,8 +1743,7 @@
     "UTWY",
     "VXX",
     "VXZ",
-    "VYLD",
-    "XX"
+    "VYLD"
   ],
   "degraded_surfaces": [
     "actions_recent",
