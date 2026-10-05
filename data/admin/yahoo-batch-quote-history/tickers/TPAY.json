@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T06:34:15Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TPAY.json",
-    "payload_sha256": "e8fcfe8c38c2dccc9f19fc437720b573010b3676c8e16e4636e34cf807af821d",
-    "quote_as_of": "2026-09-24T15:10:03Z",
-    "source_as_of": "2026-09-24T15:10:03Z"
+    "fetched_at": "2026-10-05T13:12:35Z",
+    "history_as_of": "2026-10-02",
+    "path": "data/yf/finance/TPAY.json",
+    "payload_sha256": "ae00070bb1238e9027b228175e6e9aef1744284c966ee59609a62f0e83522e7d",
+    "quote_as_of": "2026-10-02T18:11:14Z",
+    "source_as_of": "2026-10-02"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 464,
-    "observed_at": "2026-09-28T06:30:00Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: TPAY: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TPAY: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TPAY: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TPAY: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TPAY: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TPAY: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 669,
+    "observed_at": "2026-10-05T13:12:35Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-24T15:10:03Z",
     "source_as_of": "2026-09-24T15:10:03Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-24T15:10:03Z"
   },
   "ticker": "TPAY",
-  "updated_at": "2026-10-05T05:31:25Z"
+  "updated_at": "2026-10-05T13:12:35Z"
 }

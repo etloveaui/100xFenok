@@ -6926,58 +6926,159 @@
   "counts": {
     "active": 6921,
     "eligible": 6921,
-    "failed": 39,
-    "fresh": 6652,
-    "lkg": 242,
+    "failed": 37,
+    "fresh": 6849,
+    "lkg": 45,
     "pending_acquisition": 1,
     "pending_history": 0,
-    "retry": 242,
-    "stale": 241,
+    "retry": 45,
+    "stale": 44,
     "terminal": 26,
     "unavailable": 0,
     "untracked": 0
   },
   "current_results": {
-    "attempted": 18,
-    "errors": [],
-    "failed": 0,
-    "fetch_attempts": 18,
+    "attempted": 204,
+    "errors": [
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "KeyError=[redacted]",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          }
+        ],
+        "ticker": "LEAD"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for LFDR: quote_as_of",
+        "failures": [],
+        "ticker": "LFDR"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for MDCR: quote_as_of",
+        "failures": [],
+        "ticker": "MDCR"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for MJUN: quote_as_of",
+        "failures": [],
+        "ticker": "MJUN"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for MMAR: quote_as_of",
+        "failures": [],
+        "ticker": "MMAR"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for PIEL: quote_as_of",
+        "failures": [],
+        "ticker": "PIEL"
+      },
+      {
+        "error": "ValueError: Yahoo provider source timestamp regresses for ZCBF: quote_as_of",
+        "failures": [],
+        "ticker": "ZCBF"
+      }
+    ],
+    "failed": 7,
+    "fetch_attempts": 204,
     "skipped": 0,
-    "successes": 18
+    "successes": 197
   },
-  "generated_at": "2026-10-05T12:50:41Z",
+  "generated_at": "2026-10-05T13:13:20Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for XEML: quote_as_of",
+    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBF: quote_as_of",
     "failure_kind": "systemic_integrity",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-10-05T05:57:21Z",
-    "ticker": "XEML"
+    "observed_at": "2026-10-05T13:13:17Z",
+    "ticker": "ZCBF"
   },
   "lkg_details": [
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:13:17Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "4b43d761b115f9ab90220a6e501fbfaf0a1eaf967c4d1436d9f65aea68e1747e",
+      "payload_sha256": "75e092b6c0244f512e23e3d1f4a60b6edefa60f39bf2a1581ed5e979bf063e79",
       "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:57:57Z",
+      "source_as_of": "2026-08-10",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AEMC"
+      "symbol": "ZCBF"
     },
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:11:17Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "05e0e5c9f471cd8cf9b9e3e16e5d56754d1a3329bb6e19031d1637442eea7e7e",
+      "payload_sha256": "2010cc52ba60439c9971f871a900f56d06d6f2078b7386173efaec528ab1e94a",
       "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T14:46:05Z",
+      "source_as_of": "2026-08-10",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AEMG"
+      "symbol": "PIEL"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:10:39Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "e8da1642dfcb21b1676706c539649cd2cf7a18d366f3ab3ad0404df5148b607c",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-10",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "MMAR"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:10:38Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "c01463010a89b9b0f6d65f04b735b101e648522b04d2bcad9a791b5159332150",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-10",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "MJUN"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:10:30Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "0b8f898774375aea2412af24ea7bf98b4ffd3fa180d9d55e496e537affa0845e",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-12",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "MDCR"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:10:19Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "b15851c386267b9383e48a6978a27b766e9e82112bb7cc051d7101dbf7f5acd2",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-12",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "LFDR"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-05T13:10:15Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
+      "source_age_business_days": 19,
+      "source_as_of": "2026-07-14T17:31:32Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "LEAD"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -7000,96 +7101,6 @@
       "symbol": "APDB"
     },
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "3a07f59e36e54ddf6fa6ece3b999c61ada2bd19caca5d00ef02a90f2691e4dac",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:37:08Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BCGS"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "32bd8b8820bfdf72e8feb973432d575bfcd3534ed92146054a7904eba12c5611",
-      "source_age_business_days": 40,
-      "source_as_of": "2026-08-05T13:43:16Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BCKT"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "5e02bc9fb7019427526b01a4cd010f281e02f3e68a0e308c59776c9166e2c4c0",
-      "source_age_business_days": 28,
-      "source_as_of": "2026-08-20T19:10:18Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BEMD"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "bc3f194d94993910a97e737770beb7e9a89cfd1f32e8c902b3cda046f1a78b0c",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-23T14:46:13Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BRZX"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "cb50220b2cb04b522f677fec7c3cbe40c36987b8f8bb9c797aac20751ffad7f5",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:39:41Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CAMX"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "bb7d3a3f8d0d211045b5f61274f7faf0bdbb86bddfc088761d64adb6440110d8",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:00:10Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CARX"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "ef1d564fa39f6a4fa2ad38d56ae857cefa0f82386c1d5e4a554119c38b5eb2e9",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T19:41:47Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CAUG"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "7abde2aa80bfee44f0b1b12fa712c913048dda2a5336c5e4e1b90043aab9768e",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:15:01Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CCPX"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "510b75facf6dc6c1c9889b60b61d4057365ebfd1d6a4c4165f053c4f68c1856a",
-      "source_age_business_days": 103,
-      "source_as_of": "2026-05-04T20:00:00Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CCRP"
-    },
-    {
       "expected_resolution": "next_natural_yahoo_run",
       "failure_observed_at": "2026-10-05T05:36:11Z",
       "max_source_age_business_days": 6,
@@ -7098,16 +7109,6 @@
       "source_as_of": "2026-09-30",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "CJUN"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "3696eb167f0e893d944408895c80db385713b9363b7d4cdb8ec1abf69d0cb6d1",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T13:55:40Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CLOO"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -7121,68 +7122,118 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
+      "failure_observed_at": "2026-10-03T02:07:59Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "678d9bd7d83d8d9df370a484c5067022bef6660c48cd9b61535d8cac68358a4c",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:35:06Z",
+      "payload_sha256": "c4c86e3d7b21b6e936bf89cef5c61751e1afcfb7b7f138a5721cb641ac727233",
+      "source_age_business_days": 25,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CTJL"
+      "symbol": "DVIN"
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
       "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "ce3a47ebe4e992ede6f27e0a71a7e9b1b0c92c3107cd7cf4bfafcf001d5480b3",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:42:33Z",
+      "payload_sha256": "469556449a2e78e04eddbeddd96f14a3fa6e6363ebae1831f6f59f3c75e77ac4",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "DGAP"
+      "symbol": "DVRE"
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
       "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "532f105c9d52a89ba5d00f7c3d091b735d37d31624ff27d193d543bd64382fbb",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:42:30Z",
+      "payload_sha256": "c618831f9f3ff433119375fca2f6d2590e8e2cee6aed8935a989a1d2937b1672",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "DGJA"
+      "symbol": "DVUT"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": "2026-10-03T02:08:02Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "063a715fb52858f61d5d4b2f1899874299cb1dff20f3451f90ef20c4ba11365f",
+      "source_age_business_days": 25,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXB"
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
       "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "afea66e3c905e5ae4c47646c704c04e4360ea603e2d50410ad3aa94a91e52b5e",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:29:10Z",
+      "payload_sha256": "f14cb7262684602504e8a7f4dd2ce05000772c33086b299bb031de86ec9e4512",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "DIVL"
+      "symbol": "DVXC"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "66476bd19388e6ecd7a3ff6e22863c13117599f71fb48e682e98ad5dd57b93ec",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXE"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "b5d580419ec220f7fac0db7d0c911586310c829238e2b71ecb75d641bdf695e3",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXF"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "449889fb6d72d1a0137457910864411834a9e68ae6705a1dfdd5336f3524c340",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXK"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "9992926fe8969d45ed8e29e4cff2eb1fae09a5447f13de9611003448f4ac3c6f",
+      "source_age_business_days": 26,
+      "source_as_of": "2026-08-26T20:00:00Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "DVXP"
     }
   ],
   "lkg_symbols": [
-    "AEMC",
-    "AEMG",
     "AMHI",
     "APDB",
-    "BCGS",
-    "BCKT",
-    "BEMD",
-    "BRZX",
-    "CAMX",
-    "CARX",
-    "CAUG",
-    "CCPX",
-    "CCRP",
     "CJUN",
-    "CLOO",
     "CLUB",
-    "CTJL",
-    "DGAP",
-    "DGJA",
-    "DIVL"
+    "DVIN",
+    "DVRE",
+    "DVUT",
+    "DVXB",
+    "DVXC",
+    "DVXE",
+    "DVXF",
+    "DVXK",
+    "DVXP",
+    "DVXV",
+    "DVXY",
+    "EMJN",
+    "FHIL",
+    "FLXI",
+    "GAIQ",
+    "GEVC"
   ],
-  "message": "Yahoo quote/history: fresh=6652, lkg=242, pending_history=0, unavailable=0, pending_acquisition=1, terminal=26, catalogue=6921, eligible=6921, retry=242, failed=39, source_stale=241. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
+  "message": "Yahoo quote/history: fresh=6849, lkg=45, pending_history=0, unavailable=0, pending_acquisition=1, terminal=26, catalogue=6921, eligible=6921, retry=45, failed=37, source_stale=44. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
   "oldest_source_as_of": "2026-04-10T19:35:04Z",
   "oldest_source_ticker": "ZCBE",
   "pending_acquisition_details": [
@@ -7196,7 +7247,7 @@
       "first_seen_from": [
         "market_facts"
       ],
-      "last_seen_at": "2026-10-05T12:49:58Z",
+      "last_seen_at": "2026-10-05T13:08:18Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "VYLR"
@@ -7208,26 +7259,10 @@
   "pending_details": [],
   "pending_symbols": [],
   "retry_symbols": [
-    "AEMC",
-    "AEMG",
     "AMHI",
     "APDB",
-    "BCGS",
-    "BCKT",
-    "BEMD",
-    "BRZX",
-    "CAMX",
-    "CARX",
-    "CAUG",
-    "CCPX",
-    "CCRP",
     "CJUN",
-    "CLOO",
     "CLUB",
-    "CTJL",
-    "DGAP",
-    "DGJA",
-    "DIVL",
     "DVIN",
     "DVRE",
     "DVUT",
@@ -7240,246 +7275,38 @@
     "DVXV",
     "DVXY",
     "EMJN",
-    "EMXX",
-    "ESG",
-    "EYES",
-    "FDND",
-    "FEBP",
-    "FEIG",
-    "FEMD",
-    "FFDI",
-    "FFIU",
     "FHIL",
     "FLXI",
-    "FMCE",
-    "FMCX",
-    "FPAA",
-    "FRIZ",
-    "FSPC",
-    "FTHB",
-    "FTKI",
-    "FUSD",
-    "GABF",
     "GAIQ",
-    "GALX",
-    "GAMR",
-    "GARA",
-    "GDOC",
-    "GEEQ",
     "GEVC",
-    "GGRW",
-    "GTND",
-    "GUSA",
-    "GXLC",
-    "GXPE",
-    "GXUS",
-    "HAPS",
-    "HAUG",
-    "HBIL",
     "HBTC",
-    "HOLD",
-    "HOOC",
-    "HXA",
-    "HXC",
-    "IDJL",
-    "IDMY",
-    "IGCB",
-    "INDZ",
-    "INOV",
-    "IOSX",
-    "JANZ",
-    "JHAC",
-    "JHID",
-    "JLQD",
-    "JOBC",
-    "JULC",
-    "JULP",
-    "JULT",
-    "KBUF",
-    "KCAI",
-    "KDRN",
-    "KDVD",
-    "KNO",
-    "KPHO",
     "KPRO",
-    "KYC",
     "LEAD",
     "LFAI",
-    "LFAO",
-    "LFAW",
     "LFDR",
-    "LKOR",
-    "LLDR",
-    "LWLX",
-    "MARU",
-    "MARZ",
-    "MAYU",
-    "MBBB",
     "MDCR",
     "MEGX",
-    "MEMY",
     "MFEB",
-    "MHIG",
     "MHIP",
-    "MIDE",
-    "MIVL",
     "MJSC",
     "MJUN",
     "MMAR",
-    "MMAY",
-    "MOTG",
     "MSIX",
-    "MSTI",
-    "MTRA",
-    "MUNA",
-    "MUNB",
-    "MUNF",
-    "MUNG",
-    "MUNH",
-    "MWHS",
-    "NICO",
-    "NMBL",
     "NOEQ",
-    "NQLT",
-    "NSIG",
-    "NUDG",
     "NYNY",
-    "OAKG",
-    "OCIO",
-    "ODHY",
-    "ORO",
-    "PCFI",
-    "PCI",
-    "PCOV",
-    "PCS",
-    "PCSG",
-    "PEVC",
-    "PEXL",
     "PIEL",
-    "PIPE",
-    "PJFM",
-    "PJSM",
-    "PJUS",
-    "PMAP",
-    "PMAU",
-    "PMDE",
-    "PMMR",
-    "PRVT",
-    "PSCQ",
-    "PSFJ",
-    "PSFM",
-    "PTNT",
-    "PZLV",
-    "QAU",
-    "QBIF",
-    "QBIV",
-    "QFRD",
     "QJL",
-    "QQAU",
-    "QQSE",
-    "QUA",
-    "QVMS",
-    "RAAY",
-    "RCLR",
-    "REMC",
-    "RESM",
-    "RHTX",
-    "RKSG",
-    "RMME",
-    "RMRC",
-    "ROMO",
-    "ROSC",
-    "RSDE",
-    "RW",
-    "SCAU",
-    "SCOW",
-    "SHPP",
     "SMDX",
-    "SMLL",
-    "SPXN",
-    "SPXV",
-    "SPYA",
-    "SRHR",
-    "STAX",
-    "SXQG",
-    "TAJX",
-    "TAPR",
-    "TBFG",
-    "TBXU",
-    "THNR",
-    "TINS",
     "TIPH",
-    "TIZE",
-    "TJAN",
-    "TNUK",
     "TOAO",
-    "TPAY",
-    "TPLX",
-    "TROT",
-    "TSIC",
-    "TYYY",
-    "UCOP",
-    "UMCU",
-    "UPSC",
     "USML",
-    "UXOC",
-    "VEGX",
-    "VMSB",
     "VNSE",
-    "WBIF",
-    "WCAP",
-    "WDAI",
-    "WEBX",
-    "WNDR",
-    "WTIB",
-    "WTRE",
-    "XAGI",
-    "XCOM",
-    "XCOR",
     "XEML",
-    "XEUR",
-    "XLUX",
-    "XLVX",
-    "XLYX",
-    "XPAV",
-    "YCLO",
-    "YFFI",
     "YUNG",
-    "ZCBB",
-    "ZCBE",
-    "ZCBF",
-    "ZCBG",
-    "ZFEB"
+    "ZCBF"
   ],
   "schema_version": "yahoo-batch-quote-history-index/v1",
   "stale_groups": [
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 122,
-      "source_as_of": "2026-04-10T19:35:04Z",
-      "symbols": [
-        "ZCBE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 103,
-      "source_as_of": "2026-05-04T20:00:00Z",
-      "symbols": [
-        "CCRP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 78,
-      "source_as_of": "2026-06-09T13:34:35Z",
-      "symbols": [
-        "ZCBB"
-      ]
-    },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
@@ -7487,24 +7314,6 @@
       "source_as_of": "2026-07-14T17:31:32Z",
       "symbols": [
         "LEAD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 41,
-      "source_as_of": "2026-08-03T19:25:00Z",
-      "symbols": [
-        "ODHY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 40,
-      "source_as_of": "2026-08-05T13:43:16Z",
-      "symbols": [
-        "BCKT"
       ]
     },
     {
@@ -7516,8 +7325,6 @@
         "MJUN",
         "MMAR",
         "PIEL",
-        "SPYA",
-        "TAJX",
         "ZCBF"
       ]
     },
@@ -7548,15 +7355,6 @@
       "source_as_of": "2026-08-19T19:06:27Z",
       "symbols": [
         "AMHI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 28,
-      "source_as_of": "2026-08-20T19:10:18Z",
-      "symbols": [
-        "BEMD"
       ]
     },
     {
@@ -7602,15 +7400,6 @@
       "source_as_of": "2026-09-01T17:21:56Z",
       "symbols": [
         "CJUN"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 19,
-      "source_as_of": "2026-09-02",
-      "symbols": [
-        "PRVT"
       ]
     },
     {
@@ -7794,1656 +7583,12 @@
       ]
     },
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 10,
-      "source_as_of": "2026-09-21T19:31:33Z",
-      "symbols": [
-        "MWHS"
-      ]
-    },
-    {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
       "source_age_business_days": 7,
       "source_as_of": "2026-09-21T19:39:18Z",
       "symbols": [
         "SMDX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T13:36:34Z",
-      "symbols": [
-        "GXPE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
-      "source_as_of": "2026-09-22T13:55:31Z",
-      "symbols": [
-        "YCLO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T13:55:40Z",
-      "symbols": [
-        "CLOO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T13:59:33Z",
-      "symbols": [
-        "FDND"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T14:12:34Z",
-      "symbols": [
-        "XAGI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T14:14:37Z",
-      "symbols": [
-        "PSCQ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T14:46:05Z",
-      "symbols": [
-        "AEMG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T14:48:54Z",
-      "symbols": [
-        "FMCE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T14:55:38Z",
-      "symbols": [
-        "TIZE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T15:39:53Z",
-      "symbols": [
-        "GXUS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
-      "source_as_of": "2026-09-22T16:00:03Z",
-      "symbols": [
-        "HXC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T16:00:26Z",
-      "symbols": [
-        "SCOW"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T16:00:55Z",
-      "symbols": [
-        "PJFM"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T16:09:59Z",
-      "symbols": [
-        "TBFG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
-      "source_as_of": "2026-09-22T17:00:03Z",
-      "symbols": [
-        "MMAY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T17:00:33Z",
-      "symbols": [
-        "HAUG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T17:08:22Z",
-      "symbols": [
-        "JOBC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T17:57:57Z",
-      "symbols": [
-        "NQLT"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T18:19:30Z",
-      "symbols": [
-        "TINS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T18:30:48Z",
-      "symbols": [
-        "RAAY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T18:51:48Z",
-      "symbols": [
-        "RMRC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T19:08:01Z",
-      "symbols": [
-        "HOLD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T19:24:34Z",
-      "symbols": [
-        "ORO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T19:40:34Z",
-      "symbols": [
-        "SHPP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T19:41:47Z",
-      "symbols": [
-        "CAUG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-22T19:55:00Z",
-      "symbols": [
-        "PZLV"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-22T20:00:00Z",
-      "symbols": [
-        "FSPC",
-        "MUNG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
-      "source_as_of": "2026-09-22T20:00:00Z",
-      "symbols": [
-        "MUNF",
-        "MUNH"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T13:30:00Z",
-      "symbols": [
-        "MTRA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T13:35:07Z",
-      "symbols": [
-        "MUNB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T13:43:23Z",
-      "symbols": [
-        "HBIL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T13:43:54Z",
-      "symbols": [
-        "GDOC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-23T13:44:31Z",
-      "symbols": [
-        "EMXX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T14:10:44Z",
-      "symbols": [
-        "QQSE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-23T14:23:02Z",
-      "symbols": [
-        "NICO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T14:33:13Z",
-      "symbols": [
-        "QBIF"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-23T14:46:13Z",
-      "symbols": [
-        "BRZX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T14:51:44Z",
-      "symbols": [
-        "SMLL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T14:53:59Z",
-      "symbols": [
-        "TBXU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T14:57:06Z",
-      "symbols": [
-        "PCOV"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:03:46Z",
-      "symbols": [
-        "VMSB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:20:45Z",
-      "symbols": [
-        "KCAI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:37:08Z",
-      "symbols": [
-        "BCGS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:41:59Z",
-      "symbols": [
-        "YFFI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T15:53:03Z",
-      "symbols": [
-        "MOTG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:00:03Z",
-      "symbols": [
-        "NUDG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:00:08Z",
-      "symbols": [
-        "PJUS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:00:10Z",
-      "symbols": [
-        "CARX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:00:47Z",
-      "symbols": [
-        "UPSC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:04:03Z",
-      "symbols": [
-        "FUSD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:04:09Z",
-      "symbols": [
-        "NSIG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-23T16:14:56Z",
-      "symbols": [
-        "TPLX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:27:39Z",
-      "symbols": [
-        "WNDR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:35:06Z",
-      "symbols": [
-        "CTJL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:45:00Z",
-      "symbols": [
-        "QVMS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:45:43Z",
-      "symbols": [
-        "PJSM"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T16:57:57Z",
-      "symbols": [
-        "AEMC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T17:02:12Z",
-      "symbols": [
-        "LFAO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T17:27:59Z",
-      "symbols": [
-        "RMME"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T17:30:57Z",
-      "symbols": [
-        "IDJL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T17:33:44Z",
-      "symbols": [
-        "LFAW"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T17:49:34Z",
-      "symbols": [
-        "OCIO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T18:12:42Z",
-      "symbols": [
-        "MEMY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T18:22:20Z",
-      "symbols": [
-        "MSTI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T18:31:00Z",
-      "symbols": [
-        "KPHO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T18:47:39Z",
-      "symbols": [
-        "FEIG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:29:19Z",
-      "symbols": [
-        "XEUR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:40:42Z",
-      "symbols": [
-        "FTHB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:50:34Z",
-      "symbols": [
-        "XCOR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:52:41Z",
-      "symbols": [
-        "QQAU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:56:15Z",
-      "symbols": [
-        "XLVX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:56:38Z",
-      "symbols": [
-        "WDAI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T19:59:45Z",
-      "symbols": [
-        "RKSG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T20:00:00Z",
-      "symbols": [
-        "MBBB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-23T20:03:16Z",
-      "symbols": [
-        "IGCB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:30:00Z",
-      "symbols": [
-        "OAKG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:30:01Z",
-      "symbols": [
-        "FMCX",
-        "XLUX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:31:38Z",
-      "symbols": [
-        "GALX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:32:51Z",
-      "symbols": [
-        "KDVD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:35:00Z",
-      "symbols": [
-        "XLYX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:35:36Z",
-      "symbols": [
-        "HXA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:39:41Z",
-      "symbols": [
-        "CAMX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:44:19Z",
-      "symbols": [
-        "TYYY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:54:48Z",
-      "symbols": [
-        "LWLX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T13:55:56Z",
-      "symbols": [
-        "GAMR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:03:55Z",
-      "symbols": [
-        "JULP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:08:18Z",
-      "symbols": [
-        "MUNA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:12:57Z",
-      "symbols": [
-        "SCAU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:15:26Z",
-      "symbols": [
-        "EYES"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:16:34Z",
-      "symbols": [
-        "WEBX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:32:55Z",
-      "symbols": [
-        "PEVC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:47:16Z",
-      "symbols": [
-        "UMCU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:52:16Z",
-      "symbols": [
-        "FRIZ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:58:58Z",
-      "symbols": [
-        "JLQD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T14:59:57Z",
-      "symbols": [
-        "PCFI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:10:03Z",
-      "symbols": [
-        "TPAY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:10:16Z",
-      "symbols": [
-        "VEGX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:12:27Z",
-      "symbols": [
-        "KDRN"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:14:25Z",
-      "symbols": [
-        "GGRW"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:20:53Z",
-      "symbols": [
-        "LLDR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:28:56Z",
-      "symbols": [
-        "LKOR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:46:07Z",
-      "symbols": [
-        "MHIG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:48:32Z",
-      "symbols": [
-        "JULT"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T15:51:10Z",
-      "symbols": [
-        "SRHR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:00:02Z",
-      "symbols": [
-        "PMMR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:00:56Z",
-      "symbols": [
-        "XPAV"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:06:16Z",
-      "symbols": [
-        "JULC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:06:22Z",
-      "symbols": [
-        "TAPR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:06:51Z",
-      "symbols": [
-        "NMBL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:15:01Z",
-      "symbols": [
-        "CCPX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:15:08Z",
-      "symbols": [
-        "QAU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:16:03Z",
-      "symbols": [
-        "SPXN"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:16:45Z",
-      "symbols": [
-        "WCAP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:17:06Z",
-      "symbols": [
-        "ZCBG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:18:07Z",
-      "symbols": [
-        "IDMY"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:19:25Z",
-      "symbols": [
-        "HAPS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:22:41Z",
-      "symbols": [
-        "GABF"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:38:24Z",
-      "symbols": [
-        "SPXV"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:42:39Z",
-      "symbols": [
-        "THNR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:45:00Z",
-      "symbols": [
-        "MARU",
-        "PMDE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T16:49:17Z",
-      "symbols": [
-        "MAYU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:06:46Z",
-      "symbols": [
-        "XCOM"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:10:12Z",
-      "symbols": [
-        "GARA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:10:44Z",
-      "symbols": [
-        "PMAU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:12:22Z",
-      "symbols": [
-        "PSFM"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:16:47Z",
-      "symbols": [
-        "MIDE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:26:43Z",
-      "symbols": [
-        "FEBP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:33:28Z",
-      "symbols": [
-        "PMAP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:34:28Z",
-      "symbols": [
-        "HOOC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:37:57Z",
-      "symbols": [
-        "MARZ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:40:26Z",
-      "symbols": [
-        "UXOC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:45:59Z",
-      "symbols": [
-        "RSDE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:52:01Z",
-      "symbols": [
-        "STAX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:55:29Z",
-      "symbols": [
-        "PTNT"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:57:32Z",
-      "symbols": [
-        "FEMD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T17:58:18Z",
-      "symbols": [
-        "INDZ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:00:35Z",
-      "symbols": [
-        "UCOP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:01:11Z",
-      "symbols": [
-        "PCI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:01:30Z",
-      "symbols": [
-        "FFIU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:02:18Z",
-      "symbols": [
-        "QFRD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:03:18Z",
-      "symbols": [
-        "ROMO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:06:30Z",
-      "symbols": [
-        "PCSG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:11:15Z",
-      "symbols": [
-        "JANZ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:12:34Z",
-      "symbols": [
-        "GTND"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:16:15Z",
-      "symbols": [
-        "TSIC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:19:40Z",
-      "symbols": [
-        "TJAN"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:20:30Z",
-      "symbols": [
-        "SXQG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:22:43Z",
-      "symbols": [
-        "PEXL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:25:19Z",
-      "symbols": [
-        "WTRE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:37:12Z",
-      "symbols": [
-        "TROT"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:37:48Z",
-      "symbols": [
-        "RHTX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:38:08Z",
-      "symbols": [
-        "IOSX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:38:36Z",
-      "symbols": [
-        "QUA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:48:11Z",
-      "symbols": [
-        "KNO"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T18:58:18Z",
-      "symbols": [
-        "KBUF"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:06:36Z",
-      "symbols": [
-        "RCLR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:14:24Z",
-      "symbols": [
-        "WTIB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:16:06Z",
-      "symbols": [
-        "GUSA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:17:16Z",
-      "symbols": [
-        "TNUK"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:25:08Z",
-      "symbols": [
-        "JHID"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:26:20Z",
-      "symbols": [
-        "PCS"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:26:22Z",
-      "symbols": [
-        "GEEQ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:29:10Z",
-      "symbols": [
-        "DIVL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:30:07Z",
-      "symbols": [
-        "REMC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:30:41Z",
-      "symbols": [
-        "GXLC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:32:33Z",
-      "symbols": [
-        "ESG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:40:38Z",
-      "symbols": [
-        "FTKI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:42:30Z",
-      "symbols": [
-        "DGJA"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:42:33Z",
-      "symbols": [
-        "DGAP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:45:17Z",
-      "symbols": [
-        "PSFJ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:45:56Z",
-      "symbols": [
-        "PIPE"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:46:04Z",
-      "symbols": [
-        "MIVL"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:46:22Z",
-      "symbols": [
-        "ZFEB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:51:23Z",
-      "symbols": [
-        "INOV"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:56:40Z",
-      "symbols": [
-        "ROSC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:56:58Z",
-      "symbols": [
-        "FFDI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:57:09Z",
-      "symbols": [
-        "JHAC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:59:45Z",
-      "symbols": [
-        "RESM"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:59:46Z",
-      "symbols": [
-        "KYC",
-        "WBIF"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:59:51Z",
-      "symbols": [
-        "RW"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-24T19:59:57Z",
-      "symbols": [
-        "FPAA",
-        "QBIV"
       ]
     }
   ],
