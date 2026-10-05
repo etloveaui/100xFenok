@@ -134,6 +134,12 @@ try {
     ["42824C109", "HPE"],
     ["H25662182", "CFRHF"],
     ["00508Y102", "AYI"],
+    ["922908363", "VOO"], ["922908769", "VTI"], ["922042858", "VWO"],
+    ["921943858", "VEA"], ["92206C870", "VCIT"], ["922908736", "VUG"],
+    ["922908744", "VTV"], ["922042775", "VEU"], ["922907746", "VTEB"],
+    ["74347X831", "TQQQ"], ["G491BT108", "IVZ"],
+    ["02376R102", "AAL"], ["37045V100", "GM"], ["78409V104", "SPGI"],
+    ["91307C102", "UTHR"], ["902973304", "USB"], ["736508847", "POR"],
     ["78464A698", "KRE"],
     ["78464A755", "XME"],
     ["78464A797", "KBE"],
@@ -358,7 +364,8 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "BETA ENERGY INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "ALPHABET ENERGY INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "ALPHA ENERGY CORP" }).symbol, "GEN");
-  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GE", cusip: "736508847", name: "PORTLAND GEN ELEC CO" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GE", name: "PORTLAND GEN ELEC CO" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GE", cusip: "736508847", name: "PORTLAND GEN ELEC CO" }).symbol, "POR");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "DUPA", name: "DUPLICATE ISSUER INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ONE-A", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol, "ONE-A");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ONE.A", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol, "ONE.A");
