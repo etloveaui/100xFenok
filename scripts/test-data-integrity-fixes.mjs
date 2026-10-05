@@ -10,6 +10,7 @@ import {
   computeLiquidityFlowSnapshot,
 } from "../tools/macro-monitor/shared/signals-core.mjs";
 import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
+import { annotateHoldingIdentity, buildConfirmedChanges } from "./lib/sec13f-holding-identity.mjs";
 import {
   aggregateFilingHoldings,
   mergePortfolioAggregates,
@@ -475,6 +476,144 @@ try {
   assert.deepEqual(verifiedLkg, verifiedBefore);
 } finally {
   fs.rmSync(resolverRoot, { recursive: true, force: true });
+}
+
+{
+  const identityResolver = { resolveHoldingSymbol: (holding) => ({ symbol: holding.confirmed ?? null }) };
+  const row = (cusip, shares, fields = {}) => annotateHoldingIdentity({
+    cusip, shares, name: "BANK OF AMER CORP", title_of_class: "COM", ...fields,
+  }, identityResolver);
+  const filing = (quarter, holdings) => ({ quarter, holdings });
+  const oldQuarter = "2026-Q1";
+  const newQuarter = "2026-Q2";
+
+  const raw = { cusip: " 060505104 ", shares: 100, ticker: "BAD", name: "BANK OF AMER CORP",
+    title_of_class: "COM", confirmed: "BAC", sector: "Financials" };
+  const annotated = annotateHoldingIdentity(raw, identityResolver);
+  assert.deepEqual({ ...annotated, resolved_ticker: undefined, security_key: undefined },
+    { ...raw, resolved_ticker: undefined, security_key: undefined });
+  assert.equal(annotated.resolved_ticker, "BAC");
+  assert.equal(annotated.security_key, "060505104|COMMON|SH");
+  assert.equal(row("bad", 10, { confirmed: "BAC" }).security_key, null);
+  assert.equal(row("060505104", 10, { put_call: "SWAP" }).security_key, null);
+  assert.equal(row("060505104", 10, { share_type: null }).security_key, null);
+  assert.equal(row("060505104", 10, { share_type: "" }).security_key, null);
+  assert.equal(row("060505104", 10, { ssh_prnamt_type: "PRN", share_type: "SH" }).security_key, null);
+  assert.equal(row("060505104", 10, { ssh_prnamt_type: "PRN" }).security_key, "060505104|COMMON|PRN");
+  assert.equal(row("060505104", 10, { put_call: "Call" }).security_key, "060505104|CALL|SH");
+
+  const oldBac = row("060505104", 100, { name: "BANK AMERICA CORP", ticker: null });
+  const renamedBac = row("060505104", 100, { name: "BANK OF AMER CORP", ticker: "BAC", confirmed: "BAC" });
+  const unchanged = buildConfirmedChanges(filing(newQuarter, [renamedBac]), filing(oldQuarter, [oldBac]));
+  assert.equal(unchanged.comparison_basis, "reported_security_shares");
+  assert.equal(unchanged.previous_quarter, oldQuarter);
+  for (const kind of ["new", "increased", "decreased", "sold"]) assert.deepEqual(unchanged[kind], []);
+  assert.equal(unchanged.uncomparable_rows, 0);
+
+  const exit = row("111111111", 50, { name: "EXIT CORP", confirmed: "EXIT" });
+  const entry = row("222222222", 10, { name: "ENTRY CORP", confirmed: "ENTRY" });
+  const changed = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 120, { confirmed: "BAC" }), entry]),
+    filing(oldQuarter, [row("060505104", 100, { confirmed: "BAC" }), exit]),
+  );
+  assert.deepEqual(changed.new.map(({ security_key, change_pct }) => [security_key, change_pct]),
+    [["222222222|COMMON|SH", 100]]);
+  assert.deepEqual(changed.sold.map(({ security_key, change_pct }) => [security_key, change_pct]),
+    [["111111111|COMMON|SH", -100]]);
+  assert.deepEqual(changed.increased.map(({ security_key, change_pct, ticker }) => [security_key, change_pct, ticker]),
+    [["060505104|COMMON|SH", 20, "BAC"]]);
+  assert.equal(changed.new[0].ticker, "ENTRY");
+  assert.equal(changed.sold[0].ticker, "EXIT");
+  assert.equal(changed.new[0].title_of_class, "COM");
+
+  const punctuation = buildConfirmedChanges(
+    filing(newQuarter, [row("777777777", 120, { confirmed: "ONE-A" })]),
+    filing(oldQuarter, [row("777777777", 100, { confirmed: "ONE.A" })]));
+  assert.equal(punctuation.increased[0].resolved_ticker, "ONE.A");
+  const unnamed = buildConfirmedChanges(
+    filing(newQuarter, [row("888888888", 10, { name: null, title_of_class: null })]),
+    filing(oldQuarter, []));
+  assert.equal(unnamed.new[0].name, null);
+  assert.equal(unnamed.new[0].title_of_class, null);
+
+  const sameIssuer = buildConfirmedChanges(
+    filing(newQuarter, [row("333333333", 100, { name: "ONE ISSUER" })]),
+    filing(oldQuarter, [row("444444444", 100, { name: "ONE ISSUER" })]),
+  );
+  assert.deepEqual(sameIssuer.new.map(({ cusip }) => cusip), ["333333333"]);
+  assert.deepEqual(sameIssuer.sold.map(({ cusip }) => cusip), ["444444444"]);
+  assert.equal(sameIssuer.new[0].ticker, null);
+  assert.equal(sameIssuer.new[0].resolved_ticker, null);
+
+  const variants = (common, put, call, principal) => [
+    row("555555555", common),
+    row("555555555", put, { put_call: "Put" }),
+    row("555555555", call, { put_call: "CALL" }),
+    row("555555555", principal, { ssh_prnamt_type: "PRN" }),
+  ];
+  const separated = buildConfirmedChanges(
+    filing(newQuarter, variants(120, 5, 20, 1100)), filing(oldQuarter, variants(100, 10, 20, 1000)));
+  assert.deepEqual(separated.increased.map(({ security_key, change_pct }) => [security_key, change_pct]),
+    [["555555555|COMMON|PRN", 10], ["555555555|COMMON|SH", 20]]);
+  assert.deepEqual(separated.decreased.map(({ security_key, change_pct }) => [security_key, change_pct]),
+    [["555555555|PUT|SH", -50]]);
+  assert.deepEqual(separated.new, []);
+  assert.deepEqual(separated.sold, []);
+
+  for (const badShares of [undefined, null, NaN, Infinity, 0, -1]) {
+    const invalid = buildConfirmedChanges(
+      filing(newQuarter, [row("060505104", badShares, { confirmed: "BAC" })]),
+      filing(oldQuarter, [row("060505104", 100, { confirmed: "BAC" })]));
+    assert.equal(invalid.uncomparable_rows, 2);
+    for (const kind of ["new", "increased", "decreased", "sold"]) assert.deepEqual(invalid[kind], []);
+  }
+  const mixedShares = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 120), row("060505104", null)]),
+    filing(oldQuarter, [row("060505104", 100)]));
+  assert.equal(mixedShares.uncomparable_rows, 3);
+  for (const kind of ["new", "increased", "decreased", "sold"]) assert.deepEqual(mixedShares[kind], []);
+  const unkeyed = buildConfirmedChanges(
+    filing(newQuarter, [row(null, 10, { ticker: "BAC", confirmed: null })]),
+    filing(oldQuarter, [row("invalid", 10, { ticker: "BAC", confirmed: null })]));
+  assert.equal(unkeyed.uncomparable_rows, 2);
+  assert.deepEqual(unkeyed.new, []);
+  assert.deepEqual(unkeyed.sold, []);
+  const malformedKind = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 10, { put_call: "SWAP" })]),
+    filing(oldQuarter, [row("060505104", 10, { share_type: null })]));
+  assert.equal(malformedKind.uncomparable_rows, 2);
+  assert.deepEqual(malformedKind.new, []);
+  assert.deepEqual(malformedKind.sold, []);
+  const ambiguousCusip = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 10), row("060505104", 5, { put_call: "Put" })]),
+    filing(oldQuarter, [row("060505104", 10, { share_type: "UNKNOWN" })]));
+  assert.equal(ambiguousCusip.uncomparable_rows, 3);
+  for (const kind of ["new", "increased", "decreased", "sold"]) assert.deepEqual(ambiguousCusip[kind], []);
+  const ambiguousOption = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 10)]),
+    filing(oldQuarter, [row("060505104", 10, { put_call: "SWAP" })]));
+  assert.equal(ambiguousOption.uncomparable_rows, 2);
+  assert.deepEqual(ambiguousOption.new, []);
+  assert.deepEqual(ambiguousOption.sold, []);
+
+  const duplicate = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 130, { confirmed: "BAC" })]),
+    filing(oldQuarter, [row("060505104", 40, { confirmed: "BAC" }),
+      row("060505104", 60, { confirmed: null })]));
+  assert.equal(duplicate.increased[0].change_pct, 30);
+  assert.equal(duplicate.increased[0].ticker, null);
+  assert.equal(duplicate.increased[0].resolved_ticker, null);
+  const conflicting = buildConfirmedChanges(
+    filing(newQuarter, [row("060505104", 130, { confirmed: "BAC" }),
+      row("060505104", 1, { confirmed: "BOFA" })]),
+    filing(oldQuarter, [row("060505104", 100, { confirmed: "BAC" })]));
+  assert.equal(conflicting.increased[0].ticker, null);
+  assert.equal(conflicting.increased[0].change_pct, 31);
+
+  assert.equal(buildConfirmedChanges(filing("2026-Q3", []), filing(oldQuarter, [])), null);
+  assert.equal(buildConfirmedChanges(filing("2026-QX", []), filing(oldQuarter, [])), null);
+  assert.equal(buildConfirmedChanges(filing(newQuarter, []), null), null);
+  assert.equal(buildConfirmedChanges(filing(newQuarter, []), { quarter: oldQuarter }), null);
 }
 
 const buffett = JSON.parse(read("data/sec-13f/investors/buffett.json"));

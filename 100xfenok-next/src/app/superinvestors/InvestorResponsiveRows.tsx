@@ -8,6 +8,8 @@ import { ROUTES } from "@/lib/routes";
 import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type { InvestorFiling, InvestorHolding, TradesRankingRow } from "@/lib/superinvestors/types";
+import { buildHoldingChangeMap, buildHoldingRows } from "@/lib/superinvestors/holdingRows";
+import type { HoldingChangeKind } from "@/lib/superinvestors/holdingRows";
 
 const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
 
@@ -18,8 +20,6 @@ function normalizeSuperSector(gicsRaw?: string | null, scouterRaw?: string | nul
   if (scouter && CANONICAL_SECTOR_SET.has(scouter)) return scouter as CanonicalSector;
   return resolveSector(gicsRaw, scouterRaw);
 }
-
-type HoldingChangeKind = "new" | "increased" | "decreased" | "sold";
 
 const HOLDING_CHANGE_LABEL: Record<HoldingChangeKind, string> = {
   new: "신규",
@@ -35,73 +35,16 @@ const HOLDING_CHANGE_TONE: Record<HoldingChangeKind, string> = {
   sold: "bg-rose-100 text-rose-700",
 };
 
-type HoldingRow = InvestorHolding & { liquidated?: boolean };
-
-function buildHoldingChangeMap(
-  changes: InvestorFiling["changes_summary"] | undefined,
-): Map<string, { kind: HoldingChangeKind; pct: number }> {
-  const map = new Map<string, { kind: HoldingChangeKind; pct: number }>();
-  if (!changes) return map;
-  const kinds: HoldingChangeKind[] = ["new", "increased", "decreased", "sold"];
-  for (const kind of kinds) {
-    for (const entry of changes[kind] ?? []) {
-      if (!entry?.ticker || map.has(entry.ticker)) continue;
-      map.set(entry.ticker, {
-        kind,
-        pct: typeof entry.change_pct === "number" && Number.isFinite(entry.change_pct) ? entry.change_pct : NaN,
-      });
-    }
-  }
-  return map;
-}
-
 function HoldingChangePill({ change }: { change: { kind: HoldingChangeKind; pct: number } | undefined }) {
   if (!change) return <span className="text-[var(--c-ink-3)]">—</span>;
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${HOLDING_CHANGE_TONE[change.kind]}`}
-      title={Number.isFinite(change.pct) ? `변화 ${change.pct}%` : undefined}
+      title={Number.isFinite(change.pct) ? `보고 수량 변화 ${change.pct}%` : undefined}
     >
       {HOLDING_CHANGE_LABEL[change.kind]}
     </span>
   );
-}
-
-function buildHoldingRows(
-  holdings: InvestorHolding[],
-  changes: InvestorFiling["changes_summary"] | undefined,
-): HoldingRow[] {
-  // Filings carry one row per share class / CUSIP — aggregate by ticker.
-  const byTicker = new Map<string, InvestorHolding>();
-  for (const holding of holdings) {
-    if (!holding.ticker) continue;
-    const current = byTicker.get(holding.ticker);
-    if (current) {
-      current.weight = (current.weight || 0) + (holding.weight || 0);
-      current.shares = (current.shares || 0) + (holding.shares || 0);
-      current.market_value = (current.market_value || 0) + (holding.market_value || 0);
-    } else {
-      byTicker.set(holding.ticker, { ...holding });
-    }
-  }
-  const held: HoldingRow[] = [...byTicker.values()]
-    .sort((a, b) => (b.weight || 0) - (a.weight || 0))
-    .slice(0, 50);
-  // Fully liquidated positions are absent from the latest holdings. Keep them
-  // as explicit rows with unavailable holding/price values, never fabricated 0s.
-  const liquidated: HoldingRow[] = (changes?.sold ?? [])
-    .filter((entry) => entry?.ticker && !byTicker.has(entry.ticker))
-    .slice(0, 50)
-    .map((entry) => ({
-      ticker: entry.ticker,
-      cusip: `sold-${entry.ticker}`,
-      name: entry.name || entry.ticker,
-      shares: Number.NaN,
-      market_value: Number.NaN,
-      weight: Number.NaN,
-      liquidated: true,
-    }));
-  return [...held, ...liquidated];
 }
 
 export function ResponsiveHoldingsTable({
@@ -143,7 +86,7 @@ export function ResponsiveHoldingsTable({
               <th scope="col">종목</th>
               <th scope="col">비중</th>
               <th scope="col">분기 변화</th>
-              <th scope="col">주식수</th>
+              <th scope="col">보고 수량</th>
               <th scope="col">보고가</th>
               <th scope="col">현재가</th>
               <th scope="col">보유 평가액</th>
@@ -152,18 +95,18 @@ export function ResponsiveHoldingsTable({
           <tbody>
             {rows.map((holding) => (
               <tr
-                key={`${holding.ticker}-${holding.cusip}`}
+                key={holding.row_key}
                 data-superinvestor-guru-holding-row
-                data-superinvestor-guru-holding-ticker={holding.ticker ?? ""}
+                data-superinvestor-guru-holding-ticker={holding.resolved_ticker ?? ""}
                 data-superinvestor-guru-holding-liquidated={holding.liquidated ? "true" : undefined}
                 className="sup-responsive-row"
               >
                 <td data-label="티커">
-                  {holding.ticker ? (
+                  {holding.resolved_ticker ? (
                     <TickerChip
-                      ticker={holding.ticker}
+                      ticker={holding.resolved_ticker}
                       variant="pill"
-                      href={ROUTES.stock(holding.ticker, returnTo)}
+                      href={ROUTES.stock(holding.resolved_ticker, returnTo)}
                       onClick={onBeforeNavigate}
                       className="min-h-11"
                     />
@@ -172,8 +115,9 @@ export function ResponsiveHoldingsTable({
                   )}
                 </td>
                 <td data-label="종목">
-                  <span className="sup-responsive-name">{holding.name}</span>
+                  <span className="sup-responsive-name">{holding.name?.trim() || "종목명 미확인"}</span>
                   {holding.sector ? <span className="sup-responsive-sub">{holding.sector}</span> : null}
+                  <span className="sup-responsive-sub">{[!holding.name?.trim() ? holding.cusip : null, holding.title_of_class, holding.put_call, (holding.share_type ?? holding.ssh_prnamt_type) === "PRN" ? "원금" : null].filter(Boolean).join(" · ")}</span>
                 </td>
                 <td data-label="비중">
                   <span className="tabular-nums font-bold text-slate-900">
@@ -181,19 +125,19 @@ export function ResponsiveHoldingsTable({
                   </span>
                 </td>
                 <td data-label="분기 변화">
-                  <HoldingChangePill change={holding.ticker ? changeMap.get(holding.ticker) : undefined} />
+                  <HoldingChangePill change={changeMap.get(holding.row_key)} />
                 </td>
-                <td data-label="주식수">
+                <td data-label="보고 수량">
                   <span className="tabular-nums text-slate-700">{formatCompactNumber(holding.shares)}</span>
                 </td>
                 <td data-label="보고가">
                   <span className="tabular-nums text-slate-700">
-                    {holding.price_at_filing != null ? formatCurrency(holding.price_at_filing, "USD", { digits: 2 }) : "—"}
+                    {holding.resolved_ticker && holding.price_at_filing != null ? formatCurrency(holding.price_at_filing, "USD", { digits: 2 }) : "—"}
                   </span>
                 </td>
                 <td data-label="현재가">
                   <span className="tabular-nums text-slate-700">
-                    {holding.price_latest != null ? formatCurrency(holding.price_latest, "USD", { digits: 2 }) : "—"}
+                    {holding.resolved_ticker && holding.price_latest != null ? formatCurrency(holding.price_latest, "USD", { digits: 2 }) : "—"}
                   </span>
                 </td>
                 <td data-label="보유 평가액">

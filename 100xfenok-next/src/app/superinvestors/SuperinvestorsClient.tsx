@@ -1,5 +1,7 @@
 "use client";
 
+import { confirmedChanges } from "@/lib/superinvestors/holdingRows";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -259,6 +261,7 @@ function GuruDetailPanel({
   }, [id, loading, onReady]);
 
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
+  const latestChanges = confirmedChanges(latest?.changes_summary);
   const prev: InvestorFiling | null =
     data?.investor?.filings?.[data.investor.filings.length - 2] ?? null;
   const investorView = pvData?.investors?.[id] ?? null;
@@ -432,33 +435,37 @@ function GuruDetailPanel({
         />
       </Panel>
 
-      {/* Row 2 — 분기 매매 내역 */}
-      {latest?.changes_summary ? (
+      {/* Reported security quantities, rather than inferred trades. */}
+      {latestChanges ? (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
-            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-emerald-700">새 보유 ↑</p>
             <p className="mt-1 text-sm font-black text-emerald-800">
-              {latest.changes_summary.new?.length ?? 0}
+              {latestChanges.new?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center">
-            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-rose-700">보유 종료 ↓</p>
             <p className="mt-1 text-sm font-black text-rose-800">
-              {latest.changes_summary.sold?.length ?? 0}
+              {latestChanges.sold?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
-            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-sky-700">수량 증가 ↑</p>
             <p className="mt-1 text-sm font-black text-sky-800">
-              {latest.changes_summary.increased?.length ?? 0}
+              {latestChanges.increased?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
-            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-amber-700">수량 감소 ↓</p>
             <p className="mt-1 text-sm font-black text-amber-800">
-              {latest.changes_summary.decreased?.length ?? 0}
+              {latestChanges.decreased?.length ?? 0}
             </p>
           </div>
+          <p className="col-span-2 text-[11px] text-slate-500 sm:col-span-4">
+            공시 수량 변화이며 실제 매매량과 다를 수 있습니다.
+            {latestChanges.uncomparable_rows ? ` 비교할 수 없는 보유 항목 ${latestChanges.uncomparable_rows}개는 제외했습니다.` : ""}
+          </p>
         </div>
       ) : null}
 

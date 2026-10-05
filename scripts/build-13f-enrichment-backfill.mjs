@@ -20,6 +20,7 @@ import {
   loadTickerResolver,
   SYMBOL_RE,
 } from "./lib/sec13f-symbols.mjs";
+import { annotateHoldingIdentity, buildConfirmedChanges } from "./lib/sec13f-holding-identity.mjs";
 import {
   loadJsonGuarded,
   requireArray,
@@ -492,11 +493,22 @@ for (const file of investorFiles) {
   const id = path.basename(file, ".json");
   const doc = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   doc.__id = id;
-  for (const filing of doc.investor?.filings ?? []) {
+  const filings = doc.investor?.filings ?? [];
+  const identityFilings = new Set(filings.slice(-2));
+  for (const filing of filings) {
     for (const holding of filing.holdings ?? []) {
+      if (identityFilings.has(filing)) {
+        Object.assign(holding, annotateHoldingIdentity(holding, resolver));
+      }
       backfillHolding(holding, filing, backfillStats);
     }
     assignRelativeBuckets(filing.holdings ?? []);
+  }
+  const latest = filings.at(-1);
+  if (latest) {
+    const changes = buildConfirmedChanges(latest, filings.at(-2));
+    if (changes) latest.changes_summary = changes;
+    else delete latest.changes_summary;
   }
   doc.metadata = {
     ...(doc.metadata ?? {}),

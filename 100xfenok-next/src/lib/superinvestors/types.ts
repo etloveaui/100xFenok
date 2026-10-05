@@ -385,12 +385,17 @@ export type SectorHoldingsData = Record<
 
 export interface InvestorHolding {
   ticker: string | null;
+  resolved_ticker?: string | null;
+  security_key?: string | null;
   cusip: string;
-  name: string;
+  name: string | null;
   shares: number;
   market_value: number;
   weight: number;
-  title_of_class?: string;
+  title_of_class?: string | null;
+  put_call?: string | null;
+  share_type?: string | null;
+  ssh_prnamt_type?: string | null;
   sector?: string;
   industry?: string;
   enrichment_source?: string;
@@ -407,6 +412,18 @@ export interface InvestorHolding {
   price_source?: string;
 }
 
+export interface InvestorHoldingChange {
+  ticker: string | null;
+  resolved_ticker?: string | null;
+  security_key?: string | null;
+  cusip?: string;
+  title_of_class?: string | null;
+  put_call?: string | null;
+  share_type?: string | null;
+  name: string | null;
+  change_pct: number;
+}
+
 export interface InvestorFiling {
   quarter: string;
   filing_date: string;
@@ -418,10 +435,13 @@ export interface InvestorFiling {
   top_10_weight: number;
   holdings: InvestorHolding[];
   changes_summary?: {
-    new?: Array<{ ticker: string; name: string; change_pct: number }>;
-    increased?: Array<{ ticker: string; name: string; change_pct: number }>;
-    decreased?: Array<{ ticker: string; name: string; change_pct: number }>;
-    sold?: Array<{ ticker: string; name: string; change_pct: number }>;
+    comparison_basis?: "reported_security_shares";
+    previous_quarter?: string;
+    uncomparable_rows?: number;
+    new?: InvestorHoldingChange[];
+    increased?: InvestorHoldingChange[];
+    decreased?: InvestorHoldingChange[];
+    sold?: InvestorHoldingChange[];
   };
 }
 
