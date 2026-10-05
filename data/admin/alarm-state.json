@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-05T09:43:18.592Z",
+  "generated_at": "2026-10-05T11:08:50.417Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "global-writer-queue-observer.yml",
@@ -29,6 +29,18 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
       "alarm_reasons": [
@@ -37,8 +49,8 @@
       "stopped_sets": [
         "gdelt_news_tone"
       ],
-      "latest_generated_at": "2026-10-05T09:37:14.848Z",
-      "previous_generated_at": "2026-10-05T09:00:59.057Z"
+      "latest_generated_at": "2026-10-05T10:00:08.402Z",
+      "previous_generated_at": "2026-10-05T09:37:14.848Z"
     }
   ],
   "watched_workflows": [
@@ -381,13 +393,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37291529587",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37291529587",
-    "observed_at": "2026-10-05T09:43:18.592Z",
+    "run_id": "37300621832",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37300621832",
+    "observed_at": "2026-10-05T11:08:50.417Z",
     "event": "workflow_run",
     "workflows": [
       "global-writer-queue-observer.yml",
       "retention-restore.yml",
+      "worker-request-budget-alarm.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
