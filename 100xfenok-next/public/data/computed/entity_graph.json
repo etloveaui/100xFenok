@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-10-05T14:43:25.470Z",
+  "generated_at": "2026-10-05T15:47:36.654Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-02",
     "stock_action_index": "2026-10-02",
@@ -41,10 +41,10 @@
     "sectors": 10,
     "etf_categories": 7,
     "filing_nodes": 202,
-    "sec13f_nodes": 1238,
+    "sec13f_nodes": 1263,
     "stocks_with_market_facts": 1066,
     "stocks_with_filings": 202,
-    "stocks_with_13f": 513,
+    "stocks_with_13f": 515,
     "stocks_with_single_stock_etfs": 84,
     "etfs_with_market_facts": 5701
   },
@@ -13622,26 +13622,27 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": true,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
           "filings",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -13654,6 +13655,11 @@
             "type": "has_filing_summary",
             "target": "filing:ELV",
             "source": "edgar-korean-summaries"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:ELV",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -31350,18 +31356,19 @@
           "action_index": "2026-10-02",
           "market_facts": "2026-10-02",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -31369,6 +31376,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Technology",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:ZBRA",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -279860,6 +279872,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:AMR",
+        "type": "sec13f_ticker",
+        "ticker": "AMR",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:AMRC",
         "type": "sec13f_ticker",
         "ticker": "AMRC",
@@ -279989,6 +280008,13 @@
         "id": "sec13f:ARCT",
         "type": "sec13f_ticker",
         "ticker": "ARCT",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:ARE",
+        "type": "sec13f_ticker",
+        "ticker": "ARE",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -280413,6 +280439,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:BKD",
+        "type": "sec13f_ticker",
+        "ticker": "BKD",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:BKH",
         "type": "sec13f_ticker",
         "ticker": "BKH",
@@ -280609,6 +280642,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:BTU",
+        "type": "sec13f_ticker",
+        "ticker": "BTU",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:BUD",
         "type": "sec13f_ticker",
         "ticker": "BUD",
@@ -280753,6 +280793,13 @@
         "type": "sec13f_ticker",
         "ticker": "CBSH",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:CCC",
+        "type": "sec13f_ticker",
+        "ticker": "CCC",
+        "holder_count": 3,
         "as_of": "2026-Q2"
       },
       {
@@ -281134,6 +281181,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:COLD",
+        "type": "sec13f_ticker",
+        "ticker": "COLD",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:COMP",
         "type": "sec13f_ticker",
         "ticker": "COMP",
@@ -281410,6 +281464,13 @@
         "id": "sec13f:CTRI",
         "type": "sec13f_ticker",
         "ticker": "CTRI",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:CTRN",
+        "type": "sec13f_ticker",
+        "ticker": "CTRN",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -281932,6 +281993,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:ELV",
+        "type": "sec13f_ticker",
+        "ticker": "ELV",
+        "holder_count": 9,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:EMBJ",
         "type": "sec13f_ticker",
         "ticker": "EMBJ",
@@ -282005,6 +282073,13 @@
         "id": "sec13f:EPD",
         "type": "sec13f_ticker",
         "ticker": "EPD",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:EPRT",
+        "type": "sec13f_ticker",
+        "ticker": "EPRT",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -282674,6 +282749,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:GLPI",
+        "type": "sec13f_ticker",
+        "ticker": "GLPI",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:GLUE",
         "type": "sec13f_ticker",
         "ticker": "GLUE",
@@ -282916,6 +282998,13 @@
         "type": "sec13f_ticker",
         "ticker": "HIG",
         "holder_count": 4,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:HIW",
+        "type": "sec13f_ticker",
+        "ticker": "HIW",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -283752,6 +283841,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:KSPI",
+        "type": "sec13f_ticker",
+        "ticker": "KSPI",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:KTOS",
         "type": "sec13f_ticker",
         "ticker": "KTOS",
@@ -284340,6 +284436,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:MP",
+        "type": "sec13f_ticker",
+        "ticker": "MP",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:MPC",
         "type": "sec13f_ticker",
         "ticker": "MPC",
@@ -284365,6 +284468,13 @@
         "type": "sec13f_ticker",
         "ticker": "MRNA",
         "holder_count": 3,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:MRP",
+        "type": "sec13f_ticker",
+        "ticker": "MRP",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -284448,6 +284558,13 @@
         "id": "sec13f:MTD",
         "type": "sec13f_ticker",
         "ticker": "MTD",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:MTG",
+        "type": "sec13f_ticker",
+        "ticker": "MTG",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -284554,6 +284671,13 @@
         "type": "sec13f_ticker",
         "ticker": "NBIX",
         "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:NBP",
+        "type": "sec13f_ticker",
+        "ticker": "NBP",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -284739,6 +284863,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:NTLA",
+        "type": "sec13f_ticker",
+        "ticker": "NTLA",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:NTNX",
         "type": "sec13f_ticker",
         "ticker": "NTNX",
@@ -284869,6 +285000,13 @@
         "type": "sec13f_ticker",
         "ticker": "NXT",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:NYT",
+        "type": "sec13f_ticker",
+        "ticker": "NYT",
+        "holder_count": 4,
         "as_of": "2026-Q2"
       },
       {
@@ -285334,6 +285472,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:PLNT",
+        "type": "sec13f_ticker",
+        "ticker": "PLNT",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:PLTR",
         "type": "sec13f_ticker",
         "ticker": "PLTR",
@@ -285421,6 +285566,13 @@
         "id": "sec13f:PR",
         "type": "sec13f_ticker",
         "ticker": "PR",
+        "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:PRDO",
+        "type": "sec13f_ticker",
+        "ticker": "PRDO",
         "holder_count": 2,
         "as_of": "2026-Q2"
       },
@@ -286296,7 +286448,7 @@
         "id": "sec13f:SNDK",
         "type": "sec13f_ticker",
         "ticker": "SNDK",
-        "holder_count": 19,
+        "holder_count": 20,
         "as_of": "2026-Q2"
       },
       {
@@ -286542,6 +286694,13 @@
         "type": "sec13f_ticker",
         "ticker": "SU",
         "holder_count": 5,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:SUI",
+        "type": "sec13f_ticker",
+        "ticker": "SUI",
+        "holder_count": 2,
         "as_of": "2026-Q2"
       },
       {
@@ -286850,6 +287009,13 @@
         "type": "sec13f_ticker",
         "ticker": "TMUS",
         "holder_count": 11,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:TNL",
+        "type": "sec13f_ticker",
+        "ticker": "TNL",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -287196,6 +287362,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:UNIT",
+        "type": "sec13f_ticker",
+        "ticker": "UNIT",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:UNM",
         "type": "sec13f_ticker",
         "ticker": "UNM",
@@ -287290,7 +287463,7 @@
         "id": "sec13f:V",
         "type": "sec13f_ticker",
         "ticker": "V",
-        "holder_count": 33,
+        "holder_count": 34,
         "as_of": "2026-Q2"
       },
       {
@@ -287382,6 +287555,13 @@
         "type": "sec13f_ticker",
         "ticker": "VIAV",
         "holder_count": 2,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:VICI",
+        "type": "sec13f_ticker",
+        "ticker": "VICI",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -288026,6 +288206,13 @@
         "type": "sec13f_ticker",
         "ticker": "YUM",
         "holder_count": 4,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:ZBRA",
+        "type": "sec13f_ticker",
+        "ticker": "ZBRA",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
