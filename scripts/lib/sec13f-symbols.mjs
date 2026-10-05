@@ -375,28 +375,15 @@ function identityTokens(value) {
     .filter((word) => word.length >= 2 && !NON_IDENTIFYING_WORDS.has(word));
 }
 
-// Short words must match exactly; filings abbreviate longer ones (AMER, MATLS).
-function tokensAgree(a, b) {
-  if (a === b) return true;
-  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
-  return shorter.length >= 4 && longer.startsWith(shorter);
-}
-
 // Stored 13F tickers and the aliases generated from them are not identity
 // evidence: historical rows carry tickers such as ATI for IBM or Philip Morris.
-// A non-authoritative symbol is admitted only when the filing's issuer name
-// shares a distinctive word with that symbol's own universe name.
-function issuerNameConfirms(symbolNames, symbol, issuerName) {
-  const names = symbolNames.get(symbol);
-  if (!names) return false;
-  const issuerTokens = identityTokens(issuerName);
-  if (!issuerTokens.length) return false;
-  for (const name of names) {
-    for (const token of identityTokens(name)) {
-      if (issuerTokens.some((issuerToken) => tokensAgree(issuerToken, token))) return true;
-    }
-  }
-  return false;
+// Full normalized names must agree and identify one symbol. Shared descriptors,
+// prefixes, abbreviations, and ambiguous issuer names are not security proof.
+// Exact primary CUSIP identities remain the earlier authoritative route.
+function issuerNameConfirms(issuerSymbols, symbol, issuerName) {
+  if (!identityTokens(issuerName).length) return false;
+  const matches = issuerSymbols.get(normalizeCompanyName(issuerName));
+  return matches?.size === 1 && matches.has(String(symbol ?? "").replace(/-/g, "."));
 }
 
 function addSymbolName(symbolNames, symbol, name) {
@@ -487,7 +474,7 @@ function loadSecIssuerNames(root, symbolNames) {
   }
 }
 
-function loadExistingAliases(root, aliasMap, nameMap, symbolNames) {
+function loadExistingAliases(root, aliasMap, nameMap, issuerSymbols) {
   const aliasDoc = readJson(path.join(root, "data/sec-13f/analytics/ticker_aliases.json"), {});
 
   if (Array.isArray(aliasDoc.aliases)) {
@@ -497,7 +484,7 @@ function loadExistingAliases(root, aliasMap, nameMap, symbolNames) {
       if (AUTHORITATIVE_ALIAS_SOURCES.has(alias.source) || Array.isArray(alias.cusips) && alias.cusips.some(
         (cusip) => AUTHORITATIVE_CUSIP_SYMBOLS.has(normalizeCusip(cusip)),
       )) continue;
-      if (!issuerNameConfirms(symbolNames, normalizeSymbol(alias.symbol), alias.raw_key)) continue;
+      if (!issuerNameConfirms(issuerSymbols, normalizeSymbol(alias.symbol), alias.raw_key)) continue;
       addAlias(aliasMap, alias.raw_key, alias.normalized_key, alias.symbol, alias.source ?? "alias-history");
       addName(nameMap, alias.raw_key, alias.symbol, alias.source ?? "alias-history");
     }
@@ -506,14 +493,14 @@ function loadExistingAliases(root, aliasMap, nameMap, symbolNames) {
 
   if (aliasDoc.aliases && typeof aliasDoc.aliases === "object") {
     for (const [rawKey, symbol] of Object.entries(aliasDoc.aliases)) {
-      if (!issuerNameConfirms(symbolNames, normalizeSymbol(symbol), rawKey)) continue;
+      if (!issuerNameConfirms(issuerSymbols, normalizeSymbol(symbol), rawKey)) continue;
       addAlias(aliasMap, rawKey, rawKey, symbol, "alias-history");
       addName(nameMap, rawKey, symbol, "alias-history");
     }
   }
 }
 
-function loadInvestorHistory(root, symbols, nameMap, cusipMap, symbolNames) {
+function loadInvestorHistory(root, symbols, nameMap, cusipMap, issuerSymbols) {
   const investorsDir = path.join(root, "data/sec-13f/investors");
   if (!fs.existsSync(investorsDir)) return;
 
@@ -530,7 +517,7 @@ function loadInvestorHistory(root, symbols, nameMap, cusipMap, symbolNames) {
           continue;
         }
         const symbol = normalizeSymbol(holding?.ticker);
-        if (!symbol || !issuerNameConfirms(symbolNames, symbol, holding?.name)) continue;
+        if (!symbol || !issuerNameConfirms(issuerSymbols, symbol, holding?.name)) continue;
         addSymbol(symbols, symbol);
 
         addName(nameMap, holding?.name, symbol, "13f-history");
@@ -553,9 +540,20 @@ export function loadTickerResolver(rootPath) {
   loadStockUniverse(root, symbols, nameMap, symbolNames);
   loadYfUniverse(root, symbols, nameMap, symbolNames);
   loadSecIssuerNames(root, symbolNames);
-  loadExistingAliases(root, aliasMap, nameMap, symbolNames);
-  loadInvestorHistory(root, symbols, nameMap, cusipMap, symbolNames);
-  const confirmed = (symbol, issuerName) => issuerNameConfirms(symbolNames, normalizeSymbol(symbol), issuerName);
+  const issuerSymbols = new Map();
+  for (const [symbol, names] of symbolNames) {
+    for (const name of names) {
+      const normalized = normalizeCompanyName(name);
+      if (!normalized) continue;
+      if (!issuerSymbols.has(normalized)) issuerSymbols.set(normalized, new Set());
+      // SEC/Yahoo already support dot and dash spellings of the same class.
+      // Count them once; genuinely different class symbols remain ambiguous.
+      issuerSymbols.get(normalized).add(symbol.replace(/-/g, "."));
+    }
+  }
+  loadExistingAliases(root, aliasMap, nameMap, issuerSymbols);
+  loadInvestorHistory(root, symbols, nameMap, cusipMap, issuerSymbols);
+  const confirmed = (symbol, issuerName) => issuerNameConfirms(issuerSymbols, normalizeSymbol(symbol), issuerName);
 
   function result(symbol, rawKey, normalizedKey, source, authoritative = false) {
     return {

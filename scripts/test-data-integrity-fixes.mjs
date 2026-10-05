@@ -64,6 +64,11 @@ try {
     { ticker: "ATI", title: "ATI INC" },
     { ticker: "IBM", title: "INTERNATIONAL BUSINESS MACHINES CORP" },
     { ticker: "T", title: "AT&T INC." },
+    { ticker: "GEN", title: "ALPHA ENERGY INC" },
+    { ticker: "GE", title: "GENERAL ELECTRIC CO" },
+    { ticker: "DUPA", title: "DUPLICATE ISSUER INC" },
+    { ticker: "DUPB", title: "DUPLICATE ISSUER CORP" },
+    { ticker: "ONE-A", title: "UNIQUE PUNCTUATION ISSUER INC" },
   ] }));
   const aliasesDir = path.join(resolverRoot, "data/sec-13f/analytics");
   fs.mkdirSync(aliasesDir, { recursive: true });
@@ -348,6 +353,15 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "01741R102", name: "ATI INC" }).symbol, "ATI");
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }).symbol, "IBM");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", name: "AT&T INC" }).symbol, "T");
+  // A descriptor, prefix, or issuer shared by two symbols cannot confirm a security.
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", cusip: "000000009", name: "AT HOME GROUP INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "BETA ENERGY INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "ALPHABET ENERGY INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GEN", name: "ALPHA ENERGY CORP" }).symbol, "GEN");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "GE", cusip: "736508847", name: "PORTLAND GEN ELEC CO" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "DUPA", name: "DUPLICATE ISSUER INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ONE-A", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol, "ONE-A");
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ONE.A", name: "UNIQUE PUNCTUATION ISSUER INC" }).symbol, "ONE.A");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287999", name: "ISHARES TR" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287432", name: "ISHARES TR" }).symbol, "TLT");
   assert.equal(resolver.confirmed("ATI", "SPACE EXPLORATION TECHN CORP"), false);
@@ -389,6 +403,10 @@ try {
   const misEnriched = { ...misTickered, sector: "Industrials", industry: "Metals", market_cap_usd: 9, price_latest: 9, enrichment_source: "yf-local" };
   backfillHolding(misEnriched, {}, { total: 0, profileMiss: 0 });
   assert.deepEqual(misEnriched, misTickered);
+  const missingIdentity = { ticker: null, cusip: "000000009", name: "Unresolved security", shares: 5 };
+  const missingIdentityEnriched = { ...missingIdentity, sector: "Stale sector", price_latest: 9, enrichment_source: "yf-local" };
+  backfillHolding(missingIdentityEnriched, {}, { total: 0, profileMiss: 0 });
+  assert.deepEqual(missingIdentityEnriched, missingIdentity);
   const unrelated = { cusip: "000000000", sector: "Existing sector", price_latest: 9 };
   backfillHolding(unrelated, {}, { total: 0, profileMiss: 0 });
   assert.deepEqual(unrelated, { cusip: "000000000", sector: "Existing sector", price_latest: 9 });

@@ -333,7 +333,8 @@ function backfillHolding(holding, filing, stats) {
   stats.total += 1;
   const resolved = resolver.resolveHoldingSymbol(holding);
   const enrichmentSymbol = String(holding.enrichment_symbol ?? holding.ticker ?? "").trim().toUpperCase();
-  const verifiedOwnEnrichment = holding.enrichment_source === "yf-local"
+  const verifiedOwnEnrichment = Boolean(resolved.symbol)
+    && holding.enrichment_source === "yf-local"
     && enrichmentSymbol.replace("-", ".") === String(resolved.symbol ?? "").replace("-", ".");
   if (!verifiedOwnEnrichment && (resolved.authoritative || holding.enrichment_source === "yf-local")) {
     // Remove unknown or mismatched identity metadata before exact enrichment,
