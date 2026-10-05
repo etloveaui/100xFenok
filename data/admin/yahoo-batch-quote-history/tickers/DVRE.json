@@ -10,13 +10,36 @@
   "discovered_from": [
     "market_facts"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 467,
-    "observed_at": "2026-10-03T02:08:00Z",
-    "outcome": "fresh"
+    "error": "ValueError: Yahoo provider source timestamp regresses for DVRE: history_as_of",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 646,
+    "observed_at": "2026-10-05T13:47:26Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for DVRE: history_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-05T13:47:26Z"
   },
   "lkg": {
     "fetched_at": "2026-10-03T02:08:00Z",
@@ -39,5 +62,5 @@
     "source_as_of": "2026-08-26T20:00:00Z"
   },
   "ticker": "DVRE",
-  "updated_at": "2026-10-04T17:02:58Z"
+  "updated_at": "2026-10-05T13:47:26Z"
 }
