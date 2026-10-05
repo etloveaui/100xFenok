@@ -7,6 +7,12 @@ export const SYMBOL_RE = /^[A-Z0-9][A-Z0-9.-]{0,11}$/;
 // CUSIP/ticker source pairs are recorded in the platform's data-recovery receipt.
 // Trust shares (SLV) retain their security identity; this map assigns no sector.
 const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
+  // Exact SEC 13G cover common classes + current issuer CIK/ticker binding.
+  ["147528103", { symbol: "CASY", source: "sec-caseys-13g-2026-common" }],
+  ["216648501", { symbol: "COO", source: "sec-cooper-companies-13g-2026-common" }],
+  ["24477V105", { symbol: "DFTX", source: "sec-definium-13g-2026-common" }],
+  ["38341P102", { symbol: "GOSS", source: "sec-gossamer-13g-2026-common" }],
+  ["464286772", { symbol: "EWY", source: "issuer-ishares-2026-ewy-etf-shares" }],
   // SEC Alphabet 13G covers identify these classes; the June 2026 10-Q
   // identifies Class A as GOOGL and Class C as GOOG.
   ["02079K305", { symbol: "GOOGL", source: "sec-alphabet-13g-2025-10q-2026-class-a" }],
