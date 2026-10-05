@@ -129,6 +129,13 @@ try {
     ["42824C109", "HPE"],
     ["H25662182", "CFRHF"],
     ["00508Y102", "AYI"],
+    ["718172109", "PM"],
+    ["459200101", "IBM"],
+    ["655844108", "NSC"],
+    ["026874784", "AIG"],
+    ["609207105", "MDLZ"],
+    ["910047109", "UAL"],
+    ["G87110105", "FTI"],
   ];
   for (const [cusip, symbol] of exactPrimaryIdentities) {
     const exact = resolver.resolveHoldingSymbol({ ticker: "WRONG", cusip, name: "Unrelated fixture name" });
@@ -151,8 +158,8 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ZZZ", name: "Unrelated retained alias" }).symbol, "ZZZ");
   // Stored filing tickers and generated aliases need the symbol's own issuer name.
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ZZZ" }).symbol, null);
-  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC" }).symbol, null);
-  assert.equal(resolver.resolveHoldingSymbol({ cusip: "718172109", name: "PHILIP MORRIS INTL INC" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC" }).symbol, "PM");
+  assert.equal(resolver.resolveHoldingSymbol({ name: "PHILIP MORRIS INTL INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "01741R102", name: "ATI INC" }).symbol, "ATI");
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }).symbol, "IBM");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", name: "AT&T INC" }).symbol, "T");
@@ -168,7 +175,7 @@ try {
     (name) => name,
   );
   calls.length = 0;
-  assert.equal(resolveProfile({ ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC" }), null);
+  assert.equal(resolveProfile({ ticker: "ATI", cusip: "000000009", name: "PHILIP MORRIS INTL INC" }), null);
   assert.deepEqual(calls, []);
   for (const [cusip, symbol] of exactPrimaryIdentities) {
     calls.length = 0;
@@ -192,7 +199,7 @@ try {
     assert.deepEqual(holding, raw);
     assert.deepEqual(stats, { total: 1, profileMiss: 1 });
   }
-  const misTickered = { ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC", shares: 5 };
+  const misTickered = { ticker: "ATI", cusip: "000000009", name: "PHILIP MORRIS INTL INC", shares: 5 };
   const misEnriched = { ...misTickered, sector: "Industrials", industry: "Metals", market_cap_usd: 9, price_latest: 9, enrichment_source: "yf-local" };
   backfillHolding(misEnriched, {}, { total: 0, profileMiss: 0 });
   assert.deepEqual(misEnriched, misTickered);

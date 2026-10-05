@@ -64,6 +64,14 @@ const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
   ["42824C109", { symbol: "HPE", source: "issuer-hpe-common-stock-identifiers" }],
   ["H25662182", { symbol: "CFRHF", source: "sec-nport-2026-richemont-ordinary-shares" }],
   ["00508Y102", { symbol: "AYI", source: "sec-13g-2026-acuity-issuer-current-common" }],
+  // SEC Schedule 13G cover CUSIP of the subject's common stock, ticker from SEC company_tickers by CIK.
+  ["718172109", { symbol: "PM", source: "sec-13g-2024-pm-common" }],
+  ["459200101", { symbol: "IBM", source: "sec-13g-2024-ibm-common" }],
+  ["655844108", { symbol: "NSC", source: "sec-13g-2024-nsc-common" }],
+  ["026874784", { symbol: "AIG", source: "sec-13g-2024-aig-common" }],
+  ["609207105", { symbol: "MDLZ", source: "sec-13g-2024-mdlz-common" }],
+  ["910047109", { symbol: "UAL", source: "sec-13g-2025-ual-common" }],
+  ["G87110105", { symbol: "FTI", source: "sec-13g-2024-fti-ordinary" }],
 ]);
 const LIBERTY_LIVE_NAME = "LIBERTY LIVE";
 const AUTHORITATIVE_ALIAS_SOURCES = new Set(
