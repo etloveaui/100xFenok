@@ -808,7 +808,12 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             "active_universe_scope": "all_sources",
             "catalogue_symbols": sorted({*retries, "STALE", "STOCK", "TERMINAL", "NOCAN", "VERIFIED"}),
         })
-        retained = store.retained_stockanalysis_etf_sources({"VERIFIED"})
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {
+            "schema_version": "stockanalysis/v1", "asset_type": "etf",
+            "records": [*({"ticker": ticker} for ticker in [*retries, "STALE", "VERIFIED", "TERMINAL"]),
+                        {"ticker": "STOCK", "type": "stock"}],
+        })
+        retained = store.retained_stockanalysis_etf_sources({"VERIFIED"}, self.fetcher.STOCKANALYSIS_ETF_UNIVERSE)
         self.assertEqual(set(retained), set(retries) | {"STALE"})
 
         shard = self.fetcher.stable_shard_index("CORE", 6)
@@ -944,7 +949,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             self.assertNotEqual(ticker, "../OUTSIDE", "reject malformed key before path lookup")
             return original_state_path(ticker)
         store._state_path = checked_state_path
-        expected = {"PENDING", "FAILED"}
+        # Current typed source + catalogue permits acquisition to repair invalid
+        # prior bytes and stale discovery labels; it never accepts those bytes.
+        expected = {"PENDING", "FAILED", "INVALID", "MALFORMED", "STOCKPEND"}
         self.assertEqual(
             set(store.retained_stockanalysis_etf_sources({"TERMINAL"}, self.fetcher.STOCKANALYSIS_ETF_UNIVERSE)),
             expected,
@@ -971,16 +978,17 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             finally:
                 sys.argv, sys.stdout = original_argv, original_stdout
             plan = json.loads(output.getvalue())
-            self.assertEqual(plan["candidate_count_before_filters"], 3)
+            self.assertEqual(plan["candidate_count_before_filters"], len(expected) + 1)
             self.assertEqual(plan["sample"][0], "FAILED")
             regular = plan["sample"][1:]
+            regular_members = (expected - {"FAILED"}) | {"CORE"}
             self.assertEqual(regular, sorted(
-                ticker for ticker in {"CORE", "PENDING"}
+                ticker for ticker in regular_members
                 if self.fetcher.stable_shard_index(ticker, 6) == weekday
             ))
             weekly_regular.extend(regular)
-        self.assertEqual(set(weekly_regular), {"CORE", "PENDING"})
-        self.assertEqual(len(weekly_regular), 2)
+        self.assertEqual(set(weekly_regular), (expected - {"FAILED"}) | {"CORE"})
+        self.assertEqual(len(weekly_regular), len(expected))
         self.assertEqual(before, {path: path.read_bytes() for path in self.root.rglob("*.json")})
 
     def test_core_retry_overflow_in_regular_shard_bypasses_fresh_cache_and_attempts_provider(self) -> None:
@@ -1011,6 +1019,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         write_json(store.root / "index.json", {
             "schema_version": "yahoo-batch-quote-history-index/v1",
             "active_universe_scope": "all_sources", "catalogue_symbols": ["CORE", "OFFCORE"],
+        })
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {
+            "schema_version": "stockanalysis/v1", "asset_type": "etf", "records": [{"ticker": "OFFCORE"}],
         })
 
         calls = []
