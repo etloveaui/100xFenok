@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeJsonAtomic } from "./lib/atomic-file.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -132,6 +133,50 @@ function sourceDate(value) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
 }
 
+const today = new Date().toISOString().slice(0, 10);
+const previous = readJson(OUT, null); // one read; generated_at is never a source date
+
+function formattedValue(value, cfg) {
+  if (typeof value !== "string" || !value.endsWith(cfg.unit)) return false;
+  const numberText = value.slice(0, value.length - cfg.unit.length);
+  const pattern = cfg.decimals === 0
+    ? /^[+-]?\d+$/
+    : new RegExp(`^[+-]?\\d+\\.\\d{${cfg.decimals}}$`);
+  return pattern.test(numberText)
+    && (cfg.transform && cfg.transform !== "level" || !numberText.startsWith("+"))
+    && Number.isFinite(Number(numberText));
+}
+
+function priorValue(key, cfg, series, source, allowUndated = false) {
+  const row = previous?.values?.[key];
+  if (!row || typeof row !== "object" || Array.isArray(row)) return null;
+  const asOf = sourceDate(row.asOf);
+  if (
+    row.key !== key || row.series !== series || row.source !== source
+    || (!asOf && !(allowUndated && row.asOf === null
+      && typeof row.asOfReason === "string" && row.asOfReason.trim()))
+    || (row.asOf != null && !asOf) || (asOf && asOf > today) || !formattedValue(row.value, cfg)
+  ) return null;
+  return { title: cfg.title, value: row.value, asOf: row.asOf,
+    ...(asOf ? {} : { asOfReason: row.asOfReason }), series, source };
+}
+
+function chooseFresh(key, cfg, fresh, series, source, allowUndated = false) {
+  const asOf = sourceDate(fresh.asOf);
+  if (
+    fresh.series !== series || fresh.source !== source
+    || !formattedValue(fresh.value, cfg)
+    || (fresh.asOf != null && !asOf) || (asOf && asOf > today)
+    || (!allowUndated && !asOf)
+  ) throw new Error(`${key}: invalid source value or date`);
+  const prior = priorValue(key, cfg, series, source, allowUndated);
+  if (prior?.asOf && (!asOf || asOf < prior.asOf)) {
+    console.warn(`retain ${cfg.title}: fresh source date ${asOf ?? "unknown"} is older than ${prior.asOf}`);
+    return prior;
+  }
+  return fresh;
+}
+
 function deriveActivity(key, cfg, activity) {
   const coverage = activity?.meta?.coverage?.[cfg.dataset];
   const value = coverage?.latest_values?.[cfg.metric];
@@ -155,16 +200,24 @@ const values = {};
 const aliases = {};
 let failed = 0;
 if (!API_KEY) {
-  console.warn("FRED_API_KEY missing — FRED-backed values skipped");
+  console.warn("FRED_API_KEY missing — retaining valid prior FRED values");
+  for (const [key, cfg] of Object.entries(MAP)) {
+    const prior = priorValue(key, cfg, cfg.series, "FRED");
+    if (prior) addValue(values, aliases, key, prior, cfg);
+    else failed += 1;
+  }
 } else {
   for (const [key, cfg] of Object.entries(MAP)) {
     try {
       const v = await derive(key, cfg);
-      addValue(values, aliases, key, v, cfg);
-      console.log(`ok   ${cfg.title}: ${v.value} (as of ${v.asOf})`);
+      const chosen = chooseFresh(key, cfg, v, cfg.series, "FRED");
+      addValue(values, aliases, key, chosen, cfg);
+      console.log(`ok   ${cfg.title}: ${chosen.value} (as of ${chosen.asOf})`);
     } catch (err) {
-      failed += 1;
-      console.warn(`skip ${cfg.title}: ${err.message}`);
+      const prior = priorValue(key, cfg, cfg.series, "FRED");
+      if (prior) addValue(values, aliases, key, prior, cfg);
+      else failed += 1;
+      console.warn(`${prior ? "retain" : "skip"} ${cfg.title}: ${err.message}`);
     }
     await new Promise((r) => setTimeout(r, 350)); // FRED rate courtesy
   }
@@ -172,13 +225,17 @@ if (!API_KEY) {
 
 const activity = readJson(ACTIVITY_IN, null);
 for (const [key, cfg] of Object.entries(ACTIVITY_MAP)) {
+  const series = `activity-surveys:${cfg.dataset}.${cfg.metric}`;
   try {
     const v = deriveActivity(key, cfg, activity);
-    addValue(values, aliases, key, v, cfg);
-    console.log(`ok   ${cfg.title}: ${v.value} (as of ${v.asOf})`);
+    const chosen = chooseFresh(key, cfg, v, series, "macro/activity-surveys", true);
+    addValue(values, aliases, key, chosen, cfg);
+    console.log(`ok   ${cfg.title}: ${chosen.value} (as of ${chosen.asOf})`);
   } catch (err) {
-    failed += 1;
-    console.warn(`skip ${cfg.title}: ${err.message}`);
+    const prior = priorValue(key, cfg, series, "macro/activity-surveys", true);
+    if (prior) addValue(values, aliases, key, prior, cfg);
+    else failed += 1;
+    console.warn(`${prior ? "retain" : "skip"} ${cfg.title}: ${err.message}`);
   }
 }
 
@@ -212,6 +269,5 @@ const doc = {
   values,
 };
 
-fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, `${JSON.stringify(doc, null, 2)}\n`);
+writeJsonAtomic(OUT, doc);
 console.log(`done: ${Object.keys(values).length} values, ${failed} skipped -> ${OUT}`);
