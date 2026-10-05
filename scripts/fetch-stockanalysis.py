@@ -1954,6 +1954,7 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
         if len(raw_row) != len(header):
             raise ValueError("official holdings CSV row has invalid field coverage")
         row = dict(zip(header, raw_row))
+        signed_cash = False
         try:
             if ticker == "ESUM":
                 symbol, name = row["Ticker"].strip(), row["Description"].strip()
@@ -1978,6 +1979,12 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                             row["Currency"].strip(), row["Market Currency"].strip()) != (
                             "USD CASH", "Cash and/or Derivatives", "Cash", "-", "USD", "USD"):
                         raise ValueError(f"{ticker} issuer cash identity is invalid")
+                    if weight < 0:
+                        amounts = [float(row[key].replace(",", ""))
+                                   for key in ("Market Value", "Notional Value", "Par Value")]
+                        if not all(math.isfinite(value) and value < 0 for value in amounts):
+                            raise ValueError(f"{ticker} issuer cash amounts disagree with its weight")
+                        signed_cash = True
                 elif not name or not re.fullmatch(r"[A-Z0-9]{9}", cusip):
                     raise ValueError(f"{ticker} holding identity or CUSIP invalid")
                 location = row["Location"].strip()
@@ -2014,7 +2021,8 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                     raise ValueError("ABXB holding ticker or CUSIP is invalid")
         except (TypeError, ValueError) as exc:
             raise ValueError("official holdings CSV has an invalid holding") from exc
-        if not math.isfinite(weight) or weight < 0 or weight > 100:
+        if (not math.isfinite(weight) or weight > 100 or weight < -100
+                or (weight < 0 and not signed_cash)):
             raise ValueError("official holdings CSV has an invalid weight")
         total_weight += weight
         holdings.append(holding)

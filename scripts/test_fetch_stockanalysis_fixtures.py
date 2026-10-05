@@ -114,6 +114,9 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 row.update({"Name": name, "Sector": "Treasury" if asset_class == "Fixed Income" else "Cash and/or Derivatives",
                             "Asset Class": asset_class, "Weight (%)": weight, "CUSIP": cusip,
                             "Location": "United States", "Currency": "USD", "Market Currency": "USD"})
+                if asset_class == "Cash" and float(weight) < 0:
+                    row.update({key: "-1,000.00" for key in
+                                ("Market Value", "Notional Value", "Par Value")})
                 if "Price" in row:
                     row["Price"] = "99.96"
                 writer.writerow([row[column] for column in columns])
@@ -159,6 +162,22 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
 
         for ticker in ("IBIC", "IBIH", "IBIJ", "IBIK"):
             valid = document(ticker)
+            signed_positions = [(name, kind, cusip, "-0.50" if kind == "Cash" else weight)
+                                for name, kind, cusip, weight in holdings[ticker]]
+            signed = document(ticker, positions=signed_positions, date="Oct 02, 2026")
+            with self.subTest(ticker=ticker, case="verified negative USD cash"):
+                _, data, provenance = fetch(ticker, signed)
+                self.assertEqual(next(row for row in data["holdings"] if row["n"] == "USD CASH")["as"], -0.5)
+                self.assertAlmostEqual(data["countries"][0]["weight"], provenance["weight_sum_pct"])
+            for replacement in ("1,000.00", "0", "NaN", "Infinity", "-"):
+                with self.subTest(ticker=ticker, case="cash amount sign or value", value=replacement), self.assertRaises(ValueError):
+                    fetch(ticker, signed.replace('"-1,000.00"', replacement, 1))
+            with self.subTest(ticker=ticker, case="negative noncash"), self.assertRaises(ValueError):
+                fetch(ticker, document(ticker, positions=[
+                    (name, kind, cusip, "-0.50" if index == 0 else weight)
+                    for index, (name, kind, cusip, weight) in enumerate(holdings[ticker])]))
+            with self.subTest(ticker=ticker, case="unverified negative cash identity"), self.assertRaises(ValueError):
+                fetch(ticker, signed.replace("USD CASH", "OTHER CASH", 1))
             with self.subTest(ticker=ticker, case="wrong fund"), self.assertRaises(ValueError):
                 fetch(ticker, valid.replace(str(years[ticker]), "2099", 1))
             with self.subTest(ticker=ticker, case="missing Price"), self.assertRaises(ValueError):
