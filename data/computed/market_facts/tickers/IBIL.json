@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "IBIL",
   "asset_type": "etf",
-  "generated_at": "2026-10-05T03:18:56Z",
+  "generated_at": "2026-10-05T13:12:43Z",
   "source_as_of": "2026-10-02",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 23.700000762939453,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 23.7,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,20 +31,42 @@
       ],
       "candidates": [
         {
-          "value": 23.700000762939453,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": 23.7,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 23.76,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-05T12:31:39Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 23.76,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change": {
-      "value": -0.05999923706054844,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.06,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -54,20 +76,20 @@
       ],
       "candidates": [
         {
-          "value": -0.05999923706054844,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.06,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "change_pct": {
-      "value": -0.25252204150062474,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.25,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,20 +99,20 @@
       ],
       "candidates": [
         {
-          "value": -0.25252204150062474,
-          "source": "yf.stockanalysis_fallback.quote",
+          "value": -0.25,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "total_assets": {
-      "value": 42015916.0,
-      "source": "yf.stockanalysis_fallback.overview",
+      "value": 52070000.0,
+      "source": "stockanalysis.overview",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -99,10 +121,10 @@
       ],
       "candidates": [
         {
-          "value": 42015916.0,
-          "source": "yf.stockanalysis_fallback.overview",
+          "value": 52070000.0,
+          "source": "stockanalysis.overview",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "observed"
         }
       ],
@@ -110,9 +132,9 @@
     },
     "dividend_yield": {
       "value": 4.89,
-      "source": "yf.stockanalysis_fallback.overview",
+      "source": "stockanalysis.overview",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -124,42 +146,20 @@
       "candidates": [
         {
           "value": 4.89,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
     "expense_ratio": {
       "value": 0.1,
-      "source": "yf.stockanalysis_fallback.overview",
+      "source": "stockanalysis.overview",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -170,9 +170,9 @@
       "candidates": [
         {
           "value": 0.1,
-          "source": "yf.stockanalysis_fallback.overview",
+          "source": "stockanalysis.overview",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -180,10 +180,10 @@
       "candidate_count": 1
     },
     "return_1m": {
-      "value": -0.38476459610987834,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-05T02:06:18Z",
+      "value": -3.49083,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -194,7 +194,15 @@
       ],
       "candidates": [
         {
-          "value": -0.38476459610987834,
+          "value": -3.49083,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-05T12:31:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -3.49083,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-10-05T02:06:18Z",
@@ -202,13 +210,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
-      "value": -4.630605164117279,
+      "value": -4.6303264214196025,
       "source": "stockanalysis.detail.history",
       "as_of": "2026-10-02",
-      "fetched_at": "2026-10-05T02:14:26Z",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -217,10 +225,10 @@
       ],
       "candidates": [
         {
-          "value": -4.630605164117279,
+          "value": -4.6303264214196025,
           "source": "stockanalysis.detail.history",
           "as_of": "2026-10-02",
-          "fetched_at": "2026-10-05T02:14:26Z",
+          "fetched_at": "2026-10-05T12:31:39Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -228,10 +236,10 @@
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 1.061,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-05T02:06:18Z",
+      "value": -3.38644,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -243,7 +251,15 @@
       ],
       "candidates": [
         {
-          "value": 1.061,
+          "value": -3.38644,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-05T12:31:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -3.38644,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-10-05T02:06:18Z",
@@ -251,13 +267,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
-      "value": 4.314,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-05T02:06:18Z",
+      "value": -3.44328,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -269,7 +285,15 @@
       ],
       "candidates": [
         {
-          "value": 4.314,
+          "value": -3.44328,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-05T12:31:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -3.44328,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-10-05T02:06:18Z",
@@ -277,13 +301,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_max_avg": {
-      "value": 4.463,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-05T02:06:18Z",
+      "value": 0.8025,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-02",
+      "fetched_at": "2026-10-05T12:31:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -293,7 +317,15 @@
       ],
       "candidates": [
         {
-          "value": 4.463,
+          "value": 0.8025,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-02",
+          "fetched_at": "2026-10-05T12:31:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.8025,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-10-05T02:06:18Z",
@@ -301,35 +333,175 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": 1,
-    "holdings_updated": "2026-10-02T19:59:43Z",
+    "holdings_count": 4,
+    "holdings_updated": "2026-10-02",
     "top_holdings": [
       {
-        "rank": 1,
-        "symbol": "XTSLA",
-        "name": "BlackRock Cash Funds Treasury SL Agency",
-        "weight_pct": 0.005059999999999999,
+        "name": "TREASURY (CPI) NOTE",
+        "weight_pct": 50.77,
         "raw": {
-          "_index": "XTSLA",
-          "Name": "BlackRock Cash Funds Treasury SL Agency",
-          "Holding Percent": 5.06e-05
+          "n": "TREASURY (CPI) NOTE",
+          "as": 50.77,
+          "cusip": "91282CNS6",
+          "raw": {
+            "Name": "TREASURY (CPI) NOTE",
+            "Sector": "Treasury",
+            "Asset Class": "Fixed Income",
+            "Market Value": "26’434’418",
+            "Weight (%)": "50.77",
+            "Notional Value": "26’434’417.58",
+            "Par Value": "28’490’894.00",
+            "CUSIP": "91282CNS6",
+            "ISIN": "US91282CNS60",
+            "SEDOL": "BVPCXF3",
+            "Price": "92.38",
+            "Location": "United States",
+            "Exchange": "-",
+            "Currency": "USD",
+            "Duration": "7.87",
+            "YTM (%)": "5.25",
+            "FX Rate": "1.00",
+            "Maturity": "15/Jul/2035",
+            "Coupon (%)": "1.88",
+            "Mod. Duration": "7.87",
+            "Yield to Call (%)": "-",
+            "Yield to Worst (%)": "2.90",
+            "Real Duration": "7.96",
+            "Real YTM (%)": "2.90",
+            "Market Currency": "USD",
+            "Accrual Date": "15/Jul/2025",
+            "Effective Date": "31/Jul/2025"
+          }
+        }
+      },
+      {
+        "name": "TREASURY (CPI) NOTE",
+        "weight_pct": 49.21,
+        "raw": {
+          "n": "TREASURY (CPI) NOTE",
+          "as": 49.21,
+          "cusip": "91282CML2",
+          "raw": {
+            "Name": "TREASURY (CPI) NOTE",
+            "Sector": "Treasury",
+            "Asset Class": "Fixed Income",
+            "Market Value": "25’621’100",
+            "Weight (%)": "49.21",
+            "Notional Value": "25’621’100.43",
+            "Par Value": "26’951’782.00",
+            "CUSIP": "91282CML2",
+            "ISIN": "US91282CML27",
+            "SEDOL": "BTWN775",
+            "Price": "94.61",
+            "Location": "United States",
+            "Exchange": "-",
+            "Currency": "USD",
+            "Duration": "7.39",
+            "YTM (%)": "5.20",
+            "FX Rate": "1.00",
+            "Maturity": "15/Jan/2035",
+            "Coupon (%)": "2.13",
+            "Mod. Duration": "7.39",
+            "Yield to Call (%)": "-",
+            "Yield to Worst (%)": "2.90",
+            "Real Duration": "7.47",
+            "Real YTM (%)": "2.90",
+            "Market Currency": "USD",
+            "Accrual Date": "15/Jan/2025",
+            "Effective Date": "31/Jan/2025"
+          }
+        }
+      },
+      {
+        "name": "BLK CSH FND TREASURY SL AGENCY",
+        "weight_pct": 0.57,
+        "raw": {
+          "n": "BLK CSH FND TREASURY SL AGENCY",
+          "as": 0.57,
+          "cusip": "066922477",
+          "raw": {
+            "Name": "BLK CSH FND TREASURY SL AGENCY",
+            "Sector": "Cash and/or Derivatives",
+            "Asset Class": "Money Market",
+            "Market Value": "296’085",
+            "Weight (%)": "0.57",
+            "Notional Value": "296’084.80",
+            "Par Value": "296’085.00",
+            "CUSIP": "066922477",
+            "ISIN": "US0669224778",
+            "SEDOL": "6922477",
+            "Price": "1.00",
+            "Location": "United States",
+            "Exchange": "-",
+            "Currency": "USD",
+            "Duration": "0.09",
+            "YTM (%)": "3.60",
+            "FX Rate": "1.00",
+            "Maturity": "-",
+            "Coupon (%)": "3.90",
+            "Mod. Duration": "0.10",
+            "Yield to Call (%)": "-",
+            "Yield to Worst (%)": "3.60",
+            "Real Duration": "0.10",
+            "Real YTM (%)": "3.60",
+            "Market Currency": "USD",
+            "Accrual Date": "-",
+            "Effective Date": "04/Feb/2009"
+          }
+        }
+      },
+      {
+        "name": "USD CASH",
+        "weight_pct": -0.54,
+        "raw": {
+          "n": "USD CASH",
+          "as": -0.54,
+          "cusip": null,
+          "raw": {
+            "Name": "USD CASH",
+            "Sector": "Cash and/or Derivatives",
+            "Asset Class": "Cash",
+            "Market Value": "-281’752",
+            "Weight (%)": "-0.54",
+            "Notional Value": "-281’751.80",
+            "Par Value": "-281’752.00",
+            "CUSIP": "-",
+            "ISIN": "-",
+            "SEDOL": "-",
+            "Price": "100.00",
+            "Location": "United States",
+            "Exchange": "-",
+            "Currency": "USD",
+            "Duration": "0.00",
+            "YTM (%)": "3.90",
+            "FX Rate": "1.00",
+            "Maturity": "-",
+            "Coupon (%)": "0.00",
+            "Mod. Duration": "0.00",
+            "Yield to Call (%)": "-",
+            "Yield to Worst (%)": "3.90",
+            "Real Duration": "0.00",
+            "Real YTM (%)": "3.90",
+            "Market Currency": "USD",
+            "Accrual Date": "-",
+            "Effective Date": "01/Jan/1989"
+          }
         }
       }
     ],
-    "asset_allocation": {
-      "cashPosition": 0.0001,
-      "stockPosition": 0.0,
-      "bondPosition": 0.9999,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
+    "asset_allocation": null,
     "sectors": null,
-    "countries": null,
+    "countries": [
+      {
+        "code": "US",
+        "country": "United States",
+        "weight": 100.01
+      }
+    ],
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -344,21 +516,21 @@
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/IBIL.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/IBIL.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

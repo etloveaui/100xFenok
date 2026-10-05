@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-10-05T09:59:43.665Z",
+  "generated_at": "2026-10-05T13:16:14.254Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-02",
     "stock_action_index": "2026-10-02",
@@ -41,10 +41,10 @@
     "sectors": 10,
     "etf_categories": 7,
     "filing_nodes": 202,
-    "sec13f_nodes": 1233,
+    "sec13f_nodes": 1238,
     "stocks_with_market_facts": 1066,
     "stocks_with_filings": 202,
-    "stocks_with_13f": 511,
+    "stocks_with_13f": 513,
     "stocks_with_single_stock_etfs": 84,
     "etfs_with_market_facts": 5701
   },
@@ -28710,25 +28710,26 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-09-29",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -28736,6 +28737,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Consumer Staples",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:CASY",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -36770,25 +36776,26 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "coverage_ratio": 0.75
+          "coverage_ratio": 1
         },
         "as_of": {
           "profile": "2026-10-02",
           "action_index": "2026-10-02",
           "market_facts": "2026-10-02",
           "filings": null,
-          "sec_13f": null
+          "sec_13f": "2026-Q2"
         },
         "source_links": {
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
           "edgar_summary": false,
-          "sec_13f": false
+          "sec_13f": true
         },
         "service_flags": [
           "screener",
           "stock_detail",
+          "smart_money",
           "index_membership"
         ],
         "relations": [
@@ -36796,6 +36803,11 @@
             "type": "belongs_to_sector",
             "target": "sector:Healthcare",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "held_by_13f_investors",
+            "target": "sec13f:COO",
+            "source": "sec-13f/by_ticker"
           }
         ]
       },
@@ -244741,7 +244753,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-24"
+          "market_facts": "2026-10-02"
         },
         "source_links": {
           "etf_universe": true,
@@ -280695,6 +280707,13 @@
         "as_of": "2026-Q2"
       },
       {
+        "id": "sec13f:CASY",
+        "type": "sec13f_ticker",
+        "ticker": "CASY",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
         "id": "sec13f:CAT",
         "type": "sec13f_ticker",
         "ticker": "CAT",
@@ -281119,6 +281138,13 @@
         "type": "sec13f_ticker",
         "ticker": "COMP",
         "holder_count": 3,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:COO",
+        "type": "sec13f_ticker",
+        "ticker": "COO",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {
@@ -281601,6 +281627,13 @@
         "id": "sec13f:DEO",
         "type": "sec13f_ticker",
         "ticker": "DEO",
+        "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:DFTX",
+        "type": "sec13f_ticker",
+        "ticker": "DFTX",
         "holder_count": 1,
         "as_of": "2026-Q2"
       },
@@ -282113,6 +282146,13 @@
         "type": "sec13f_ticker",
         "ticker": "EWC",
         "holder_count": 1,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:EWY",
+        "type": "sec13f_ticker",
+        "ticker": "EWY",
+        "holder_count": 4,
         "as_of": "2026-Q2"
       },
       {
@@ -282687,6 +282727,13 @@
         "type": "sec13f_ticker",
         "ticker": "GOOGL",
         "holder_count": 41,
+        "as_of": "2026-Q2"
+      },
+      {
+        "id": "sec13f:GOSS",
+        "type": "sec13f_ticker",
+        "ticker": "GOSS",
+        "holder_count": 1,
         "as_of": "2026-Q2"
       },
       {

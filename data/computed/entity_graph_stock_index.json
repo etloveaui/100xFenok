@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-index/v1",
-  "generated_at": "2026-10-05T09:59:43.665Z",
+  "generated_at": "2026-10-05T13:16:14.254Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-02",
     "stock_action_index": "2026-10-02",
@@ -29,7 +29,7 @@
     "stocks": 1066,
     "with_market_facts": 1066,
     "with_filings": 202,
-    "with_sec_13f": 511,
+    "with_sec_13f": 513,
     "with_index_membership": 415,
     "with_single_stock_etfs": 84
   },
@@ -21057,28 +21057,32 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 0.75
+        "coverage_ratio": 1
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-09-29",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Consumer Staples"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:CASY"
         }
       ]
     },
@@ -27567,28 +27571,32 @@
       "confidence": {
         "label": "high",
         "rank": 3,
-        "coverage_ratio": 0.75
+        "coverage_ratio": 1
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": true,
         "single_stock_etfs": false
       },
-      "connection_count": 2,
+      "connection_count": 3,
       "service_count": 0,
       "as_of": {
         "profile": "2026-10-02",
         "action_index": "2026-10-02",
         "market_facts": "2026-10-02",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Healthcare"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:COO"
         }
       ]
     },

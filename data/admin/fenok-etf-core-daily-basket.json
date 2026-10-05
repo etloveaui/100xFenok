@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-etf-core-daily-basket/v0.1",
-  "generated_at": "2026-10-05T09:58:46.290Z",
+  "generated_at": "2026-10-05T13:15:12.518Z",
   "basket_id": "etf_core_daily_basket",
   "asset_type": "etf",
   "contract_doc": "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md",
@@ -12,9 +12,9 @@
     "etf_detail_dir": "data/stockanalysis/etfs"
   },
   "source_generated_at": {
-    "etf_signal_summary": "2026-10-05T09:57:51.454Z",
-    "etf_action_index": "2026-10-05T09:58:46.184Z",
-    "etf_detail_coverage": "2026-10-05T03:50:47Z",
+    "etf_signal_summary": "2026-10-05T13:14:15.782Z",
+    "etf_action_index": "2026-10-05T13:15:12.414Z",
+    "etf_detail_coverage": "2026-10-05T12:31:48Z",
     "new_etfs": "2026-10-05T02:06:23Z"
   },
   "raw_policy": {
@@ -65,8 +65,8 @@
     "detail_candidate_total": 5701,
     "detail_stockanalysis_files": 5872,
     "detail_yahoo_fallback_files": null,
-    "structural_candidate_count": 1713,
-    "fresh_structural_candidate_count": 1595,
+    "structural_candidate_count": 1714,
+    "fresh_structural_candidate_count": 1596,
     "stale_structural_candidate_count": 118,
     "selected_count": 120,
     "fresh_selected_count": 120,
@@ -85,7 +85,7 @@
       "Commodity": 41,
       "Currency": 7,
       "Equity": 1076,
-      "Fixed Income": 501
+      "Fixed Income": 502
     },
     "cohort_metrics": {
       "Alternatives": {
@@ -129,23 +129,23 @@
         "max_quote_age_days": 3
       },
       "Fixed Income": {
-        "eligible_count": 501,
+        "eligible_count": 502,
         "selected_count": 35,
         "fresh_selected_count": 35,
         "stale_selected_count": 0,
-        "achieved_coverage_pct": 6.99,
+        "achieved_coverage_pct": 6.97,
         "max_quote_age_days": 5
       }
     },
     "freshness_blocker_counts": {},
     "excluded_reason_counts": {
       "action_confidence_not_high": 537,
-      "aum_lt_50m": 1567,
-      "avg_dollar_volume_5d_lt_1m": 2773,
+      "aum_lt_50m": 1566,
+      "avg_dollar_volume_5d_lt_1m": 2772,
       "classification_not_high_confidence": 8,
       "coverage_ratio_lt_0_75": 537,
       "daily_1y_rows_lt_200": 792,
-      "inverse_etf": 5,
+      "inverse_etf": 4,
       "new_etf_radar_only": 95,
       "scored_signal_count_lt_6": 537,
       "single_stock_or_concentrated_derivative_income_strategy": 57
@@ -224,8 +224,8 @@
       "KNG",
       "TBUX",
       "USHY",
-      "IBDR",
       "VWOB",
+      "IBDR",
       "IBTH",
       "CLOX",
       "CLOI",
@@ -239,9 +239,9 @@
       "NSCI",
       "IGLB",
       "XONE",
+      "CLOZ",
       "SPLB",
       "SCHI",
-      "CLOZ",
       "VCIT",
       "BOXX",
       "SBAR",
@@ -343,7 +343,6 @@
     "inverse_etf": [
       "HYGW",
       "LQDW",
-      "TLTW",
       "UTRE",
       "UTWO"
     ],
@@ -1874,8 +1873,8 @@
       "beta": 0.41,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 72.12,
-      "action_score": 72.12,
+      "signal_score": 72.16,
+      "action_score": 72.16,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -2126,8 +2125,8 @@
       "beta": 0.55,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 67.67,
-      "action_score": 67.67,
+      "signal_score": 67.72,
+      "action_score": 67.72,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -2312,6 +2311,34 @@
       }
     },
     {
+      "ticker": "VWOB",
+      "company": "Vanguard Emerging Markets Government Bond ETF",
+      "asset_type": "etf",
+      "category": "Fixed Income",
+      "aum": 6190000000,
+      "expense_ratio": 0.15,
+      "dividend_yield": 6.13,
+      "beta": 0.51,
+      "scored_signal_count": 7,
+      "coverage_ratio": 1,
+      "signal_score": 65.98,
+      "action_score": 65.98,
+      "confidence_label": "high",
+      "core_candidate_allowed": true,
+      "core_candidate_reason": "passes_structural_core_daily_filters",
+      "status": "fresh",
+      "freshness_blockers": [],
+      "proof": {
+        "detail_source": "stockanalysis",
+        "classification_confidence": "high",
+        "quote_date": "2026-09-30",
+        "quote_age_days": 5,
+        "quote_volume": 674400,
+        "daily_1y_rows": 252,
+        "average_dollar_volume_5d": 41589018.03
+      }
+    },
+    {
       "ticker": "IBDR",
       "company": "iShares iBonds Dec 2026 Term Corporate ETF",
       "asset_type": "etf",
@@ -2337,34 +2364,6 @@
         "quote_volume": 505616,
         "daily_1y_rows": 252,
         "average_dollar_volume_5d": 13775178.53
-      }
-    },
-    {
-      "ticker": "VWOB",
-      "company": "Vanguard Emerging Markets Government Bond ETF",
-      "asset_type": "etf",
-      "category": "Fixed Income",
-      "aum": 6190000000,
-      "expense_ratio": 0.15,
-      "dividend_yield": 6.13,
-      "beta": 0.51,
-      "scored_signal_count": 7,
-      "coverage_ratio": 1,
-      "signal_score": 65.93,
-      "action_score": 65.93,
-      "confidence_label": "high",
-      "core_candidate_allowed": true,
-      "core_candidate_reason": "passes_structural_core_daily_filters",
-      "status": "fresh",
-      "freshness_blockers": [],
-      "proof": {
-        "detail_source": "stockanalysis",
-        "classification_confidence": "high",
-        "quote_date": "2026-09-30",
-        "quote_age_days": 5,
-        "quote_volume": 674400,
-        "daily_1y_rows": 252,
-        "average_dollar_volume_5d": 41589018.03
       }
     },
     {
@@ -2602,8 +2601,8 @@
       "beta": null,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 65.52,
-      "action_score": 65.52,
+      "signal_score": 65.56,
+      "action_score": 65.56,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -2732,6 +2731,34 @@
       }
     },
     {
+      "ticker": "CLOZ",
+      "company": "Eldridge BBB-B CLO ETF",
+      "asset_type": "etf",
+      "category": "Fixed Income",
+      "aum": 787850000,
+      "expense_ratio": 0.5,
+      "dividend_yield": 7.11,
+      "beta": 0.14,
+      "scored_signal_count": 7,
+      "coverage_ratio": 1,
+      "signal_score": 65.44,
+      "action_score": 65.44,
+      "confidence_label": "high",
+      "core_candidate_allowed": true,
+      "core_candidate_reason": "passes_structural_core_daily_filters",
+      "status": "fresh",
+      "freshness_blockers": [],
+      "proof": {
+        "detail_source": "stockanalysis",
+        "classification_confidence": "high",
+        "quote_date": "2026-09-30",
+        "quote_age_days": 5,
+        "quote_volume": 82883,
+        "daily_1y_rows": 251,
+        "average_dollar_volume_5d": 13741655.14
+      }
+    },
+    {
       "ticker": "SPLB",
       "company": "State Street SPDR Portfolio Long Term Corporate Bond ETF",
       "asset_type": "etf",
@@ -2785,34 +2812,6 @@
         "quote_volume": 2891142,
         "daily_1y_rows": 251,
         "average_dollar_volume_5d": 109621206.74
-      }
-    },
-    {
-      "ticker": "CLOZ",
-      "company": "Eldridge BBB-B CLO ETF",
-      "asset_type": "etf",
-      "category": "Fixed Income",
-      "aum": 787850000,
-      "expense_ratio": 0.5,
-      "dividend_yield": 7.11,
-      "beta": 0.14,
-      "scored_signal_count": 7,
-      "coverage_ratio": 1,
-      "signal_score": 65.39,
-      "action_score": 65.39,
-      "confidence_label": "high",
-      "core_candidate_allowed": true,
-      "core_candidate_reason": "passes_structural_core_daily_filters",
-      "status": "fresh",
-      "freshness_blockers": [],
-      "proof": {
-        "detail_source": "stockanalysis",
-        "classification_confidence": "high",
-        "quote_date": "2026-09-30",
-        "quote_age_days": 5,
-        "quote_volume": 82883,
-        "daily_1y_rows": 251,
-        "average_dollar_volume_5d": 13741655.14
       }
     },
     {
@@ -3358,8 +3357,8 @@
       "beta": null,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 61.84,
-      "action_score": 61.84,
+      "signal_score": 61.98,
+      "action_score": 61.98,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
@@ -3470,8 +3469,8 @@
       "beta": null,
       "scored_signal_count": 7,
       "coverage_ratio": 1,
-      "signal_score": 60.51,
-      "action_score": 60.51,
+      "signal_score": 60.65,
+      "action_score": 60.65,
       "confidence_label": "high",
       "core_candidate_allowed": true,
       "core_candidate_reason": "passes_structural_core_daily_filters",
