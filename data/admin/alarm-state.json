@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-05T07:12:36.729Z",
+  "generated_at": "2026-10-05T09:43:18.592Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 3,
   "open_incidents": [
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
@@ -25,8 +37,8 @@
       "stopped_sets": [
         "gdelt_news_tone"
       ],
-      "latest_generated_at": "2026-10-05T07:02:24.452Z",
-      "previous_generated_at": "2026-10-05T06:34:58.852Z"
+      "latest_generated_at": "2026-10-05T09:37:14.848Z",
+      "previous_generated_at": "2026-10-05T09:00:59.057Z"
     }
   ],
   "watched_workflows": [
@@ -369,11 +381,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37276119034",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37276119034",
-    "observed_at": "2026-10-05T07:12:36.729Z",
-    "event": "schedule",
+    "run_id": "37291529587",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37291529587",
+    "observed_at": "2026-10-05T09:43:18.592Z",
+    "event": "workflow_run",
     "workflows": [
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
       "data-health-kpi"
     ],
