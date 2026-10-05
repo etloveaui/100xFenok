@@ -39,8 +39,17 @@ function filing(quarter, holdings) {
   };
 }
 
+// Each fixture issuer has one distinctive word so the resolver confirms only
+// its own symbol against the fixture SEC company_tickers titles.
+const FIXTURE_ISSUERS = {
+  AAA: "Aardvark", BBB: "Bluebird", XYZ: "Xylophone", BAD: "Badger", CUS: "Cuscus",
+  NEW: "Newt", OLD: "Oldfield", NEG: "Negroni", OVER: "Overture", SAME: "Samovar", STALE: "Stallion",
+};
+
 function holding(ticker, weight, cusip) {
   const row = { ticker };
+  const issuer = typeof ticker === "string" ? FIXTURE_ISSUERS[ticker.toUpperCase()] : undefined;
+  if (issuer) row.name = `${issuer.toUpperCase()} INC`;
   if (weight !== undefined) row.weight = weight;
   if (cusip !== undefined) row.cusip = cusip;
   return row;
@@ -71,6 +80,10 @@ try {
   fs.mkdirSync(fixtureInvestors, { recursive: true });
   fs.copyFileSync(BUILDER, path.join(fixtureScripts, "build-guru-holders-index.mjs"));
   fs.copyFileSync(GUARDED_JSON, path.join(fixtureLib, "guarded-json.mjs"));
+  fs.copyFileSync(path.join(ROOT, "scripts/lib/sec13f-symbols.mjs"), path.join(fixtureLib, "sec13f-symbols.mjs"));
+  writeJson("data/edgar/company_tickers.json", {
+    rows: Object.entries(FIXTURE_ISSUERS).map(([ticker, issuer]) => ({ ticker, title: `${issuer} Inc` })),
+  });
   fs.copyFileSync(PRIVACY_AUTHORITY, path.join(fixturePrivacy, "cloud-data-plane-routing-authority.mjs"));
   fs.copyFileSync(PRIVACY_ENROLLMENT, path.join(fixturePrivacy, "cloud-data-plane-enrollment.generated.mjs"));
 
@@ -158,6 +171,9 @@ try {
       holding("OVER", 1.2),
       holding("SAME", 0.1),
       holding("SAME", 0.2),
+      // A stored ticker its issuer name does not confirm (the converter's
+      // Philip Morris rows carried such tickers) must not move SAME's weight.
+      { ticker: "SAME", name: "PHILIP MORRIS INTL INC", cusip: "333333333", weight: 0.05 },
       holding({ malformed: "ticker" }, 0.25),
     ]),
   ]));
@@ -293,7 +309,7 @@ try {
     missing_previous: 1,
     public_excluded: 1,
     comparison_basis: "public_retained_holdings",
-    unresolved_mapping_count: 2,
+    unresolved_mapping_count: 3,
     current_quarter: "2026-Q2",
     previous_quarter: "2026-Q1",
   });

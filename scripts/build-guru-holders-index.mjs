@@ -17,12 +17,16 @@ import {
   requireObject,
 } from "./lib/guarded-json.mjs";
 import { PRIVATE_PUBLIC_PATH_VALUES } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
+import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "data/sec-13f/analytics/consensus.json");
 const SUMMARY = path.join(ROOT, "data/sec-13f/summary.json");
 const OUT = path.join(ROOT, "data/sec-13f/analytics/guru_holders_index.json");
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
+// Stored filing tickers are not identity evidence; key holdings on the same
+// issuer-confirmed symbol that consensus uses.
+const { resolveHoldingSymbol } = loadTickerResolver(ROOT);
 const PRIVATE_INVESTOR_FILES = new Set(
   PRIVATE_PUBLIC_PATH_VALUES
     .filter((value) => value.startsWith("/data/sec-13f/investors/"))
@@ -122,7 +126,7 @@ function roundRatio(value) {
 function aggregateHoldings(filing) {
   const bySecurity = new Map();
   for (const holding of Array.isArray(filing?.holdings) ? filing.holdings : []) {
-    const ticker = normalizeTicker(holding?.ticker);
+    const ticker = normalizeTicker(resolveHoldingSymbol(holding).symbol);
     const cusip = normalizeCusip(holding?.cusip);
     const key = ticker ? `ticker:${ticker}` : cusip ? `cusip:${cusip}` : null;
     if (!key) continue;
