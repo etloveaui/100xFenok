@@ -1374,8 +1374,14 @@ OFFICIAL_HOLDINGS_FALLBACKS = {
     "ABXB": "https://abacusfcf.com/abxb/",
     "ESUM": "https://www.eventideinvestments.com/etfs/esum",
     "HBIL": "https://www.harborcapital.com/etf/hbil/",
+    "IBIC": "https://www.ishares.com/us/products/333118/ishares-ibonds-oct-2026-term-tips-etf/latest-holdings.csv",
+    "IBIH": "https://www.ishares.com/us/products/333121/ishares-ibonds-oct-2031-term-tips-etf/latest-holdings.csv",
+    "IBIJ": "https://www.ishares.com/us/products/333076/ishares-ibonds-oct-2033-term-tips-etf/latest-holdings.csv",
+    "IBIK": "https://www.ishares.com/us/products/337462/ishares-ibonds-oct-2034-term-tips-etf/latest-holdings.csv",
     "IBIM": "https://www.ishares.com/us/products/350034/ishares-ibonds-oct-2036-term-tips-etf/latest-holdings.csv",
 }
+ISHARES_TERM_TIPS_YEARS = {"IBIC": 2026, "IBIH": 2031, "IBIJ": 2033, "IBIK": 2034, "IBIM": 2036}
+ISHARES_TERM_TIPS_WITH_PRICE = frozenset({"IBIC", "IBIH", "IBIJ", "IBIK"})
 SVELTE_FAILURE_SIGNATURE_SCHEMA_VERSION = "svelte-contract-failure-signature/v1"
 SVELTE_FAILURE_SIGNATURE_MAX_KEY_SETS = 16
 SVELTE_FAILURE_SIGNATURE_MAX_KEYS_PER_SET = 24
@@ -1769,8 +1775,8 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
         page_hash = hashlib.sha256(page_body).hexdigest()
     else:
         csv_url = source_page
-    hostname = {"ABXB": "abacusfcf.com", "ESUM": "www.eventideinvestments.com",
-                "IBIM": "www.ishares.com"}[ticker]
+    hostname = ({"ABXB": "abacusfcf.com", "ESUM": "www.eventideinvestments.com"}
+                | {symbol: "www.ishares.com" for symbol in ISHARES_TERM_TIPS_YEARS})[ticker]
     body = official_bytes(csv_url, hostname)
     rows = list(csv.reader(StringIO(body.decode("utf-8-sig"))))
     if ticker == "ESUM":
@@ -1780,18 +1786,20 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
             raise ValueError("ESUM official holdings identity is invalid")
         date_text = rows[2][1]
         header = ["Ticker", "Description", "Shares", "Weight"]
-    elif ticker == "IBIM":
-        if not rows or rows[0] != ["iShares® iBonds® Oct 2036 Term TIPS ETF"]:
-            raise ValueError("IBIM official holdings identity is invalid")
+    elif ticker in ISHARES_TERM_TIPS_YEARS:
+        if not rows or rows[0] != [f"iShares® iBonds® Oct {ISHARES_TERM_TIPS_YEARS[ticker]} Term TIPS ETF"]:
+            raise ValueError(f"{ticker} official holdings identity is invalid")
         date_rows = [row for row in rows if len(row) == 2 and row[0] == "Fund Holdings as of"]
         if len(date_rows) != 1:
-            raise ValueError("IBIM official holdings source date is unavailable")
+            raise ValueError(f"{ticker} official holdings source date is unavailable")
         date_text = date_rows[0][1]
         header = ["Name", "Sector", "Asset Class", "Market Value", "Weight (%)",
                   "Notional Value", "Par Value", "CUSIP", "ISIN", "SEDOL", "Location",
                   "Exchange", "Currency", "Duration", "YTM (%)", "FX Rate", "Maturity",
                   "Coupon (%)", "Mod. Duration", "Yield to Call (%)", "Yield to Worst (%)",
                   "Real Duration", "Real YTM (%)", "Market Currency", "Accrual Date", "Effective Date"]
+        if ticker in ISHARES_TERM_TIPS_WITH_PRICE:
+            header.insert(header.index("Location"), "Price")
     else:
         date_text = None
         header = ["Ticker", "CUSIP", "Security Description", "Shares",
@@ -1832,16 +1840,25 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                 if (not cash_without_ticker and not SYMBOL_RE.fullmatch(symbol)) or not name or not math.isfinite(shares) or shares < 0:
                     raise ValueError("ESUM holding identity or shares invalid")
                 holding = {"s": symbol or None, "n": name, "as": weight, "sh": shares, "raw": row}
-            elif ticker == "IBIM":
+            elif ticker in ISHARES_TERM_TIPS_YEARS:
                 name, cusip = row["Name"].strip(), row["CUSIP"].strip()
                 weight = float(row["Weight (%)"].replace(",", ""))
-                if not name or not re.fullmatch(r"[A-Z0-9]{9}", cusip):
-                    raise ValueError("IBIM holding identity or CUSIP invalid")
+                asset_class = row["Asset Class"].strip()
+                issuer_cash = ticker in ISHARES_TERM_TIPS_WITH_PRICE and (
+                    name == "USD CASH" or asset_class == "Cash" or cusip == "-"
+                )
+                if issuer_cash:
+                    if (name, row["Sector"].strip(), asset_class, cusip,
+                            row["Currency"].strip(), row["Market Currency"].strip()) != (
+                            "USD CASH", "Cash and/or Derivatives", "Cash", "-", "USD", "USD"):
+                        raise ValueError(f"{ticker} issuer cash identity is invalid")
+                elif not name or not re.fullmatch(r"[A-Z0-9]{9}", cusip):
+                    raise ValueError(f"{ticker} holding identity or CUSIP invalid")
                 location = row["Location"].strip()
                 if location != "United States":
-                    raise ValueError("IBIM holding location is outside verified country coverage")
+                    raise ValueError(f"{ticker} holding location is outside verified country coverage")
                 country_weights[location] = country_weights.get(location, 0.0) + weight
-                holding = {"n": name, "as": weight, "cusip": cusip, "raw": row}
+                holding = {"n": name, "as": weight, "cusip": None if issuer_cash else cusip, "raw": row}
             else:
                 symbol, cusip = row["Ticker"].strip(), row["CUSIP"].strip()
                 name = row["Security Description"].strip()
@@ -1877,17 +1894,20 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
         holdings.append(holding)
     if not holdings or not 95 <= total_weight <= 105:
         raise ValueError("official holdings CSV is empty or incomplete")
-    if ticker == "IBIM" and sum(row.get("raw", {}).get("Asset Class") == "Fixed Income" for row in holdings) < 2:
-        raise ValueError("IBIM official holdings have no Treasury bond coverage")
+    if ticker in ISHARES_TERM_TIPS_YEARS and sum(
+            row.get("raw", {}).get("Asset Class") == "Fixed Income" for row in holdings
+    ) < (1 if ticker == "IBIC" else 2):
+        raise ValueError(f"{ticker} official holdings have no Treasury bond coverage")
     data = {"holdings": holdings, "count": len(holdings), "date": date.date().isoformat()}
-    if ticker == "IBIM":
+    if ticker in ISHARES_TERM_TIPS_YEARS:
         data["countries"] = [{"code": "US", "country": "United States",
                               "weight": round(country_weights["United States"], 4)}]
-    provenance = {"provider": {"ABXB": "abacusfcf", "ESUM": "eventide", "IBIM": "ishares"}[ticker],
+    provenance = {"provider": ({"ABXB": "abacusfcf", "ESUM": "eventide"}
+                               | {symbol: "ishares" for symbol in ISHARES_TERM_TIPS_YEARS})[ticker],
                   "landing_page": source_page, "csv_url": csv_url,
                   "csv_sha256": hashlib.sha256(body).hexdigest(),
                   "source_as_of": data["date"], "weight_sum_pct": round(total_weight, 4),
-                  "country_coverage": "issuer_csv_location" if ticker == "IBIM" else "issuer_not_provided"}
+                  "country_coverage": "issuer_csv_location" if ticker in ISHARES_TERM_TIPS_YEARS else "issuer_not_provided"}
     if ticker == "ABXB":
         provenance.update({"page_sha256": page_hash,
                            "date_binding": "dated_page_table_complete_csv_parity"})

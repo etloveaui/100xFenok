@@ -65,6 +65,131 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
+    def test_ishares_term_tips_official_holdings_exact_fund_schema_and_country(self) -> None:
+        urls = {
+            "IBIC": "https://www.ishares.com/us/products/333118/ishares-ibonds-oct-2026-term-tips-etf/latest-holdings.csv",
+            "IBIH": "https://www.ishares.com/us/products/333121/ishares-ibonds-oct-2031-term-tips-etf/latest-holdings.csv",
+            "IBIJ": "https://www.ishares.com/us/products/333076/ishares-ibonds-oct-2033-term-tips-etf/latest-holdings.csv",
+            "IBIK": "https://www.ishares.com/us/products/337462/ishares-ibonds-oct-2034-term-tips-etf/latest-holdings.csv",
+            "IBIM": "https://www.ishares.com/us/products/350034/ishares-ibonds-oct-2036-term-tips-etf/latest-holdings.csv",
+        }
+        years = {"IBIC": 2026, "IBIH": 2031, "IBIJ": 2033, "IBIK": 2034, "IBIM": 2036}
+        header = ["Name", "Sector", "Asset Class", "Market Value", "Weight (%)",
+                  "Notional Value", "Par Value", "CUSIP", "ISIN", "SEDOL", "Location",
+                  "Exchange", "Currency", "Duration", "YTM (%)", "FX Rate", "Maturity",
+                  "Coupon (%)", "Mod. Duration", "Yield to Call (%)", "Yield to Worst (%)",
+                  "Real Duration", "Real YTM (%)", "Market Currency", "Accrual Date", "Effective Date"]
+        holdings = {
+            "IBIC": [("TREASURY (CPI) NOTE", "Fixed Income", "91282CDC2", "98.56"),
+                     ("USD CASH", "Cash", "-", "1.19"),
+                     ("BLK CSH FND TREASURY SL AGENCY", "Money Market", "066922477", "0.25")],
+            "IBIH": [("TREASURY (CPI) NOTE", "Fixed Income", "91282CQP9", "36.60"),
+                     ("TREASURY (CPI) NOTE", "Fixed Income", "91282CBF7", "31.72"),
+                     ("TREASURY (CPI) NOTE", "Fixed Income", "91282CCM1", "31.66"),
+                     ("BLK CSH FND TREASURY SL AGENCY", "Money Market", "066922477", "0.01"),
+                     ("USD CASH", "Cash", "-", "0.00")],
+            "IBIJ": [("TREASURY (CPI) NOTE", "Fixed Income", "91282CGK1", "50.20"),
+                     ("TREASURY (CPI) NOTE", "Fixed Income", "91282CHP9", "49.77"),
+                     ("USD CASH", "Cash", "-", "0.03"),
+                     ("BLK CSH FND TREASURY SL AGENCY", "Money Market", "066922477", "0.00")],
+            "IBIK": [("TREASURY (CPI) NOTE", "Fixed Income", "91282CLE9", "51.10"),
+                     ("TREASURY (CPI) NOTE", "Fixed Income", "91282CJY8", "48.89"),
+                     ("USD CASH", "Cash", "-", "0.01")],
+            "IBIM": [("TREASURY (CPI) NOTE", "Fixed Income", "91282AAA1", "50.00"),
+                     ("TREASURY (CPI) NOTE", "Fixed Income", "91282BBB2", "50.00")],
+        }
+
+        def document(ticker, *, positions=None, date="Oct 01, 2026", add_price=None):
+            columns = header.copy()
+            if add_price if add_price is not None else ticker != "IBIM":
+                columns.insert(columns.index("Location"), "Price")
+            out = io.StringIO()
+            writer = csv.writer(out)
+            writer.writerow([f"iShares® iBonds® Oct {years[ticker]} Term TIPS ETF"])
+            writer.writerow(["Fund Holdings as of", date])
+            writer.writerow([])
+            writer.writerow(columns)
+            for name, asset_class, cusip, weight in positions or holdings[ticker]:
+                row = dict.fromkeys(columns, "-")
+                row.update({"Name": name, "Sector": "Treasury" if asset_class == "Fixed Income" else "Cash and/or Derivatives",
+                            "Asset Class": asset_class, "Weight (%)": weight, "CUSIP": cusip,
+                            "Location": "United States", "Currency": "USD", "Market Currency": "USD"})
+                if "Price" in row:
+                    row["Price"] = "99.96"
+                writer.writerow([row[column] for column in columns])
+            return out.getvalue()
+
+        class FixedDateTime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 10, 5, tzinfo=tz or timezone.utc)
+
+        def fetch(ticker, csv_text, *, redirect=None):
+            class Response(io.BytesIO):
+                status = 200
+
+                def geturl(self):
+                    return redirect or urls[ticker]
+
+            def urlopen(request, timeout):
+                self.assertEqual(request.full_url, urls[ticker])
+                return Response(csv_text.encode("utf-8"))
+
+            with patch.object(self.fetcher, "datetime", FixedDateTime), \
+                    patch.object(self.fetcher.urllib.request, "urlopen", side_effect=urlopen):
+                return self.fetcher.fetch_official_etf_holdings(ticker, 1)
+
+        for ticker in urls:
+            with self.subTest(ticker=ticker):
+                source, data, provenance = fetch(ticker, document(ticker))
+                self.assertEqual(source, urls[ticker])
+                self.assertEqual((data["date"], data["count"]), ("2026-10-01", len(holdings[ticker])))
+                self.assertEqual(provenance["provider"], "ishares")
+                self.assertEqual(provenance["country_coverage"], "issuer_csv_location")
+                self.assertEqual(data["countries"][0]["country"], "United States")
+                self.assertAlmostEqual(sum(item["as"] for item in data["holdings"]),
+                                       sum(float(item[3]) for item in holdings[ticker]))
+                if ticker != "IBIM":
+                    cash = next(item for item in data["holdings"] if item["n"] == "USD CASH")
+                    self.assertIsNone(cash["cusip"])
+                    self.assertEqual(cash["raw"]["CUSIP"], "-")
+                    self.assertIn("Price", data["holdings"][0]["raw"])
+                else:
+                    self.assertNotIn("Price", data["holdings"][0]["raw"])
+
+        for ticker in ("IBIC", "IBIH", "IBIJ", "IBIK"):
+            valid = document(ticker)
+            with self.subTest(ticker=ticker, case="wrong fund"), self.assertRaises(ValueError):
+                fetch(ticker, valid.replace(str(years[ticker]), "2099", 1))
+            with self.subTest(ticker=ticker, case="missing Price"), self.assertRaises(ValueError):
+                fetch(ticker, document(ticker, add_price=False))
+            with self.subTest(ticker=ticker, case="wrong location"), self.assertRaises(ValueError):
+                fetch(ticker, valid.replace("United States", "Canada", 1))
+            with self.subTest(ticker=ticker, case="bad cash identity"), self.assertRaises(ValueError):
+                fetch(ticker, valid.replace("USD CASH", "OTHER CASH", 1))
+            with self.subTest(ticker=ticker, case="bad noncash CUSIP"), self.assertRaises(ValueError):
+                fetch(ticker, valid.replace(holdings[ticker][0][2], "-", 1))
+            with self.subTest(ticker=ticker, case="future date"), self.assertRaises(ValueError):
+                fetch(ticker, document(ticker, date="Oct 06, 2026"))
+            with self.subTest(ticker=ticker, case="stale date"), self.assertRaises(ValueError):
+                fetch(ticker, document(ticker, date="Sep 25, 2026"))
+            with self.subTest(ticker=ticker, case="redirect"), self.assertRaises(ValueError):
+                fetch(ticker, valid, redirect="https://example.com/holdings.csv")
+        ibic_no_treasury = [(name, "Money Market" if kind == "Fixed Income" else kind, cusip, weight)
+                            for name, kind, cusip, weight in holdings["IBIC"]]
+        with self.assertRaises(ValueError):
+            fetch("IBIC", document("IBIC", positions=ibic_no_treasury))
+        ibij_one_treasury = [(name, "Money Market" if index == 0 else kind, cusip, weight)
+                             for index, (name, kind, cusip, weight) in enumerate(holdings["IBIJ"])]
+        with self.assertRaises(ValueError):
+            fetch("IBIJ", document("IBIJ", positions=ibij_one_treasury))
+        ibim_cash = [*holdings["IBIM"], ("USD CASH", "Cash", "-", "0.00")]
+        with self.assertRaises(ValueError):
+            fetch("IBIM", document("IBIM", positions=ibim_cash))
+        for ticker in ("IBIL", "TLTW"):
+            with self.assertRaisesRegex(ValueError, "no verified official holdings fallback"):
+                self.fetcher.fetch_official_etf_holdings(ticker, 1)
+
     def test_hbil_official_html_reconciles_signed_net_assets_and_rejects_bad_rows(self) -> None:
         page_url = "https://www.harborcapital.com/etf/hbil/"
         header = ["Company Name", "Category Name", "Cusip", "Shares", "Maturity Date",
