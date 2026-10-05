@@ -192,6 +192,10 @@ try {
     assert.deepEqual(holding, raw);
     assert.deepEqual(stats, { total: 1, profileMiss: 1 });
   }
+  const misTickered = { ticker: "ATI", cusip: "718172109", name: "PHILIP MORRIS INTL INC", shares: 5 };
+  const misEnriched = { ...misTickered, sector: "Industrials", industry: "Metals", market_cap_usd: 9, price_latest: 9, enrichment_source: "yf-local" };
+  backfillHolding(misEnriched, {}, { total: 0, profileMiss: 0 });
+  assert.deepEqual(misEnriched, misTickered);
   const unrelated = { cusip: "000000000", sector: "Existing sector", price_latest: 9 };
   backfillHolding(unrelated, {}, { total: 0, profileMiss: 0 });
   assert.deepEqual(unrelated, { cusip: "000000000", sector: "Existing sector", price_latest: 9 });

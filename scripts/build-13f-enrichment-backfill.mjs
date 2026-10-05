@@ -334,9 +334,10 @@ function backfillHolding(holding, filing, stats) {
   const resolved = resolver.resolveHoldingSymbol(holding);
   const enrichmentSymbol = String(holding.enrichment_symbol ?? holding.ticker ?? "").trim().toUpperCase();
   const verifiedOwnEnrichment = holding.enrichment_source === "yf-local"
-    && enrichmentSymbol === resolved.symbol;
-  if (resolved.authoritative && !verifiedOwnEnrichment) {
-    // Remove unknown or mismatched identity metadata before exact enrichment.
+    && enrichmentSymbol.replace("-", ".") === String(resolved.symbol ?? "").replace("-", ".");
+  if (!verifiedOwnEnrichment && (resolved.authoritative || holding.enrichment_source === "yf-local")) {
+    // Remove unknown or mismatched identity metadata before exact enrichment,
+    // including profiles taken from an unconfirmed stored filing ticker.
     // Verified same-security LKG survives a temporary missing/failed profile.
     for (const key of [
       "sector", "industry", "market_cap_usd", "market_cap_bucket_abs",
