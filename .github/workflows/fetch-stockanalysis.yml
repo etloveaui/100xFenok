@@ -846,6 +846,8 @@ jobs:
                   payload = json.loads(body)
                   if not isinstance(payload, dict):
                       raise ValueError("payload is not an object")
+                  legacy_unclassified = (legacy_baseline and "source_as_of" not in payload
+                                         and "detail_status" not in payload)
                   # Earlier active generations predate the explicit source stamp.
                   # Derive their floor from the same provider fields as acquisition;
                   # incoming artifacts still require their own verified stamp.
@@ -859,16 +861,45 @@ jobs:
               if fetched is None or fetched > datetime.now(timezone.utc) or (source and source > fetched):
                   raise SystemExit(f"ETF {label} source/fetch clock invalid for {ticker}")
               complete = fetcher.is_complete_stockanalysis_etf_payload(ticker, payload)
-              return payload, source, complete
+              return payload, source, complete, legacy_unclassified
 
           def enforce_floor(ticker, candidate_payload, candidate_source, candidate_complete, baseline_bytes, label):
               if baseline_bytes is None:
                   return
-              baseline, baseline_source, baseline_complete = checked_payload(
+              baseline, baseline_source, baseline_complete, legacy_unclassified = checked_payload(
                   baseline_bytes, ticker, label, legacy_baseline=True)
               if baseline_source and (candidate_source is None or candidate_source < baseline_source):
                   raise SystemExit(f"ETF {ticker} artifact source date regresses {label}")
-              if baseline_complete and not candidate_complete:
+              old_normalized = baseline.get("normalized") or {}
+              new_normalized = candidate_payload.get("normalized") or {}
+              old_holdings = (baseline.get("raw") or {}).get("holdings")
+              new_holdings = (candidate_payload.get("raw") or {}).get("holdings")
+              new_count = new_normalized.get("holding_count")
+              # A legacy row with no country surface was never country-complete.
+              # Admit only that same gap's new explicit label; every existing
+              # complete-baseline quote/history/date floor still runs below.
+              same_legacy_country_gap = (
+                  baseline_complete and legacy_unclassified
+                  and candidate_payload.get("detail_status") == "stockanalysis_partial"
+                  and candidate_payload.get("partial_reason_codes") == ["holdings_countries_unavailable"]
+                  and isinstance(old_holdings, dict) and isinstance(new_holdings, dict)
+                  and old_holdings.get("countries") is None and new_holdings.get("countries") is None
+                  and isinstance(old_holdings.get("allocationChartData"), (dict, type(None)))
+                  and isinstance(new_holdings.get("allocationChartData"), (dict, type(None)))
+                  and not (old_holdings.get("allocationChartData") or {}).get("countries")
+                  and not (new_holdings.get("allocationChartData") or {}).get("countries")
+                  and old_normalized.get("countries") is None and new_normalized.get("countries") is None
+                  and isinstance(new_normalized.get("holdings"), list) and bool(new_normalized["holdings"])
+                  and len(new_normalized["holdings"]) >= len(old_normalized.get("holdings") or [])
+                  and isinstance(new_count, (int, float)) and not isinstance(new_count, bool)
+                  and math.isfinite(new_count) and new_count == old_normalized.get("holding_count")
+                  and new_count >= len(new_normalized["holdings"])
+                  and all(new_normalized.get(field) is not None
+                          and (not value or bool(new_normalized[field]))
+                          for field, value in old_normalized.items() if value is not None)
+                  and (not old_holdings.get("sectors") or bool(new_holdings.get("sectors")))
+              )
+              if baseline_complete and not candidate_complete and not same_legacy_country_gap:
                   raise SystemExit(f"ETF {ticker} artifact loses complete {label} detail")
               if baseline_complete:
                   old_normalized = baseline.get("normalized") or {}
@@ -917,7 +948,7 @@ jobs:
               if len(body) != row["size"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
                   raise SystemExit(f"ETF candidate artifact changed after apply: {rel}")
               ticker = name[:-5]
-              payload, source_as_of, complete = checked_payload(body, ticker, "artifact")
+              payload, source_as_of, complete, _ = checked_payload(body, ticker, "artifact")
               active_file = active_root / name
               enforce_floor(ticker, payload, source_as_of, complete,
                             active_file.read_bytes() if active_file.exists() else None, "active")

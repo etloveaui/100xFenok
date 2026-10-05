@@ -365,6 +365,113 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 self.assertIn(diagnostic, rejected.stderr)
                 self.assertEqual((rejected_root / "TARGET.json").read_bytes(), legacy_bytes)
 
+            # Older payloads did not label their already-missing country surface.
+            # The same absence in a newer response is not loss of complete data.
+            legacy["raw"]["holdings"] = {"countries": None}
+            legacy["normalized"]["countries"] = None
+            legacy_country_bytes = json.dumps(legacy).encode()
+            (active / "TARGET.json").write_bytes(legacy_country_bytes)
+
+            def country_partial(body):
+                payload = json.loads(body)
+                payload["raw"]["holdings"] = {"countries": None}
+                payload["normalized"]["countries"] = None
+                payload["detail_status"] = "stockanalysis_partial"
+                payload["partial_reason_codes"] = ["holdings_countries_unavailable"]
+                return json.dumps(payload).encode()
+
+            (git_etfs / "TARGET.json").write_bytes(country_partial(etf_payload(2)))
+            for command in (["git", "add", target_rel],
+                            ["git", "-c", "user.name=Fixture", "-c",
+                             "user.email=fixture@example.invalid", "commit", "-qm", "Partial country baseline"]):
+                completed = subprocess.run(command, cwd=repo, text=True, capture_output=True, check=False)
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+            country_bytes = country_partial(target_bytes)
+            recovered, recovered_root = run_candidate("legacy-country-gap", country_bytes)
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual((recovered_root / "TARGET.json").read_bytes(), country_bytes)
+            self.assertEqual((active / "TARGET.json").read_bytes(), legacy_country_bytes)
+
+            missing_holdings = json.loads(country_bytes)
+            missing_holdings["normalized"]["holdings"] = []
+            extra_reason = json.loads(country_bytes)
+            extra_reason["partial_reason_codes"].append("history_daily_1y_unavailable")
+            raw_country = json.loads(country_bytes)
+            raw_country["raw"]["holdings"]["countries"] = [{"country": "United States"}]
+            normalized_country = json.loads(country_bytes)
+            normalized_country["normalized"]["countries"] = [{"country": "United States"}]
+            changed_count = json.loads(country_bytes)
+            changed_count["normalized"]["holding_count"] = 2
+            chart_country = json.loads(country_bytes)
+            chart_country["raw"]["holdings"]["allocationChartData"] = {
+                "countries": [{"country": "United States", "weight": 100}]}
+            for label, body, diagnostic in (
+                ("country-source-regression", country_partial(etf_payload(4)), "regresses active"),
+                ("country-quote-regression", country_partial(etf_payload(1, empty_quote=True)), "loses active usable quote"),
+                ("country-history-regression", country_partial(etf_payload(1, truncated_history=True)), "loses active daily_1y history"),
+                ("country-missing-holdings", json.dumps(missing_holdings).encode(), "loses complete active"),
+                ("country-extra-reason", json.dumps(extra_reason).encode(), "loses complete active"),
+                ("country-raw-inconsistent", json.dumps(raw_country).encode(), "loses complete active"),
+                ("country-normalized-inconsistent", json.dumps(normalized_country).encode(), "loses complete active"),
+                ("country-changed-count", json.dumps(changed_count).encode(), "loses complete active"),
+                ("country-chart-inconsistent", json.dumps(chart_country).encode(), "loses complete active"),
+            ):
+                rejected, rejected_root = run_candidate(label, body)
+                self.assertNotEqual(rejected.returncode, 0, label)
+                self.assertIn(diagnostic, rejected.stderr)
+                self.assertEqual((rejected_root / "TARGET.json").read_bytes(), legacy_country_bytes)
+
+            for label, update in (
+                ("country-explicit-baseline", {"source_as_of": json.loads(etf_payload(3))["source_as_of"]}),
+                ("country-explicit-status", {"detail_status": "stockanalysis"}),
+            ):
+                explicit = {**legacy, **update}
+                (active / "TARGET.json").write_bytes(json.dumps(explicit).encode())
+                rejected, _ = run_candidate(label, country_bytes)
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn("loses complete active", rejected.stderr)
+
+            legacy["raw"]["holdings"]["allocationChartData"] = {
+                "countries": [{"country": "United States", "weight": 100}]}
+            (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
+            rejected, _ = run_candidate("country-baseline-chart-loss", country_bytes)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses complete active", rejected.stderr)
+            legacy["raw"]["holdings"]["allocationChartData"] = {"countries": []}
+
+            legacy["normalized"]["holdings"].append({"symbol": "OTHER"})
+            legacy["normalized"]["holding_count"] = 2
+            (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
+            rejected, _ = run_candidate("country-nonempty-shorter-holdings", json.dumps(changed_count).encode())
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses complete active", rejected.stderr)
+            legacy["normalized"]["holdings"].pop()
+            legacy["normalized"]["holding_count"] = 1
+
+            legacy["normalized"]["sectors"] = [{"sector": "Financials", "weight": 100}]
+            (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
+            rejected, _ = run_candidate("country-sector-loss", country_bytes)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses complete active", rejected.stderr)
+            empty_sector = json.loads(country_bytes)
+            empty_sector["normalized"]["sectors"] = []
+            rejected, _ = run_candidate("country-sector-empty", json.dumps(empty_sector).encode())
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses complete active", rejected.stderr)
+            legacy["normalized"]["sectors"] = None
+            legacy["raw"]["holdings"]["sectors"] = [{"sector": "Financials"}]
+            (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
+            rejected, _ = run_candidate("country-raw-sector-loss", country_bytes)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses complete active", rejected.stderr)
+            legacy["raw"]["holdings"]["sectors"] = None
+
+            legacy["normalized"]["countries"] = [{"country": "United States", "weight": 100}]
+            (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
+            rejected, _ = run_candidate("country-actual-loss", country_bytes)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses complete active", rejected.stderr)
+
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
             "--candidate-root \"$STOCKANALYSIS_CANDIDATE_ROOT\"",
