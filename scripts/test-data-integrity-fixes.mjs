@@ -334,7 +334,8 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "ATI", cusip: "01741R102", name: "ATI INC" }).symbol, "ATI");
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "459200101", name: "INTERNATIONAL BUSINESS MACHS" }).symbol, "IBM");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "T", name: "AT&T INC" }).symbol, "T");
-  assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287432", name: "ISHARES TR" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287999", name: "ISHARES TR" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVV", cusip: "464287432", name: "ISHARES TR" }).symbol, "TLT");
   assert.equal(resolver.confirmed("ATI", "SPACE EXPLORATION TECHN CORP"), false);
   const profileSource = read("scripts/build-13f-enrichment-backfill.mjs");
   const profileBody = profileSource.slice(profileSource.indexOf("function resolveProfile("), profileSource.indexOf("function priceSnapshot("));
