@@ -26,9 +26,12 @@ import {
   sectorWeights as buildSectorWeights,
   treemapRows as buildTreemapRows,
 } from "./lib/sec13f-portfolio-views.mjs";
+import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
+const { resolveHoldingSymbol } = loadTickerResolver(ROOT);
+const confirmedSymbol = (holding) => resolveHoldingSymbol(holding).symbol;
 
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
 const OUTPUT = path.join(ROOT, "data/sec-13f/analytics/portfolio_views.json");
@@ -144,7 +147,7 @@ function returnSinceQuarterEnd(ticker, reportDate) {
 function performanceSeries(filings) {
   const points = filings
     .filter((f) => f.report_date)
-    .map((f) => ({ date: f.report_date, agg: aggregateFilingHoldings(f) }));
+    .map((f) => ({ date: f.report_date, agg: aggregateFilingHoldings(f, confirmedSymbol) }));
   if (points.length < 2 && !(points.length === 1 && latestClose("SPY"))) {
     return null;
   }
@@ -229,12 +232,12 @@ for (const file of investorFiles) {
   const quarters = filings.map((f) => f.quarter);
   const history = Object.fromEntries(CANONICAL.map((c) => [c, []]));
   for (const filing of filings) {
-    const weights = sectorWeights(aggregateFilingHoldings(filing));
+    const weights = sectorWeights(aggregateFilingHoldings(filing, confirmedSymbol));
     for (const c of CANONICAL) history[c].push(weights[c]);
   }
 
   const latest = filings.at(-1);
-  const latestAgg = aggregateFilingHoldings(latest);
+  const latestAgg = aggregateFilingHoldings(latest, confirmedSymbol);
   investors[id] = {
     name: investor.name,
     quarter: latest.quarter,
@@ -281,7 +284,7 @@ for (const file of investorFiles) {
   const { investor } = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   for (const filing of investor.filings ?? []) {
     if (!cohortByQuarter.has(filing.quarter)) continue;
-    const agg = aggregateFilingHoldings(filing);
+    const agg = aggregateFilingHoldings(filing, confirmedSymbol);
     const bucket = cohortByQuarter.get(filing.quarter);
     for (const [ticker, h] of agg.positions) {
       bucket[resolveCanonical(h.gics, ticker, h.name)] += h.value;

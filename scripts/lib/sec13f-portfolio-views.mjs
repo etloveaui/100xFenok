@@ -1,6 +1,8 @@
 const round4 = (value) => Math.round(value * 10000) / 10000;
 
-export function aggregateFilingHoldings(filing) {
+// symbolFor returns the confirmed security symbol; stored filing tickers are
+// not identity evidence (see sec13f-symbols.mjs).
+export function aggregateFilingHoldings(filing, symbolFor = (holding) => holding?.ticker) {
   const aggregate = {
     positions: new Map(),
     reportedValue: 0,
@@ -13,7 +15,7 @@ export function aggregateFilingHoldings(filing) {
     const value = Number(holding?.market_value);
     if (!(value > 0)) continue;
     aggregate.reportedValue += value;
-    const ticker = String(holding?.ticker ?? "").trim().toUpperCase();
+    const ticker = String(symbolFor(holding) ?? "").trim().toUpperCase();
     if (!ticker) {
       aggregate.unmappedValue += value;
       aggregate.unmappedRows += 1;

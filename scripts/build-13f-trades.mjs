@@ -20,9 +20,11 @@ import {
   requireKeys,
   requireObject,
 } from "./lib/guarded-json.mjs";
+import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
+const { resolveHoldingSymbol } = loadTickerResolver(ROOT);
 
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
 const OUTPUT = path.join(ROOT, "data/sec-13f/analytics/trades_ranking.json");
@@ -135,7 +137,8 @@ for (const inv of investors) {
 function aggByTicker(filing) {
   const map = new Map();
   for (const h of filing.holdings ?? []) {
-    const ticker = h.ticker?.trim();
+    // Stored filing tickers are not identity evidence; use the confirmed symbol.
+    const ticker = resolveHoldingSymbol(h).symbol;
     if (!ticker) continue;
     const cur = map.get(ticker) ?? {
       shares: 0,
