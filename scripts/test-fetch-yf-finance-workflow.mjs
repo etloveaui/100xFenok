@@ -4,7 +4,9 @@
 // workflow commits; the gate keeps it that way in both directions.
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-yf-finance.yml", import.meta.url), "utf8");
@@ -34,6 +36,69 @@ function extractStepSpan(jobSpan, stepName) {
 
 const acquireJob = extractJobSpan(workflowText, "acquire-yf-finance");
 const publishJob = extractJobSpan(workflowText, "publish-yf-finance");
+
+// Execute the actual production loop under bash -e. Only the provider and
+// aggregator process boundary is stubbed; Python fixtures validate their data.
+const fetchStep = extractStepSpan(acquireJob, "Run batch fetch");
+const loopStart = fetchStep.indexOf('          if [ "${INPUT_DAILY_ALL_SHARDS:-false}" = "true" ]');
+assert.ok(loopStart >= 0, "daily all-shards branch must exist");
+const dailyLines = fetchStep.slice(loopStart).split("\n");
+const loopEnd = dailyLines.findIndex((line) => line.trim() && !line.startsWith("          "));
+const dailyShell = dailyLines.slice(0, loopEnd < 0 ? undefined : loopEnd).map((line) => line.slice(10)).join("\n");
+for (const scenario of [
+  { name: "isolated", statuses: "1,0,0", exit: 1, calls: ["0/3", "1/3", "2/3", "aggregate"] },
+  { name: "systemic", statuses: "2,0,0", exit: 2, calls: ["0/3", "aggregate"] },
+  { name: "missing-evidence", statuses: "1,0,0", exit: 2, missing: "true", calls: ["0/3", "aggregate"] },
+  { name: "success", statuses: "0,0,0", exit: 0, calls: ["0/3", "1/3", "2/3", "aggregate"] },
+]) {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "yf-shards-"));
+  try {
+    const bin = path.join(fixture, "bin");
+    fs.mkdirSync(bin);
+    const callsPath = path.join(fixture, "calls.txt");
+    fs.writeFileSync(path.join(bin, "python3"), `#!/usr/bin/env bash
+if [ "$1" = "scripts/rebuild-yf-finance-summary.py" ]; then
+  echo aggregate >> "$FAKE_CALLS"
+  exit "$FAKE_AGGREGATE_EXIT"
+fi
+if [ "$1" != "scripts/fetch-yf-finance.py" ]; then exit 99; fi
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--shard" ]; then SHARD="$2"; break; fi
+  shift
+done
+echo "$SHARD" >> "$FAKE_CALLS"
+IFS=, read -r -a STATUSES <<< "$FAKE_SHARD_STATUSES"
+if [ "$FAKE_MISSING_SUMMARY" != "true" ]; then
+  mkdir -p data/yf/finance
+  echo '{}' > data/yf/finance/_summary.json
+fi
+exit "\${STATUSES[\${SHARD%%/*}]}"
+`, { mode: 0o755 });
+    const result = spawnSync("bash", ["-e", "-c", dailyShell], {
+      cwd: fixture,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH}`,
+        RUNNER_TEMP: fixture,
+        INPUT_DAILY_ALL_SHARDS: "true",
+        INPUT_DAILY_STOCK_SHARDS: "3",
+        INPUT_SHARD: "",
+        INPUT_PLAN_ONLY: "false",
+        ARGS: "",
+        FAKE_CALLS: callsPath,
+        FAKE_SHARD_STATUSES: scenario.statuses,
+        FAKE_AGGREGATE_EXIT: String(scenario.exit),
+        FAKE_MISSING_SUMMARY: scenario.missing ?? "false",
+      },
+    });
+    assert.equal(result.status, scenario.exit, `${scenario.name}: ${result.stderr}`);
+    assert.deepEqual(fs.readFileSync(callsPath, "utf8").trim().split("\n"), scenario.calls,
+      `${scenario.name}: isolated failures continue; systemic failures stop and aggregate`);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
 
 for (const input of [
   "untracked_only", "retry_limit", "regular_limit", "untracked_limit",

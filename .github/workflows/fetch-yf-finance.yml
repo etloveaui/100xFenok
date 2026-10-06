@@ -352,12 +352,52 @@ jobs:
           if [ "$INPUT_PLAN_ONLY" = "true" ]; then ARGS="$ARGS --plan-only"; fi
           if [ "${INPUT_DAILY_ALL_SHARDS:-false}" = "true" ] && [ -z "$INPUT_SHARD" ]; then
             DAILY_STOCK_SHARDS="${INPUT_DAILY_STOCK_SHARDS:-5}"
+            case "$DAILY_STOCK_SHARDS" in
+              ''|*[!0-9]*) echo "::error::daily stock shard count must be a positive integer" >&2; exit 2 ;;
+            esac
+            if [ "$DAILY_STOCK_SHARDS" -lt 1 ]; then
+              echo "::error::daily stock shard count must be positive" >&2
+              exit 2
+            fi
+            SHARD_RESULTS_DIR="$(mktemp -d "$RUNNER_TEMP/yf-shards.XXXXXX")"
+            BATCH_EXIT=0
             echo "Running all daily stock shards: ${DAILY_STOCK_SHARDS}"
             for shard_index in $(seq 0 $((DAILY_STOCK_SHARDS - 1))); do
               echo "::group::YF daily stock shard ${shard_index}/${DAILY_STOCK_SHARDS}"
-              python3 scripts/fetch-yf-finance.py $ARGS --all-shards-run --shard "${shard_index}/${DAILY_STOCK_SHARDS}" --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
+              if [ "$INPUT_PLAN_ONLY" != "true" ]; then rm -f data/yf/finance/_summary.json; fi
+              # Exit 1 is a rejected ticker candidate with preserved state;
+              # exit 2 is systemic provider/storage failure. An explicit branch
+              # keeps bash -e from cancelling the remaining isolated shards.
+              if python3 scripts/fetch-yf-finance.py $ARGS --all-shards-run --all-shards-plan-dir "$SHARD_RESULTS_DIR" --shard "${shard_index}/${DAILY_STOCK_SHARDS}" --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"; then
+                SHARD_EXIT=0
+              else
+                SHARD_EXIT=$?
+              fi
+              printf '%s\n' "$SHARD_EXIT" > "$SHARD_RESULTS_DIR/${shard_index}.exit"
+              if [ "$INPUT_PLAN_ONLY" != "true" ]; then
+                if [ -f data/yf/finance/_summary.json ]; then
+                  cp data/yf/finance/_summary.json "$SHARD_RESULTS_DIR/${shard_index}.json"
+                else
+                  echo "::error::shard ${shard_index}/${DAILY_STOCK_SHARDS} did not produce completion evidence" >&2
+                  SHARD_EXIT=2
+                fi
+              fi
+              if [ "$SHARD_EXIT" -gt "$BATCH_EXIT" ]; then BATCH_EXIT="$SHARD_EXIT"; fi
               echo "::endgroup::"
+              if [ "$SHARD_EXIT" -ge 2 ]; then
+                echo "::error::systemic Yahoo failure; stopping subsequent shards" >&2
+                break
+              fi
             done
+            if [ "$INPUT_PLAN_ONLY" != "true" ]; then
+              if python3 scripts/rebuild-yf-finance-summary.py --shard-results-dir "$SHARD_RESULTS_DIR" --expected-shards "$DAILY_STOCK_SHARDS"; then
+                AGGREGATE_EXIT=0
+              else
+                AGGREGATE_EXIT=$?
+              fi
+              if [ "$AGGREGATE_EXIT" -gt "$BATCH_EXIT" ]; then BATCH_EXIT="$AGGREGATE_EXIT"; fi
+            fi
+            exit "$BATCH_EXIT"
           else
             if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
             python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"

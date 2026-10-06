@@ -1693,6 +1693,30 @@ def validate_ticker_plan_limits(total_limit, retry_limit, regular_limit):
         raise ValueError("total limit must cover retry and regular limits")
 
 
+def freeze_all_shards_retry_queue(retry_queue, plan_dir, shard):
+    """Keep shard membership stable while earlier shards mutate retry state."""
+    path = Path(plan_dir) / "retry-queue.json"
+    if path.exists():
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        frozen = payload.get("symbols") if isinstance(payload, dict) else None
+        if (
+            not isinstance(payload, dict)
+            or payload.get("schema_version") != "yahoo-all-shards-retry-plan/v1"
+            or not isinstance(frozen, list)
+            or any(not isinstance(ticker, str) or not SYMBOL_RE.fullmatch(ticker) for ticker in frozen)
+            or len(frozen) != len(set(frozen))
+        ):
+            raise ValueError("invalid all-shards retry snapshot")
+        return frozen
+    if not shard.startswith("0/"):
+        raise ValueError("all-shards retry snapshot must be created by shard zero")
+    frozen = list(dict.fromkeys(retry_queue))
+    _atomic_write_bytes(path, stable_json({
+        "schema_version": "yahoo-all-shards-retry-plan/v1", "symbols": frozen,
+    }).encode("utf-8"))
+    return frozen
+
+
 def scheduled_shard_cycle_index(now, scheduled_weekday):
     if scheduled_weekday < 0 or scheduled_weekday > 6:
         raise ValueError("scheduled weekday must be within 0..6")
@@ -1918,11 +1942,21 @@ SYSTEMIC_FAILURE_MARKERS = {
         "invalid json", "expecting value", "unterminated string", "malformed json",
     ),
     "integrity": (
-        "Yahoo candidate payload is invalid", "promotion candidate payload is not bound",
-        "Yahoo candidate disagrees", "Yahoo candidate source date", "Yahoo provider source timestamp",
+        "promotion candidate payload", "promotion candidate canonical payload",
+        "promotion candidate source date",
         "stock-detail state publication failed",
     ),
 }
+
+# Rejected provider candidates never reached canonical publication. Keep their
+# failures visible without treating an isolated bad ticker as a broken lane.
+CANDIDATE_REJECTION_MARKERS = (
+    "Yahoo candidate payload is invalid", "Yahoo candidate disagrees",
+    "Yahoo candidate source date", "Yahoo provider source timestamp",
+    "source timestamp regression", "source history disappeared",
+    "history coverage collapsed", "history_as_of is unavailable",
+    "quote_as_of follows fetched_at", "history_as_of follows fetched_at",
+)
 
 TRANSIENT_PROVIDER_MISS_MARKERS = (
     "provider source timestamp is unavailable",
@@ -1970,6 +2004,8 @@ def yahoo_failure_kind(row, *, event_name=None):
     for category, markers in SYSTEMIC_FAILURE_MARKERS.items():
         if any(marker.lower() in text for marker in markers):
             return f"systemic_{category}"
+    if any(marker.lower() in text for marker in CANDIDATE_REJECTION_MARKERS):
+        return "candidate_rejected"
     if event_name == "workflow_dispatch" and any(marker in text for marker in CONTROLLED_FAILURE_MARKERS):
         return "transient_provider_miss"
     if any(marker in text for marker in TRANSIENT_PROVIDER_MISS_MARKERS):
@@ -2037,33 +2073,17 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         }
 
     current_results = state_index.get("current_results") if isinstance(state_index.get("current_results"), dict) else {}
+    # The current error list is uncapped evidence. Display samples such as
+    # lkg_details/unavailable_details cannot decide whether a failure is named.
     named_attempts = {
         str(row.get("ticker"))
         for row in current_results.get("errors") or []
         if isinstance(row, dict) and row.get("ticker")
     }
     retry_symbols = {str(value) for value in state_index.get("retry_symbols") or []}
-    kpi_names = {
-        str(row.get("symbol"))
-        for row in state_index.get("lkg_details") or []
-        if isinstance(row, dict) and row.get("symbol")
-    }
-    for group in state_index.get("stale_groups") or []:
-        if isinstance(group, dict):
-            kpi_names.update(str(value) for value in group.get("symbols") or [])
-    kpi_names.update(
-        str(row.get("symbol"))
-        for row in state_index.get("unavailable_details") or []
-        if isinstance(row, dict) and row.get("symbol")
-    )
-    for group_name in ("pending_details",):
-        kpi_names.update(
-            str(row.get("symbol") or row.get("ticker"))
-            for row in state_index.get(group_name) or []
-            if isinstance(row, dict) and (row.get("symbol") or row.get("ticker"))
-        )
     retained_lkg_tickers = []
     deferred_without_lkg_tickers = []
+    rejected_candidates = []
 
     for ticker in tickers:
         state = _load_failure_state(state_store, ticker)
@@ -2077,6 +2097,8 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
         )
         if not isinstance(latest_failure, dict) or latest_failure.get("failure_kind") != expected_kind:
             reasons.append(f"{ticker} failure classification does not match the actual failure")
+        if expected_kind == "candidate_rejected":
+            rejected_candidates.append(ticker)
         valid_lkg = _valid_retained_lkg(state_store, ticker, state)
         deferred = (
             isinstance(latest_failure, dict)
@@ -2089,20 +2111,27 @@ def yahoo_failure_exit_assessment(errors, state_store, state_index):
             retained_lkg_tickers.append(ticker)
         elif deferred:
             deferred_without_lkg_tickers.append(ticker)
-        if not valid_lkg and not deferred:
+        rejected_without_prior_data = (
+            expected_kind == "candidate_rejected"
+            and isinstance(latest_failure, dict)
+            and latest_failure.get("lkg_status") == "absent"
+            and latest_failure.get("data_loss") is False
+        )
+        if not valid_lkg and not deferred and not rejected_without_prior_data:
             if isinstance(latest_failure, dict) and latest_failure.get("data_loss") is True:
                 reasons.append(f"{ticker} lost previously advertised Yahoo data/LKG")
             else:
                 reasons.append(f"{ticker} has no valid retained LKG for a non-transient failure")
-        if ticker not in named_attempts or ticker not in kpi_names:
+        if ticker not in named_attempts:
             reasons.append(f"{ticker} is not named in the Yahoo KPI evidence")
 
     return {
-        "exit_code": 2 if reasons else 0,
+        "exit_code": 2 if reasons else 1 if rejected_candidates else 0,
         "tickers": tickers,
         "reasons": reasons,
         "retained_lkg_tickers": retained_lkg_tickers,
         "deferred_without_lkg_tickers": deferred_without_lkg_tickers,
+        "rejected_candidates": rejected_candidates,
     }
 
 
@@ -2192,6 +2221,8 @@ def write_empty_summary(profile, args, candidate_count, reason):
         "untracked_limit": args.untracked_limit,
         "merge_existing": args.merge_existing,
         "empty_reason": reason,
+        "exit_code": 0,
+        "current_results": {"attempted": 0, "successes": 0, "failed": 0, "skipped": 0, "fetch_attempts": 0, "errors": []},
         "errors": [],
     }
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
@@ -2311,6 +2342,7 @@ def main():
     parser.add_argument("--record-batch-state", action="store_true", help="persist bounded Yahoo lane attempt/LKG state")
     parser.add_argument("--natural-run", action="store_true", help="mark a scheduled acquisition eligible for deterministic retry priority")
     parser.add_argument("--all-shards-run", action="store_true", help="claim retries only in shard zero of a sequential all-shard run")
+    parser.add_argument("--all-shards-plan-dir", type=Path, help="shared temporary retry snapshot for a sequential all-shard invocation")
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
@@ -2355,6 +2387,8 @@ def main():
             raise ValueError("shard cycle index must be non-negative")
         validate_ticker_plan_limits(args.limit, args.retry_limit, args.regular_limit)
         validate_scheduled_shard(args.shard, args.scheduled_weekday, args.scheduled_slot)
+        if args.all_shards_plan_dir is not None and (not args.all_shards_run or not args.shard):
+            raise ValueError("--all-shards-plan-dir requires --all-shards-run and --shard")
     except ValueError as exc:
         parser.error(str(exc))
     controlled_failures = {
@@ -2458,6 +2492,15 @@ def main():
         "active_universe_scope": "core_etf" if args.core_daily_basket else "all_sources" if state_store else "selection",
         "observed_at": lifecycle_as_of,
     }
+    # Catalogue ownership preserves all retained evidence. Scheduled ownership
+    # is the exact pre-shard candidate population for each of the two crons.
+    # An explicit/manual selection must not redefine that scheduled contract.
+    if args.natural_run and not args.tickers and (args.stocks_only or core_retained_lane):
+        run_context["scheduled_universe"] = {
+            "scope": "core_etf" if args.core_daily_basket else "stocks",
+            "symbols": sorted(set(tickers) - terminal_tickers),
+            "observed_at": lifecycle_as_of,
+        }
     eligible_universe = active_universe
     freshness = (
         yahoo_source_freshness(existing_yahoo_source_dates(eligible_universe), run_context["observed_at"])
@@ -2488,6 +2531,8 @@ def main():
         if state_store and args.natural_run
         else []
     )
+    if args.all_shards_plan_dir is not None and not args.plan_only:
+        retry_queue = freeze_all_shards_retry_queue(retry_queue, args.all_shards_plan_dir, args.shard)
     # Cache reuse must still recognize retry-pending core tickers that fall
     # beyond today's retry budget and enter their regular shard page.
     retry_tickers = set(retry_queue)
@@ -2554,6 +2599,12 @@ def main():
         )
     if args.limit:
         tickers = tickers[: args.limit]
+    run_context["selection"] = {
+        "scope": "core_etf" if args.core_daily_basket else "stocks" if args.stocks_only else "selection",
+        "shard": args.shard,
+        "candidate_count_before_filters": candidate_count,
+        "selected_symbols": list(tickers),
+    }
 
     if args.plan_only:
         print(stable_json(plan_summary(args, tickers, candidate_count), indent=2))
@@ -2807,6 +2858,7 @@ def main():
             "skipped": False,
         }
         if error is not None:
+            result["failures"] = evidence.get("failures") or []
             result["failure_kind"] = yahoo_failure_kind(
                 {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []},
                 event_name=args.event_name,
@@ -2840,20 +2892,29 @@ def main():
         "merge_existing": args.merge_existing,
         "candidate_count_before_filters": candidate_count,
         "estimates_archive": dict(_ARCHIVE_RUN_COUNTS),
+        "selection": run_context["selection"],
         "errors": errors,
     }
-    (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
     if finalize_state:
         finalized_index = finalize_state(False)
+        summary["current_results"] = finalized_index["current_results"]
+    assessment = yahoo_failure_exit_assessment(errors, state_store, finalized_index)
+    summary["exit_code"] = assessment["exit_code"]
+    summary["failure_assessment"] = assessment
+    (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
     print(f"\n[summary] ok={len(ok)} failed={len(errors)} total={total_s}s")
     if errors:
-        assessment = yahoo_failure_exit_assessment(errors, state_store, finalized_index)
         if assessment["exit_code"] == 0:
             retained = ", ".join(assessment["retained_lkg_tickers"]) or "none"
             deferred = ", ".join(assessment["deferred_without_lkg_tickers"]) or "none"
             print(
                 f"[degraded] retained LKG: {retained}; deferred without LKG: {deferred}; "
                 "all failures joined the retry set and are named in KPI evidence"
+            )
+        elif assessment["exit_code"] == 1:
+            print(
+                f"[rejected] Yahoo candidate(s): {', '.join(assessment['rejected_candidates'])}; "
+                "canonical/LKG preserved and retry evidence recorded"
             )
         else:
             print(f"[corrupt] Yahoo batch integrity failure: {'; '.join(assessment['reasons'])}")

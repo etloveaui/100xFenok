@@ -295,7 +295,30 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
   if (lane.id === "yahoo_batch_quote_history") {
     const document = readOptionalJson(dataRoot, "admin/yahoo-batch-quote-history/index.json");
     if (!document) return null;
-    const symbols = Array.isArray(document.catalogue_symbols) ? document.catalogue_symbols : [];
+    const etfDocument = readOptionalJson(dataRoot, "admin/yahoo-batch-quote-history/index-core-etf.json");
+    const catalogues = [document, etfDocument].map((index) => (
+      Array.isArray(index?.catalogue_symbols) ? index.catalogue_symbols : []
+    ));
+    const scheduledMembers = [[document, "stocks"], [etfDocument, "core_etf"]];
+    const completeSchedule = scheduledMembers.every(([index, scope]) => {
+      const scheduled = index?.scheduled_universe;
+      const catalogue = new Set(Array.isArray(index?.catalogue_symbols) ? index.catalogue_symbols : []);
+      return index?.schema_version === "yahoo-batch-quote-history-index/v1"
+        && index.active_universe_scope === (scope === "stocks" ? "all_sources" : "core_etf")
+        && scheduled?.scope === scope
+        && Number.isFinite(Date.parse(scheduled.observed_at))
+        && Array.isArray(scheduled.symbols) && scheduled.symbols.length > 0
+        && new Set(scheduled.symbols).size === scheduled.symbols.length
+        && scheduled.symbols.every((id) => typeof id === "string"
+          && /^[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(id) && catalogue.has(id));
+    });
+    // The two cron members own their full pre-shard candidates, including
+    // stale and unobserved names. Catalogue counts and stale_groups stay in
+    // the producer indexes for audit. Missing/invalid membership evidence
+    // falls back to the whole catalogue; it cannot shrink the denominator.
+    const symbols = [...new Set(completeSchedule
+      ? scheduledMembers.flatMap(([index]) => index.scheduled_universe.symbols)
+      : catalogues.flat())];
     const members = symbols.map((id) => {
       if (typeof id !== "string" || !/^[A-Z0-9^=.-]+$/i.test(id)) return memberDate(null, "source", id);
       const state = readOptionalJson(dataRoot, `admin/yahoo-batch-quote-history/tickers/${id}.json`);

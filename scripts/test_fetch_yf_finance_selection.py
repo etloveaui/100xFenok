@@ -257,16 +257,17 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIn("systemic", output)
 
     def test_swallowed_systemic_evidence_cannot_be_laundered_by_transient_terminal_error(self) -> None:
-        code, state, _index, output = self._run_low_rate_failure(
-            error="empty payload",
-            failure_evidence_error="YFRateLimitError: HTTP 429 Too Many Requests",
-            retain_lkg=False,
-        )
-
-        self.assertEqual(code, 2)
-        self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_rate_limit")
-        self.assertFalse(state["latest_failure"]["deferred_acquisition"])
-        self.assertIn("[corrupt]", output)
+        for retain_lkg in (False, True):
+            with self.subTest(retain_lkg=retain_lkg):
+                code, state, _index, output = self._run_low_rate_failure(
+                    error="empty payload",
+                    failure_evidence_error="YFRateLimitError: HTTP 429 Too Many Requests",
+                    retain_lkg=retain_lkg,
+                )
+                self.assertEqual(code, 2)
+                self.assertEqual(state["latest_failure"]["failure_kind"], "systemic_rate_limit")
+                self.assertFalse(state["latest_failure"]["deferred_acquisition"])
+                self.assertIn("[corrupt]", output)
 
     def test_lkg_less_systemic_or_unknown_failure_remains_corrupt(self) -> None:
         for error in [
@@ -561,12 +562,160 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                     store.evaluate_recovery_candidate("AAPL", candidate, provider, canonical_payload=retained)
                 row = {"ticker": "AAPL", "error": str(caught.exception), "failures": []}
                 kind = self.fetcher.yahoo_failure_kind(row)
-                self.assertEqual(kind, "systemic_integrity")
+                self.assertEqual(kind, "candidate_rejected")
                 store.record_failure("AAPL", row["error"], run, ["fixture"], evidence, failure_kind=kind)
                 row["failure_kind"] = kind
                 assessment = self.fetcher.yahoo_failure_exit_assessment([row], store, store.rebuild_index({"AAPL"}, run))
-                self.assertEqual(assessment["exit_code"], 2)
+                self.assertEqual(assessment["exit_code"], 1)
                 self.assertEqual((canonical.read_bytes(), store._lkg_path("AAPL").read_bytes()), before)
+
+    def test_candidate_rejection_without_prior_data_is_named_and_isolated(self) -> None:
+        code, state, index, output = self._run_low_rate_failure(
+            error="ValueError: Yahoo candidate payload is invalid for FAIL",
+            retain_lkg=False,
+        )
+        self.assertEqual(code, 1)
+        self.assertEqual(state["latest_failure"]["failure_kind"], "candidate_rejected")
+        self.assertFalse(state["latest_failure"]["data_loss"])
+        self.assertFalse(state["latest_failure"]["deferred_acquisition"])
+        self.assertIn("FAIL", index["retry_symbols"])
+        self.assertIn("[rejected]", output)
+
+    def test_twenty_one_fresh_lkg_regressions_are_not_limited_by_display_samples(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        run = {**self._run("many-regressions"), "observed_at": "2026-07-15T03:00:00Z"}
+        evidence = {"attempts_used": 1, "failures": [], "latency_ms": 1}
+        errors, before = [], {}
+        tickers = [f"REG{index:02d}" for index in range(21)]
+        for ticker in tickers:
+            retained = self._daily_payload(ticker)
+            canonical = self.fetcher.OUT_DIR / f"{ticker}.json"
+            write_json(canonical, retained)
+            store.record_failure(ticker, "seed LKG", run, ["fixture"], evidence)
+            store.record_success(ticker, retained, run, ["fixture"], evidence)
+            before[ticker] = canonical.read_bytes(), store._lkg_path(ticker).read_bytes()
+            older = self.fetcher.decorate_finance_payload(
+                ticker=ticker, profile="daily", fetched_at=run["observed_at"],
+                data={"info": {"symbol": ticker, "quoteType": "EQUITY",
+                               "regularMarketTime": int(datetime(2026, 7, 13, tzinfo=timezone.utc).timestamp())},
+                      "history_1y": [{"date": "2026-07-13", "Close": 9}]},
+            )
+            with self.assertRaisesRegex(ValueError, "source timestamp regresses") as caught:
+                store.evaluate_recovery_candidate(ticker, older, older, canonical_payload=retained)
+            row = {"ticker": ticker, "error": str(caught.exception), "failures": []}
+            row["failure_kind"] = self.fetcher.yahoo_failure_kind(row)
+            self.assertEqual(row["failure_kind"], "candidate_rejected")
+            store.record_failure(ticker, row["error"], run, ["fixture"], evidence,
+                                 failure_kind=row["failure_kind"])
+            errors.append(row)
+
+        index = store.rebuild_index(set(tickers), run)
+        self.assertEqual(len(index["lkg_details"]), 20)
+        self.assertEqual(index["stale_groups"], [], "fresh LKG must not rely on a stale-group escape hatch")
+        self.assertEqual(len(index["retry_symbols"]), 21)
+        self.assertEqual(len(index["current_results"]["errors"]), 21)
+        assessment = self.fetcher.yahoo_failure_exit_assessment(errors, store, index)
+        self.assertEqual(assessment["exit_code"], 1)
+        self.assertEqual(assessment["reasons"], [])
+        self.assertEqual(assessment["retained_lkg_tickers"], tickers)
+        for ticker in tickers:
+            self.assertEqual(
+                ((self.fetcher.OUT_DIR / f"{ticker}.json").read_bytes(), store._lkg_path(ticker).read_bytes()),
+                before[ticker],
+            )
+        # Full error/retry membership and actual LKG bytes remain required,
+        # even for the ticker omitted from the twenty-row display sample.
+        for broken in (
+            {**index, "current_results": {**index["current_results"], "errors": index["current_results"]["errors"][:-1]}},
+            {**index, "retry_symbols": index["retry_symbols"][:-1]},
+        ):
+            self.assertEqual(self.fetcher.yahoo_failure_exit_assessment(errors, store, broken)["exit_code"], 2)
+        last_lkg = store._lkg_path(tickers[-1])
+        last_lkg.write_bytes(before[tickers[-1]][1] + b" ")
+        try:
+            self.assertEqual(self.fetcher.yahoo_failure_exit_assessment(errors, store, index)["exit_code"], 2)
+        finally:
+            last_lkg.write_bytes(before[tickers[-1]][1])
+
+    def test_regression_in_first_shard_preserves_lkg_and_next_shard_aggregate(self) -> None:
+        tickers = ["FAIL", "GOOD0", "GOOD1"]
+        sources = {ticker: ["global_scouter_stock"] for ticker in tickers}
+        self.fetcher.load_universe_sources = lambda **kwargs: (
+            sources if kwargs.get("stocks_only") else {**sources, "OFFLANE": ["stockanalysis_etf"]}
+        )
+        self.fetcher._observed_now = lambda: "2026-07-15T03:00:00Z"
+        self.fetcher.yahoo_source_freshness = lambda _sources, _now: {
+            "ages": {"FAIL": 0, "OFFLANE": 20}, "max_source_business_days": 6,
+        }
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        retained = self._daily_payload("FAIL")
+        canonical = self.fetcher.OUT_DIR / "FAIL.json"
+        write_json(canonical, retained)
+        write_json(self.fetcher.OUT_DIR / "OFFLANE.json", self._daily_payload("OFFLANE"))
+        evidence = {"attempts_used": 1, "failures": [], "latency_ms": 1}
+        store.record_failure("FAIL", "seed LKG", self._run("seed"), sources["FAIL"], evidence)
+        store.record_success("FAIL", retained, self._run("recovered"), sources["FAIL"], evidence)
+        before = canonical.read_bytes(), store._lkg_path("FAIL").read_bytes()
+        calls = []
+
+        def fake_fetch(ticker, **_kwargs):
+            calls.append(ticker)
+            data = self._daily_payload(ticker)["data"]
+            if ticker == "FAIL":
+                data["info"]["regularMarketTime"] = int(datetime(2026, 7, 13, tzinfo=timezone.utc).timestamp())
+                data["history_1y"] = [{"date": "2026-07-13", "Close": 9}]
+            return data, 1, None, evidence
+
+        self.fetcher.fetch_with_retry = fake_fetch
+        results_dir = self.root / "shard-results"
+        results_dir.mkdir()
+        statuses = []
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.stdout = io.StringIO()
+            for shard in range(2):
+                sys.argv = [
+                    "fetch-yf-finance.py", "--stocks-only", "--record-batch-state", "--natural-run",
+                    "--event-name", "schedule", "--all-shards-run", "--shard", f"{shard}/2",
+                    "--all-shards-plan-dir", str(results_dir), "--retry-limit", "40",
+                    "--sleep", "0", "--retries", "0",
+                ]
+                status = 0
+                try:
+                    self.fetcher.main()
+                except SystemExit as exc:
+                    status = exc.code
+                statuses.append(status)
+                (results_dir / f"{shard}.exit").write_text(str(status), encoding="utf-8")
+                (results_dir / f"{shard}.json").write_bytes((self.fetcher.OUT_DIR / "_summary.json").read_bytes())
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertEqual(statuses, [1, 0])
+        self.assertEqual(calls, ["FAIL", "GOOD1", "GOOD0"], "new retry state must not shift later shard membership")
+        self.assertEqual((canonical.read_bytes(), store._lkg_path("FAIL").read_bytes()), before)
+        for ticker in ("GOOD0", "GOOD1"):
+            self.assertEqual(json.loads((self.fetcher.OUT_DIR / f"{ticker}.json").read_text())["ticker"], ticker)
+        failed_state = json.loads(store._state_path("FAIL").read_text())
+        self.assertTrue(failed_state["retry"])
+        self.assertEqual(failed_state["latest_failure"]["failure_kind"], "candidate_rejected")
+
+        spec = importlib.util.spec_from_file_location("yf_summary", ROOT / "scripts/rebuild-yf-finance-summary.py")
+        summary_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(summary_module)
+        summary_module.OUT_DIR = self.fetcher.OUT_DIR
+        summary_module.STATE_INDEX = store.root / "index.json"
+        self.assertEqual(summary_module.aggregate_shard_summaries(results_dir, 2), 1)
+        index = json.loads(summary_module.STATE_INDEX.read_text())
+        self.assertEqual(index["current_results"]["attempted"], 3)
+        self.assertEqual(index["current_results"]["successes"], 2)
+        self.assertEqual(index["current_results"]["failed"], 1)
+        self.assertEqual([row["ticker"] for row in index["current_results"]["errors"]], ["FAIL"])
+        self.assertEqual(index["batch_results"]["unattempted_shards"], [])
+        self.assertEqual(index["scheduled_universe"]["symbols"], tickers)
+        self.assertEqual(index["selection"]["selected_symbols"], tickers)
+        self.assertIn("OFFLANE", index["catalogue_symbols"])
+        self.assertIn("OFFLANE", {symbol for group in index["stale_groups"] for symbol in group["symbols"]})
+        self.assertEqual((canonical.read_bytes(), store._lkg_path("FAIL").read_bytes()), before)
 
     def test_current_failure_is_prioritized_into_bounded_kpi_lkg_details(self) -> None:
         store = self.fetcher.YahooBatchStateStore(
@@ -608,6 +757,44 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
 
         self.assertEqual(len(index["lkg_details"]), 20)
         self.assertEqual(index["lkg_details"][0]["symbol"], "ZZZ")
+
+    def test_shard_aggregate_records_systemic_stop_and_missing_completion_evidence(self) -> None:
+        spec = importlib.util.spec_from_file_location("yf_summary", ROOT / "scripts/rebuild-yf-finance-summary.py")
+        summary_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(summary_module)
+        summary_module.OUT_DIR = self.fetcher.OUT_DIR
+        summary_module.STATE_INDEX = self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json"
+        initial = {
+            "schema_version": "yahoo-batch-quote-history-index/v1",
+            "catalogue_symbols": ["FAIL"], "counts": {"active": 1},
+        }
+        for missing in (False, True):
+            with self.subTest(missing=missing):
+                directory = self.root / f"aggregate-{missing}"
+                directory.mkdir()
+                write_json(summary_module.STATE_INDEX, initial)
+                (directory / "0.exit").write_text("2" if not missing else "1", encoding="utf-8")
+                if not missing:
+                    failure = {"ticker": "FAIL", "error": "HTTP 401 Unauthorized"}
+                    write_json(directory / "0.json", {
+                        "schema_version": "yf-finance/v2", "exit_code": 2,
+                        "count": 1, "ok": 0, "failed": 1, "skipped": 0, "total_seconds": 1,
+                        "errors": [failure],
+                        "current_results": {"attempted": 1, "successes": 0, "failed": 1,
+                                            "skipped": 0, "fetch_attempts": 1, "errors": [failure]},
+                        "selection": {"selected_symbols": ["FAIL"]},
+                    })
+                self.assertEqual(summary_module.aggregate_shard_summaries(directory, 3), 2)
+                index = json.loads(summary_module.STATE_INDEX.read_text())
+                self.assertEqual(index["batch_results"]["attempted_shards"], 1)
+                self.assertEqual(index["batch_results"]["completed_shards"], 0 if missing else 1)
+                self.assertEqual(index["batch_results"]["unattempted_shards"], ["1/3", "2/3"])
+                self.assertEqual(index["catalogue_symbols"], ["FAIL"])
+                self.assertGreater(index["current_results"]["failed"], 0)
+                if not missing:
+                    self.assertEqual(index["current_results"]["errors"], [failure])
+                else:
+                    self.assertIn("evidence_error", index["batch_results"]["shards"][0])
 
     def test_stockanalysis_etfs_parse_records_tables_and_aum_priority(self) -> None:
         write_json(
@@ -2580,7 +2767,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             self.root / "admin" / "yahoo-batch-quote-history",
             self.fetcher.OUT_DIR,
         )
-        core_run = {**self._run("core-etf"), "active_universe_scope": "core_etf"}
+        core_run = {
+            **self._run("core-etf"), "active_universe_scope": "core_etf",
+            "scheduled_universe": {"scope": "core_etf", "symbols": ["ETF"], "observed_at": "2026-07-15T00:00:00Z"},
+        }
         core_index = store.rebuild_index({"ETF"}, core_run)
         core_path = store.root / "index-core-etf.json"
         stock_path = store.root / "index.json"
@@ -2589,11 +2779,23 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertTrue(core_path.exists())
         self.assertFalse(stock_path.exists())
 
-        stock_run = {**self._run("stock"), "active_universe_scope": "all_sources"}
-        stock_index = store.rebuild_index({"STOCK"}, stock_run)
+        stock_run = {
+            **self._run("stock"), "active_universe_scope": "all_sources",
+            "scheduled_universe": {"scope": "stocks", "symbols": ["STOCK"], "observed_at": "2026-07-15T00:00:00Z"},
+        }
+        stock_index = store.rebuild_index({"STOCK", "CATALOGUE"}, stock_run)
         self.assertEqual(stock_index["active_universe_scope"], "all_sources")
         self.assertEqual(json.loads(core_path.read_text(encoding="utf-8"))["active_universe_scope"], "core_etf")
         self.assertEqual(json.loads(stock_path.read_text(encoding="utf-8"))["active_universe_scope"], "all_sources")
+        self.assertEqual(stock_index["scheduled_universe"]["symbols"], ["STOCK"])
+        self.assertEqual(stock_index["catalogue_symbols"], ["CATALOGUE", "STOCK"])
+        manual_index = store.rebuild_index({"STOCK", "CATALOGUE"}, {
+            **self._run("manual"), "active_universe_scope": "all_sources",
+            "selection": {"selected_symbols": ["CATALOGUE"]},
+        })
+        self.assertEqual(manual_index["scheduled_universe"], stock_index["scheduled_universe"],
+                         "a manual ticker selection must not redefine scheduled ownership")
+        self.assertEqual(json.loads(core_path.read_text())["scheduled_universe"]["symbols"], ["ETF"])
 
     def test_observed_and_terminal_state_win_over_stale_pending_inventory(self) -> None:
         store = self.fetcher.YahooBatchStateStore(

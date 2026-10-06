@@ -369,6 +369,52 @@ try {
     95,
     "threshold-boundary checks leave generated-document evidence unchanged",
   );
+  const scheduledDataRoot = path.join(root, "yahoo-scheduled-scope");
+  fs.cpSync(
+    path.join(dataRoot, "admin/yahoo-batch-quote-history"),
+    path.join(scheduledDataRoot, "admin/yahoo-batch-quote-history"),
+    { recursive: true },
+  );
+  const cataloguePath = path.join(scheduledDataRoot, "admin/yahoo-batch-quote-history/index.json");
+  const catalogue = JSON.parse(fs.readFileSync(cataloguePath, "utf8"));
+  const stockScope = {
+    ...catalogue,
+    schema_version: "yahoo-batch-quote-history-index/v1",
+    scheduled_universe: { scope: "stocks", observed_at: now, symbols: ["SYM0", "SYM1"] },
+    selection: { selected_symbols: ["SYM0"] },
+    stale_groups: [{ symbols: ["ZCBE"], source_as_of: "2026-04-10" }],
+  };
+  writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/index.json", stockScope);
+  const etfScope = {
+    schema_version: "yahoo-batch-quote-history-index/v1",
+    active_universe_scope: "core_etf",
+    catalogue_symbols: ["SYM1", "ZCBE", "UNOBSERVED"],
+    scheduled_universe: { scope: "core_etf", observed_at: now, symbols: ["SYM1", "ZCBE", "UNOBSERVED"] },
+    selection: { selected_symbols: ["SYM1"] },
+  };
+  writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/index-core-etf.json", etfScope);
+  const beforeCatalogue = fs.readFileSync(cataloguePath, "utf8");
+  const scheduled = summarizeDataSetFreshness(yahooLane, null, now, undefined, scheduledDataRoot);
+  assert.equal(scheduled.total_members, 4, "the two cron populations form one union before per-run shard limits");
+  assert.equal(scheduled.fresh_members, 2, "stale and unobserved scheduled names stay in the denominator");
+  assert.equal(scheduled.oldest_source_member, "ZCBE");
+  assert.equal(scheduled.status, "stopped", "membership alignment does not hide a scheduled stale member");
+  assert.equal(scheduled.max_age, yahooBatch.max_age, "scope correction must not relax the freshness bound");
+  assert.equal(fs.readFileSync(cataloguePath, "utf8"), beforeCatalogue,
+    "full catalogue counts and stale evidence are preserved independently of scheduled responsibility");
+  for (const invalidScope of [
+    undefined,
+    { ...etfScope.scheduled_universe, scope: "selection" },
+    { ...etfScope.scheduled_universe, symbols: ["SYM1", "SYM1"] },
+    { ...etfScope.scheduled_universe, symbols: ["OUTSIDE"] },
+  ]) {
+    writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/index-core-etf.json", {
+      ...etfScope, scheduled_universe: invalidScope,
+    });
+    const fallbackScope = summarizeDataSetFreshness(yahooLane, null, now, undefined, scheduledDataRoot);
+    assert.equal(fallbackScope.total_members, 101,
+      "missing or invalid cron membership falls back to both whole catalogues, never the current shard sample");
+  }
   assert.equal(rootDoc.sets.find((set) => set.set === "nasdaq_giw_sox").served_path,
     "data/indices/nasdaq-giw-sox-constituents.json");
   assert.equal(rootDoc.sets.find((set) => set.set === "finra_short_volume").served_path,

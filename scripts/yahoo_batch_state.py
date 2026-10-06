@@ -697,7 +697,7 @@ class YahooBatchStateStore:
         if not _valid_canonical_payload(canonical_payload, ticker):
             raise ValueError(f"promotion candidate canonical payload is invalid for {ticker}")
         if not self.recovery_candidate_advances(ticker, payload):
-            raise ValueError(f"Yahoo candidate source date regresses or is invalid for {ticker}")
+            raise ValueError(f"promotion candidate source date regresses or is invalid for {ticker}")
         pending = state.get("pending")
         data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
         history = data.get("history_1y")
@@ -888,6 +888,9 @@ class YahooBatchStateStore:
     def rebuild_index(self, active_universe: set[str], run: dict, batch_failure: str | None = None) -> dict:
         active = set(active_universe)
         active_universe_scope = str(run.get("active_universe_scope") or "").strip() or None
+        index_filename = CORE_ETF_INDEX_FILENAME if active_universe_scope == "core_etf" else DEFAULT_INDEX_FILENAME
+        previous_index = _read_json(self.root / index_filename) or {}
+        scheduled_universe = run.get("scheduled_universe") or previous_index.get("scheduled_universe")
         counts = {
             "active": len(active),
             "eligible": len(active),
@@ -1039,6 +1042,8 @@ class YahooBatchStateStore:
             "active_universe_scope": active_universe_scope,
             "counts": counts,
             "catalogue_symbols": sorted(active),
+            **({"scheduled_universe": scheduled_universe} if isinstance(scheduled_universe, dict) else {}),
+            **({"selection": run["selection"]} if isinstance(run.get("selection"), dict) else {}),
             "oldest_source_as_of": oldest[0],
             "oldest_source_ticker": oldest[1],
             "retry_symbols": retry_symbols,
@@ -1082,6 +1087,5 @@ class YahooBatchStateStore:
                 "Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition."
             ),
         }
-        index_filename = CORE_ETF_INDEX_FILENAME if active_universe_scope == "core_etf" else DEFAULT_INDEX_FILENAME
         _write_json(self.root / index_filename, index)
         return index
