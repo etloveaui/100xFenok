@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-10-06T03:28:00.570Z",
-  "classification_as_of": "2026-10-06T03:26:52.227Z",
+  "generated_at": "2026-10-06T07:16:51.278Z",
+  "classification_as_of": "2026-10-06T07:15:44.075Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -25,10 +25,10 @@
     "fetchable_plan_output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
   },
   "daily_1y_readiness": {
-    "managed_etf_count": 120,
+    "managed_etf_count": 117,
     "scored_universe_total": 4619,
-    "denominator": 120,
-    "daily_1y_complete": 120,
+    "denominator": 117,
+    "daily_1y_complete": 117,
     "daily_1y_missing": 0,
     "daily_1y_fetchable": 0,
     "inception_limited_daily_1y_gap": 0,
@@ -53,9 +53,9 @@
   },
   "generated_count_checks": {
     "summary_rows": 4619,
-    "managed_etf_count": 120,
+    "managed_etf_count": 117,
     "scored_universe_total": 4619,
-    "core_basket_ticker_count": 120,
+    "core_basket_ticker_count": 117,
     "core_tickers_missing_from_summary": 0,
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
@@ -78,8 +78,8 @@
     "terminal_limited": [],
     "complete": [
       {
-        "ticker": "ALLW",
-        "actual_rows": 252,
+        "ticker": "ACWX",
+        "actual_rows": 251,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -87,7 +87,15 @@
       },
       {
         "ticker": "AOA",
-        "actual_rows": 252,
+        "actual_rows": 250,
+        "missing_file": false,
+        "inception_date": null,
+        "classification_reason": null,
+        "effective_start_source": null
+      },
+      {
+        "ticker": "AOK",
+        "actual_rows": 251,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -95,7 +103,7 @@
       },
       {
         "ticker": "AOM",
-        "actual_rows": 252,
+        "actual_rows": 250,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -103,15 +111,7 @@
       },
       {
         "ticker": "AOR",
-        "actual_rows": 252,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
-      {
-        "ticker": "AVDV",
-        "actual_rows": 252,
+        "actual_rows": 250,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -148,17 +148,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 50,
+      "ticker_count": 49,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 50,
+          "ticker_count": 49,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "AMJB,AMUB,ATMP,BDCX,BDCZ,CEFD,COIO,DGP,DGZ,DVIN,DVRE,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,FEAT,FIVY,GLDI,GRN,HDLB,IFED,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MSOO,MTUL,MVRL,NVDO,PFFL,PLOO,QULL,SCDL,SLVO,SMHB,TSLO,UCIB,USML,USOI,VXX,VXZ,VYLD"
+            "etfs": "AMJB,AMUB,ATMP,BDCX,BDCZ,CEFD,COIO,DGZ,DVIN,DVRE,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,FEAT,FIVY,GLDI,GRN,HDLB,IFED,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MSOO,MTUL,MVRL,NVDO,PFFL,PLOO,QULL,SCDL,SLVO,SMHB,TSLO,UCIB,USML,USOI,VXX,VXZ,VYLD"
           }
         }
       ]

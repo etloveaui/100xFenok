@@ -184,8 +184,8 @@
     "count": 7069,
     "coverage": {
       "yf": 1281,
-      "stockanalysis": 5593,
-      "stockanalysis_yf_fallback": 305,
+      "stockanalysis": 5562,
+      "stockanalysis_yf_fallback": 336,
       "stockanalysis_financials": 43,
       "stockanalysis_etf_catalog": 5701,
       "slickcharts": 544,
@@ -193,8 +193,8 @@
       "stock": 1218
     },
     "audited_ticker_files": 7069,
-    "candidate_fields": 88038,
-    "multi_candidate_fields": 28297,
+    "candidate_fields": 87984,
+    "multi_candidate_fields": 28134,
     "policy_mismatch_fields": 0,
     "percent_scale_warnings": 4,
     "return_field_coverage": {
@@ -243,15 +243,15 @@
         "stockanalysis_universe_pct": 76.32
       },
       "return_3y_avg": {
-        "total": 2952,
-        "etf": 2952,
+        "total": 2923,
+        "etf": 2923,
         "stock": 0,
         "yf_history_1y": 0,
         "yf_info": 37,
-        "stockanalysis_history": 2915,
+        "stockanalysis_history": 2886,
         "stockanalysis_performance": 0,
-        "etf_coverage_pct": 50.45,
-        "stockanalysis_universe_pct": 51.78
+        "etf_coverage_pct": 49.96,
+        "stockanalysis_universe_pct": 51.27
       },
       "return_5y_avg": {
         "total": 2099,
@@ -294,15 +294,15 @@
     }
   },
   "market_source_parity": {
-    "generated_at": "2026-10-06T03:25:30Z",
+    "generated_at": "2026-10-06T07:14:24Z",
     "summary": {
       "inspected_ticker_files": 7069,
       "fields": 19,
-      "multi_candidate_fields": 28297,
-      "divergence_rows": 28293,
+      "multi_candidate_fields": 28134,
+      "divergence_rows": 28130,
       "percent_scale_warnings": 6,
       "diagnosis_counts": {
-        "agreement": 24510,
+        "agreement": 24347,
         "scale_mismatch": 6,
         "sign_divergence": 121,
         "stale": 2534,
@@ -314,12 +314,12 @@
     }
   },
   "incremental_etf": {
-    "status": "pass",
+    "status": "fail",
     "has_run_evidence": true,
     "index_file_exists": true,
     "proof_file_exists": true,
     "plan_file_exists": true,
-    "index_generated_at": "2026-10-06T01:49:05Z",
+    "index_generated_at": "2026-10-06T03:29:05Z",
     "proof_generated_at": "2026-10-05T02:07:33Z",
     "plan_generated_at": "2026-09-27T22:47:42Z",
     "counts": {
@@ -333,20 +333,19 @@
       "plan_history_gap": 0,
       "plan_inception_limited_history_gap": 0,
       "plan_total_history_gap": 0,
-      "no_actionable_plan": 1,
+      "no_actionable_plan": 0,
       "cooldown_skipped": 7,
       "pending_ledger_tracked": 132,
       "pending_ledger_cooldown": 36,
-      "etfs_stockanalysis_ok": 0,
+      "etfs_stockanalysis_ok": 118,
       "etfs_yahoo_fallback_ok": 0,
       "etfs_still_pending": 0,
-      "hard_failed": 0,
-      "market_facts_yf_fallback": 305
+      "hard_failed": 3,
+      "market_facts_yf_fallback": 336
     },
     "notes": [
       "incremental_plan_available",
-      "incremental_not_reflected_in_fetch_index",
-      "cooldown_tracked_no_actionable_plan"
+      "incremental_not_reflected_in_fetch_index"
     ]
   }
 }
