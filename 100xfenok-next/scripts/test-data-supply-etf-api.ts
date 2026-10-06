@@ -22,6 +22,8 @@ async function fixture(options: {
   ticker?: string;
   enrolledTicker?: string;
   state?: "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
+  fallbackDepth?: number;
+  additionalEntries?: Record<string, JsonRecord>;
   direct?: JsonRecord | null;
   payload?: JsonRecord | null;
   guardMissing?: boolean;
@@ -56,7 +58,9 @@ async function fixture(options: {
         enrollment_state: "enrolled",
         resolution_state: options.state ?? "fresh_fallback",
         provider_role: primary ? "primary" : "fallback",
-        fallback_depth: primary ? 0 : 1,
+        fallback_depth: options.fallbackDepth ?? {
+          fresh_primary: 0, fresh_fallback: 1, lkg_primary: 1, lkg_fallback: 2,
+        }[options.state === "unavailable" ? "fresh_fallback" : options.state ?? "fresh_fallback"],
         source_as_of: "2026-07-02T01:57:29Z",
         selected_at: "2026-07-11T00:00:00Z",
         reason_code: "primary_unavailable",
@@ -76,7 +80,13 @@ async function fixture(options: {
     : options.payload;
   const payloadDoc = payload ? document(payload) : null;
   if (payloadDoc && !unavailable) entry.payload_sha256 = await sha256Text(payloadDoc.raw);
-  const membershipSha = await canonicalJsonSha256([enrolledTicker]);
+  const entries = {
+    [enrolledTicker]: { ...entry, ticker: enrolledTicker, payload_path: unavailable ? null : `payloads/${enrolledTicker}.json` },
+    ...options.additionalEntries,
+  };
+  const enrolledTickers = Object.keys(entries).sort();
+  const unavailableCount = Object.values(entries).filter((row) => row.resolution_state === "unavailable").length;
+  const membershipSha = await canonicalJsonSha256(enrolledTickers);
 
   const index: JsonRecord = {
     schema_version: "data-supply-etf-detail-public-index/v1",
@@ -85,10 +95,10 @@ async function fixture(options: {
     active_transaction_id: "tx-1",
     active_generation_manifest_sha256: "a".repeat(64),
     membership_sha256: membershipSha,
-    enrolled_count: 1,
-    selected_count: unavailable ? 0 : 1,
-    unavailable_count: unavailable ? 1 : 0,
-    entries: { [enrolledTicker]: { ...entry, ticker: enrolledTicker, payload_path: unavailable ? null : `payloads/${enrolledTicker}.json` } },
+    enrolled_count: enrolledTickers.length,
+    selected_count: enrolledTickers.length - unavailableCount,
+    unavailable_count: unavailableCount,
+    entries,
   };
   if (options.invalidCounts) index.selected_count = 99;
   const indexSha = await canonicalJsonSha256(index);
@@ -101,8 +111,8 @@ async function fixture(options: {
     active_generation_manifest_sha256: "a".repeat(64),
     index_sha256: options.crossbind ? "c".repeat(64) : indexSha,
     membership_sha256: membershipSha,
-    enrolled_count: 1,
-    tickers: [enrolledTicker],
+    enrolled_count: enrolledTickers.length,
+    tickers: enrolledTickers,
   };
 
   return resolveDataSupplyEtfDetail(ticker, {
@@ -179,6 +189,39 @@ for (const state of ["fresh_primary", "lkg_primary"] as const) {
   const primary = await fixture({ state, payload: primaryPayload });
   assert.equal(primary.kind, "selected", `${state} must accept the primary provider schema`);
 }
+// These depths come from the existing resolver's fresh and LKG transitions.
+// A retained primary consumes one fallback step without changing provider role.
+for (const [state, expectedDepth] of [
+  ["fresh_primary", 0], ["fresh_fallback", 1], ["lkg_primary", 1], ["lkg_fallback", 2],
+] as const) {
+  const options = { state, ...(state.endsWith("primary") ? { payload: primaryPayload } : {}) };
+  const selected = await fixture(options);
+  assert.equal(selected.kind, "selected", `${state} must accept resolver depth ${expectedDepth}`);
+  if (selected.kind === "selected") assert.equal(selected.dataSupply.fallback_depth, expectedDepth);
+  for (const wrongDepth of [-1, 0, 1, 2, 3, 1.5].filter((depth) => depth !== expectedDepth)) {
+    const rejected = await fixture({ ...options, fallbackDepth: wrongDepth });
+    assert.equal(rejected.kind, "error", `${state} must reject depth ${wrongDepth}`);
+    if (rejected.kind === "error") assert.equal(rejected.code, "DATA_SUPPLY_INDEX_UNAVAILABLE");
+  }
+}
+const restoredPrimaryEntry = {
+  ticker: "BITW", enrollment_state: "enrolled", resolution_state: "lkg_primary",
+  provider_role: "primary", fallback_depth: 1,
+  source_as_of: "2026-07-02T01:57:29Z", selected_at: "2026-07-11T00:00:00Z",
+  reason_code: "operator_quality_restore", payload_sha256: "b".repeat(64), payload_path: "payloads/BITW.json",
+};
+const otherPrimaryOptions = {
+  ticker: "BCLO", state: "fresh_primary" as const, payload: { ...primaryPayload, ticker: "BCLO" },
+};
+const alongsidePrimaryLkg = await fixture({
+  ...otherPrimaryOptions, additionalEntries: { BITW: restoredPrimaryEntry },
+});
+assert.equal(alongsidePrimaryLkg.kind, "selected", "a valid primary LKG entry must not disable another enrolled ETF");
+const invalidOtherDepth = await fixture({
+  ...otherPrimaryOptions, additionalEntries: { BITW: { ...restoredPrimaryEntry, fallback_depth: 0 } },
+});
+assert.equal(invalidOtherDepth.kind, "error", "invalid depth in another entry must still fail the index closed");
+if (invalidOtherDepth.kind === "error") assert.equal(invalidOtherDepth.code, "DATA_SUPPLY_INDEX_UNAVAILABLE");
 const rejectedPrimaryProviderMismatch = await fixture({
   state: "fresh_primary",
   payload: { ...primaryPayload, source: "yahoo_finance" },

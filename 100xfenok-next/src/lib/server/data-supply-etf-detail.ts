@@ -344,8 +344,11 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
     entry.provider_role !== expectedRole(resolutionState)
     || !Number.isInteger(entry.fallback_depth)
     || (entry.fallback_depth as number) < 0
-    || (entry.provider_role === "primary" && entry.fallback_depth !== 0)
-    || (entry.provider_role === "fallback" && (entry.fallback_depth as number) < 1)
+    // Match the resolver's state depth: preserving primary LKG is one step;
+    // preserving fallback LKG is two. Provider role alone does not encode it.
+    || entry.fallback_depth !== (
+      resolutionState === "fresh_primary" ? 0 : resolutionState === "lkg_fallback" ? 2 : 1
+    )
     || !isIsoTimestamp(entry.source_as_of)
     || !isIsoTimestamp(entry.selected_at)
     || !isSha256(entry.payload_sha256)

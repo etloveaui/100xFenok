@@ -62,8 +62,9 @@ export function parseEtfDataSupply(value: unknown): EtfDataSupply | null {
     || (unavailable
       ? record.fallback_depth !== null || record.source_as_of !== null || record.source_age_days !== null || record.selected_at !== null
       : !Number.isInteger(record.fallback_depth)
-        || (expectedRole === "primary" && record.fallback_depth !== 0)
-        || (expectedRole === "fallback" && (record.fallback_depth as number) < 1)
+        || record.fallback_depth !== (
+          state === "fresh_primary" ? 0 : state === "lkg_fallback" ? 2 : 1
+        )
         || !isTimestamp(record.source_as_of)
         || !isTimestamp(record.selected_at)
         || !Number.isInteger(record.source_age_days)

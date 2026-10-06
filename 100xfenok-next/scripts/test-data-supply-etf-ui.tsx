@@ -20,21 +20,21 @@ const base = {
 } as const;
 
 const expectations = [
-  ["fresh_primary", null],
-  ["fresh_fallback", "보조 공급원 최신값"],
-  ["lkg_primary", "마지막 확인값"],
-  ["lkg_fallback", "마지막 확인값"],
-  ["unavailable", "세부 데이터 일시 이용 불가"],
+  ["fresh_primary", null, 0],
+  ["fresh_fallback", "보조 공급원 최신값", 1],
+  ["lkg_primary", "마지막 확인값", 1],
+  ["lkg_fallback", "마지막 확인값", 2],
+  ["unavailable", "세부 데이터 일시 이용 불가", null],
 ] as const;
 
 async function main() {
 
-for (const [resolution_state, label] of expectations) {
+for (const [resolution_state, label, fallback_depth] of expectations) {
   const value = parseEtfDataSupply({
     ...base,
     resolution_state,
     provider_role: resolution_state === "unavailable" ? null : resolution_state.endsWith("primary") ? "primary" : "fallback",
-    fallback_depth: resolution_state === "unavailable" ? null : resolution_state.endsWith("primary") ? 0 : 1,
+    fallback_depth,
     source_as_of: resolution_state === "unavailable" ? null : base.source_as_of,
     selected_at: resolution_state === "unavailable" ? null : base.selected_at,
     source_age_days: resolution_state === "unavailable" ? null : 9,
@@ -43,6 +43,27 @@ for (const [resolution_state, label] of expectations) {
   });
   assert.ok(value);
   assert.equal(getEtfDataSupplyPresentation(value).label, label);
+  assert.equal(value.fallback_depth, fallback_depth);
+  if (resolution_state !== "unavailable") {
+    for (const wrongDepth of [-1, 0, 1, 2, 3, 1.5].filter((depth) => depth !== fallback_depth)) {
+      assert.equal(parseEtfDataSupply({ ...value, fallback_depth: wrongDepth }), null,
+        `${resolution_state} must reject depth ${wrongDepth}`);
+    }
+  }
+  if (resolution_state === "lkg_primary" || resolution_state === "lkg_fallback") {
+    const restored = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
+      asset_type: "etf", ticker: "BITW", data_supply: value,
+    }), "BITW");
+    assert.equal(restored.kind, "ok");
+    if (restored.kind === "ok") {
+      assert.deepEqual(restored.dataSupply, value, "HTTP 200 must retain verified LKG metadata");
+      const presentation = getEtfDataSupplyPresentation(restored.dataSupply);
+      assert.equal(presentation.label, "마지막 확인값");
+      assert.equal(presentation.sourceDate, base.source_as_of);
+      assert.equal(presentation.ageDays, base.source_age_days);
+      assert.equal(presentation.degraded, true);
+    }
+  }
 }
 
 const noTime = parseEtfDataSupply({
