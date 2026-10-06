@@ -41,7 +41,7 @@
 - Benchmarks latest: 32,437 records, 2010-01-01 ~ 2026-10-02, 38 sections (micro_sectors +과창판 STAR50), 875 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
-- Yardney: Feno Yardeni S&P 500 fair value model, 1,894 weekly public valuation records through 2026-08-14, latest fair value 6,341.71 and premium +22.77%; raw bond-yield components are excluded from public payloads
+- Yardney: Feno Yardeni S&P 500 fair value model, 1,901 weekly public valuation records through 2026-10-02, latest fair value 6,234.61 and premium +23.87%; raw bond-yield components are excluded from public payloads
 - RIM inputs: `computed/rim-index/inputs.json` is a preserved quarantined snapshot mirrored to Next public data; automatic RIM execution was retired under DEC-302, and the standalone scripts remain manual research tools rather than a freshness claim
 
 - 60 tracked investors' 13F holdings across 31 quarters through 2026-Q2 where filed
