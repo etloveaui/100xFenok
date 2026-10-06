@@ -180,6 +180,42 @@ class DataSupplyResolverTests(unittest.TestCase):
                 active = self.resolve_manual(row, fallback)
                 self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis")
 
+    def test_native_primary_quote_uses_provider_whole_second_precision(self):
+        raw_epoch_ms = 1790780805672.4773
+        for label, source, raw_epoch, accepted in (
+            ("fractional-milliseconds", "2026-09-30T15:06:45Z", raw_epoch_ms, True),
+            ("fractional-seconds", "2026-09-30T15:06:45Z", raw_epoch_ms / 1000, True),
+            ("one-second-ahead", "2026-09-30T15:06:46Z", raw_epoch_ms, False),
+            ("one-second-behind", "2026-09-30T15:06:44Z", raw_epoch_ms, False),
+            ("fetch-time-is-not-source", "2026-09-30T15:22:02Z", raw_epoch_ms, False),
+        ):
+            with self.subTest(label=label):
+                store = DataSupplyStateStore(self.root / label)
+                resolver = DataSupplyResolver(store)
+                row, raw = observation(provider="stockanalysis", suffix=label, entity="BITW",
+                                       source_as_of=source, observed_at="2026-09-30T15:22:02Z")
+                payload = json.loads(raw)
+                payload["raw"]["quote"] = {"symbol": "BITW", "ts": raw_epoch, "td": "2026-09-30"}
+                raw = canonical_json_bytes(payload)
+                row["payload_sha256"] = hashlib.sha256(raw).hexdigest()
+                row["event_id"] = deterministic_event_id("observation", row)
+                store.store_provider_object(observation=row, payload=raw)
+                store.record_observation(row)
+                self.assertEqual(resolver._preserves_etf_detail(row, None), accepted)
+                if accepted:
+                    active = resolver.resolve_etf_detail(entity="BITW", observations=[row],
+                                                         decided_at="2026-09-30T15:23:00Z")
+                    selected = active["current"]["BITW"]
+                    self.assertEqual(selected["provider"], "stockanalysis")
+                    self.assertEqual(selected["resolution_state"], "fresh_primary")
+                    self.assertEqual(selected["source_as_of"], source)
+                    self.assertEqual(selected["payload_sha256"], row["payload_sha256"])
+                else:
+                    with self.assertRaises(NoFreshInitialCandidateError):
+                        resolver.resolve_etf_detail(entity="BITW", observations=[row],
+                                                    decided_at="2026-09-30T15:23:00Z")
+                    self.assertNotIn("BITW", store.read_active_domain("etf_detail")["current"])
+
 
 
 

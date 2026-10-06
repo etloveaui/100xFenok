@@ -180,6 +180,51 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                         "source_as_of": prior["source_as_of"]}, "retry": False})
         self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", detail("2026-10-02")))
 
+    def test_complete_native_portfolio_can_shrink_after_its_holdings_date_advances(self):
+        def portfolio(count, day):
+            rows = [{"n": f"Position {index}", "as": f"{100 / count:.2f}%"} for index in range(count)]
+            return {
+                "schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                "ticker": "SDCI", "source_as_of": "2026-10-05T20:00:00Z",
+                "fetched_at": "2026-10-06T07:50:10Z",
+                "raw": {"holdings": {"count": count, "date": day, "holdings": rows}},
+                "normalized": {"overview": {}, "holding_count": count, "holdings_updated": day,
+                               "holdings": [{"name": row["n"], "raw": row} for row in rows]},
+            }
+
+        old = portfolio(22, "Sep 25, 2026")
+        new = portfolio(21, "Oct 2, 2026")
+        self.assertIsNone(etf_detail_regression(new, old))
+        for label, side, edit in (
+            ("truncated-raw-total", "new", lambda p: p["raw"]["holdings"].update(count=22)),
+            ("truncated-normalized-total", "new", lambda p: p["normalized"].update(holding_count=22)),
+            ("missing-raw-count", "new", lambda p: p["raw"]["holdings"].pop("count")),
+            ("boolean-count", "new", lambda p: p["raw"]["holdings"].update(count=True)),
+            ("raw-row-loss", "new", lambda p: p["raw"]["holdings"]["holdings"].pop()),
+            ("unbound-normalized-row", "new", lambda p: p["normalized"]["holdings"][0].update(raw={})),
+            ("wrong-normalized-identity", "new", lambda p: p["normalized"]["holdings"][0].update(name="Other")),
+            ("missing-normalized-identity", "new", lambda p: p["normalized"]["holdings"][0].pop("name")),
+            ("wrong-ticker", "new", lambda p: p.update(ticker="OTHER")),
+            ("other-provider", "new", lambda p: p.update(source="yf_fallback", source_provider="yahoo_finance")),
+            ("unbound-date", "new", lambda p: p["normalized"].update(holdings_updated="Oct 1, 2026")),
+            ("same-date", "new", lambda p: (p["raw"]["holdings"].update(date="Sep 25, 2026"),
+                                             p["normalized"].update(holdings_updated="Sep 25, 2026"))),
+            ("regressed-date", "new", lambda p: (p["raw"]["holdings"].update(date="Sep 24, 2026"),
+                                                  p["normalized"].update(holdings_updated="Sep 24, 2026"))),
+            ("future-holdings", "new", lambda p: p.update(fetched_at="2026-10-01T20:00:00Z")),
+            ("old-sample-is-not-whole-fund", "old", lambda p: (p["raw"]["holdings"].update(count=63),
+                                                              p["normalized"].update(holding_count=63))),
+        ):
+            with self.subTest(label=label):
+                before, after = json.loads(json.dumps(old)), json.loads(json.dumps(new))
+                edit(before if side == "old" else after)
+                self.assertEqual(etf_detail_regression(after, before), "holdings")
+        yahoo = portfolio(1, "Oct 2, 2026")
+        yahoo.update(source="yf_fallback", source_provider="yahoo_finance", schema_version="yf-etf-detail/v1")
+        self.assertEqual(etf_detail_regression(yahoo, old), "holdings")
+        old["normalized"]["countries"] = [{"name": "United States", "weight": 100}]
+        self.assertEqual(etf_detail_regression(new, old), "countries")
+
     def test_archived_yahoo_daily_series_requires_exact_embedded_bytes(self):
         from datetime import datetime
         raw_rows = [{"t": "2025-10-02", "c": 25.69}, {"t": "2026-10-02", "c": 25.64}]

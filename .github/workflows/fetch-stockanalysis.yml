@@ -875,6 +875,7 @@ jobs:
               old_holdings = (baseline.get("raw") or {}).get("holdings")
               new_holdings = (candidate_payload.get("raw") or {}).get("holdings")
               new_count = new_normalized.get("holding_count")
+              detail_loss = fetcher.etf_detail_regression(candidate_payload, baseline)
               # A legacy row with no country surface was never country-complete.
               # Admit only that same gap's new explicit label; every existing
               # complete-baseline quote/history/date floor still runs below.
@@ -890,7 +891,7 @@ jobs:
                   and not (new_holdings.get("allocationChartData") or {}).get("countries")
                   and old_normalized.get("countries") is None and new_normalized.get("countries") is None
                   and isinstance(new_normalized.get("holdings"), list) and bool(new_normalized["holdings"])
-                  and len(new_normalized["holdings"]) >= len(old_normalized.get("holdings") or [])
+                  and detail_loss is None
                   and isinstance(new_count, (int, float)) and not isinstance(new_count, bool)
                   and math.isfinite(new_count)
                   and new_count >= len(new_normalized["holdings"])
@@ -928,7 +929,6 @@ jobs:
                       if old_count > 0 and fetcher.valid_unique_history_date_count(
                               new_periods.get(period)) < required_count:
                           raise SystemExit(f"ETF {ticker} artifact loses {label} {period} history")
-              detail_loss = fetcher.etf_detail_regression(candidate_payload, baseline)
               if detail_loss:
                   raise SystemExit(f"ETF {ticker} artifact loses {label} {detail_loss}")
 

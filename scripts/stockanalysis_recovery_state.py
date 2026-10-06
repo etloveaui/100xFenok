@@ -167,7 +167,8 @@ def _etf_provider_source(payload: dict) -> datetime | None:
             except (ValueError, OverflowError, OSError):
                 stamp = None
             if stamp is not None and (day is None or stamp.date() == day.date()):
-                return stamp
+                # Match the producer's utc_iso representation of provider epochs.
+                return stamp.replace(microsecond=0)
         if day is not None:
             return day
     holdings = raw.get("holdings") if isinstance(raw.get("holdings"), dict) else {}
@@ -323,8 +324,47 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
     new_holdings = new.get("holdings") if isinstance(new.get("holdings"), list) else []
     def holding_rows(rows: list) -> int:
         return sum(isinstance(row, dict) and any(present(row.get(key)) for key in ("symbol", "ticker", "name")) for row in rows)
+
+    def complete_native_holdings_date(payload: dict, rows: list) -> datetime | None:
+        if (payload.get("source") != "stockanalysis" or payload.get("schema_version") != "stockanalysis/v1"
+                or payload.get("asset_type") != "etf"):
+            return None
+        raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+        if raw.get("official_holdings") is not None:
+            return None
+        holdings = raw.get("holdings") if isinstance(raw.get("holdings"), dict) else {}
+        raw_rows = holdings.get("holdings")
+        count = holdings.get("count")
+        normalized = payload.get("normalized") or {}
+        normalized_count = normalized.get("holding_count")
+        if (not isinstance(count, (int, float)) or isinstance(count, bool) or not math.isfinite(count)
+                or not isinstance(normalized_count, (int, float)) or isinstance(normalized_count, bool)
+                or not isinstance(raw_rows, list) or not rows
+                or count != normalized_count or count != len(raw_rows)
+                or count != len(rows) or count != holding_rows(rows)
+                or any(not isinstance(original, dict) or row.get("raw") != original
+                       or row.get("name") != (original.get("n") or original.get("name"))
+                       or row.get("symbol") != (str(original.get("s") or original.get("symbol") or "")
+                                                .strip().lstrip("$").upper() or None)
+                       for row, original in zip(rows, raw_rows))):
+            return None
+        date = _iso_timestamp(holdings.get("date"))
+        fetched = _iso_timestamp(payload.get("fetched_at"))
+        if (date is None or date != _iso_timestamp(normalized.get("holdings_updated"))
+                or fetched is None or date > fetched):
+            return None
+        return date
+
     if old_holdings and holding_rows(new_holdings) < holding_rows(old_holdings):
-        return "holdings"
+        old_date = complete_native_holdings_date(baseline, old_holdings)
+        new_date = complete_native_holdings_date(candidate, new_holdings)
+        # A later complete fund portfolio can contain fewer positions. Both
+        # totals must come from the native provider, with every row retained;
+        # a smaller sample or another provider's count cannot prove completeness.
+        if (not isinstance(baseline.get("ticker"), str) or not baseline["ticker"]
+                or candidate.get("ticker") != baseline["ticker"]
+                or old_date is None or new_date is None or new_date <= old_date):
+            return "holdings"
     primary_recovery = (candidate.get("source") == "stockanalysis"
                         and baseline.get("source_provider") == "yahoo_finance")
     # Primary recovery still preserves holdings, prices, financial essentials

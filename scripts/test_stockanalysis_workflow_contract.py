@@ -474,6 +474,43 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.assertNotEqual(rejected.returncode, 0)
             self.assertIn("loses complete active", rejected.stderr)
 
+            def whole_native_portfolio(body, count):
+                payload = json.loads(country_partial(body))
+                day = payload["normalized"]["holdings_updated"]
+                rows = [{"n": f"Position {index}"} for index in range(count)]
+                payload["raw"]["holdings"].update(holdings=rows, count=count, date=day)
+                payload["normalized"].update(
+                    holdings=[{"name": row["n"], "raw": row} for row in rows], holding_count=count)
+                return payload
+
+            whole_old = whole_native_portfolio(etf_payload(3), 22)
+            for field in ("source_as_of", "detail_status", "partial_reason_codes"):
+                whole_old.pop(field, None)
+            whole_old_bytes = json.dumps(whole_old).encode()
+            (active / "TARGET.json").write_bytes(whole_old_bytes)
+            whole_new = whole_native_portfolio(etf_payload(1), 21)
+            whole_new_bytes = json.dumps(whole_new).encode()
+            recovered, recovered_root = run_candidate("country-whole-fund-count-decreased", whole_new_bytes)
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual((recovered_root / "TARGET.json").read_bytes(), whole_new_bytes)
+            self.assertEqual((active / "TARGET.json").read_bytes(), whole_old_bytes)
+            for label, edit in (
+                ("whole-fund-truncated", lambda p: p["raw"]["holdings"].update(count=22)),
+                ("whole-fund-unbound-row", lambda p: p["normalized"]["holdings"][0].update(raw={})),
+                ("whole-fund-unbound-date", lambda p: p["normalized"].update(
+                    holdings_updated=whole_old["normalized"]["holdings_updated"])),
+            ):
+                candidate_body = json.loads(whole_new_bytes)
+                edit(candidate_body)
+                rejected, rejected_root = run_candidate(label, json.dumps(candidate_body).encode())
+                self.assertNotEqual(rejected.returncode, 0, label)
+                self.assertIn("loses complete active", rejected.stderr)
+                self.assertEqual((rejected_root / "TARGET.json").read_bytes(), whole_old_bytes)
+            regressed_source = whole_native_portfolio(etf_payload(4), 21)
+            rejected, _ = run_candidate("whole-fund-source-regression", json.dumps(regressed_source).encode())
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("regresses active", rejected.stderr)
+
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
             "--candidate-root \"$STOCKANALYSIS_CANDIDATE_ROOT\"",
