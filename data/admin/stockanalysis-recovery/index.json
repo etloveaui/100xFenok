@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-06T03:24:16Z",
+  "generated_at": "2026-10-06T07:16:49Z",
   "counts": {
     "tracked": 914,
-    "fresh": 817,
-    "lkg": 86,
-    "unavailable": 11,
-    "retry": 97,
-    "failed": 5
+    "fresh": 819,
+    "lkg": 85,
+    "unavailable": 10,
+    "retry": 95,
+    "failed": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -33,10 +33,10 @@
     },
     "surface": {
       "tracked": 25,
-      "fresh": 23,
-      "lkg": 1,
-      "unavailable": 1,
-      "retry": 2
+      "fresh": 25,
+      "lkg": 0,
+      "unavailable": 0,
+      "retry": 0
     },
     "universe": {
       "tracked": 1,
@@ -426,14 +426,6 @@
     {
       "artifact_kind": "etf",
       "entity": "VYLD"
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "actions_recent"
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "actions_splits"
     }
   ],
   "degraded_details": [
@@ -1386,62 +1378,11 @@
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_count": 0,
       "data_loss": false
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "actions_recent",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-07-10T00:00:00Z",
-      "failure_observed_at": "2026-10-06T03:24:16Z",
-      "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-      "failure_count": 6,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "surface",
-      "entity": "actions_splits",
-      "resolution_state": "unavailable",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-06T03:24:16Z",
-      "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-      "failure_count": 6,
-      "data_loss": false
     }
   ],
   "current_results": {
-    "failed": 5,
-    "errors": [
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
-        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
-        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "FLKR",
-        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "DMXF",
-        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "SBIL",
-        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-        "data_loss": false
-      }
-    ]
+    "failed": 0,
+    "errors": []
   },
   "degraded_tickers": [],
   "degraded_etfs": [
@@ -1541,9 +1482,6 @@
     "VXZ",
     "VYLD"
   ],
-  "degraded_surfaces": [
-    "actions_recent",
-    "actions_splits"
-  ],
+  "degraded_surfaces": [],
   "degraded_universes": []
 }
