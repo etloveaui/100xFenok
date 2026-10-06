@@ -1,75 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 681,
-      "natural": true,
-      "observed_at": "2026-07-24T23:12:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30132647097",
-      "schedule": "0 22 * * 5",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1240,
-      "natural": true,
-      "observed_at": "2026-08-07T00:12:01Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31133672903",
-      "schedule": "7 18 * * 0-5",
-      "shard": "69/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 796,
-      "natural": false,
-      "observed_at": "2026-08-09T15:40:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31321645091",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1351,
-      "natural": true,
-      "observed_at": "2026-08-10T22:52:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31439945275",
-      "schedule": "7 22 * * 0-5",
-      "shard": "23/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 541,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:29:01Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/BIV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BIV.json",
     "payload_sha256": "df04e9386c53f5617630a7389b6a963de288da443658a95bd9090875f4467800",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -77,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 541,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T22:54:11Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BIV.json",
-    "payload_sha256": "f8a7a1b58257ebcfb21047cdb0ab619e31fff3ead7508b1b32b767bcb0082edc",
-    "quote_as_of": "2026-08-10T20:00:00Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:29:01Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "ca8c728db9f501186351b1e5829e67721ff402e9cb5fd91efe49337bf85641a3",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BIV.json",
+    "payload_sha256": "df04e9386c53f5617630a7389b6a963de288da443658a95bd9090875f4467800",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "BIV holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BIV holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "BIV",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

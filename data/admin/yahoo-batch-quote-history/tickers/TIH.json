@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 425,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:22:33Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/TIH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIH.json",
     "payload_sha256": "22ee1e252a58f83e1e8d330ca8af64a62eac079ee22b9214a952413d01ce9f2f",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 425,
-    "natural": false,
     "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T06:22:33Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "f3809dbfff8bec20c47f6ff2c20eff44d7b67c281bc22b69b227e5d1fe8b6da6",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIH.json",
+    "payload_sha256": "22ee1e252a58f83e1e8d330ca8af64a62eac079ee22b9214a952413d01ce9f2f",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "TIH holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-25"
+  },
   "ticker": "TIH",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

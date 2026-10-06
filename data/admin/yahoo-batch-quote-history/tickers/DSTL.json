@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 843,
-      "natural": true,
-      "observed_at": "2026-07-23T23:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30051682457",
-      "schedule": "0 22 * * 4",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1034,
-      "natural": true,
-      "observed_at": "2026-08-06T10:49:28Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31094670683",
-      "schedule": "7 8 * * 0-5",
-      "shard": "52/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 736,
-      "natural": true,
-      "observed_at": "2026-08-12T20:54:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "schedule": "7 20 * * 0-5",
-      "shard": "46/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 556,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:18:45Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/DSTL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DSTL.json",
     "payload_sha256": "38c294da9d4e7d22ab6c9e7eb010929f122fb9397de74472672a456bea0163cd",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 556,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T20:56:28Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DSTL.json",
-    "payload_sha256": "01e5f376bd31db4c85e1d71049a798894fbdba0b43be18b42a1f449df9fce525",
-    "quote_as_of": "2026-08-12T20:00:00Z",
-    "source_as_of": "2026-08-12"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:18:45Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "db341fb92bc7a2f871903b6c7c260a8fba4f7d7e9fa86f094e4a6277cb900765",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DSTL.json",
+    "payload_sha256": "38c294da9d4e7d22ab6c9e7eb010929f122fb9397de74472672a456bea0163cd",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "DSTL holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DSTL holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "DSTL",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

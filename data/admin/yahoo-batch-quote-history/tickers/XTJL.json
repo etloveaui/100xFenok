@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 552,
-      "natural": true,
-      "observed_at": "2026-08-02T22:59:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30771231562",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 718,
-      "natural": true,
-      "observed_at": "2026-08-10T05:42:10Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31359333130",
-      "schedule": "7 4 * * 0-5",
-      "shard": "14/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 444,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:47:58Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/XTJL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XTJL.json",
     "payload_sha256": "430e629a17e7503d1255f791cc3404a0170a7073881e27c83f03b338175646cc",
     "quote_as_of": "2026-09-25T18:06:39Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 444,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T05:46:10Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XTJL.json",
-    "payload_sha256": "1e31cfebc15214826c5a86982842f48beec65c7586d4ced0599fcdaeb222ccc5",
-    "quote_as_of": "2026-08-07T19:58:27Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:47:58Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "8a8b76a1c3b1f13db2cf13903b8b1b070abd6296ac338b0b0fe56f8dee402c89",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XTJL.json",
+    "payload_sha256": "430e629a17e7503d1255f791cc3404a0170a7073881e27c83f03b338175646cc",
     "quote_as_of": "2026-09-25T18:06:39Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "XTJL holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XTJL holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "XTJL",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

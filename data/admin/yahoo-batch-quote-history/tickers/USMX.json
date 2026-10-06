@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-01T14:19:17Z",
     "history_as_of": "2026-10-01",
-    "path": "data/yf/finance/USMX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USMX.json",
     "payload_sha256": "b1e51f7f322577e141feaee826a0c3dd7902405b0b40437501f9cf44135afcce",
     "quote_as_of": "2026-10-01T13:46:08Z",
     "source_as_of": "2026-10-01"
@@ -12,48 +12,36 @@
     "same_security_successor:XVO",
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 468,
-    "observed_at": "2026-10-01T14:19:17Z",
-    "outcome": "fresh"
+    "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
+    "failures": [],
+    "latency_ms": 384,
+    "observed_at": "2026-10-06T03:11:18Z",
+    "outcome": "failed"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T03:11:18Z"
+  },
+  "lkg": {
+    "fetched_at": "2026-10-01T14:19:17Z",
+    "history_as_of": "2026-10-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USMX.json",
+    "payload_sha256": "b1e51f7f322577e141feaee826a0c3dd7902405b0b40437501f9cf44135afcce",
+    "quote_as_of": "2026-10-01T13:46:08Z",
+    "source_as_of": "2026-10-01"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "USMX",
-  "updated_at": "2026-10-01T14:19:17Z"
+  "updated_at": "2026-10-06T03:11:18Z"
 }

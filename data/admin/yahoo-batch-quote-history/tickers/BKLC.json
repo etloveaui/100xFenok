@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 913,
-      "natural": true,
-      "observed_at": "2026-07-22T23:45:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29965324287",
-      "schedule": "0 22 * * 3",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 843,
-      "natural": true,
-      "observed_at": "2026-08-06T05:27:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31074084652",
-      "schedule": "7 2 * * 0-5",
-      "shard": "49/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1354,
-      "natural": true,
-      "observed_at": "2026-08-09T07:09:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31300442711",
-      "schedule": "7 6 * * 0-5",
-      "shard": "3/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 500,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:29:24Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/BKLC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BKLC.json",
     "payload_sha256": "4b0858d67d06c16236b1d748df4fc40ae456f338e6e097781bcdd106408eb8ef",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 500,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T07:12:06Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BKLC.json",
-    "payload_sha256": "26cc5ba27e297ece65846b2b5aca06e55c57cbf401d166e71bdfb25e3b4097d5",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:29:24Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "134a479f86dde4576a6e07c2cc80ce1133c144a3a18b206d33a59023e5a68e11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BKLC.json",
+    "payload_sha256": "4b0858d67d06c16236b1d748df4fc40ae456f338e6e097781bcdd106408eb8ef",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "BKLC holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BKLC holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "BKLC",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

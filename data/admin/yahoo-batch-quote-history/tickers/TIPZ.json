@@ -1,36 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 733,
-      "natural": true,
-      "observed_at": "2026-08-10T17:04:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31411954324",
-      "schedule": "7 16 * * 0-5",
-      "shard": "20/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 519,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:33:00Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/TIPZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPZ.json",
     "payload_sha256": "e03d07097a1650331c9b822fdea94b26094e48ceb226314919a541e65ee1d442",
     "quote_as_of": "2026-09-25T19:51:44Z",
     "source_as_of": "2026-09-25"
@@ -38,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 519,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T17:07:57Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPZ.json",
-    "payload_sha256": "c1d22c1bf13e0d3ed59932511a8b6406330f9a8dfbe03e1dcc0ad86ad9f6b50d",
-    "quote_as_of": "2026-08-10T15:58:50Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:33:00Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "b5e168d1415f96440cc9944e31a121657632cebc93f65ba385af06b2cd4dc9f6",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPZ.json",
+    "payload_sha256": "e03d07097a1650331c9b822fdea94b26094e48ceb226314919a541e65ee1d442",
     "quote_as_of": "2026-09-25T19:51:44Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "TIPZ holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TIPZ holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "TIPZ",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

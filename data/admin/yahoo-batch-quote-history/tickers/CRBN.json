@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 678,
-      "natural": true,
-      "observed_at": "2026-07-28T23:07:58Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30406712544",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 637,
-      "natural": true,
-      "observed_at": "2026-08-07T09:14:45Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31164940276",
-      "schedule": "7 8 * * 0-5",
-      "shard": "64/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1170,
-      "natural": true,
-      "observed_at": "2026-08-09T05:15:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31296241377",
-      "schedule": "7 4 * * 0-5",
-      "shard": "2/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 584,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:12:23Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/CRBN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CRBN.json",
     "payload_sha256": "69f8ec030b1572bce7afeba2bac25f58e2f911ce2f0d011a7952c86aa31950dc",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 584,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T05:17:54Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CRBN.json",
-    "payload_sha256": "6d0388a51b57cfad7f0b7f15d47155d804bd559c3cf462e269c4839281104656",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:12:23Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "4c8ce022f8a8c5f881da12c657ac8d582dafed24687826e95c30de4bbdbe3a97",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CRBN.json",
+    "payload_sha256": "69f8ec030b1572bce7afeba2bac25f58e2f911ce2f0d011a7952c86aa31950dc",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "CRBN holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CRBN holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "CRBN",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

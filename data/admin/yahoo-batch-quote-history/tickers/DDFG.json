@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 425,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:38:01Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/DDFG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DDFG.json",
     "payload_sha256": "a6a61ac5c3238ccf6f648ccae68f34c18a54af20ef20c8fbe2b5400e7954192d",
     "quote_as_of": "2026-09-25T19:03:29Z",
     "source_as_of": "2026-09-25"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 425,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T01:38:01Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "07608de752ac12feb0fa0161147f18249ae66d726f10b72f5fea92a0282db80c",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DDFG.json",
+    "payload_sha256": "a6a61ac5c3238ccf6f648ccae68f34c18a54af20ef20c8fbe2b5400e7954192d",
     "quote_as_of": "2026-09-25T19:03:29Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "DDFG holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-25"
+  },
   "ticker": "DDFG",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

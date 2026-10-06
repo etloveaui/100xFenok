@@ -1,49 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 961,
-      "natural": true,
-      "observed_at": "2026-07-22T23:45:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29965324287",
-      "schedule": "0 22 * * 3",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 808,
-      "natural": true,
-      "observed_at": "2026-08-06T05:27:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31074084652",
-      "schedule": "7 2 * * 0-5",
-      "shard": "49/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 447,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:25:36Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/AVUQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVUQ.json",
     "payload_sha256": "a69063e8826653dd979797bcf1a0deab1447701ff021f7c586c98ef6b9ec976f",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -51,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 447,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T05:27:35Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVUQ.json",
-    "payload_sha256": "4eaf65f3436def2788cc6de6a353cd39eeb1e38f9f60ffe6f88c4da25eb3a265",
-    "quote_as_of": "2026-08-05T20:00:00Z",
-    "source_as_of": "2026-08-05"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:25:36Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "3b573bfe13c57d131ff0868ceac88342920324d9476bd1d1cc63f72d7409136b",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVUQ.json",
+    "payload_sha256": "a69063e8826653dd979797bcf1a0deab1447701ff021f7c586c98ef6b9ec976f",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "AVUQ holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AVUQ holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "AVUQ",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

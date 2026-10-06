@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 933,
-      "natural": true,
-      "observed_at": "2026-07-23T23:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30051682457",
-      "schedule": "0 22 * * 4",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1179,
-      "natural": true,
-      "observed_at": "2026-08-06T08:51:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31086476783",
-      "schedule": "7 6 * * 0-5",
-      "shard": "51/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 824,
-      "natural": true,
-      "observed_at": "2026-08-10T20:51:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31430923656",
-      "schedule": "7 20 * * 0-5",
-      "shard": "22/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 467,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:35:52Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/CGW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CGW.json",
     "payload_sha256": "df250b068aa369f8ef0534e69d6718b878cacdffc39a65440e50d54dec00df5e",
     "quote_as_of": "2026-09-25T19:59:09Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 467,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T20:53:49Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CGW.json",
-    "payload_sha256": "9b76c15b15e5ca5c50ef99ae8c459061934790076ab6174285141c0f3d0b1c69",
-    "quote_as_of": "2026-08-10T20:00:00Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:35:52Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "8f43e38a2474c54c64250bb45cf857f6a368e7a20fcd3e64be052b46b0d012fa",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CGW.json",
+    "payload_sha256": "df250b068aa369f8ef0534e69d6718b878cacdffc39a65440e50d54dec00df5e",
     "quote_as_of": "2026-09-25T19:59:09Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "CGW holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CGW holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "CGW",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

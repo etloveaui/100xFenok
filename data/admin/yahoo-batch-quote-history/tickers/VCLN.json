@@ -1,36 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 671,
-      "natural": true,
-      "observed_at": "2026-08-07T17:02:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31200268852",
-      "schedule": "7 16 * * 0-5",
-      "shard": "68/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 460,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:40:19Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/VCLN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VCLN.json",
     "payload_sha256": "2eeca45a9ec2f4a6b4271b1fc1f06ab86834b9df8fa6dce4ffc424e226d95875",
     "quote_as_of": "2026-09-25T19:13:24Z",
     "source_as_of": "2026-09-25"
@@ -38,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 460,
-    "natural": false,
     "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T17:05:22Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VCLN.json",
-    "payload_sha256": "6c8781388a8047f3dafbf1e1f58c7b567a508b4698df38b3f0182cad964d90a0",
-    "quote_as_of": "2026-08-07T13:46:10Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:40:19Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "7f931d5d2060077e432de3c7ce26d67dbe3c144ed4e0b52dbda1136f82580b18",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VCLN.json",
+    "payload_sha256": "2eeca45a9ec2f4a6b4271b1fc1f06ab86834b9df8fa6dce4ffc424e226d95875",
     "quote_as_of": "2026-09-25T19:13:24Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "VCLN holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VCLN holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "VCLN",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 604,
-      "natural": true,
-      "observed_at": "2026-08-05T12:11:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31004461242",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 668,
-      "natural": true,
-      "observed_at": "2026-08-11T07:21:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31468517777",
-      "schedule": "7 6 * * 0-5",
-      "shard": "27/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1021,
-      "natural": true,
-      "observed_at": "2026-08-12T11:11:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31590557839",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 480,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:16:24Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/SIFI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SIFI.json",
     "payload_sha256": "18ed2fbdde8e46f39c3cf63f54bca11e9afeeda6c57bc1e9c2402b8fd7c07fc4",
     "quote_as_of": "2026-09-25T19:00:31Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 480,
-    "natural": false,
     "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T11:14:45Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SIFI.json",
-    "payload_sha256": "a2448cd557cbf8be8777dc2097c0b9ea12ccc94c0711053060dba728e758e0a7",
-    "quote_as_of": "2026-08-06T17:22:21Z",
-    "source_as_of": "2026-08-06T17:22:21Z"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:16:24Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "1712c77a475ec9cb6c141f903b3c1014c69397c5cc45d60e566ede294a1cdf44",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SIFI.json",
+    "payload_sha256": "18ed2fbdde8e46f39c3cf63f54bca11e9afeeda6c57bc1e9c2402b8fd7c07fc4",
     "quote_as_of": "2026-09-25T19:00:31Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "SIFI holds LKG because Yahoo source date 2026-08-06T17:22:21Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SIFI holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-06T17:22:21Z"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "SIFI",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

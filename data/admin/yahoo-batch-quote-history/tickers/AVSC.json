@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1244,
-      "natural": true,
-      "observed_at": "2026-07-21T23:04:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29875696340",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 596,
-      "natural": true,
-      "observed_at": "2026-08-05T21:19:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31047972318",
-      "schedule": "7 20 * * 0-5",
-      "shard": "46/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1017,
-      "natural": true,
-      "observed_at": "2026-08-09T16:47:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31324627429",
-      "schedule": "7 16 * * 0-5",
-      "shard": "8/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 866,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:25:28Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/AVSC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVSC.json",
     "payload_sha256": "7254fde58da495be4aab42f38c25d6f884d22c7cb4bef83c99c73c19eaf5a67a",
     "quote_as_of": "2026-09-25T19:59:51Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 866,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T16:49:30Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVSC.json",
-    "payload_sha256": "a5525ec3e1abd707453a47ef674dd6d62d2e7e58583947fd481e674a2ae9fc8f",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:25:28Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "889be4a32b70ae65356c03bbeb751b53edf0fc5da3e432d1e16f333a6056ebb3",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVSC.json",
+    "payload_sha256": "7254fde58da495be4aab42f38c25d6f884d22c7cb4bef83c99c73c19eaf5a67a",
     "quote_as_of": "2026-09-25T19:59:51Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "AVSC holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AVSC holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "AVSC",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

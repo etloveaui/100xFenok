@@ -1,95 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 804,
-      "natural": true,
-      "observed_at": "2026-07-20T23:03:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29785605821",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 469,
-      "natural": true,
-      "observed_at": "2026-07-24T23:12:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30132647097",
-      "schedule": "0 22 * * 5",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 605,
-      "natural": true,
-      "observed_at": "2026-08-06T14:33:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31111230701",
-      "schedule": "7 12 * * 0-5",
-      "shard": "54/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for AXTC despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 346,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 404,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:25:43Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/AXTC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AXTC.json",
     "payload_sha256": "f3506c472e8ab10b1dd5fe55a2f94064cb79ab469364262fc9ce75a0aa04656a",
     "quote_as_of": "2026-09-25T19:57:17Z",
     "source_as_of": "2026-09-25"
@@ -97,75 +10,34 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 404,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
-  },
-  "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for AXTC despite available history",
-    "failure_kind": "systemic_rate_limit",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-12T22:55:30Z",
-    "run_attempt": 1,
-    "run_id": "31648785047"
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T14:34:12Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AXTC.json",
-    "payload_sha256": "ad84be2111071e8bafb80b89145bfd4282bddbe71f9601cfb6ccfc740e5e8702",
-    "quote_as_of": "2026-08-06T14:20:04Z",
-    "source_as_of": "2026-08-06"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:25:43Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "8343808e4815e6b4a55c91e2cc9e4c694b2296cd00393d2ccc77c0a6c83968bd",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AXTC.json",
+    "payload_sha256": "f3506c472e8ab10b1dd5fe55a2f94064cb79ab469364262fc9ce75a0aa04656a",
     "quote_as_of": "2026-09-25T19:57:17Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-09-28T01:17:59Z",
-  "recovered_from_run_id": "31648785047",
-  "recovery_event_name": "workflow_dispatch",
-  "recovery_run_attempt": 1,
-  "recovery_run_id": "36365270594",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-04T00:18:08Z",
-    "classified_run_id": "30865042195",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "AXTC holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AXTC holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "AXTC",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

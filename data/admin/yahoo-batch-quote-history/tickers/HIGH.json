@@ -1,75 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 531,
-      "natural": true,
-      "observed_at": "2026-07-27T22:58:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30312518312",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1096,
-      "natural": true,
-      "observed_at": "2026-08-07T07:38:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31158308843",
-      "schedule": "7 6 * * 0-5",
-      "shard": "63/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 552,
-      "natural": true,
-      "observed_at": "2026-08-12T09:23:29Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31582524321",
-      "schedule": "7 8 * * 0-5",
-      "shard": "40/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 491,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T04:46:04Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/HIGH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HIGH.json",
     "payload_sha256": "b822d77733ad689ba720e7fa0f037f4ccb2f45ae24e21e31c5c37d2d8c5c6161",
     "quote_as_of": "2026-09-25T19:48:25Z",
     "source_as_of": "2026-09-25"
@@ -77,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 491,
-    "natural": false,
     "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T09:25:41Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HIGH.json",
-    "payload_sha256": "4310f8d40788e8635d1a66a8c391a005e51038c92148cf1a8029adc5298ef9d1",
-    "quote_as_of": "2026-08-11T19:21:49Z",
-    "source_as_of": "2026-08-11"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T04:46:04Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "75855bacc182a179db53a68e5269e06af1416421b5cd25556184df831fe1f89e",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HIGH.json",
+    "payload_sha256": "b822d77733ad689ba720e7fa0f037f4ccb2f45ae24e21e31c5c37d2d8c5c6161",
     "quote_as_of": "2026-09-25T19:48:25Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "HIGH holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "HIGH holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "HIGH",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

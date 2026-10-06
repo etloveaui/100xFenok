@@ -1,49 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 568,
-      "natural": true,
-      "observed_at": "2026-08-01T18:48:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711926935",
-      "schedule": "",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 698,
-      "natural": true,
-      "observed_at": "2026-08-06T12:16:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31100540842",
-      "schedule": "7 10 * * 0-5",
-      "shard": "53/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 451,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:37:30Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/COPA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/COPA.json",
     "payload_sha256": "da1585f4ad898cb7d362af43a6bf624ebd3b5395ece92ea66061a0f866fcd5f9",
     "quote_as_of": "2026-09-25T15:24:02Z",
     "source_as_of": "2026-09-25"
@@ -51,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 451,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T12:17:32Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/COPA.json",
-    "payload_sha256": "26ab74188d136d63f85af71fab4e37aede7e2d45cf9783a078ab71e6a4d4ec84",
-    "quote_as_of": "2026-08-05T17:55:01Z",
-    "source_as_of": "2026-08-05"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:37:30Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "eae6899f94a124d482eaa0d8a091f46ab2dd66a4fb67cd75bff7cc79c323848c",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/COPA.json",
+    "payload_sha256": "da1585f4ad898cb7d362af43a6bf624ebd3b5395ece92ea66061a0f866fcd5f9",
     "quote_as_of": "2026-09-25T15:24:02Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "COPA holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "COPA holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "COPA",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

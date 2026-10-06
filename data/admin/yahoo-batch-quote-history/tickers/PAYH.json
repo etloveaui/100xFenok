@@ -1,23 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 450,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T05:40:35Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/PAYH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PAYH.json",
     "payload_sha256": "a9eab39cf7016316c73c7ce6a60d1343d09bb63d460a6856c42bd0838959069d",
     "quote_as_of": "2026-09-25T19:57:11Z",
     "source_as_of": "2026-09-25"
@@ -25,34 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 450,
-    "natural": false,
     "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+  "lkg": {
+    "fetched_at": "2026-09-28T05:40:35Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "d7cfeed967fd1ed9dc29aa11093df9139e3bf4ffd14a2385b65f7b7695f2fffc",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PAYH.json",
+    "payload_sha256": "a9eab39cf7016316c73c7ce6a60d1343d09bb63d460a6856c42bd0838959069d",
     "quote_as_of": "2026-09-25T19:57:11Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "PAYH holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-25"
+  },
   "ticker": "PAYH",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

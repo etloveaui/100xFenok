@@ -1,67 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFDataException: GINC: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: GINC: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: GINC: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: GINC: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: GINC: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: GINC: No Fund data found.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 1056,
-      "natural": true,
-      "observed_at": "2026-08-12T11:11:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31590557839",
-      "schedule": "7 10 * * 0-5",
-      "shard": "41/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 446,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T04:41:47Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/GINC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GINC.json",
     "payload_sha256": "3fa0f7f58899cbda30129b3f474261eb58a9f9d1b4a1acd3cbda6bd32f38c51a",
     "quote_as_of": "2026-09-25T14:24:25Z",
     "source_as_of": "2026-09-25"
@@ -69,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 446,
-    "natural": false,
     "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T11:13:27Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GINC.json",
-    "payload_sha256": "c19db41a1edfda97856e197e0ce245eebb25fd6d0fcc8b19c864d2bbdde1369d",
-    "quote_as_of": "2026-08-11T19:59:47Z",
-    "source_as_of": "2026-08-11"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T04:41:47Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "16f6b851f2aae906dbb06274d202ac30f4c596f11d881096c0908ad767db4959",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GINC.json",
+    "payload_sha256": "3fa0f7f58899cbda30129b3f474261eb58a9f9d1b4a1acd3cbda6bd32f38c51a",
     "quote_as_of": "2026-09-25T14:24:25Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "GINC holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GINC holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "GINC",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

@@ -1,49 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 574,
-      "natural": true,
-      "observed_at": "2026-08-04T23:07:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30958820437",
-      "schedule": "0 22 * * 2",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 627,
-      "natural": true,
-      "observed_at": "2026-08-07T05:49:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31151738848",
-      "schedule": "7 4 * * 0-5",
-      "shard": "62/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 522,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T04:38:51Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/FTCE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FTCE.json",
     "payload_sha256": "d675374d6d02031f347db5d118b5fc64d44a9efc14d4cff6128d494209238387",
     "quote_as_of": "2026-09-25T19:59:45Z",
     "source_as_of": "2026-09-25"
@@ -51,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 522,
-    "natural": false,
     "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T05:50:50Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FTCE.json",
-    "payload_sha256": "cf12b65fcc82a4f447a8a0cb700b066d27a6b4cb0cd5397d6b7c2ec2341e2385",
-    "quote_as_of": "2026-08-06T19:59:45Z",
-    "source_as_of": "2026-08-06"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T04:38:51Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "c2eec666515341c97151947792ae89bff6e63c7e0da354732595a6b6e33f5e41",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FTCE.json",
+    "payload_sha256": "d675374d6d02031f347db5d118b5fc64d44a9efc14d4cff6128d494209238387",
     "quote_as_of": "2026-09-25T19:59:45Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "FTCE holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FTCE holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "FTCE",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

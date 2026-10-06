@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 945,
-      "natural": true,
-      "observed_at": "2026-07-22T23:45:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29965324287",
-      "schedule": "0 22 * * 3",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 396,
-      "natural": true,
-      "observed_at": "2026-08-06T03:31:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31068593165",
-      "schedule": "7 0 * * 0-5",
-      "shard": "48/72"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-06T08:51:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31086476783",
-      "schedule": "7 6 * * 0-5",
-      "shard": "51/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 549,
-      "natural": false,
-      "observed_at": "2026-09-28T01:17:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36365270594",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T01:23:18Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/AQLT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AQLT.json",
     "payload_sha256": "b3f0e16053248c5fac7288c390774655d60d11b853f17e51d64eb877fdf7316d",
     "quote_as_of": "2026-09-25T19:33:14Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 549,
-    "natural": false,
     "observed_at": "2026-09-28T01:17:59Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T03:32:29Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AQLT.json",
-    "payload_sha256": "8d87a4f387c69e3fa1705fca7e0bdd743bef3fe3ce5403aee00a8565170ef63e",
-    "quote_as_of": "2026-08-05T16:55:46Z",
-    "source_as_of": "2026-08-05"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T01:23:18Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T01:17:59Z",
-    "payload_sha256": "d8a75d5d9760747c08bfea0d1b4a0d783e3d7128b751f481a860ef187474496b",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AQLT.json",
+    "payload_sha256": "b3f0e16053248c5fac7288c390774655d60d11b853f17e51d64eb877fdf7316d",
     "quote_as_of": "2026-09-25T19:33:14Z",
-    "run_attempt": 1,
-    "run_id": "36365270594",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "AQLT holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AQLT holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "AQLT",
-  "updated_at": "2026-09-28T01:17:59Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

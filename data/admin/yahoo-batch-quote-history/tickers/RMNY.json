@@ -1,36 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1293,
-      "natural": true,
-      "observed_at": "2026-08-06T12:16:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31100540842",
-      "schedule": "7 10 * * 0-5",
-      "shard": "53/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 514,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:11:22Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/RMNY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RMNY.json",
     "payload_sha256": "605febe82b2463ea298e1be8b08f88de143486b48a65dae26e64a6d2847bc698",
     "quote_as_of": "2026-09-25T14:51:40Z",
     "source_as_of": "2026-09-25"
@@ -38,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 514,
-    "natural": false,
     "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T12:18:23Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/RMNY.json",
-    "payload_sha256": "0620e0207676652e864c39ff64e440a539b4782b479b4ddb7f0ebce92f74daad",
-    "quote_as_of": "2026-08-05T15:42:50Z",
-    "source_as_of": "2026-08-05"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:11:22Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "169d0dbd08403706bfd322f30db09b2b78a66453663a39299c409853fbff5dfa",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RMNY.json",
+    "payload_sha256": "605febe82b2463ea298e1be8b08f88de143486b48a65dae26e64a6d2847bc698",
     "quote_as_of": "2026-09-25T14:51:40Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "RMNY holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "RMNY holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "RMNY",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

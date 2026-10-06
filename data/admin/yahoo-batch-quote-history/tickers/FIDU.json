@@ -1,49 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 631,
-      "natural": true,
-      "observed_at": "2026-08-01T18:28:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711923637",
-      "schedule": "",
-      "shard": "2/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 644,
-      "natural": true,
-      "observed_at": "2026-08-11T03:59:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31456720047",
-      "schedule": "7 2 * * 0-5",
-      "shard": "25/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 546,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:29:00Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/FIDU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FIDU.json",
     "payload_sha256": "54f07f974fb22ffd25a47b22f4db5a54e5ec00c393185be83dd0adb540c1669f",
     "quote_as_of": "2026-09-25T19:59:47Z",
     "source_as_of": "2026-09-25"
@@ -51,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 546,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T04:00:33Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FIDU.json",
-    "payload_sha256": "d0c0176df6a2ff3f2cfe1b8d76541af59829355b41e8a41ea21325d9b8da4c46",
-    "quote_as_of": "2026-08-10T19:59:51Z",
-    "source_as_of": "2026-08-10"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:29:00Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "7e44877c86514aac2fe92197a84050f239ab6a0d4d6c271e06a994debaea775d",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FIDU.json",
+    "payload_sha256": "54f07f974fb22ffd25a47b22f4db5a54e5ec00c393185be83dd0adb540c1669f",
     "quote_as_of": "2026-09-25T19:59:47Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "FIDU holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FIDU holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "FIDU",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

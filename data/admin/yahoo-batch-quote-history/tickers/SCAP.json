@@ -1,36 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 561,
-      "natural": true,
-      "observed_at": "2026-08-11T07:21:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31468517777",
-      "schedule": "7 6 * * 0-5",
-      "shard": "27/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 446,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T06:13:43Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/SCAP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SCAP.json",
     "payload_sha256": "b26ecea6dcf49f8262a55174c5784581a7bfb99bfe6ed4ddc3f638ede25a9585",
     "quote_as_of": "2026-09-25T17:55:06Z",
     "source_as_of": "2026-09-25"
@@ -38,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 446,
-    "natural": false,
     "observed_at": "2026-09-28T06:02:24Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T07:24:46Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SCAP.json",
-    "payload_sha256": "cdeba9c2b19c27ea73c83a58151eb06c0d98d8a04a7e0300c972d8d308670684",
-    "quote_as_of": "2026-08-06T18:12:56Z",
-    "source_as_of": "2026-08-06T18:12:56Z"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T06:13:43Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:02:24Z",
-    "payload_sha256": "d3985f658ac98a6726d08af87d30f389e6ed4179f082681f2f838a8c5e5ae3d7",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SCAP.json",
+    "payload_sha256": "b26ecea6dcf49f8262a55174c5784581a7bfb99bfe6ed4ddc3f638ede25a9585",
     "quote_as_of": "2026-09-25T17:55:06Z",
-    "run_attempt": 1,
-    "run_id": "36367834787",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "SCAP holds LKG because Yahoo source date 2026-08-06T18:12:56Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SCAP holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-06T18:12:56Z"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "SCAP",
-  "updated_at": "2026-09-28T06:02:24Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

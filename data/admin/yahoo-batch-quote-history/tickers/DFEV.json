@@ -1,62 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 621,
-      "natural": true,
-      "observed_at": "2026-08-01T18:35:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30711924670",
-      "schedule": "",
-      "shard": "3/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 827,
-      "natural": true,
-      "observed_at": "2026-08-07T00:12:01Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31133672903",
-      "schedule": "7 18 * * 0-5",
-      "shard": "69/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 510,
-      "natural": true,
-      "observed_at": "2026-08-07T19:09:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31210066712",
-      "schedule": "7 18 * * 0-5",
-      "shard": "69/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 539,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T03:16:09Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/DFEV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DFEV.json",
     "payload_sha256": "2b2f0369594616714ab01e668e84d38abc8b05c582ea5f4f57bc7ba60a777aec",
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
@@ -64,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 539,
-    "natural": false,
     "observed_at": "2026-09-28T03:11:20Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T19:11:12Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DFEV.json",
-    "payload_sha256": "4ea2ff6af0fdcd556bf443f2cde2be6cb1a33ddc4ec0d1a11e58471de60b6958",
-    "quote_as_of": "2026-08-07T19:09:03Z",
-    "source_as_of": "2026-08-07"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T03:16:09Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T03:11:20Z",
-    "payload_sha256": "1e81024e16a5c278ba1ccd8d46cb1b7a3a8e1b22bbf757ff73ec4cc0344cdcf4",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DFEV.json",
+    "payload_sha256": "2b2f0369594616714ab01e668e84d38abc8b05c582ea5f4f57bc7ba60a777aec",
     "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367829153",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "DFEV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DFEV holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "DFEV",
-  "updated_at": "2026-09-28T03:11:20Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }

@@ -1,36 +1,8 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 943,
-      "natural": true,
-      "observed_at": "2026-08-09T16:47:26Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31324627429",
-      "schedule": "7 16 * * 0-5",
-      "shard": "8/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 492,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-28T05:36:32Z",
     "history_as_of": "2026-09-25",
-    "path": "data/yf/finance/NOVZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NOVZ.json",
     "payload_sha256": "f2d098687a1018d0fc6c0aa3946d21b470048bafd6287e0aee1abd1f87028ef2",
     "quote_as_of": "2026-09-25T16:01:20Z",
     "source_as_of": "2026-09-25"
@@ -38,52 +10,33 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
     "latency_ms": 492,
-    "natural": false,
     "observed_at": "2026-09-28T05:23:15Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schedule": "",
-    "shard": ""
+    "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T16:51:33Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NOVZ.json",
-    "payload_sha256": "e1ee8a88d5bb9c7827226a79e6eecc583cfac551b1ce2a7eea39ea5b3d027c13",
-    "quote_as_of": "2026-08-05T16:46:55Z",
-    "source_as_of": "2026-08-05T16:46:55Z"
-  },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
+    "fetched_at": "2026-09-28T05:36:32Z",
     "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T05:23:15Z",
-    "payload_sha256": "183256b9e29c7adf039a072a77cba04050f89daf9d66cd8d05c17147c567a66b",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NOVZ.json",
+    "payload_sha256": "f2d098687a1018d0fc6c0aa3946d21b470048bafd6287e0aee1abd1f87028ef2",
     "quote_as_of": "2026-09-25T16:01:20Z",
-    "run_attempt": 1,
-    "run_id": "36367832955",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-14T00:10:47Z",
-    "classified_run_id": "31755913658",
-    "expected_resolution": "next_natural_yahoo_run",
+    "classified_at": "2026-10-06T03:07:39Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "NOVZ holds LKG because Yahoo source date 2026-08-05T16:46:55Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NOVZ holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-05T16:46:55Z"
+    "source_as_of": "2026-09-25"
   },
   "ticker": "NOVZ",
-  "updated_at": "2026-09-28T05:23:15Z"
+  "updated_at": "2026-10-06T03:07:39Z"
 }
