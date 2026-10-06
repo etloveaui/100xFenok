@@ -3579,7 +3579,8 @@ module.main()
                         "normalized": {"overview": {"aum": 100_000_000_000 if ticker == "HOT" else 1}},
                     })
                 options = dict(universe_payload=universe, limit=40, max_age_hours=720,
-                               pending_ledger=pending, now_dt=now_dt, natural_general_priority=True)
+                               pending_ledger=pending, now_dt=now_dt, natural_general_priority=True,
+                               selected_etf_state={})
                 first = self.fetcher.incremental_etf_backfill_candidates(**options)
                 repeated = self.fetcher.incremental_etf_backfill_candidates(**options)
                 self.assertEqual(first["selected"], repeated["selected"])
@@ -3622,6 +3623,160 @@ module.main()
             self.assertTrue(self.fetcher.pending_entry_in_cooldown(entry, now_dt + timedelta(days=3), 7, 3))
             self.assertFalse(self.fetcher.pending_entry_in_cooldown(entry, now_dt + timedelta(days=10), 7, 3))
 
+    def test_natural_general_priority_uses_selected_serving_source_floor(self) -> None:
+        now_dt = datetime(2026, 10, 6, 9, 4, 40, tzinfo=timezone.utc)
+        fresh = "2026-10-05T20:00:00Z"
+        old = "2026-06-01T00:00:00Z"
+        canonical_dates = dict.fromkeys((
+            "ARLU", "CANONOLD", "INVALID", "FALLBACK", "DATELESS", "UNAVAILABLE",
+            "ENROLLED", "FRESH", "UNENROLLED", "PROVDATE", "FUTURE", "CORE",
+        ), fresh)
+        canonical_dates.update({"ARLU": "2026-09-30T14:53:36Z", "CANONOLD": "2026-05-01T00:00:00Z",
+                                "PROVDATE": None})
+        current = {ticker: {
+            "source_as_of": fresh, "observed_at": now_dt.isoformat(),
+            "provider": "stockanalysis", "resolution_state": "fresh_primary",
+        } for ticker in canonical_dates if ticker not in {"UNAVAILABLE", "ENROLLED", "UNENROLLED"}}
+        current["ARLU"].update({"source_as_of": "2026-06-29T23:06:46Z",
+                                "provider": "yahoo_finance", "resolution_state": "lkg_fallback"})
+        current["INVALID"]["source_as_of"] = "2026-06-20T00:00:00Z"
+        current["FALLBACK"]["source_as_of"] = "2026-06-15T00:00:00Z"
+        current["DATELESS"]["source_as_of"] = None
+        current["FUTURE"]["source_as_of"] = "2026-10-07T00:00:00Z"
+        current["CORE"]["source_as_of"] = old
+        selected_state = {
+            "current": current,
+            "recovery": {"UNAVAILABLE": {"last_transition": "unavailable"},
+                         "ENROLLED": {"last_transition": "legacy_migration"}},
+            "lkg": {ticker: {"source_as_of": old} for ticker in ("FRESH", "UNENROLLED", "UNAVAILABLE")},
+        }
+        before_state = json.dumps(selected_state, sort_keys=True)
+        # These enrolled names must remain candidates even outside all catalogs.
+        universe = {"records": [{"ticker": ticker} for ticker in canonical_dates
+                                if ticker not in {"DATELESS", "UNAVAILABLE", "ENROLLED"}]}
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "OUT_DIR", Path(tmp)), \
+             patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={
+                 "INVALID": {"validation_status": "invalid", "reason_code": "quality_regression"},
+             }), patch.object(self.fetcher, "data_supply_store") as supply_store:
+            supply_store.return_value.read_active_domain.return_value = selected_state
+            for ticker, stamp in canonical_dates.items():
+                self.fetcher.write_json(Path(tmp) / "etfs" / f"{ticker}.json", {
+                    "source": "yahoo_finance" if ticker == "FALLBACK" else "stockanalysis",
+                    "ticker": ticker, "asset_type": "etf", "source_as_of": stamp,
+                    "fetched_at": now_dt.isoformat(), "normalized": {"overview": {"aum": 1}},
+                })
+            before_files = {path.name: path.read_bytes() for path in Path(tmp).joinpath("etfs").glob("*.json")}
+            summary = self.fetcher.incremental_etf_backfill_candidates(
+                universe, 40, 720, exclude={"CORE"}, pending_ledger={"entries": {}},
+                now_dt=now_dt, natural_general_priority=True)
+            supply_store.return_value.read_active_domain.assert_called_once_with("etf_detail")
+            self.assertEqual(before_files, {path.name: path.read_bytes()
+                                           for path in Path(tmp).joinpath("etfs").glob("*.json")})
+        rows = {row["ticker"]: row for row in summary["selected"]}
+        self.assertEqual(len(rows), len(canonical_dates) - 1)
+        self.assertNotIn("CORE", rows)
+        arlu = rows["ARLU"]
+        expected_age = (now_dt - datetime(2026, 6, 29, 23, 6, 46, tzinfo=timezone.utc)).total_seconds() / 3600
+        self.assertEqual(arlu["age_hours"], round(expected_age, 2))
+        self.assertEqual(arlu["serving_source_as_of"], "2026-06-29T23:06:46Z")
+        self.assertEqual(arlu["serving_resolution_state"], "lkg_fallback")
+        self.assertEqual(arlu["reason"], "stale")
+        self.assertEqual([row["ticker"] for row in summary["selected"]
+                          if row["selection_bucket"] == "oldest_stale"],
+                         ["CANONOLD", "FALLBACK", "INVALID", "ARLU"])
+        self.assertEqual(rows["INVALID"]["reason"], "invalid")
+        self.assertEqual(rows["FALLBACK"]["reason"], "fallback_retry")
+        for ticker in ("DATELESS", "UNAVAILABLE", "ENROLLED", "PROVDATE"):
+            self.assertEqual(rows[ticker]["selection_bucket"], "missing", ticker)
+            self.assertTrue(rows[ticker]["source_date_missing"], ticker)
+            self.assertTrue(rows[ticker]["source_freshness_debt"], ticker)
+        self.assertEqual(rows["UNAVAILABLE"]["serving_resolution_state"], "unavailable")
+        self.assertIsNone(rows["ENROLLED"]["serving_resolution_state"])
+        for ticker in ("FRESH", "UNENROLLED"):
+            self.assertEqual(rows[ticker]["selection_bucket"], "fresh", ticker)
+            self.assertFalse(rows[ticker]["source_freshness_debt"], ticker)
+        self.assertEqual(rows["FUTURE"]["reason"], "invalid")
+        self.assertEqual(rows["FUTURE"]["selection_bucket"], "pending_retry")
+        self.assertEqual(json.dumps(selected_state, sort_keys=True), before_state)
+
+    def test_natural_serving_debt_preserves_cooldown_and_post_collection_clock(self) -> None:
+        now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
+        tickers = ("OLD", "RETRY", "COOL", "ABSENT", "SHORT")
+        selected_state = {"current": {ticker: {
+            "source_as_of": "2026-06-01T00:00:00Z", "resolution_state": "lkg_fallback",
+        } for ticker in tickers}}
+        ledger = {"entries": {
+            "RETRY": {"consecutive_failures": 1, "last_attempt_utc": "2026-10-04T00:00:00Z"},
+            "COOL": {"consecutive_failures": 3, "next_attempt_after_utc": "2026-10-13T00:00:00Z"},
+            "ABSENT": {"availability_status": "provider_absent", "next_probe_after_utc": "2026-10-13T00:00:00Z"},
+            "SHORT": {"failure_class": "successful_short_history", "next_attempt_after_utc": "2026-10-13T00:00:00Z"},
+        }}
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "OUT_DIR", Path(tmp)), \
+             patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={
+                 "OLD": {"validation_status": "invalid", "reason_code": "quality_regression"},
+             }):
+            for ticker in tickers:
+                self.fetcher.write_json(Path(tmp) / "etfs" / f"{ticker}.json", {
+                    "source": "stockanalysis", "source_as_of": "2026-10-05T00:00:00Z",
+                    "fetched_at": now_dt.isoformat(), "normalized": {"overview": {"aum": 1}},
+                })
+            self.fetcher.write_json(Path(tmp) / self.fetcher.PENDING_LEDGER_REL_PATH, ledger)
+            options = dict(universe_payload={"records": [{"ticker": ticker} for ticker in tickers]},
+                           limit=40, max_age_hours=720, natural_general_priority=True,
+                           selected_etf_state=selected_state)
+            initial = self.fetcher.incremental_etf_backfill_candidates(**options, pending_ledger=ledger, now_dt=now_dt)
+            rows = {row["ticker"]: row for row in initial["selected"]}
+            self.assertEqual(set(rows), {"OLD", "RETRY"})
+            self.assertEqual(rows["OLD"]["selection_bucket"], "oldest_stale")
+            self.assertEqual(rows["RETRY"]["selection_bucket"], "pending_retry")
+            self.assertEqual({row["ticker"] for row in initial["cooldown"]}, {"COOL", "ABSENT", "SHORT"})
+            result = {"ticker": "OLD", "asset_type": "etf", "provider": "stockanalysis", "status": "ok", "error": None}
+            # Publication follows acquisition. An old selected row must not turn
+            # a newly collected, fresh provider source into a false failure.
+            ledger = self.fetcher.update_pending_ledger([result], initial["selected"], 7, 3, False, now_dt=now_dt)
+            self.assertNotIn("OLD", ledger["entries"])
+            self.fetcher.write_json(Path(tmp) / "etfs/OLD.json", {
+                "source": "stockanalysis", "source_as_of": "2026-06-01T00:00:00Z",
+                "fetched_at": now_dt.isoformat(), "normalized": {"overview": {"aum": 1}},
+            })
+            for day in range(3):
+                stamp = now_dt + timedelta(days=day)
+                summary = self.fetcher.incremental_etf_backfill_candidates(**options, pending_ledger=ledger, now_dt=stamp)
+                old_row = next(row for row in summary["selected"] if row["ticker"] == "OLD")
+                self.assertEqual(old_row["reason"], "invalid")
+                self.assertTrue(old_row["source_freshness_debt"])
+                ledger = self.fetcher.update_pending_ledger([result], summary["selected"], 7, 3, False, now_dt=stamp)
+            self.assertEqual(ledger["entries"]["OLD"]["failure_class"], "source_date_non_advance")
+            self.assertEqual(ledger["entries"]["OLD"]["consecutive_failures"], 3)
+            after = self.fetcher.incremental_etf_backfill_candidates(
+                **options, pending_ledger=ledger, now_dt=now_dt + timedelta(days=3))
+            self.assertNotIn("OLD", {row["ticker"] for row in after["selected"]})
+            self.assertIn("OLD", {row["ticker"] for row in after["cooldown"]})
+
+    def test_selected_serving_floor_does_not_change_manual_or_history_selection(self) -> None:
+        now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
+        selected_state = {"current": {"ARLU": {"source_as_of": "2026-06-29T23:06:46Z"}},
+                          "recovery": {"UNAVAILABLE": {"last_transition": "unavailable"}}}
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "OUT_DIR", Path(tmp)), \
+             patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={}), \
+             patch.object(self.fetcher, "data_supply_store") as supply_store:
+            self.fetcher.write_json(Path(tmp) / "etfs/ARLU.json", {
+                "source": "stockanalysis", "source_as_of": "2026-09-30T14:53:36Z",
+                "fetched_at": now_dt.isoformat(), "normalized": {"overview": {"aum": 1}},
+            })
+            options = dict(universe_payload={"records": [{"ticker": "ARLU"}]}, limit=40, max_age_hours=720,
+                           pending_ledger={"entries": {}}, now_dt=now_dt, selected_etf_state=selected_state)
+            manual = self.fetcher.incremental_etf_backfill_candidates(**options)
+            self.assertEqual(manual["selected"], [])
+            history_options = {**options, "required_history_periods": ("weekly_3y",), "history_gaps_only": True}
+            history = self.fetcher.incremental_etf_backfill_candidates(**history_options)
+            baseline = self.fetcher.incremental_etf_backfill_candidates(**{**history_options, "selected_etf_state": {}})
+            self.assertEqual(history["selected"], baseline["selected"])
+            self.assertEqual([row["ticker"] for row in history["selected"]], ["ARLU"])
+            self.assertEqual(history["selected"][0]["reason"], "history_gap")
+            self.assertNotIn("serving_source_as_of", history["selected"][0])
+            supply_store.assert_not_called()
+
     def test_natural_pending_retries_do_not_starve_behind_stale_backlog(self) -> None:
         now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
         stale = [f"OLD{i:03d}" for i in range(160)]
@@ -3644,7 +3799,8 @@ module.main()
             for day in range(2):
                 stamp = now_dt + timedelta(days=day)
                 result = self.fetcher.incremental_etf_backfill_candidates(
-                    universe, 40, 720, pending_ledger=ledger, now_dt=stamp, natural_general_priority=True)
+                    universe, 40, 720, pending_ledger=ledger, now_dt=stamp, natural_general_priority=True,
+                    selected_etf_state={})
                 self.assertGreater(result["priority_selector"]["eligible_counts"]["oldest_stale"], 40)
                 self.assertEqual(result["priority_selector"]["selected_counts"]["pending_retry"], 10)
                 selected = result["selected"]

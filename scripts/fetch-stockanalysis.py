@@ -4681,7 +4681,8 @@ def update_pending_ledger(
             continue
         if error is None and primary_error is None:
             selected_row = selected_by_ticker.get(ticker) or {}
-            if selected_row.get("reason") in {"stale", "source_date_missing", "pending_retry"}:
+            if (selected_row.get("reason") in {"stale", "source_date_missing", "pending_retry"}
+                    or selected_row.get("source_freshness_debt")):
                 post_payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
                 age = payload_age_hours(post_payload, now_dt)
                 max_age = selected_row.get("max_age_hours", DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS)
@@ -5611,17 +5612,16 @@ def select_natural_general_incremental_candidates(
     default_focus = set(DEFAULT_ETFS)
     for row in candidates:
         context = contexts.get(row["ticker"]) or {}
-        pending = bool(row.get("prior_failures") or row.get("provider_absent")
-                       or row["reason"] in {"invalid", "fallback_retry", "pending_retry"})
+        pending = bool(row.get("prior_failures") or row.get("provider_absent"))
         if pending:
             bucket = "pending_retry"
         elif row["reason"] == "missing" and "new_etfs" in context.get("sources", set()):
             bucket = "new_listings"
         elif row["reason"] == "missing" or row.get("source_date_missing"):
             bucket = "missing"
-        elif row["reason"] == "stale":
+        elif row["reason"] == "stale" or row.get("source_freshness_debt"):
             bucket = "oldest_stale"
-        elif row["reason"] in {"deferred_detail", "history_gap"}:
+        elif row["reason"] in {"invalid", "fallback_retry", "pending_retry", "deferred_detail", "history_gap"}:
             bucket = "pending_retry"
         elif (row["ticker"] in default_focus or context.get("leveraged_focus")
               or (context.get("aum") or 0) >= NATURAL_GENERAL_MIN_AUM
@@ -5679,6 +5679,7 @@ def incremental_etf_backfill_candidates(
     history_gaps_only: bool = False,
     natural_general_priority: bool = False,
     recovery_tickers: tuple[str, ...] = (),
+    selected_etf_state: dict | None = None,
 ) -> dict:
     exclude = exclude or set()
     now_dt = now_dt or datetime.now(timezone.utc)
@@ -5698,7 +5699,17 @@ def incremental_etf_backfill_candidates(
                 now_dt,
             )
 
+    use_serving_freshness = natural_general_priority and not history_gaps_only and not required_history_periods
+    if use_serving_freshness and selected_etf_state is None:
+        selected_etf_state = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")
+    selected_current = ((selected_etf_state or {}).get("current") or {}) if use_serving_freshness else {}
+    selected_recovery = ((selected_etf_state or {}).get("recovery") or {}) if use_serving_freshness else {}
+    enrolled = set(selected_current) | set(selected_recovery)
     source_records = etf_incremental_source_records(universe_payload)
+    if enrolled:
+        # Enrollment survives catalog removal and explicit unavailable state.
+        # Historical LKG rows alone are audit evidence, not serving authority.
+        source_records.append(("selected_serving", [{"ticker": ticker} for ticker in sorted(enrolled)]))
     if recovery_tickers:
         source_records.append(("pending_recovery", [{"ticker": ticker} for ticker in recovery_tickers]))
     sources = [
@@ -5711,7 +5722,7 @@ def incremental_etf_backfill_candidates(
     terminal_limited_rows = []
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
-    reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "deferred_detail": 2, "history_gap": 2, "stale": 3}
+    reason_priority = {"missing": 0, "source_date_missing": 0, "invalid": 0, "fallback_retry": 1, "deferred_detail": 2, "history_gap": 2, "stale": 3}
     latest_primary_observations = latest_stockanalysis_etf_detail_observations()
 
     for source_name, symbols in sources:
@@ -5726,6 +5737,37 @@ def incremental_etf_backfill_candidates(
                 latest_primary_observations.get(ticker),
                 now_dt,
             )
+            source_date_missing = reason != "missing" and age_hours is None
+            serving_evidence = {}
+            if ticker in enrolled:
+                selected_row = selected_current.get(ticker) or {}
+                recovery_row = selected_recovery.get(ticker) or {}
+                serving_state = selected_row.get("resolution_state")
+                if not selected_row and recovery_row.get("last_transition") == "unavailable":
+                    serving_state = "unavailable"
+                serving_age = (
+                    payload_age_hours(selected_row, now_dt)
+                    if selected_row and serving_state != "unavailable" else None
+                )
+                serving_missing = serving_age is None
+                serving_evidence = {
+                    "serving_source_as_of": selected_row.get("source_as_of"),
+                    "serving_resolution_state": serving_state,
+                    "serving_age_hours": round(serving_age, 2) if serving_age is not None else None,
+                }
+                # A fresh provider file does not refresh an older selected
+                # payload. Missing clocks stay missing; collection time is not
+                # a source-date substitute. Keep validation reasons intact.
+                known_ages = [age for age in (age_hours, serving_age) if age is not None]
+                age_hours = max(known_ages) if known_ages else None
+                source_date_missing = source_date_missing or serving_missing
+                if reason is None:
+                    if serving_missing:
+                        reason = "source_date_missing"
+                    elif serving_age < 0:
+                        reason = "invalid"
+                    elif max_age_hours > 0 and age_hours >= max_age_hours:
+                        reason = "stale"
             if reason is None and ticker in recovery_tickers:
                 reason = "pending_retry"
             if reason is None and natural_general_priority:
@@ -5754,12 +5796,18 @@ def incremental_etf_backfill_candidates(
                 "prior_failures": prior_failures,
                 "priority": source_priority.get(source_name, 99),
                 "reason_priority": reason_priority.get(reason, 99),
-                "source_date_missing": reason != "missing" and age_hours is None,
+                "source_date_missing": source_date_missing,
                 "max_age_hours": max_age_hours,
                 "last_attempt_utc": (pending_entry or {}).get("last_attempt_utc")
                     or (latest_primary_observations.get(ticker) or {}).get("observed_at"),
                 "provider_absent": (pending_entry or {}).get("availability_status") == "provider_absent",
+                **serving_evidence,
             }
+            if use_serving_freshness:
+                row["source_freshness_debt"] = (
+                    reason == "missing" or source_date_missing
+                    or (max_age_hours > 0 and age_hours is not None and age_hours >= max_age_hours)
+                )
             if reason == "history_gap":
                 payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
                 gap = history_gap_classification(
@@ -7661,6 +7709,7 @@ def _main() -> None:
         return
 
     recovery_store = None
+    selected_etf_state = None
     retry_financials: set[str] = set()
     retry_etfs: list[str] = []
     yahoo_retry_etfs = (
@@ -7674,6 +7723,8 @@ def _main() -> None:
             OUT_DIR.parent.parent,
         )
         if args.natural_run:
+            if "etf" in natural_recovery_kinds:
+                selected_etf_state = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")
             stocks, retry_financials, retry_etfs, surface_names, retry_universe = (
                 select_natural_recovery_targets(
                     recovery_store,
@@ -7681,6 +7732,7 @@ def _main() -> None:
                     stocks,
                     surface_names,
                     stock_limit=args.stock_limit,
+                    selected_etf_state=selected_etf_state,
                 )
             )
             if retry_universe:
@@ -7787,6 +7839,7 @@ def _main() -> None:
             history_gaps_only=args.history_gaps_only,
             natural_general_priority=bounded_natural_general,
             recovery_tickers=tuple(unique_symbols(yahoo_retry_etfs + retry_etfs)) if bounded_natural_general else (),
+            selected_etf_state=selected_etf_state,
         )
         incremental_etfs = [row["ticker"] for row in incremental_summary["selected"]]
         planned_etfs = unique_symbols(etfs + incremental_etfs)
