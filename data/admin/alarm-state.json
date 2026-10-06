@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-06T09:31:47.217Z",
+  "generated_at": "2026-10-06T10:09:56.729Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -53,6 +53,18 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
       "alarm_reasons": [
@@ -61,8 +73,8 @@
       "stopped_sets": [
         "yahoo_batch_quote_history"
       ],
-      "latest_generated_at": "2026-10-06T09:25:26.003Z",
-      "previous_generated_at": "2026-10-06T07:17:44.678Z"
+      "latest_generated_at": "2026-10-06T09:38:25.607Z",
+      "previous_generated_at": "2026-10-06T09:25:26.003Z"
     }
   ],
   "watched_workflows": [
@@ -405,15 +417,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37443096122",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37443096122",
-    "observed_at": "2026-10-06T09:31:47.217Z",
+    "run_id": "37447551340",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37447551340",
+    "observed_at": "2026-10-06T10:09:56.729Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-defillama.yml",
       "fetch-yahoo-ticker.yml",
       "global-writer-queue-observer.yml",
+      "retention-restore.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
