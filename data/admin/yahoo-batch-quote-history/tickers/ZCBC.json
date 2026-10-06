@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:43:20Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/ZCBC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBC.json",
     "payload_sha256": "a1a152edb13af654a031b9f281bf0dd47aff92e001095d123e786ddb49fa4373",
     "quote_as_of": "2026-09-30T13:46:09Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBC: quote_as_of",
     "failures": [],
-    "latency_ms": 527,
-    "observed_at": "2026-09-30T14:43:20Z",
-    "outcome": "fresh"
+    "latency_ms": 534,
+    "observed_at": "2026-10-06T06:42:12Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBC: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T06:42:12Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:49:29Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:43:20Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBC.json",
-    "payload_sha256": "3958a5b327778590342118cf50e7dc8d7b28de55bb3e9b134e5073f6ffb25263",
-    "quote_as_of": "2026-09-18T15:43:15Z",
-    "source_as_of": "2026-09-18T15:43:15Z"
+    "payload_sha256": "a1a152edb13af654a031b9f281bf0dd47aff92e001095d123e786ddb49fa4373",
+    "quote_as_of": "2026-09-30T13:46:09Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-18T15:43:15Z"
   },
   "ticker": "ZCBC",
-  "updated_at": "2026-09-30T14:43:20Z"
+  "updated_at": "2026-10-06T06:42:12Z"
 }

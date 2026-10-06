@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T01:19:01Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ABLD.json",
-    "payload_sha256": "8ac7c478b10aaf1f72c28b20822b0d00ee5d4613ed5c8b415d52a8050b599090",
-    "quote_as_of": "2026-09-25T19:50:20Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-06T06:16:50Z",
+    "history_as_of": "2026-10-05",
+    "path": "data/yf/finance/ABLD.json",
+    "payload_sha256": "c3adb29467a8ed882b4097867ebcb208f0e8b3a31b632185f69b3d34add0efad",
+    "quote_as_of": "2026-10-05T19:59:43Z",
+    "source_as_of": "2026-10-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 515,
-    "observed_at": "2026-09-28T01:17:59Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABLD: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABLD: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABLD: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABLD: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABLD: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ABLD: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 647,
+    "observed_at": "2026-10-06T06:16:50Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:50:20Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "ABLD",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-06T06:16:50Z"
 }

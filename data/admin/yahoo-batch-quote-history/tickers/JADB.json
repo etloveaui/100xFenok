@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:36:50Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/JADB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/JADB.json",
     "payload_sha256": "c0d2e522c27ff5f3ee1490165f0e5cfdaede3425f1c32b02b18b77e0bf110cbc",
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for JADB: quote_as_of",
     "failures": [],
-    "latency_ms": 517,
-    "observed_at": "2026-09-30T14:36:50Z",
-    "outcome": "fresh"
+    "latency_ms": 599,
+    "observed_at": "2026-10-06T06:29:15Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for JADB: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T06:29:15Z"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T17:18:47Z",
-    "history_as_of": "2026-08-12",
+    "fetched_at": "2026-09-30T14:36:50Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/JADB.json",
-    "payload_sha256": "139dcb196e39626ca86ce5b68dd44f5326ca575bbe325ee4af0d4b593dd975ba",
-    "quote_as_of": "2026-08-12T13:46:06Z",
-    "source_as_of": "2026-08-12"
+    "payload_sha256": "c0d2e522c27ff5f3ee1490165f0e5cfdaede3425f1c32b02b18b77e0bf110cbc",
+    "quote_as_of": "2026-09-30T13:46:05Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "JADB",
-  "updated_at": "2026-09-30T14:36:50Z"
+  "updated_at": "2026-10-06T06:29:15Z"
 }

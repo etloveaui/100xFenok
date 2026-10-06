@@ -2,33 +2,43 @@
   "current": {
     "fetched_at": "2026-09-30T14:42:07Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/TIPF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TIPF.json",
     "payload_sha256": "9d7adfe2650171ae8fffc4a16922d491144b565faecca11a8f798e7b2da6522c",
     "quote_as_of": "2026-09-30T13:46:08Z",
     "source_as_of": "2026-09-30"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for TIPF: quote_as_of",
     "failures": [],
-    "latency_ms": 3038,
-    "observed_at": "2026-09-30T14:42:07Z",
-    "outcome": "fresh"
+    "latency_ms": 571,
+    "observed_at": "2026-10-06T06:38:40Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for TIPF: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T06:38:40Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-30T02:14:22Z",
-    "history_as_of": "2026-09-28",
+    "fetched_at": "2026-09-30T14:42:07Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TIPF.json",
-    "payload_sha256": "0806eb0442a844c953f665e30df08805faed37ad900d8a57c3684368f0c3d799",
-    "quote_as_of": "2026-09-16T14:34:21Z",
-    "source_as_of": "2026-09-16T14:34:21Z"
+    "payload_sha256": "9d7adfe2650171ae8fffc4a16922d491144b565faecca11a8f798e7b2da6522c",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -40,5 +50,5 @@
     "source_as_of": "2026-09-16T14:34:21Z"
   },
   "ticker": "TIPF",
-  "updated_at": "2026-09-30T14:42:07Z"
+  "updated_at": "2026-10-06T06:38:40Z"
 }

@@ -2,19 +2,18 @@
   "current": {
     "fetched_at": "2026-10-01T14:19:18Z",
     "history_as_of": "2026-10-01",
-    "path": "data/yf/finance/USGX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USGX.json",
     "payload_sha256": "11f54fe369764b2b77b6d30698c7a2de0d18cd78dd34a22f556e985559425a0e",
     "quote_as_of": "2026-10-01T13:46:08Z",
     "source_as_of": "2026-10-01"
   },
   "discovered_from": [
-    "market_facts",
-    "same_security_successor:XVUG",
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for USGX: quote_as_of",
     "failures": [
       {
         "attempt": 1,
@@ -47,20 +46,61 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 397,
-    "observed_at": "2026-10-01T14:19:18Z",
-    "outcome": "fresh"
+    "latency_ms": 547,
+    "observed_at": "2026-10-06T06:39:59Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for USGX: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T06:39:59Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:38:44Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-01T14:19:18Z",
+    "history_as_of": "2026-10-01",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USGX.json",
-    "payload_sha256": "1b3871222105b6aff527c175c8dd9a5b033ae5c743cc08964952b17062f93f1a",
-    "quote_as_of": "2026-09-01T18:05:30Z",
-    "source_as_of": "2026-09-01T18:05:30Z"
+    "payload_sha256": "11f54fe369764b2b77b6d30698c7a2de0d18cd78dd34a22f556e985559425a0e",
+    "quote_as_of": "2026-10-01T13:46:08Z",
+    "source_as_of": "2026-10-01"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 18,
@@ -72,5 +112,5 @@
     "source_as_of": "2026-09-01T18:05:30Z"
   },
   "ticker": "USGX",
-  "updated_at": "2026-10-01T14:19:18Z"
+  "updated_at": "2026-10-06T06:39:59Z"
 }

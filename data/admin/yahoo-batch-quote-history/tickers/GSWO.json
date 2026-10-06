@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T04:44:02Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GSWO.json",
-    "payload_sha256": "a362079051fe95d72267a6752a35148005f358800fc0fd1f91cce1ce0cc2214a",
-    "quote_as_of": "2026-09-25T19:55:22Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-06T06:26:56Z",
+    "history_as_of": "2026-10-05",
+    "path": "data/yf/finance/GSWO.json",
+    "payload_sha256": "7def2dfb2a3cf579d96e7f6822d0b91273e42466fc0a7c3735bdc9ef72d6cc15",
+    "quote_as_of": "2026-10-05T19:59:54Z",
+    "source_as_of": "2026-10-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 534,
-    "observed_at": "2026-09-28T04:37:06Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: GSWO: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GSWO: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GSWO: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GSWO: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GSWO: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GSWO: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 704,
+    "observed_at": "2026-10-06T06:26:56Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:55:22Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "GSWO",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-06T06:26:56Z"
 }

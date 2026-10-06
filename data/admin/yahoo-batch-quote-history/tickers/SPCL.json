@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T06:19:25Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SPCL.json",
-    "payload_sha256": "61e59d9ad83980f99e567d7b43031d007619fa081d9948126954a0b59e61c696",
-    "quote_as_of": "2026-09-25T19:59:54Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-06T06:37:05Z",
+    "history_as_of": "2026-10-05",
+    "path": "data/yf/finance/SPCL.json",
+    "payload_sha256": "4b3bbb900148ca374aa11327b5cb5e3be2d3d1139f5eef28e3a951d18e46565b",
+    "quote_as_of": "2026-10-05T20:00:01Z",
+    "source_as_of": "2026-10-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 522,
-    "observed_at": "2026-09-28T06:02:24Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: SPCL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SPCL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SPCL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SPCL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SPCL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SPCL: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 550,
+    "observed_at": "2026-10-06T06:37:05Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:59:54Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "SPCL",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-06T06:37:05Z"
 }

@@ -1,95 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 549,
-      "natural": true,
-      "observed_at": "2026-08-01T18:41:58Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711925747",
-      "schedule": "",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1033,
-      "natural": true,
-      "observed_at": "2026-08-07T22:50:55Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31225112049",
-      "schedule": "7 22 * * 0-5",
-      "shard": "71/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 627,
-      "natural": true,
-      "observed_at": "2026-08-12T17:16:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31620820614",
-      "schedule": "7 16 * * 0-5",
-      "shard": "44/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 465,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:35:52Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-06T06:39:20Z",
+    "history_as_of": "2026-10-05",
     "path": "data/yf/finance/TSYW.json",
-    "payload_sha256": "6db7ab6eb5189756b5d5df4dd40c68509d2ce24e5b30f70a69d08c5fc385dad8",
-    "quote_as_of": "2026-09-25T19:19:58Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "04d5ab784f624eaa31cab8702a000f36d4e2317c2090549da558f7efd17acae4",
+    "quote_as_of": "2026-10-05T15:32:38Z",
+    "source_as_of": "2026-10-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 465,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 517,
+    "observed_at": "2026-10-06T06:39:20Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T17:19:37Z",
@@ -99,25 +26,12 @@
     "quote_as_of": "2026-08-12T14:37:53Z",
     "source_as_of": "2026-08-12"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "70d53e8eacb1d23c699b2c8fd00360c95a35c6f137fd43250025057fd872f1ac",
-    "quote_as_of": "2026-09-25T19:19:58Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "TSYW holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -125,5 +39,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "TSYW",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-06T06:39:20Z"
 }

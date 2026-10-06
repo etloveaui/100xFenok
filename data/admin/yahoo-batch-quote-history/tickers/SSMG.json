@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:41:53Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/SSMG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SSMG.json",
     "payload_sha256": "d08ea2f2fc34f30667751f8ef4f83468d5c1ed10a9bd165bc52b6f304f729b04",
     "quote_as_of": "2026-09-30T13:46:07Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for SSMG: quote_as_of",
     "failures": [],
-    "latency_ms": 519,
-    "observed_at": "2026-09-30T14:41:53Z",
-    "outcome": "fresh"
+    "latency_ms": 509,
+    "observed_at": "2026-10-06T06:37:35Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for SSMG: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T06:37:35Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:21:13Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:41:53Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SSMG.json",
-    "payload_sha256": "0116dac3de66f50a75b5dc4359783df57dbc2623c5a448e9cba76bf2281012de",
-    "quote_as_of": "2026-09-21T16:00:09Z",
-    "source_as_of": "2026-09-21T16:00:09Z"
+    "payload_sha256": "d08ea2f2fc34f30667751f8ef4f83468d5c1ed10a9bd165bc52b6f304f729b04",
+    "quote_as_of": "2026-09-30T13:46:07Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-21T16:00:09Z"
   },
   "ticker": "SSMG",
-  "updated_at": "2026-09-30T14:41:53Z"
+  "updated_at": "2026-10-06T06:37:35Z"
 }

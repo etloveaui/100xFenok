@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:36:23Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/HF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HF.json",
     "payload_sha256": "3b7ed6bf3f24b1362f65df71d5455b90f0c49b9bb280546439ac19bd3409f107",
     "quote_as_of": "2026-09-30T13:46:04Z",
     "source_as_of": "2026-09-30"
@@ -10,9 +10,10 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for HF: quote_as_of",
     "failures": [
       {
         "attempt": 1,
@@ -45,20 +46,61 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 700,
-    "observed_at": "2026-09-30T14:36:23Z",
-    "outcome": "fresh"
+    "latency_ms": 684,
+    "observed_at": "2026-10-06T06:27:15Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for HF: quote_as_of",
+    "failure_kind": "systemic_integrity",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: HF: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: HF: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: HF: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: HF: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: HF: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: HF: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-06T06:27:15Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T04:45:48Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:36:23Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/HF.json",
-    "payload_sha256": "e4c7972dc527e4b6ff694725489ad1f82ec239da621e4e4927308a6d63403eb3",
-    "quote_as_of": "2026-09-21T19:39:03Z",
-    "source_as_of": "2026-09-21T19:39:03Z"
+    "payload_sha256": "3b7ed6bf3f24b1362f65df71d5455b90f0c49b9bb280546439ac19bd3409f107",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -70,5 +112,5 @@
     "source_as_of": "2026-09-21T19:39:03Z"
   },
   "ticker": "HF",
-  "updated_at": "2026-09-30T14:36:23Z"
+  "updated_at": "2026-10-06T06:27:15Z"
 }
