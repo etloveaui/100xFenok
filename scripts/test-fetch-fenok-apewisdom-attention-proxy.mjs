@@ -336,6 +336,36 @@ function expectedAssertionIds(laneId) {
 
 }
 
+// Request latency advances the observation clock, never the provider clock.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "apewisdom-causal-clock-"));
+  const paths = runnerPaths(root);
+  const runStartedAt = "2026-07-24T13:17:00.000Z";
+  const completedAt = "2026-07-24T13:17:03.000Z";
+  try {
+    const promoted = await runApeWisdomAttention({
+      ...paths, filter: "all-stocks", maxPages: 1, tickers: "NVDA,MSFT",
+      observedAt: runStartedAt, now: () => completedAt,
+      request: async () => providerResponse(samplePages[0], "Fri, 24 Jul 2026 13:17:02 GMT"),
+      runId: "causal-clock", eventName: "schedule", runAttempt: 1,
+    });
+    assert.equal(promoted.ok, true, "a provider Date after request start is valid when received before completion");
+    const canonical = fs.readFileSync(paths.canonicalPath, "utf8");
+    const snapshot = JSON.parse(canonical);
+    assert.equal(snapshot.source.source_as_of, "2026-07-24T13:17:02.000Z");
+    assert.equal(snapshot.generated_at, completedAt);
+    await assert.rejects(runApeWisdomAttention({
+      ...paths, filter: "all-stocks", maxPages: 1, tickers: "NVDA,MSFT",
+      observedAt: runStartedAt, now: () => completedAt,
+      request: async () => providerResponse(samplePages[0], "Fri, 24 Jul 2026 13:18:00 GMT"),
+      runId: "future-clock", eventName: "schedule", runAttempt: 1,
+    }), /sourceAsOf is in the future/);
+    assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonical, "future source data cannot overwrite canonical");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 // --- Workflow contract (owned producer wiring, #366) ------------------------
 
 // --- Lane Registry ⇄ commit-shard completeness gate (#366 step 4) -----------

@@ -601,7 +601,8 @@ export async function runApeWisdomAttention({
   noFetch = false,
   noWrite = false,
   request = rawGet,
-  observedAt = isoNow(),
+  now = isoNow,
+  observedAt = now(),
   attemptId = defaultAttemptId("apewisdom-attention", observedAt),
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
@@ -621,6 +622,9 @@ export async function runApeWisdomAttention({
   // Always observe and persist the current endpoint-contract result first. The
   // LKG store is deliberately separate from this attempt evidence.
   const observation = await observeAttempt({ filter, controlledFailure: controlled, request });
+  // observedAt above identifies the run start. Promotion is bounded by the
+  // completed observation, after the provider's HTTP response has arrived.
+  run.observedAt = now();
   const attempt = noWrite ? null : observation.result.attempt;
   const recordFailure = (reason) => {
     if (noWrite) {
@@ -657,7 +661,7 @@ export async function runApeWisdomAttention({
     built = await build(args, {
       cacheDate,
       sourceAsOf,
-      generatedAt: observedAt,
+      generatedAt: run.observedAt,
       dataRoot: runnerDataRoot,
       privateDir: runnerPrivateRoot,
       write: false,
@@ -668,6 +672,9 @@ export async function runApeWisdomAttention({
       boundedDiagnosticDetail(error),
     );
   }
+  run.observedAt = now();
+  built.snapshot.generated_at = run.observedAt;
+  built.history.generated_at = run.observedAt;
   const serialized = serializeDocument(built.snapshot);
   const candidate = {
     key: LKG_KEY,
