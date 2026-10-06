@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-06T15:47:37.136Z",
+  "generated_at": "2026-10-06T16:20:42.857Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -19,6 +19,18 @@
     {
       "workflow": "fetch-defillama.yml",
       "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -73,8 +85,8 @@
       "stopped_sets": [
         "yahoo_batch_quote_history"
       ],
-      "latest_generated_at": "2026-10-06T15:14:54.697Z",
-      "previous_generated_at": "2026-10-06T13:31:24.304Z"
+      "latest_generated_at": "2026-10-06T16:14:26.138Z",
+      "previous_generated_at": "2026-10-06T15:14:54.697Z"
     }
   ],
   "watched_workflows": [
@@ -417,13 +429,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37489950618",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37489950618",
-    "observed_at": "2026-10-06T15:47:37.136Z",
-    "event": "workflow_dispatch",
+    "run_id": "37494486375",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37494486375",
+    "observed_at": "2026-10-06T16:20:42.857Z",
+    "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-defillama.yml",
+      "fetch-yahoo-ticker.yml",
       "global-writer-queue-observer.yml",
       "retention-restore.yml",
       "worker-request-budget-alarm.yml",
