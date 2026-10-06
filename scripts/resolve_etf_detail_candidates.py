@@ -29,6 +29,10 @@ PENDING_ARTIFACT_PATH = re.compile(
     r"^data/admin/data-supply-state/v1/providers/[^/]+/etf_detail/pending/"
     r"(?P<entity>[A-Z0-9][A-Z0-9._-]*)\.json$"
 )
+RECOVERY_ARTIFACT_PATH = re.compile(
+    r"^data/admin/stockanalysis-recovery/states/etf/"
+    r"(?P<entity>[A-Z0-9][A-Z0-9._-]*)\.json$"
+)
 LEGACY_YAHOO_ENDPOINT_FAMILY = "yahoo_etf_detail"
 CANONICAL_YAHOO_ENDPOINT_FAMILY = "yahoo_finance_etf_detail"
 
@@ -45,8 +49,8 @@ def _timestamp_key(value: str) -> dt.datetime:
     return parsed.astimezone(dt.timezone.utc)
 
 
-def artifact_entities(path: Path | str) -> list[str]:
-    """Return only ETF entities whose pending pointers changed in this artifact."""
+def _artifact_entity_scope(path: Path | str) -> tuple[list[str], set[str]]:
+    """Retain whether an ETF is listed only through its recovery state."""
 
     manifest_path = Path(path)
     try:
@@ -56,15 +60,25 @@ def artifact_entities(path: Path | str) -> list[str]:
     paths = manifest.get("paths") if isinstance(manifest, Mapping) else None
     if not isinstance(paths, list) or not all(isinstance(item, str) for item in paths):
         raise SchemaError("ETF resolver artifact manifest paths are invalid")
-    entities: set[str] = set()
+    pending: set[str] = set()
+    recovery: set[str] = set()
     for raw in paths:
         normalized = PurePosixPath(raw)
         if normalized.is_absolute() or ".." in normalized.parts or normalized.as_posix() != raw:
             raise SchemaError("ETF resolver artifact path is unsafe")
         match = PENDING_ARTIFACT_PATH.fullmatch(raw)
         if match:
-            entities.add(match.group("entity"))
-    return sorted(entities)
+            pending.add(match.group("entity"))
+        match = RECOVERY_ARTIFACT_PATH.fullmatch(raw)
+        if match:
+            recovery.add(match.group("entity"))
+    return sorted(pending | recovery), recovery - pending
+
+
+def artifact_entities(path: Path | str) -> list[str]:
+    """Return only ETF entities whose pending or recovery state changed."""
+
+    return _artifact_entity_scope(path)[0]
 
 
 def latest_recorded_observations(
@@ -275,13 +289,32 @@ def resolve_entities(
     entities: Iterable[str],
     decided_at: str,
     reconcile_pending_on_noop: bool = True,
+    recovery_only_entities: Iterable[str] = (),
 ) -> dict[str, Any]:
     requested = sorted(set(entities))
     if not requested:
         return {"domain": DOMAIN, "decided_at": decided_at, "results": []}
     latest_rows = latest_recorded_observations(store.root, requested)
+    recovery_only = set(recovery_only_entities)
     results: list[dict[str, Any]] = []
     for entity in requested:
+        if entity in recovery_only and not latest_rows.get(entity):
+            # A recovery-only failure may precede provider observation creation.
+            # Pending evidence without observation history must still fail closed.
+            if not any((store.root / "providers").glob(f"*/{DOMAIN}/pending/{entity}.json")):
+                results.append({
+                    "entity": entity,
+                    "provider": None,
+                    "resolution_state": None,
+                    "source_as_of": None,
+                    "transaction_id": None,
+                    "committed": False,
+                    "resolution_error": (
+                        "no recorded provider observations for recovery-only artifact "
+                        f"[entity={entity} decided_at={decided_at}]"
+                    ),
+                })
+                continue
         try:
             active, committed = resolve_with_single_retry(
                 store,
@@ -344,7 +377,7 @@ def main() -> None:
     parser.add_argument("--artifact-manifest", required=True)
     parser.add_argument("--decided-at", default=None)
     args = parser.parse_args()
-    entities = artifact_entities(args.artifact_manifest)
+    entities, recovery_only = _artifact_entity_scope(args.artifact_manifest)
     decided_at = args.decided_at or utc_now()
     if not entities:
         print(
@@ -369,6 +402,7 @@ def main() -> None:
         entities=entities,
         decided_at=decided_at,
         reconcile_pending_on_noop=False,
+        recovery_only_entities=recovery_only,
     )
     store.reconcile_committed_pending(DOMAIN)
     maintenance = store.prune_domain(DOMAIN)

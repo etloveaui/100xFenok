@@ -30,6 +30,7 @@ from data_supply_state import (
 )
 import resolve_etf_detail_candidates
 import stockanalysis_artifact
+from stockanalysis_recovery_state import StockAnalysisRecoveryStateStore
 from resolve_etf_detail_candidates import (
     artifact_entities,
     latest_recorded_observations,
@@ -289,6 +290,24 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         )
         return manifest
 
+    def failure_artifact(self, *entities: str) -> Path:
+        truth_root = self.root / "provider-truth"
+        recovery = StockAnalysisRecoveryStateStore(
+            truth_root / "data/admin/stockanalysis-recovery", truth_root
+        )
+        paths = []
+        for entity in entities:
+            recovery.record_failure(
+                "etf", entity, "provider candidate validation failed",
+                {"observed_at": "2026-08-20T00:00:01Z"},
+            )
+            relative = f"data/admin/stockanalysis-recovery/states/etf/{entity}.json"
+            self.assertTrue((truth_root / relative).is_file())
+            paths.append(relative)
+        manifest = self.root / "manifest.json"
+        manifest.write_text(json.dumps({"paths": paths}), encoding="utf-8")
+        return manifest
+
     def historical_yahoo_failure(
         self,
         *,
@@ -341,21 +360,168 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             decided_at,
         ]
 
-    def test_artifact_scope_uses_only_changed_etf_pending_pointers(self) -> None:
-        manifest = self.root / "manifest.json"
+    def test_artifact_scope_uses_only_changed_etf_pending_and_recovery_state(self) -> None:
+        manifest = self.failure_artifact("CIR", "HYGW", "UNLISTED")
         manifest.write_text(
             json.dumps(
                 {
                     "paths": [
                         "data/admin/data-supply-state/v1/providers/yahoo_finance/etf_detail/pending/HYGW.json",
+                        "data/admin/stockanalysis-recovery/states/etf/CIR.json",
+                        "data/admin/stockanalysis-recovery/states/etf/HYGW.json",
+                        "data/admin/stockanalysis-recovery/states/etf/CIR.json",
                         "data/admin/data-supply-state/v1/history/observations/2026-07-26.jsonl",
                         "data/yf/etf-details/HYGW.json",
+                        "data/admin/stockanalysis-recovery/states/stock/AAPL.json",
+                        "data/admin/stockanalysis-recovery/states/financial/MSFT.json",
+                        "data/admin/stockanalysis-recovery/states/etf/NESTED/OTHER.json",
+                        "data/admin/stockanalysis-recovery/states/etf/lowercase.json",
+                        "data/admin/stockanalysis-recovery/states/etf/TEMP.json.tmp",
+                        "data/admin/stockanalysis-recovery/lkg/etf/ARCHIVE.json",
+                        "data/admin/stockanalysis-recovery/index.json",
+                        "data/admin/data-supply-state/v1/providers/stockanalysis/stock_detail/pending/GOOG.json",
+                        "manual/data/admin/stockanalysis-recovery/states/etf/MANUAL.json",
                     ]
                 }
             ),
             encoding="utf-8",
         )
-        self.assertEqual(artifact_entities(manifest), ["HYGW"])
+        self.assertEqual(artifact_entities(manifest), ["CIR", "HYGW"])
+
+    def test_failure_only_artifact_expires_fallback_then_recovers_fresh_primary(self) -> None:
+        for entity in ("CIR", "UNLISTED"):
+            self.publish_pair(entity, "2026-08-01T00:00:00Z", "2026-08-01T00:00:01Z")
+        resolve_entities(self.store, entities=["CIR", "UNLISTED"],
+                         decided_at="2026-08-01T01:00:00Z")
+        prior = self.store.read_active_domain("etf_detail")
+        prior_bytes = (self.root / prior["current"]["CIR"]["payload_ref"]["path"]).read_bytes()
+        failure, _ = observation(provider="stockanalysis", entity="CIR", valid=False,
+                                 source_as_of=None, observed_at="2026-08-20T00:00:01Z")
+        self.store.record_observation(failure)
+        manifest = self.failure_artifact("CIR", "UNLISTED")
+        manifest.write_text(json.dumps({"paths": [
+            "data/admin/stockanalysis-recovery/states/etf/CIR.json",
+            "data/admin/data-supply-state/v1/history/observations/2026-08-20.jsonl",
+        ]}), encoding="utf-8")
+        self.assertFalse(any((self.root / "providers").glob("*/etf_detail/pending/CIR.json")))
+
+        for decided_at, committed in (("2026-08-20T00:01:00Z", True),
+                                      ("2026-08-20T01:00:00Z", False)):
+            with mock.patch.object(sys, "argv", self.cli_args(manifest, decided_at)), \
+                    mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+                main()
+            rows = json.loads(stdout.getvalue())["results"]
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["entity"], "CIR")
+            self.assertEqual(rows[0]["resolution_state"], "unavailable")
+            self.assertEqual(rows[0]["committed"], committed)
+        unavailable = self.store.read_active_domain("etf_detail")
+        self.assertNotIn("CIR", unavailable["current"])
+        self.assertEqual(unavailable["recovery"]["CIR"]["last_transition"], "unavailable")
+        self.assertEqual(unavailable["current"]["UNLISTED"], prior["current"]["UNLISTED"])
+        self.assertEqual(
+            (self.root / unavailable["lkg"]["CIR"]["payload_ref"]["path"]).read_bytes(), prior_bytes
+        )
+
+        payload = {
+            "schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+            "ticker": "CIR", "source_as_of": "2026-08-20T00:00:00Z",
+            "fetched_at": "2026-08-20T02:00:00Z",
+            "normalized": {"overview": {"aum": 1}, "holdings": [{"ticker": "AAPL", "weight": 1}]},
+            "raw": {"quote": {"td": "2026-08-20"}},
+        }
+        raw = canonical_json_bytes(payload)
+        primary, _ = observation(provider="stockanalysis", entity="CIR", valid=True,
+                                 source_as_of=payload["source_as_of"], observed_at=payload["fetched_at"])
+        primary["payload_sha256"] = hashlib.sha256(raw).hexdigest()
+        primary.pop("event_id")
+        primary["event_id"] = deterministic_event_id("observation", primary)
+        canonical = self.root / "provider-truth" / primary["provider_path"]
+        canonical.parent.mkdir(parents=True, exist_ok=True)
+        canonical.write_bytes(raw)
+        self.store.store_provider_object(observation=primary, payload=raw)
+        self.store.record_observation(primary)
+        manifest.write_text(json.dumps({"paths": [
+            "data/admin/data-supply-state/v1/providers/stockanalysis/etf_detail/pending/CIR.json",
+        ]}), encoding="utf-8")
+        with mock.patch.object(sys, "argv", self.cli_args(manifest, "2026-08-20T02:01:00Z")), \
+                mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            main()
+        row = json.loads(stdout.getvalue())["results"][0]
+        self.assertEqual(row["provider"], "stockanalysis")
+        self.assertEqual(row["resolution_state"], "fresh_primary")
+        self.assertEqual(row["source_as_of"], payload["source_as_of"])
+        self.assertTrue(row["committed"])
+        recovered = self.store.read_active_domain("etf_detail")
+        self.assertNotIn("CIR", recovered["lkg"])
+        self.assertEqual(recovered["current"]["CIR"]["payload_sha256"], primary["payload_sha256"])
+        self.assertEqual(recovered["current"]["UNLISTED"], prior["current"]["UNLISTED"])
+
+    def test_failure_only_initial_unknown_and_no_fresh_are_isolated(self) -> None:
+        self.publish_pair("HYGW", "2026-08-20T00:00:00Z", "2026-08-20T00:00:01Z")
+        failure, _ = observation(provider="stockanalysis", entity="BFAIL", valid=False,
+                                 source_as_of=None, observed_at="2026-08-20T00:00:01Z")
+        self.store.record_observation(failure)
+        manifest = self.failure_artifact("AEMPTY", "BFAIL")
+        document = json.loads(manifest.read_text())
+        document["paths"].append(
+            "data/admin/data-supply-state/v1/providers/yahoo_finance/etf_detail/pending/HYGW.json"
+        )
+        manifest.write_text(json.dumps(document), encoding="utf-8")
+        recovery_paths = [self.root / "provider-truth" / path for path in document["paths"][:2]]
+        before = [path.read_bytes() for path in recovery_paths]
+        with mock.patch.object(sys, "argv", self.cli_args(manifest, "2026-08-20T00:01:00Z")), \
+                mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            main()
+        rows = {row["entity"]: row for row in json.loads(stdout.getvalue())["results"]}
+        self.assertIn("no recorded provider observations", rows["AEMPTY"]["resolution_error"])
+        self.assertIn("no fresh provider candidate exists for initial selection", rows["BFAIL"]["resolution_error"])
+        for entity in ("AEMPTY", "BFAIL"):
+            self.assertFalse(rows[entity]["committed"])
+            self.assertIsNone(rows[entity]["resolution_state"])
+            self.assertIsNone(rows[entity]["source_as_of"])
+        self.assertEqual(rows["HYGW"]["resolution_state"], "fresh_fallback")
+        self.assertEqual(set(self.store.read_active_domain("etf_detail")["current"]), {"HYGW"})
+        self.assertEqual([path.read_bytes() for path in recovery_paths], before)
+
+    def test_failure_only_scope_does_not_hide_missing_pending_observation(self) -> None:
+        for entity, pending_in_manifest in (("DECLARED", True), ("EXISTING", False)):
+            with self.subTest(entity=entity):
+                manifest = self.failure_artifact(entity)
+                pending_path = f"providers/yahoo_finance/etf_detail/pending/{entity}.json"
+                if pending_in_manifest:
+                    document = json.loads(manifest.read_text())
+                    document["paths"].append(f"data/admin/data-supply-state/v1/{pending_path}")
+                    manifest.write_text(json.dumps(document), encoding="utf-8")
+                else:
+                    candidate, raw = observation(provider="yahoo_finance", entity=entity, valid=True,
+                                                 source_as_of="2026-08-20T00:00:00Z",
+                                                 observed_at="2026-08-20T00:00:01Z")
+                    self.store.store_provider_object(observation=candidate, payload=raw)
+                    self.assertTrue((self.root / pending_path).is_file())
+                with mock.patch.object(sys, "argv", self.cli_args(manifest, "2026-08-20T00:01:00Z")), \
+                        mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+                    with self.assertRaisesRegex(SchemaError, f"no recorded observations for {entity}"):
+                        main()
+                self.assertEqual(stdout.getvalue(), "")
+                if not pending_in_manifest:
+                    self.assertTrue((self.root / pending_path).is_file())
+
+    def test_failure_only_scope_preserves_complete_provider_evidence_guard(self) -> None:
+        self.publish_pair("CIR", "2026-08-01T00:00:00Z", "2026-08-01T00:00:01Z")
+        resolve_entities(self.store, entities=["CIR"], decided_at="2026-08-01T01:00:00Z")
+        prior = self.store.read_active_domain("etf_detail")
+        failure, _ = observation(provider="stockanalysis", entity="CIR", valid=False,
+                                 source_as_of=None, observed_at="2026-08-20T00:00:01Z")
+        self.store.record_observation(failure)
+        manifest = self.failure_artifact("CIR")
+        with mock.patch("resolve_etf_detail_candidates.latest_recorded_observations", return_value={"CIR": [failure]}), \
+                mock.patch.object(sys, "argv", self.cli_args(manifest, "2026-08-20T00:01:00Z")), \
+                mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            with self.assertRaisesRegex(SchemaError, "requires complete provider evidence"):
+                main()
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(self.store.read_active_domain("etf_detail")["transaction_id"], prior["transaction_id"])
 
     def test_six_provider_bound_yahoo_candidates_promote_exact_source_stamp(self) -> None:
         legacy_by_entity = {}
