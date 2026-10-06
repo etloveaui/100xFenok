@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
@@ -203,6 +204,7 @@ export function deriveWorkflowWatchPolicy({
   workflowsDir = WORKFLOWS_DIR,
   scheduledExclusions = SCHEDULED_WORKFLOW_EXCLUSIONS,
   nonScheduledInclusions = NON_SCHEDULED_WORKFLOW_INCLUSIONS,
+  laneRegistry = LANE_REGISTRY,
   } = {}) {
   const rows = fs.readdirSync(workflowsDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name))
@@ -214,6 +216,20 @@ export function deriveWorkflowWatchPolicy({
   const inclusionConfigs = new Map(
     Object.entries(nonScheduledInclusions).map(([file, entry]) => [file, normalizeInclusion(file, entry)]),
   );
+  // Ownership comes from the existing registry; a real cron is still required.
+  // Detector enforcement (live/shadow) does not disable a producer's schedule.
+  const externalProviders = new Set(laneRegistry.providers
+    .filter((provider) => provider.class === "external_data")
+    .map((provider) => provider.id));
+  const producerLanesByFile = new Map();
+  for (const lane of laneRegistry.lanes) {
+    if (!lane.owner_workflow || !lane.provider_refs.some((ref) =>
+      ref.role === "source" && externalProviders.has(ref.provider_id))) continue;
+    const file = path.posix.basename(lane.owner_workflow);
+    const owned = producerLanesByFile.get(file) ?? [];
+    owned.push(lane);
+    producerLanesByFile.set(file, owned);
+  }
 
   for (const [file, reason] of Object.entries(scheduledExclusions)) {
     validateReason("scheduled exclusion", file, reason);
@@ -242,11 +258,18 @@ export function deriveWorkflowWatchPolicy({
         throw new Error(`${file}: watched workflow has no countable automatic event`);
       }
       const declaredCrons = crons ?? [];
+      const producerLanes = triggers.includes("schedule") ? producerLanesByFile.get(file) : null;
+      const activation = (producerLanes ?? []).map((lane) => lane.activated_at)
+        .filter((stamp) => Number.isFinite(Date.parse(stamp))).sort()[0];
       return {
         file,
         label,
         events,
         crons: declaredCrons,
+        ...(producerLanes ? {
+          scheduled_producer: true,
+          ...(activation ? { schedule_activated_at: activation } : {}),
+        } : {}),
         failure_streak_threshold: inclusionConfigs.get(file)?.failure_streak_threshold
           ?? deriveFailureStreakThreshold(declaredCrons),
       };
@@ -558,9 +581,9 @@ export function isQueueEvictedRun(jobs) {
 // restore watchdog additionally reads recent in-progress schedule runs so a
 // legitimate bounded execution is not mistaken for an absent trigger.
 //
-// Scope is deliberately the detectors. A workflow that follows its producers
-// rather than owning a clock - Update Manifest, Deploy Worker,
-// build-stocks-analyzer - has no schedule of its own to be late against.
+// Keep the legacy detector policy. Scheduled acquisition is additionally
+// derived from registry ownership by deriveWorkflowWatchPolicy; publishers and
+// owner-run/manual-only lanes do not acquire an invented clock.
 export const MISSED_WINDOW_WORKFLOWS = new Set([
   "data-plane-serving-probe.yml",
   "check-sec13f-live-parity.yml",
@@ -620,9 +643,11 @@ export function missedSlotCount(cron, sinceMs, nowMs) {
 // records without changing their alarm result.
 export function declaredMissedSlotCount(cron, sinceMs, nowMs) {
   if (!Number.isFinite(sinceMs) || !Number.isFinite(nowMs)) return null;
-  let parsed;
+  let parsedCrons;
   try {
-    parsed = parseDeclaredCron(cron);
+    const declarations = Array.isArray(cron) ? cron : [cron];
+    if (declarations.length === 0) return null;
+    parsedCrons = declarations.map(parseDeclaredCron);
   } catch {
     return null;
   }
@@ -631,22 +656,24 @@ export function declaredMissedSlotCount(cron, sinceMs, nowMs) {
   const hourMs = 3_600_000;
   const minuteMs = 60_000;
   const firstDay = Math.floor(sinceMs / dayMs) * dayMs;
-  const hours = [...parsed.hour].sort((a, b) => a - b);
-  const minutes = [...parsed.minute].sort((a, b) => a - b);
   let missed = 0;
   let scannedDays = 0;
   for (let dayEpoch = firstDay; dayEpoch <= nowMs && scannedDays < 146_097; dayEpoch += dayMs) {
     scannedDays += 1;
     const date = new Date(dayEpoch);
-    if (!Number.isFinite(date.getTime()) || !cronMatchesUtcDay(date, parsed)) continue;
-    for (const hour of hours) {
-      for (const minute of minutes) {
-        const slot = dayEpoch + hour * hourMs + minute * minuteMs;
-        if (slot <= sinceMs || slot > nowMs) continue;
-        missed += 1;
-        if (missed > 1000) return missed;
+    if (!Number.isFinite(date.getTime())) continue;
+    const slots = new Set();
+    for (const parsed of parsedCrons) {
+      if (!cronMatchesUtcDay(date, parsed)) continue;
+      for (const hour of parsed.hour) {
+        for (const minute of parsed.minute) {
+          const slot = dayEpoch + hour * hourMs + minute * minuteMs;
+          if (slot > sinceMs && slot <= nowMs) slots.add(slot);
+        }
       }
     }
+    missed += slots.size;
+    if (missed > 1000) return 1001;
   }
   return missed;
 }
@@ -690,6 +717,7 @@ export function needsMissedWindowReverification(row) {
 
 export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeScheduledRuns = [] } = {}) {
   const countedRuns = runs.filter((run) => {
+    if (run?.status && run.status !== "completed") return false;
     if (run?.event === "workflow_dispatch") return false;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
@@ -749,12 +777,23 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   const intervalHours = intervals.length > 0 ? Math.min(...intervals) : null;
   let missedWindowHours = null;
   let missedSlots = null;
-  if (MISSED_WINDOW_WORKFLOWS.has(workflow.file) && intervalHours !== null) {
+  const isScheduledProducer = workflow.scheduled_producer === true;
+  if ((MISSED_WINDOW_WORKFLOWS.has(workflow.file) || isScheduledProducer) && intervalHours !== null) {
     const isRestoreWatchdog = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file);
     // Existing detectors retain their newest-counted-run anchor, including
     // queue-delayed execution order. Only restore observes schedule liveness.
     let sinceMs = latestStartedAt ? Date.parse(latestStartedAt) : null;
-    if (isRestoreWatchdog) {
+    if (isScheduledProducer) {
+      // Trigger liveness uses only schedule-created runs, regardless of manual
+      // recovery or another automatic event. A queued producer proves creation,
+      // but its creation time cannot cover later absent scheduled slots.
+      const evidence = runs.filter((run) => run?.event === "schedule")
+        .map((run) => Date.parse(run?.created_at || run?.run_started_at))
+        .filter((stamp) => Number.isFinite(stamp) && stamp <= now);
+      const activatedAt = Date.parse(workflow.schedule_activated_at);
+      sinceMs = evidence.length > 0 ? Math.max(...evidence)
+        : Number.isFinite(activatedAt) && activatedAt <= now ? activatedAt : null;
+    } else if (isRestoreWatchdog) {
       // A manual dispatch is useful recovery evidence for a lost acquisition
       // slot, but it is not evidence that the schedule itself remains live.
       // Anchor missed-window counting only to scheduled runs, with an additional
@@ -779,8 +818,9 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     }
     const tightestCron = (Array.isArray(workflow.crons) ? workflow.crons : [])
       .find((cron) => cronIntervalHours(cron) === intervalHours) ?? null;
-    const countSlots = isRestoreWatchdog ? declaredMissedSlotCount : missedSlotCount;
-    missedSlots = tightestCron === null || sinceMs === null ? null : countSlots(tightestCron, sinceMs, now);
+    const countSlots = isRestoreWatchdog || isScheduledProducer ? declaredMissedSlotCount : missedSlotCount;
+    const declarations = isScheduledProducer ? workflow.crons : tightestCron;
+    missedSlots = declarations === null || sinceMs === null ? null : countSlots(declarations, sinceMs, now);
     if (Number.isFinite(missedSlots) && missedSlots >= MISSED_WINDOW_MULTIPLIER) {
       missedWindowHours = (now - sinceMs) / 3_600_000;
     }
@@ -805,7 +845,14 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     failure_streak_recovered: streakRecovered,
   };
   if (workflow.events) base.events = workflow.events;
-  if (countedRuns.length === 0) {
+  if (isScheduledProducer && missedSlots === null && !base.alarming) {
+    return {
+      ...base,
+      status: "unknown",
+      message: "No usable scheduled-run or registry activation evidence; other events do not establish schedule liveness.",
+    };
+  }
+  if (countedRuns.length === 0 && !base.alarming) {
     return {
       ...base,
       status: "unknown",
@@ -887,7 +934,7 @@ export function buildWorkflowRunsUrl({
   status = "completed",
 }) {
   const query = new URLSearchParams({
-    status,
+    ...(status ? { status } : {}),
     branch,
     per_page: String(perPage),
   });
@@ -961,6 +1008,9 @@ export async function annotateQueueEvictions({ runs, fetchJobsFn, limit = QUEUE_
   if (!Array.isArray(runs) || typeof fetchJobsFn !== "function") return runs;
   let inspected = 0;
   for (const run of runs) {
+    // Producer liveness reads active runs too; they must not hide the leading
+    // completed failure prefix from queue-eviction classification.
+    if (run?.status && run.status !== "completed") continue;
     const inspectable = FAILURE_CONCLUSIONS.has(run?.conclusion)
       || (run?.event === "schedule" && run?.conclusion === "cancelled");
     if (!inspectable) break;
@@ -1064,6 +1114,7 @@ export async function main() {
           file: workflow.file,
           branch,
           event,
+          status: workflow.scheduled_producer && event === "schedule" ? null : "completed",
         }));
       }
       const fetchInProgressScheduledRuns = async () => {
@@ -1096,6 +1147,7 @@ export async function main() {
             branch,
             event,
             perPage: 100,
+            status: workflow.scheduled_producer && event === "schedule" ? null : "completed",
           }));
         }
         activeScheduledRuns = await fetchInProgressScheduledRuns();

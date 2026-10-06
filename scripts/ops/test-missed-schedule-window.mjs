@@ -24,8 +24,10 @@ import assert from "node:assert/strict";
 import {
   MISSED_WINDOW_MULTIPLIER,
   MISSED_WINDOW_WORKFLOWS,
+  annotateQueueEvictions,
   cronIntervalHours,
   declaredMissedSlotCount,
+  deriveWorkflowWatchPolicy,
   evaluateWorkflow,
   mergeWorkflowRunBatches,
   missedSlotCount,
@@ -284,4 +286,75 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
 }
 
-console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors in scope, x${MISSED_WINDOW_MULTIPLIER} tolerance)`);
+// Acquisition scope comes from the lane registry and actual workflow cron.
+{
+  const runs = [
+    { ...run(120, "2026-08-21T01:20:00Z"), status: "queued", conclusion: null },
+    { ...run(119, "2026-08-21T00:20:00Z", { conclusion: "failure" }), status: "completed" },
+    { ...run(118, "2026-08-20T23:20:00Z", { conclusion: "failure" }), status: "completed" },
+  ];
+  const inspected = [];
+  await annotateQueueEvictions({ runs, fetchJobsFn: async (id) => {
+    inspected.push(id);
+    return [{ conclusion: "cancelled", steps: [] }];
+  } });
+  assert.deepEqual(inspected, [119, 118], "active schedule evidence must not hide completed queue evictions");
+  assert.equal(runs[1].queue_evicted, true);
+  assert.equal(runs[2].queue_evicted, true);
+}
+
+// Acquisition scope comes from the lane registry and actual workflow cron.
+// Manual-only and owner-run lanes must not acquire an invented schedule.
+{
+  const policy = deriveWorkflowWatchPolicy();
+  const producers = policy.watched.filter((workflow) => workflow.scheduled_producer);
+  for (const file of ["fetch-yf-finance.yml", "fetch-stockanalysis.yml", "fetch-fenok-private-options.yml"]) {
+    assert.ok(producers.some((workflow) => workflow.file === file), `${file} owns automatic acquisition`);
+  }
+  for (const file of ["retention-sweep.yml", "global-scouter-shadow-publish.yml", "deploy-worker.yml"]) {
+    assert.ok(!producers.some((workflow) => workflow.file === file), `${file} is not a scheduled data producer`);
+  }
+  const options = producers.find((workflow) => workflow.file === "fetch-fenok-private-options.yml");
+  const lastSchedule = run(100, "2026-10-03T06:29:27Z");
+  const tuesday = evaluateWorkflow(options, [lastSchedule], { now: Date.parse("2026-10-06T06:30:00Z") });
+  assert.equal(tuesday.missed_schedule_slot_count, 1, "Sunday and Monday are not options schedule slots");
+  assert.equal(tuesday.alarming, false, "one delayed/dropped natural slot stays tolerated");
+  const wednesday = evaluateWorkflow(options, [
+    run(102, "2026-10-07T06:20:00Z", { event: "workflow_dispatch" }),
+    lastSchedule,
+  ], { now: Date.parse("2026-10-07T06:30:00Z") });
+  assert.equal(wednesday.missed_schedule_slot_count, 2);
+  assert.equal(wednesday.alarm_reasons.includes("missed_schedule_window"), true,
+    "manual recovery must not conceal a dead producer schedule");
+}
+
+{
+  const since = Date.parse("2026-10-05T00:00:00Z");
+  const now = Date.parse("2026-10-06T12:01:00Z");
+  assert.equal(declaredMissedSlotCount(["0 12 * * 2", "0 12 * * 2", "0 1 * * 2"], since, now), 2,
+    "multi-cron slots form a union, including overlapping declarations");
+  assert.equal(declaredMissedSlotCount("0 12 * * 2", since, Date.parse("2026-10-13T12:01:00Z")), 2,
+    "weekly schedules count declared dates rather than elapsed daily intervals");
+  const producer = { ...detector("fixture-producer.yml", "11 * * * *"), scheduled_producer: true,
+    schedule_activated_at: "2026-08-20T23:35:00Z" };
+  const neverRan = evaluateWorkflow(producer,
+    [run(110, "2026-08-21T01:20:00Z", { event: "workflow_dispatch" })], { now: NOW });
+  assert.equal(neverRan.status, "alarm", "a registry activation can anchor a producer with no scheduled run");
+  assert.equal(neverRan.missed_schedule_slot_count, 2);
+  const onlyPush = evaluateWorkflow({ ...producer, events: ["schedule", "push"], schedule_activated_at: undefined },
+    [run(113, "2026-08-21T01:20:00Z", { event: "push" })], { now: NOW });
+  assert.equal(onlyPush.status, "unknown", "push success is not evidence that an unanchored schedule ran");
+  const activatedOnlyPush = evaluateWorkflow({ ...producer, events: ["schedule", "push"] },
+    [run(113, "2026-08-21T01:20:00Z", { event: "push" })], { now: NOW });
+  assert.equal(activatedOnlyPush.status, "alarm", "push success cannot cover missed slots since registry activation");
+  const queued = evaluateWorkflow(producer, [{
+    id: 111, event: "schedule", status: "queued", conclusion: null, created_at: "2026-08-21T01:15:00Z",
+  }], { now: NOW });
+  assert.equal(queued.missed_schedule_slot_count, 0, "a created producer run proves the trigger exists");
+  const staleQueued = evaluateWorkflow(producer, [{
+    id: 112, event: "schedule", status: "queued", conclusion: null, created_at: "2026-08-20T23:35:00Z",
+  }], { now: NOW });
+  assert.equal(staleQueued.missed_schedule_slot_count, 2, "an old queued run cannot cover later absent slots");
+}
+
+console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors plus registry producers, x${MISSED_WINDOW_MULTIPLIER} tolerance)`);
