@@ -1,24 +1,30 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "krx",
-  "updated_at": "2026-10-04T09:28:14.573Z",
-  "retry_set": [],
+  "updated_at": "2026-10-05T19:23:58.693Z",
+  "retry_set": [
+    "bridge"
+  ],
   "items": {
     "bridge": {
       "key": "bridge",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "path": "data/admin/krx/lkg/bridge.json",
         "payload_sha256": "54860591bc4195109b0f3e66d778c2827087de4de464dde1bbbb675c21f44d2c",
         "source_as_of": "2026-10-02"
       },
       "lkg": {
         "path": "data/admin/krx/lkg/bridge.json",
-        "payload_sha256": "6dce68780023a0ffaafe36b3726d990babebafb9735a65790b0522aec4a66e8b",
-        "source_as_of": "2026-09-29"
+        "payload_sha256": "54860591bc4195109b0f3e66d778c2827087de4de464dde1bbbb675c21f44d2c",
+        "source_as_of": "2026-10-02"
       },
-      "updated_at": "2026-10-04T09:28:14.573Z"
+      "latest_failure": {
+        "observed_at": "2026-10-05T19:23:58.693Z",
+        "reason": "schema_drift"
+      },
+      "updated_at": "2026-10-05T19:23:58.693Z"
     }
   }
 }
