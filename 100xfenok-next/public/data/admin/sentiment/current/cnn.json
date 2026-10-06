@@ -1,7 +1,7 @@
 {
   "schema_version": "sentiment-source-bundle/v2",
   "source_key": "cnn",
-  "source_as_of": "2026-10-02",
+  "source_as_of": "2026-10-05",
   "persistence_policy": {
     "schema_version": "sentiment-bounded-persistence/v1",
     "basis": "distinct_source_date_per_file",
@@ -11,52 +11,52 @@
   "persistence_state": {
     "files": {
       "cnn-fear-greed.json": {
-        "available_distinct_source_dates": 4003,
-        "retained_distinct_source_dates": 4003,
+        "available_distinct_source_dates": 4004,
+        "retained_distinct_source_dates": 4004,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 4003
+        "retained_rows": 4004
       },
       "cnn-components.json": {
-        "available_distinct_source_dates": 251,
-        "retained_distinct_source_dates": 251,
+        "available_distinct_source_dates": 252,
+        "retained_distinct_source_dates": 252,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 251
+        "retained_rows": 252
       },
       "cnn-put-call.json": {
-        "available_distinct_source_dates": 750,
-        "retained_distinct_source_dates": 750,
-        "pruned_distinct_source_dates": 0,
-        "retained_rows": 750
-      },
-      "cnn-momentum.json": {
-        "available_distinct_source_dates": 752,
-        "retained_distinct_source_dates": 752,
-        "pruned_distinct_source_dates": 0,
-        "retained_rows": 752
-      },
-      "cnn-strength.json": {
-        "available_distinct_source_dates": 752,
-        "retained_distinct_source_dates": 752,
-        "pruned_distinct_source_dates": 0,
-        "retained_rows": 752
-      },
-      "cnn-breadth.json": {
-        "available_distinct_source_dates": 752,
-        "retained_distinct_source_dates": 752,
-        "pruned_distinct_source_dates": 0,
-        "retained_rows": 752
-      },
-      "cnn-junk-bond.json": {
-        "available_distinct_source_dates": 750,
-        "retained_distinct_source_dates": 750,
-        "pruned_distinct_source_dates": 0,
-        "retained_rows": 750
-      },
-      "cnn-safe-haven.json": {
         "available_distinct_source_dates": 751,
         "retained_distinct_source_dates": 751,
         "pruned_distinct_source_dates": 0,
         "retained_rows": 751
+      },
+      "cnn-momentum.json": {
+        "available_distinct_source_dates": 753,
+        "retained_distinct_source_dates": 753,
+        "pruned_distinct_source_dates": 0,
+        "retained_rows": 753
+      },
+      "cnn-strength.json": {
+        "available_distinct_source_dates": 753,
+        "retained_distinct_source_dates": 753,
+        "pruned_distinct_source_dates": 0,
+        "retained_rows": 753
+      },
+      "cnn-breadth.json": {
+        "available_distinct_source_dates": 753,
+        "retained_distinct_source_dates": 753,
+        "pruned_distinct_source_dates": 0,
+        "retained_rows": 753
+      },
+      "cnn-junk-bond.json": {
+        "available_distinct_source_dates": 751,
+        "retained_distinct_source_dates": 751,
+        "pruned_distinct_source_dates": 0,
+        "retained_rows": 751
+      },
+      "cnn-safe-haven.json": {
+        "available_distinct_source_dates": 752,
+        "retained_distinct_source_dates": 752,
+        "pruned_distinct_source_dates": 0,
+        "retained_rows": 752
       }
     }
   },
@@ -16073,6 +16073,10 @@
       {
         "date": "2026-10-02",
         "score": 31.2
+      },
+      {
+        "date": "2026-10-05",
+        "score": 43.1
       }
     ],
     "cnn-components.json": [
@@ -18585,6 +18589,16 @@
         "volatility": 50,
         "safe_haven": 52.4,
         "junk_bond": 44.2
+      },
+      {
+        "date": "2026-10-05",
+        "market_momentum": 51.4,
+        "stock_strength": 1.2,
+        "stock_breadth": 1.4,
+        "put_call": 32.4,
+        "volatility": 50,
+        "safe_haven": 71.2,
+        "junk_bond": 94.4
       }
     ],
     "cnn-put-call.json": [
@@ -22335,6 +22349,11 @@
       },
       {
         "date": "2026-10-02",
+        "value": 0.76,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-10-05",
         "value": 0.76,
         "rating": "extreme fear"
       }
@@ -26099,6 +26118,11 @@
         "date": "2026-10-02",
         "value": 7722.72,
         "rating": "extreme greed"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 7773.95,
+        "rating": "extreme greed"
       }
     ],
     "cnn-strength.json": [
@@ -29860,6 +29884,11 @@
       {
         "date": "2026-10-02",
         "value": -8.38,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-10-05",
+        "value": -8.65,
         "rating": "extreme fear"
       }
     ],
@@ -33623,6 +33652,11 @@
         "date": "2026-10-02",
         "value": 144.91,
         "rating": "extreme greed"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 141.7,
+        "rating": "extreme greed"
       }
     ],
     "cnn-junk-bond.json": [
@@ -37374,6 +37408,11 @@
       {
         "date": "2026-10-02",
         "value": 1.25,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 1.15,
         "rating": "extreme fear"
       }
     ],
@@ -41131,6 +41170,11 @@
       {
         "date": "2026-10-02",
         "value": 3.34,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 4.7,
         "rating": "extreme fear"
       }
     ]

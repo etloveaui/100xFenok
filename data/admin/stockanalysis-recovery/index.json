@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-06T01:48:41Z",
+  "generated_at": "2026-10-06T03:24:16Z",
   "counts": {
     "tracked": 914,
-    "fresh": 819,
-    "lkg": 84,
+    "fresh": 817,
+    "lkg": 86,
     "unavailable": 11,
-    "retry": 95,
-    "failed": 0
+    "retry": 97,
+    "failed": 5
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 796,
-      "fresh": 703,
-      "lkg": 83,
+      "fresh": 701,
+      "lkg": 85,
       "unavailable": 10,
-      "retry": 93
+      "retry": 95
     },
     "surface": {
       "tracked": 25,
@@ -113,11 +113,11 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "DGP"
+      "entity": "DGZ"
     },
     {
       "artifact_kind": "etf",
-      "entity": "DGZ"
+      "entity": "DMXF"
     },
     {
       "artifact_kind": "etf",
@@ -202,6 +202,10 @@
     {
       "artifact_kind": "etf",
       "entity": "FLIY"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "FLKR"
     },
     {
       "artifact_kind": "etf",
@@ -326,6 +330,10 @@
     {
       "artifact_kind": "etf",
       "entity": "RMHY"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "SBIL"
     },
     {
       "artifact_kind": "etf",
@@ -591,9 +599,9 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "DGP",
+      "entity": "DGZ",
       "resolution_state": "lkg_primary",
-      "source_as_of": "2025-11-01T00:00:00Z",
+      "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-24T14:09:27Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_count": 0,
@@ -601,12 +609,12 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "DGZ",
+      "entity": "DMXF",
       "resolution_state": "lkg_primary",
-      "source_as_of": "2025-10-31T00:00:00Z",
-      "failure_observed_at": "2026-09-24T14:09:27Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-06T03:24:16Z",
+      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -817,6 +825,16 @@
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
       "failure_count": 0,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "FLKR",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-06T03:24:16Z",
+      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_count": 1,
       "data_loss": false
     },
     {
@@ -1131,6 +1149,16 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "SBIL",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-08-14T20:00:00Z",
+      "failure_observed_at": "2026-10-06T03:24:16Z",
+      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_count": 1,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "SCDL",
       "resolution_state": "lkg_primary",
       "source_as_of": "2025-10-31T00:00:00Z",
@@ -1364,9 +1392,9 @@
       "entity": "actions_recent",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-07-10T00:00:00Z",
-      "failure_observed_at": "2026-10-05T02:05:23Z",
+      "failure_observed_at": "2026-10-06T03:24:16Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
-      "failure_count": 5,
+      "failure_count": 6,
       "data_loss": false
     },
     {
@@ -1374,15 +1402,46 @@
       "entity": "actions_splits",
       "resolution_state": "unavailable",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-05T02:05:23Z",
+      "failure_observed_at": "2026-10-06T03:24:16Z",
       "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
-      "failure_count": 5,
+      "failure_count": 6,
       "data_loss": false
     }
   ],
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "failed": 5,
+    "errors": [
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_recent",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "error": "ValueError: source did not advance beyond the retained LKG for surface:actions_splits",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FLKR",
+        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DMXF",
+        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SBIL",
+        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+        "data_loss": false
+      }
+    ]
   },
   "degraded_tickers": [],
   "degraded_etfs": [
@@ -1402,8 +1461,8 @@
     "CPAG",
     "CUSD",
     "DEFI",
-    "DGP",
     "DGZ",
+    "DMXF",
     "DVIN",
     "DVRE",
     "DVUT",
@@ -1425,6 +1484,7 @@
     "FLFR",
     "FLHK",
     "FLIY",
+    "FLKR",
     "FLM",
     "FOVL",
     "GLDI",
@@ -1456,6 +1516,7 @@
     "RCLR",
     "RCLY",
     "RMHY",
+    "SBIL",
     "SCDL",
     "SLVO",
     "SMAP",
