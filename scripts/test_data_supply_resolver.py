@@ -10,7 +10,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from data_supply_resolver import DataSupplyResolver
+from data_supply_resolver import DataSupplyResolver, NoFreshInitialCandidateError
 from data_supply_state import (
     DataSupplyStateStore,
     SchemaError,
@@ -40,6 +40,13 @@ def observation(
                         "source_as_of": source_as_of, "fetched_at": observed_at,
                         "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "AAPL", "weight_pct": 1}]},
                         "raw": {"quote": {"ts": int(dt.datetime.fromisoformat(source_as_of.replace("Z", "+00:00")).timestamp())}}})
+    elif not is_primary and not is_stock and status == "valid":
+        payload.update({"schema_version": "yf-etf-detail/v1", "source": "yahoo_finance",
+                        "source_provider": "yahoo_finance", "asset_type": "etf", "detail_status": "yf_fallback",
+                        "source_as_of": source_as_of, "fetched_at": observed_at,
+                        "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "AAPL", "weight_pct": 1}]},
+                        "raw": {"yf": {"info": {"symbol": entity, "quoteType": "ETF",
+                            "regularMarketTime": int(dt.datetime.fromisoformat(source_as_of.replace("Z", "+00:00")).timestamp())}}}})
     row = {
         "schema_version": "data-supply-observation/v1",
         "provider": provider,
@@ -126,6 +133,9 @@ class DataSupplyResolverTests(unittest.TestCase):
         return row
 
     def seed_manual_fallback(self):
+        self.manual_case = getattr(self, "manual_case", 0) + 1
+        self.store = DataSupplyStateStore(self.root / f"manual-case-{self.manual_case}")
+        self.resolver = DataSupplyResolver(self.store)
         fallback = self.publish(provider="yahoo_finance", suffix="manual-seed",
                                 source_as_of="2026-07-14T00:00:00Z", observed_at="2026-07-15T22:00:00Z")
         self.resolver.resolve(domain="etf_detail", entity="VYMI", observations=[fallback],
@@ -181,7 +191,7 @@ class DataSupplyResolverTests(unittest.TestCase):
         payload = {"schema_version": "yf-etf-detail/v1", "source": "yahoo_finance",
                    "source_provider": "yahoo_finance", "detail_status": "yf_fallback",
                    "asset_type": "etf", "ticker": "VYMI", "source_as_of": source,
-                   "fetched_at": stamp, "normalized": {"holdings": []},
+                   "fetched_at": stamp, "normalized": {"overview": {"aum": 1}, "holdings": [{"symbol": "AAPL", "weight_pct": 1}]},
                    "raw": {"yf": {"info": {"symbol": "VYMI", "quoteType": "ETF", "regularMarketTime": epoch}}}}
         raw = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
         row, _ = observation(provider="yahoo_finance", suffix="bound-refresh", source_as_of=source,
@@ -212,7 +222,7 @@ class DataSupplyResolverTests(unittest.TestCase):
         active = self.resolve_manual(primary, fallback)
         self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis")
 
-    def test_metadata_only_legacy_recovery_rejects_unbound_history(self):
+    def test_metadata_only_candidate_cannot_become_initial_authority(self):
         fallback, _ = observation(provider="yahoo_finance", suffix="unbound-history",
                                   source_as_of="2026-07-14T00:00:00Z", observed_at="2026-07-15T22:00:00Z")
         raw = canonical_json_bytes({"ticker": "VYMI", "normalized": {"history": [{"date": "2026-07-14", "Close": 1}]}})
@@ -220,10 +230,9 @@ class DataSupplyResolverTests(unittest.TestCase):
         fallback["event_id"] = deterministic_event_id("observation", fallback)
         self.store.store_provider_object(observation=fallback, payload=raw)
         self.store.record_observation(fallback)
-        self.resolver.resolve_etf_detail(entity="VYMI", observations=[fallback], decided_at="2026-07-15T22:01:00Z")
-        primary = self.manual_etf("legacy-history", 5)
-        active = self.resolve_manual(primary, fallback)
-        self.assertEqual(active["current"]["VYMI"]["provider"], "yahoo_finance")
+        with self.assertRaises(NoFreshInitialCandidateError):
+            self.resolver.resolve_etf_detail(entity="VYMI", observations=[fallback], decided_at="2026-07-15T22:01:00Z")
+        self.assertNotIn("VYMI", self.store.read_active_domain("etf_detail")["current"])
 
     def test_partial_primary_refreshes_selected_yahoo_without_primary_recovery_credit(self):
         self.seed_manual_fallback()
@@ -346,6 +355,70 @@ class DataSupplyResolverTests(unittest.TestCase):
         self.assertEqual(active["current"]["VYMI"]["resolution_state"], "fresh_fallback")
         self.assertEqual(active["lkg"]["VYMI"]["provider"], "stockanalysis")
         self.assertEqual(active["lkg"]["VYMI"]["payload_ref"]["kind"], "provider_object")
+
+    def test_bclo_sized_primary_rejects_fresh_fallback_detail_losses(self):
+        from stockanalysis_recovery_state import etf_detail_regression
+
+        for lost in ("holdings", "holding_count", "expenseRatio", "monthly_5y"):
+            with self.subTest(lost=lost), tempfile.TemporaryDirectory() as tmp:
+                store = DataSupplyStateStore(Path(tmp))
+                resolver = DataSupplyResolver(store)
+
+                def publish_payload(provider, payload, stamp):
+                    row, _ = observation(provider=provider, suffix=lost, entity="BCLO",
+                        source_as_of=payload["source_as_of"], observed_at=stamp)
+                    raw = canonical_json_bytes(payload)
+                    row["payload_sha256"] = hashlib.sha256(raw).hexdigest()
+                    row["event_id"] = deterministic_event_id("observation", row)
+                    store.store_provider_object(observation=row, payload=raw)
+                    store.record_observation(row)
+                    return row
+
+                normalized = {
+                    "overview": {"aum": 100, "expenseRatio": "0.45%", "dividendYield": "6.31%"},
+                    "holdings": [{"symbol": f"CLO{i}", "weight_pct": 1} for i in range(25)],
+                    "holding_count": 67,
+                    "history_periods": {"monthly_5y": [{"t": "2025-01-31", "c": 49}, {"t": "2026-09-30", "c": 50}]},
+                }
+                primary = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                           "ticker": "BCLO", "source_as_of": "2026-09-30T20:00:00Z", "fetched_at": "2026-10-01T00:00:00Z",
+                           "detail_status": "stockanalysis_partial", "partial_reason_codes": ["holdings_countries_unavailable"],
+                           "normalized": normalized, "raw": {"quote": {"td": "2026-09-30"}}}
+                primary["raw"]["quote"]["ts"] = int(dt.datetime.fromisoformat(primary["source_as_of"].replace("Z", "+00:00")).timestamp())
+                first = publish_payload("stockanalysis", primary, primary["fetched_at"])
+                resolver.resolve_etf_detail(entity="BCLO", observations=[first], decided_at="2026-10-01T00:01:00Z")
+                fallback = json.loads(json.dumps(primary))
+                fallback.update({"schema_version": "yf-etf-detail/v1", "source": "yahoo_finance", "source_provider": "yahoo_finance", "detail_status": "yf_fallback",
+                                 "source_as_of": "2026-10-05T20:00:00Z", "fetched_at": "2026-10-06T03:27:56Z",
+                                 "raw": {"yf": {"info": {"symbol": "BCLO", "quoteType": "ETF", "regularMarketTime": 1791230400}}}})
+                if lost == "holdings":
+                    fallback["normalized"]["holdings"] = fallback["normalized"]["holdings"][:1]
+                elif lost == "holding_count":
+                    fallback["normalized"]["holding_count"] = None
+                elif lost == "expenseRatio":
+                    fallback["normalized"]["overview"].pop("expenseRatio")
+                else:
+                    fallback["normalized"]["history_periods"] = {}
+                self.assertIsNotNone(etf_detail_regression(fallback, primary))
+                candidate = publish_payload("yahoo_finance", fallback, fallback["fetched_at"])
+                failed, _ = observation(provider="stockanalysis", suffix="failed", entity="BCLO", status="invalid",
+                    source_as_of="2026-10-05T20:00:00Z", observed_at="2026-10-06T03:27:56Z")
+                store.record_observation(failed)
+                active = resolver.resolve_etf_detail(entity="BCLO", observations=[failed, candidate], decided_at="2026-10-06T04:00:00Z")
+                self.assertEqual(active["current"]["BCLO"]["resolution_state"], "lkg_primary")
+                self.assertEqual(store.read_resolved_payload("etf_detail", "BCLO"), primary)
+                self.assertEqual(active["lkg"]["BCLO"]["payload_sha256"], first["payload_sha256"])
+
+    def test_country_only_partial_primary_recovers_over_sparse_yahoo(self):
+        fallback = self.seed_manual_fallback()
+        row = self.manual_etf("country-gap", 1, payload_changes={
+            "detail_status": "stockanalysis_partial", "partial_reason_codes": ["holdings_countries_unavailable"],
+            "normalized": {"overview": {"aum": 100}, "holdings": [{"symbol": f"CLO{i}", "weight_pct": 1} for i in range(25)],
+                           "holding_count": 67, "countries": None},
+        })
+        active = self.resolve_manual(row, fallback)
+        self.assertEqual(active["current"]["VYMI"]["provider"], "stockanalysis")
+        self.assertEqual(len(self.store.read_resolved_payload("etf_detail", "VYMI")["normalized"]["holdings"]), 25)
 
 
 

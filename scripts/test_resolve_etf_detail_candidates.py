@@ -77,14 +77,19 @@ def observation(
 ) -> tuple[dict, bytes]:
     payload = {
         "schema_version": "yf-etf-detail/v1",
+        "source": "yahoo_finance",
         "source_provider": "yahoo_finance",
+        "asset_type": "etf",
+        "detail_status": "yf_fallback",
         "source_as_of": source_as_of,
         "ticker": entity,
+        "normalized": {"overview": {"aum": 1}, "holdings": []},
     }
     if provider == "yahoo_finance" and source_as_of:
         epoch = int(dt.datetime.fromisoformat(source_as_of.replace("Z", "+00:00")).timestamp())
         payload.update({"fetched_at": observed_at,
-                        "raw": {"yf": {"info": {"symbol": entity, "quoteType": "ETF", "regularMarketTime": epoch}}}})
+                        "raw": {"yf": {"info": {"symbol": entity, "quoteType": "ETF", "totalAssets": 1,
+                                                  "regularMarketTime": epoch}}}})
     row = {
         "schema_version": "data-supply-observation/v1",
         "provider": provider,
@@ -251,6 +256,16 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.store.record_observation(primary)
         self.store.store_provider_object(observation=fallback, payload=payload)
         self.store.record_observation(fallback)
+        truth_root = self.root / "provider-truth"
+        detail = json.loads(payload)
+        provider = {"schema_version": "yf-finance/v2", "source": "yahoo_finance", "profile": "etf",
+                    "ticker": entity, "source_as_of": source_as_of, "fetched_at": observed_at,
+                    "data": detail["raw"]["yf"]}
+        for relative, content in ((fallback["provider_path"], payload),
+                                  (f"data/yf/finance/{entity}.json", canonical_json_bytes(provider))):
+            path = truth_root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
         return fallback, payload
 
     def resolution_count(self) -> int:
@@ -318,6 +333,8 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             "resolve_etf_detail_candidates.py",
             "--state-root",
             str(state_root or self.root),
+            "--provider-truth-root",
+            str(self.root / "provider-truth"),
             "--artifact-manifest",
             str(manifest),
             "--decided-at",
@@ -607,7 +624,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         source = "2026-08-20T00:00:00Z"
         observed = "2026-08-20T00:10:00Z"
         provider = fetcher.build_yf_payload(entity, {"info": {
-            "symbol": entity, "quoteType": "ETF", "currentPrice": 25,
+            "symbol": entity, "quoteType": "ETF", "currentPrice": 25, "totalAssets": 1,
             "regularMarketTime": int(datetime.fromisoformat(source.replace("Z", "+00:00")).timestamp()),
         }, "history_1y": []}, observed)
         detail = fetcher.yahoo_etf_payload(entity, provider)

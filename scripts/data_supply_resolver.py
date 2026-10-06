@@ -13,6 +13,7 @@ from typing import Any, Mapping
 from data_supply_policy import DomainPolicy, get_domain_policy
 from stockanalysis_recovery_state import (
     archived_etf_history,
+    etf_detail_regression,
     _etf_component_clocks,
     _etf_history_date_set,
     _etf_provider_source,
@@ -23,6 +24,7 @@ from data_supply_state import (
     DataSupplyStateStore,
     SchemaError,
     build_selection,
+    deterministic_event_id,
     is_same_provider_refresh,
     restate_selection,
     validate_observation,
@@ -99,46 +101,103 @@ class DataSupplyResolver:
         self._committed_transaction_id: str | None = None
 
 
-    def _eligible_selected_etf_fallback(self, row: Mapping[str, Any], prior: Mapping[str, Any], decided: dt.datetime) -> bool:
-        truth_root = self.store.provider_truth_root
-        if truth_root is None or row.get("provider_path") != f"data/yf/etf-details/{row['entity']}.json":
-            return False
+    def _eligible_selected_etf_fallback(self, row: Mapping[str, Any], prior: Mapping[str, Any] | None, decided: dt.datetime) -> bool:
+        """Require provider evidence and preserve the currently served detail."""
         try:
-            source = _timestamp(row["source_as_of"])
-            observed = _timestamp(row["observed_at"])
-            if source < _timestamp(prior["source_as_of"]) or (
-                source == _timestamp(prior["source_as_of"]) and observed < _timestamp(prior["observed_at"])
-            ):
+            source, observed = _timestamp(row["source_as_of"]), _timestamp(row["observed_at"])
+            if prior and (source < _timestamp(prior["source_as_of"]) or (
+                    source == _timestamp(prior["source_as_of"]) and observed < _timestamp(prior["observed_at"]))):
                 return False
             raw = (self.store.root / _provider_object_path(row)).read_bytes()
-            canonical = (truth_root / row["provider_path"]).read_bytes()
-            provider_raw = (truth_root / f"data/yf/finance/{row['entity']}.json").read_bytes()
-            payload, provider = json.loads(raw), json.loads(provider_raw)
-            data = provider["data"]
-            info = data.get("info") or {}
-            funds = data.get("funds_data") or {}
+            payload = json.loads(raw)
+            data = payload["raw"]["yf"]
+            info, funds = data.get("info") or {}, data.get("funds_data") or {}
+            normalized = payload["normalized"]
+            if (not isinstance(normalized, dict) or not isinstance(normalized.get("overview"), dict)
+                    or not isinstance(normalized.get("holdings"), list)
+                    or not any((normalized["overview"], normalized["holdings"], normalized.get("quote"),
+                                normalized.get("history"), normalized.get("asset_allocation"), normalized.get("sectors")))):
+                return False
             value = info.get("regularMarketTime")
             if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
                 seconds = value / 1000 if abs(value) >= 100_000_000_000 else value
                 provider_source = dt.datetime.fromtimestamp(seconds, dt.timezone.utc).replace(microsecond=0)
             else:
-                days = [dt.datetime.fromisoformat((item.get("date") or item.get("t") or item.get("time")).replace("Z", "+00:00")).date()
-                        for item in data.get("history_1y") or []]
-                provider_source = dt.datetime.combine(max(days), dt.time.min, tzinfo=dt.timezone.utc) if days else None
-            return bool(
-                raw == canonical and hashlib.sha256(raw).hexdigest() == row["payload_sha256"]
+                days = _etf_history_date_set(data.get("history_1y")) if data.get("history_1y") else set()
+                provider_source = _timestamp(max(days) + "T00:00:00Z") if days else None
+            if not (
+                hashlib.sha256(raw).hexdigest() == row["payload_sha256"]
                 and payload["schema_version"] == "yf-etf-detail/v1" and payload["ticker"] == row["entity"]
-                and payload["source_provider"] == "yahoo_finance" and payload["raw"]["yf"] == data
-                and provider["schema_version"] == "yf-finance/v2" and provider["ticker"] == row["entity"]
-                and provider["source"] == "yahoo_finance" and provider["profile"] == "etf"
+                and payload["asset_type"] == "etf" and payload["source_provider"] == "yahoo_finance"
+                and payload.get("source") == "yahoo_finance" and payload.get("detail_status") == "yf_fallback"
                 and str(info.get("symbol") or funds.get("symbol") or "").strip().upper() == row["entity"]
                 and str(info.get("quoteType") or funds.get("quote_type") or "").upper() in {"ETF", "MUTUALFUND"}
-                and provider_source == source == _timestamp(payload["source_as_of"]) == _timestamp(provider["source_as_of"])
-                and observed == _timestamp(payload["fetched_at"]) == _timestamp(provider["fetched_at"])
-                and source <= observed <= decided
-            )
+                and provider_source == source == _timestamp(payload["source_as_of"])
+                and observed == _timestamp(payload["fetched_at"]) and source <= observed <= decided
+            ):
+                return False
+            truth_root = self.store.provider_truth_root
+            if truth_root is not None and (prior is not None or (truth_root / row["provider_path"]).exists()):
+                if row["provider_path"] != f"data/yf/etf-details/{row['entity']}.json":
+                    return False
+                canonical = (truth_root / row["provider_path"]).read_bytes()
+                provider = json.loads((truth_root / f"data/yf/finance/{row['entity']}.json").read_bytes())
+                if not (raw == canonical and provider["data"] == data
+                        and provider["schema_version"] == "yf-finance/v2" and provider["ticker"] == row["entity"]
+                        and provider["source"] == "yahoo_finance" and provider["profile"] == "etf"
+                        and source == _timestamp(provider["source_as_of"])
+                        and observed == _timestamp(provider["fetched_at"])):
+                    return False
+            if prior is not None and not self._preserves_etf_detail(row, prior):
+                return False
+            # Before first enrollment, the canonical primary is already served
+            # by the static/shard readers and therefore is a preservation floor.
+            if prior is None and truth_root is not None:
+                primary_path = truth_root / f"data/stockanalysis/etfs/{row['entity']}.json"
+                if primary_path.exists():
+                    primary = json.loads(primary_path.read_bytes())
+                    if _valid_payload("etf", row["entity"], primary) and etf_detail_regression(payload, primary):
+                        return False
+            return True
         except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError, SchemaError):
             return False
+
+    def _preserves_etf_detail(self, row: Mapping[str, Any], prior: Mapping[str, Any] | None) -> bool:
+        try:
+            candidate = (self.store.root / _provider_object_path(row)).read_bytes()
+            payload = json.loads(candidate)
+            if hashlib.sha256(candidate).hexdigest() != row["payload_sha256"]:
+                return False
+            if row["provider"] == PRIMARY_PROVIDER and (
+                    not _valid_payload("etf", row["entity"], payload)
+                    or payload.get("source_provider") not in (None, PRIMARY_PROVIDER)
+                    or payload.get("source_as_of") != row["source_as_of"]
+                    or payload.get("fetched_at") != row["observed_at"]
+                    or _etf_provider_source(payload) != _timestamp(row["source_as_of"])
+                    or not validate_etf_history_archive(payload)):
+                return False
+            if prior is None:
+                return True
+            _validate_selection(prior)
+            ref = prior["payload_ref"]
+            if ref["kind"] not in {"provider_object", "provider_lkg"}:
+                return False
+            previous = self.store._inside_root(self.store.root / ref["path"]).read_bytes()
+            return (
+                hashlib.sha256(previous).hexdigest() == prior["payload_sha256"]
+                and etf_detail_regression(payload, json.loads(previous)) is None
+            )
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, SchemaError):
+            return False
+
+    def _reject_etf_candidate(self, row: Mapping[str, Any], decided_at: str) -> dict[str, Any]:
+        rejected = {**row, "validation_status": "invalid", "reason_code": "etf_detail_contract_regression",
+                    "observation_origin": "rebuild", "validation_scope": "serving_detail",
+                    "validated_at": decided_at, "source_observation_event_id": row["event_id"]}
+        rejected.pop("event_id")
+        rejected["event_id"] = deterministic_event_id("observation", rejected)
+        self.store.record_observation(rejected)
+        return rejected
 
     def _complete_etf_primary(self, row: Mapping[str, Any], decided: dt.datetime, prior: Mapping[str, Any]) -> bool:
         """Apply the complete ETF payload and honest provider date contract."""
@@ -151,7 +210,8 @@ class DataSupplyResolver:
             source, fetched = _timestamp(row["source_as_of"]), _timestamp(row["observed_at"])
             if (
                 hashlib.sha256(raw).hexdigest() != row["payload_sha256"]
-                or payload.get("detail_status") == "stockanalysis_partial"
+                or (payload.get("detail_status") == "stockanalysis_partial"
+                    and payload.get("partial_reason_codes") != ["holdings_countries_unavailable"])
                 or payload.get("source_provider") not in (None, "stockanalysis")
                 or not isinstance(normalized.get("holdings"), list) or not normalized["holdings"]
                 or payload.get("source_as_of") != row["source_as_of"]
@@ -224,7 +284,7 @@ class DataSupplyResolver:
             if truth_root is not None and row["provider_path"] == f"data/stockanalysis/etfs/{row['entity']}.json":
                 if raw != (truth_root / row["provider_path"]).read_bytes():
                     return False
-            return True
+            return self._preserves_etf_detail(row, prior)
         except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError, SchemaError):
             return False
 
@@ -272,6 +332,8 @@ class DataSupplyResolver:
             raise SchemaError("resolver requires at least one observation")
         if any(row["domain"] != domain or row["entity"] != entity for row in rows):
             raise SchemaError("resolver observation identity mismatch")
+        if domain == "etf_detail" and any(_timestamp(row["observed_at"]) > decided for row in rows):
+            raise SchemaError("evidence observation cannot follow the decision time")
         latest: dict[str, dict[str, Any]] = {}
         for row in rows:
             if row["provider"] not in policy.provider_names:
@@ -297,6 +359,29 @@ class DataSupplyResolver:
             entity,
             {"last_transition": "none"},
         )
+        if domain == "etf_detail":
+            if primary_fresh:
+                primary_fresh = self._preserves_etf_detail(primary,
+                    prior if prior is not None and prior["provider"] == primary_provider else None)
+                if not primary_fresh:
+                    rejected = self._reject_etf_candidate(primary, decided_at)
+                    rows = [rejected if row["event_id"] == primary["event_id"] else row for row in rows]
+                    primary = latest[primary_provider] = rejected
+            if fallback_fresh:
+                if prior is not None and prior["provider"] == fallback_provider and not primary_fresh:
+                    source, observed = _timestamp(fallback["source_as_of"]), _timestamp(fallback["observed_at"])
+                    prior_source = _timestamp(prior["source_as_of"])
+                    if source < prior_source or (source == prior_source and observed < _timestamp(prior["observed_at"])):
+                        # Delayed evidence cannot age a newer fresh selection
+                        # into LKG or clear that candidate's pending pointer.
+                        if self.reconcile_pending_on_noop:
+                            self.store.reconcile_committed_pending(domain)
+                        return active
+                fallback_fresh = self._eligible_selected_etf_fallback(fallback, prior, decided)
+                if not fallback_fresh:
+                    rejected = self._reject_etf_candidate(fallback, decided_at)
+                    rows = [rejected if row["event_id"] == fallback["event_id"] else row for row in rows]
+                    fallback = latest[fallback_provider] = rejected
         selected: dict[str, Any] | None = None
         transition: str
         reason_code: str
@@ -424,15 +509,9 @@ class DataSupplyResolver:
             transition = "fallback_to_primary" if prior["provider"] == fallback_provider else "primary_refresh"
             reason_code = "primary_valid"
         elif fallback_fresh:
-            if (domain != "etf_detail" or prior["provider"] != fallback_provider
-                    or self._eligible_selected_etf_fallback(fallback, prior, decided)):
-                selected = self._selection(fallback, decided_at=decided_at, primary=False)
-                transition = "fallback_refresh" if prior["provider"] == fallback_provider else "primary_to_fallback"
-                reason_code = "primary_unavailable_fallback_valid"
-            else:
-                selected = prior
-                transition = "fallback_hold"
-                reason_code = "selected_fallback_candidate_invalid"
+            selected = self._selection(fallback, decided_at=decided_at, primary=False)
+            transition = "fallback_refresh" if prior["provider"] == fallback_provider else "primary_to_fallback"
+            reason_code = "primary_unavailable_fallback_valid"
         else:
             raise SchemaError("no fresh provider candidate exists; LKG/unavailable path required")
 

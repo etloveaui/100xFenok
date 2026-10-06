@@ -227,6 +227,9 @@ jobs:
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
+              INPUT_INCREMENTAL_ETF_BACKFILL="true"
+              INPUT_INCREMENTAL_ETF_LIMIT="100"
+              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"
               NATURAL_RECOVERY_KINDS="etf,surface"
               if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
                 INPUT_SLEEP="2"
@@ -238,9 +241,6 @@ jobs:
                 # manual dispatch may refresh the payload but cannot impersonate it.
                 INPUT_DISCOVER_UNIVERSE="true"
                 INPUT_MAX_UNIVERSE_PAGES="100"
-                INPUT_INCREMENTAL_ETF_BACKFILL="true"
-                INPUT_INCREMENTAL_ETF_LIMIT="0"
-                INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"
                 INPUT_LIMIT_ETFS="0"
                 NATURAL_RECOVERY_KINDS="etf,surface,universe"
               fi
@@ -892,7 +892,7 @@ jobs:
                   and isinstance(new_normalized.get("holdings"), list) and bool(new_normalized["holdings"])
                   and len(new_normalized["holdings"]) >= len(old_normalized.get("holdings") or [])
                   and isinstance(new_count, (int, float)) and not isinstance(new_count, bool)
-                  and math.isfinite(new_count) and new_count == old_normalized.get("holding_count")
+                  and math.isfinite(new_count)
                   and new_count >= len(new_normalized["holdings"])
                   and all(new_normalized.get(field) is not None
                           and (not value or bool(new_normalized[field]))
@@ -928,6 +928,9 @@ jobs:
                       if old_count > 0 and fetcher.valid_unique_history_date_count(
                               new_periods.get(period)) < required_count:
                           raise SystemExit(f"ETF {ticker} artifact loses {label} {period} history")
+              detail_loss = fetcher.etf_detail_regression(candidate_payload, baseline)
+              if detail_loss:
+                  raise SystemExit(f"ETF {ticker} artifact loses {label} {detail_loss}")
 
           for name in git_only:
               body = (git_root / name).read_bytes()

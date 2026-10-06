@@ -402,6 +402,9 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             normalized_country["normalized"]["countries"] = [{"country": "United States"}]
             changed_count = json.loads(country_bytes)
             changed_count["normalized"]["holding_count"] = 2
+            recovered, recovered_root = run_candidate("country-changed-count", json.dumps(changed_count).encode())
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual(json.loads((recovered_root / "TARGET.json").read_bytes())["normalized"]["holding_count"], 2)
             chart_country = json.loads(country_bytes)
             chart_country["raw"]["holdings"]["allocationChartData"] = {
                 "countries": [{"country": "United States", "weight": 100}]}
@@ -413,7 +416,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 ("country-extra-reason", json.dumps(extra_reason).encode(), "loses complete active"),
                 ("country-raw-inconsistent", json.dumps(raw_country).encode(), "loses complete active"),
                 ("country-normalized-inconsistent", json.dumps(normalized_country).encode(), "loses complete active"),
-                ("country-changed-count", json.dumps(changed_count).encode(), "loses complete active"),
                 ("country-chart-inconsistent", json.dumps(chart_country).encode(), "loses complete active"),
             ):
                 rejected, rejected_root = run_candidate(label, body)
@@ -529,6 +531,11 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         natural_body = self.text[natural_start:natural_end]
         self.assertIn('INPUT_INCREMENTAL_ETF_BACKFILL="false"', natural_body)
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', natural_body)
+        etf_natural = natural_body.split('elif [ "$EVENT_SCHEDULE" = "50 23 * * 1-5" ]', 1)[1]
+        self.assertIn('INPUT_INCREMENTAL_ETF_BACKFILL="true"', etf_natural)
+        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="100"', etf_natural)
+        self.assertIn('INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"', etf_natural)
+        self.assertNotIn('INPUT_INCREMENTAL_ETF_LIMIT="0"', etf_natural)
 
     def test_manual_preflight_precedes_candidate_seed_and_provider_fetch(self) -> None:
         preflight = self.text.index("--preflight-only")

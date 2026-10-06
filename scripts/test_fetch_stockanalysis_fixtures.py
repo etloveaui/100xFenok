@@ -678,6 +678,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         if old_partial:
             old["detail_status"] = "stockanalysis_partial"
             old["partial_reason_codes"] = ["holdings_countries_unavailable"]
+            old["normalized"]["countries"] = None
         candidate = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf", "ticker": "AFK",
                      "source_as_of": source, "fetched_at": stamp,
                      "normalized": {"overview": {"aum": 110}, "holdings": [{"symbol": "NEW", "weight_pct": 5}], "countries": []},
@@ -744,14 +745,15 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             finally:
                 self.fetcher.install_candidate_outputs(original_outputs)
 
-    def test_complete_primary_partial_response_preserves_full_bytes_and_selects_bound_yahoo(self):
+    def test_complete_primary_partial_response_preserves_full_bytes_and_rejects_poorer_yahoo(self):
         case = self.complete_primary_preservation_case()
         self.assertEqual(case["after"], case["before"])
         self.assertFalse(case["result"]["canonical_write"])
         self.assertEqual(case["result"]["provider_response"], "HTTP 200 partial contract valid")
         self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
-        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
-        self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
+        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
+        self.assertEqual(case["active"]["current"]["AFK"]["resolution_state"], "lkg_primary")
+        self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], case["old"]["source_as_of"])
         self.assertEqual(case["lkg_payload"], case["old"])
         self.assertEqual(json.loads(case["candidate_raw"]), case["candidate"])
         self.assertEqual(case["diagnostic"]["validation_status"], "invalid")
@@ -809,16 +811,16 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             self.assertFalse(any(path.read_bytes() == case["candidate_raw"] for path in public.rglob("*.json")))
             self.assertEqual(private.read_bytes(), case["candidate_raw"])
 
-    def test_existing_partial_primary_prefers_bound_yahoo_and_retains_actual_primary_lineage(self):
+    def test_existing_partial_primary_keeps_valid_observation_when_yahoo_is_poorer(self):
         case = self.complete_primary_preservation_case(old_partial=True)
         self.assertEqual(json.loads(case["after"]), case["candidate"])
         self.assertEqual(case["result"]["fallback_refresh_status"], "ok")
-        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
         self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
-        self.assertEqual(case["lkg_payload"], case["old"])
+        self.assertIsNone(case["lkg_payload"])
         primary = [row for row in case["history"] if row["provider"] == "stockanalysis"][-1]
-        self.assertEqual(primary["validation_status"], "invalid")
-        self.assertEqual(primary["reason_code"], "partial_primary_bound_fallback_valid")
+        self.assertEqual(primary["validation_status"], "valid")
+        self.assertEqual(primary["reason_code"], "contract_valid")
         self.assertEqual(primary["source_as_of"], case["candidate"]["source_as_of"])
         self.assertEqual(primary["collection_origin"], "manual")
         self.assertEqual(primary["observation_origin"], "rebuild")
@@ -826,11 +828,11 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
         self.assertEqual(yahoo["collection_origin"], "manual")
 
-    def test_initial_partial_primary_prefers_bound_yahoo_without_inventing_primary_credit(self):
+    def test_initial_partial_primary_remains_selected_when_yahoo_loses_holdings(self):
         case = self.complete_primary_preservation_case(no_current=True)
         self.assertIsNone(case["before"])
         self.assertEqual(json.loads(case["after"]), case["candidate"])
-        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "yahoo_finance")
+        self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
         self.assertEqual(case["active"]["current"]["AFK"]["source_as_of"], "2026-09-25T20:00:00Z")
         yahoo = [row for row in case["history"] if row["provider"] == "yahoo_finance" and row["validation_status"] == "valid"][-1]
         self.assertEqual(yahoo["observation_origin"], "rebuild")
@@ -2082,7 +2084,9 @@ module.main()
                 canonical_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "TQQQ.json"
                 provider_path = self.fetcher.YF_OUT_DIR / "TQQQ.json"
                 self.fetcher.write_json(canonical_path, old_canonical)
+                self.fetcher.write_json(provider_path, old_provider)
                 before = canonical_path.read_bytes()
+                provider_before = provider_path.read_bytes()
                 old_row = self.fetcher.record_etf_detail_observation(provider="yahoo_finance", endpoint_family="yahoo_finance_etf_detail",
                     ticker="TQQQ", provider_path="data/yf/etf-details/TQQQ.json", payload_path=canonical_path,
                     provider_schema="yf-etf-detail/v1", source_as_of=old_canonical["source_as_of"],
@@ -2111,7 +2115,7 @@ module.main()
                 observed_prewrite = []
                 def inspect_then_invoke(action, **kwargs):
                     if action == "promote":
-                        observed_prewrite.append((canonical_path.read_bytes(), provider_path.exists()))
+                        observed_prewrite.append((canonical_path.read_bytes(), provider_path.read_bytes()))
                     return original_invoke(action, **kwargs)
 
                 run_attempt = 2 if outcome == "rerun" else 1
@@ -2136,6 +2140,7 @@ module.main()
                 state = json.loads((root / "data/admin/yahoo_etf_fallback/index.json").read_text())
                 return {"result": result, "error": error, "before": before, "after": canonical_path.read_bytes(),
                         "provider_bytes": provider_path.read_bytes() if provider_path.exists() else None,
+                        "provider_before": provider_before,
                         "history": history, "state": state, "active": store.read_active_domain("etf_detail"),
                         "observed_prewrite": observed_prewrite}
             finally:
@@ -2143,7 +2148,7 @@ module.main()
 
     def test_yahoo_etf_fallback_natural_retry_collects_before_adapter_and_bypasses_primary(self) -> None:
         case = self.natural_yahoo_recovery_case()
-        self.assertEqual(case["observed_prewrite"], [(case["before"], False)])
+        self.assertEqual(case["observed_prewrite"], [(case["before"], case["provider_before"])])
         self.assertEqual(case["result"]["status"], "recovered")
         self.assertNotEqual(case["after"], case["before"])
         self.assertEqual(case["state"]["retry_set"], [])
@@ -3294,7 +3299,7 @@ module.main()
             *,
             allow_unavailable: bool = False,
         ) -> tuple[str, dict]:
-            self.assertFalse(allow_unavailable)
+            self.assertEqual(allow_unavailable, surface == "holdings")
             if surface == "overview":
                 return "/etf/nvdl/__data.json", {
                     "description": (
@@ -3532,6 +3537,7 @@ module.main()
                     "source": "stockanalysis", "asset_type": "etf",
                     "detail_status": "stockanalysis_partial",
                     "fetched_at": datetime.now(timezone.utc).isoformat(),
+                    "source_as_of": datetime.now(timezone.utc).isoformat(),
                     "partial_reason_codes": reasons,
                 }), encoding="utf-8")
 
@@ -3554,175 +3560,108 @@ module.main()
         self.assertEqual(summary["counts"]["selected"], 5)
 
     def test_natural_general_incremental_priority_rotates_tail_and_records_evidence(self) -> None:
-        """The scheduled 40-name general budget serves each freshness sibling.
-
-        This intentionally does not use the daily_1y plan path: the ordinary
-        scheduled profile must keep its fixed 40-name budget while giving new
-        listings, owner/default focus, liquid ETFs, and the residual tail a
-        deterministic share.  A short new-listing bucket proves unused quota
-        falls through to the rotating tail instead of shrinking the run.
-        """
-        original_out_dir = self.fetcher.OUT_DIR
-        try:
-            with tempfile.TemporaryDirectory() as tmp:
-                out_dir = Path(tmp) / "stockanalysis"
-                self.fetcher.OUT_DIR = out_dir
-                (out_dir / "surfaces").mkdir(parents=True)
-                new_tickers = [f"NEW{index}" for index in range(1, 4)]
-                default_focus = [
-                    "SSO", "QLD", "DDM", "ROM", "UPRO",
-                    "TQQQ", "SOXL", "TNA", "USD", "UWM",
-                ]
-                classified_leveraged = "LEVX"
-                liquid_tickers = [f"LIQ{index}" for index in range(1, 11)]
-                tail_tickers = [f"TAIL{index}" for index in range(1, 31)]
-                (out_dir / "surfaces" / "new_etfs.json").write_text(
-                    json.dumps({"records": [{"s": ticker, "n": f"{ticker} ETF"} for ticker in new_tickers]}),
-                    encoding="utf-8",
-                )
-                (out_dir / "surfaces" / "etf_screener.json").write_text(
-                    json.dumps(
-                        {
-                            "records": [
-                                {"s": ticker, "n": f"{ticker} ETF", "aum": 5_000_000_000 + index, "volume": 2_000_000 + index}
-                                for index, ticker in enumerate(liquid_tickers)
-                            ]
-                        }
-                    ),
-                    encoding="utf-8",
-                )
-                universe_payload = {
-                    "records": [
-                        *({"ticker": ticker, "name": f"{ticker} ETF"} for ticker in default_focus),
-                        {
-                            "ticker": classified_leveraged,
-                            "name": "Classified Leveraged ETF",
-                            "classification": {
-                                "is_leveraged": True,
-                                "leverage_factor": 2.0,
-                                "is_inverse": False,
-                            },
-                        },
-                        *({"ticker": ticker, "name": f"{ticker} ETF"} for ticker in liquid_tickers),
-                        *({"ticker": ticker, "name": f"{ticker} ETF"} for ticker in tail_tickers),
-                    ]
-                }
-                now_dt = datetime(2026, 7, 30, tzinfo=timezone.utc)
-                summary = self.fetcher.incremental_etf_backfill_candidates(
-                    universe_payload=universe_payload,
-                    limit=40,
-                    max_age_hours=168,
-                    exclude=set(),
-                    now_dt=now_dt,
-                    natural_general_priority=True,
-                )
-                repeated = self.fetcher.incremental_etf_backfill_candidates(
-                    universe_payload=universe_payload,
-                    limit=40,
-                    max_age_hours=168,
-                    exclude=set(),
-                    now_dt=now_dt,
-                    natural_general_priority=True,
-                )
+        now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "data/stockanalysis"
+            out.joinpath("etfs").mkdir(parents=True)
+            out.joinpath("surfaces").mkdir()
+            tail = [f"STALE{i:02d}" for i in range(60)]
+            universe = {"records": [{"ticker": ticker} for ticker in ("NEW", "MISSING", "DATELESS", "PENDING", "HOT", "FRESH", *tail)]}
+            pending = {"entries": {"PENDING": {"consecutive_failures": 1, "last_attempt_utc": "2026-10-05T00:00:00Z"}}}
+            with patch.object(self.fetcher, "OUT_DIR", out), \
+                 patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={}):
+                self.fetcher.write_json(out / "surfaces/new_etfs.json", {"records": [{"ticker": "NEW"}]})
+                for ticker in ("DATELESS", "HOT", "FRESH", *tail):
+                    source = None if ticker == "DATELESS" else "2026-06-01T00:00:00Z" if ticker in tail else "2026-10-05T00:00:00Z"
+                    self.fetcher.write_json(out / "etfs" / f"{ticker}.json", {
+                        "schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                        "ticker": ticker, "source_as_of": source, "fetched_at": now_dt.isoformat(),
+                        "normalized": {"overview": {"aum": 100_000_000_000 if ticker == "HOT" else 1}},
+                    })
+                options = dict(universe_payload=universe, limit=40, max_age_hours=720,
+                               pending_ledger=pending, now_dt=now_dt, natural_general_priority=True)
+                first = self.fetcher.incremental_etf_backfill_candidates(**options)
+                repeated = self.fetcher.incremental_etf_backfill_candidates(**options)
+                self.assertEqual(first["selected"], repeated["selected"])
+                selected = first["selected"]
+                self.assertEqual(len(selected), 40)
+                self.assertEqual(len({row["ticker"] for row in selected}), 40)
+                self.assertEqual([row["ticker"] for row in selected[:3]], ["NEW", "MISSING", "DATELESS"])
+                self.assertTrue(all(row["selection_bucket"] == "oldest_stale" for row in selected[3:-1]))
+                self.assertEqual(selected[-1]["ticker"], "PENDING")
+                self.assertFalse({"HOT", "FRESH"} & {row["ticker"] for row in selected})
+                # A successful HTTP response that still carries old source data
+                # becomes retry debt, allowing untouched stale names to run next.
+                self.fetcher.write_json(out / self.fetcher.PENDING_LEDGER_REL_PATH, pending)
+                results = [{"ticker": row["ticker"], "asset_type": "etf", "provider": "stockanalysis", "status": "ok",
+                            "error": "HTTP Error 404" if row["reason"] == "missing" else None} for row in selected]
+                updated = self.fetcher.update_pending_ledger(results, selected, 7, 3, False, now_dt=now_dt)
+                self.assertEqual(updated["entries"]["DATELESS"]["failure_class"], "source_date_non_advance")
                 next_day = self.fetcher.incremental_etf_backfill_candidates(
-                    universe_payload=universe_payload,
-                    limit=40,
-                    max_age_hours=168,
-                    exclude=set(),
-                    now_dt=now_dt + timedelta(days=1),
-                    natural_general_priority=True,
-                )
-        finally:
-            self.fetcher.OUT_DIR = original_out_dir
+                    **{**options, "pending_ledger": updated, "now_dt": now_dt + timedelta(days=1)})
+                first_stale = {row["ticker"] for row in selected if row["ticker"] in tail}
+                next_stale = {row["ticker"] for row in next_day["selected"] if row["ticker"] in tail}
+                self.assertEqual(first_stale | next_stale, set(tail))
+                self.assertTrue(set(tail) - first_stale <= next_stale)
+                self.assertEqual(first["priority_selector"]["quota_policy"]["priority_order"],
+                                 ["new_listings", "missing", "oldest_stale", "pending_retry", "high_impact", "fresh"])
+                self.assertEqual(first["priority_selector"]["selected_counts"]["total"], 40)
 
-        selected = summary["selected"]
-        selector = summary["priority_selector"]
-        self.assertEqual(len(selected), 40)
-        self.assertEqual(len({row["ticker"] for row in selected}), 40)
-        self.assertEqual(
-            selector["quota_policy"],
-            {
-                "scheduled_total_limit": 40,
-                "remaining_selector_limit": 40,
-                "new_listings": 10,
-                "owner_default_leveraged_focus": 10,
-                "market_liquid_or_holdings_stale": 10,
-                "rotating_tail": 10,
-                "fallback_fill": "remaining eligible candidates in deterministic sibling order",
-            },
-        )
-        self.assertEqual(
-            selector["eligible_counts"],
-            {
-                "new_listings": 3,
-                "owner_default_leveraged_focus": 11,
-                "market_liquid_or_holdings_stale": 10,
-                "rotating_tail": 30,
-                "market_ranked_candidates": 10,
-                "total": 54,
-            },
-        )
-        self.assertEqual(selector["selected_counts"], {
-            "new_listings": 3,
-            "owner_default_leveraged_focus": 11,
-            "market_liquid_or_holdings_stale": 10,
-            "rotating_tail": 16,
-            "total": 40,
-        })
-        self.assertEqual(selector["cursor"], {
-            "strategy": "utc_day_ordinal_times_reserved_window_modulo_tail_count",
-            "date": "2026-07-30",
-            "ordinal": now_dt.date().toordinal(),
-            "eligible_count": 30,
-            "reserved_window_count": 16,
-            "start_index": (now_dt.date().toordinal() * 16) % 30,
-        })
-        self.assertTrue(all(row["selection_bucket"] for row in selected))
-        self.assertTrue(all(row["selection_reason"] for row in selected))
-        scheduled_owner = [
-            row["ticker"]
-            for row in selected
-            if row["selection_bucket"] == "owner_default_leveraged_focus"
-            and row["selection_reason"] == "scheduled_quota"
-        ]
-        self.assertEqual(set(scheduled_owner), set(default_focus))
-        self.assertEqual(
-            [(row["ticker"], row["selection_bucket"], row["selection_reason"]) for row in selected],
-            [(row["ticker"], row["selection_bucket"], row["selection_reason"]) for row in repeated["selected"]],
-        )
-        current_tail = {
-            row["ticker"] for row in selected if row["selection_bucket"] == "rotating_tail"
-        }
-        next_tail = {
-            row["ticker"] for row in next_day["selected"] if row["selection_bucket"] == "rotating_tail"
-        }
-        self.assertNotEqual(current_tail, next_tail)
-        self.assertEqual(current_tail | next_tail, set(tail_tickers))
+    def test_source_date_non_advance_uses_existing_bounded_cooldown(self) -> None:
+        now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
+        row = {"ticker": "OLD", "reason": "stale", "max_age_hours": 720}
+        result = {"ticker": "OLD", "asset_type": "etf", "provider": "stockanalysis", "status": "ok", "error": None}
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "OUT_DIR", Path(tmp)):
+            self.fetcher.write_json(Path(tmp) / "etfs/OLD.json", {
+                "source": "stockanalysis", "source_as_of": "2026-06-01T00:00:00Z", "fetched_at": "2026-10-06T00:00:00Z",
+            })
+            for day in range(3):
+                ledger = self.fetcher.update_pending_ledger([result], [row], 7, 3, False, now_dt=now_dt + timedelta(days=day))
+            entry = ledger["entries"]["OLD"]
+            self.assertEqual(entry["consecutive_failures"], 3)
+            self.assertTrue(self.fetcher.pending_entry_in_cooldown(entry, now_dt + timedelta(days=3), 7, 3))
+            self.assertFalse(self.fetcher.pending_entry_in_cooldown(entry, now_dt + timedelta(days=10), 7, 3))
 
-        recovery_reduced = self.fetcher.incremental_etf_backfill_candidates(
-            universe_payload=universe_payload,
-            limit=39,
-            max_age_hours=168,
-            exclude=set(),
-            now_dt=now_dt,
-            natural_general_priority=True,
-        )
-        self.assertEqual(len(recovery_reduced["selected"]), 39)
-        self.assertEqual(
-            recovery_reduced["priority_selector"]["quota_policy"]["remaining_selector_limit"],
-            39,
-        )
-
-        plan = self.fetcher.build_incremental_etf_backfill_plan(
-            [row["ticker"] for row in selected],
-            summary,
-            (),
-            history_gaps_only=False,
-        )
-        self.assertEqual(
-            plan["incremental_etf_backfill"]["priority_selector"],
-            selector,
-        )
+    def test_natural_pending_retries_do_not_starve_behind_stale_backlog(self) -> None:
+        now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
+        stale = [f"OLD{i:03d}" for i in range(160)]
+        retry = [f"RETRY{i:02d}" for i in range(20)]
+        universe = {"records": [{"ticker": ticker} for ticker in (*stale, *retry)]}
+        ledger = {"entries": {ticker: {
+            "consecutive_failures": 3, "last_attempt_utc": "2026-09-28T00:00:00Z",
+            "next_attempt_after_utc": "2026-10-05T00:00:00Z",
+        } for ticker in retry}}
+        attempted = set()
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "OUT_DIR", Path(tmp)), \
+             patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={}):
+            for ticker in stale:
+                self.fetcher.write_json(Path(tmp) / "etfs" / f"{ticker}.json", {
+                    "source": "stockanalysis", "asset_type": "etf", "ticker": ticker,
+                    "source_as_of": "2026-06-01T00:00:00Z", "fetched_at": "2026-06-02T00:00:00Z",
+                    "normalized": {"overview": {"aum": 1}},
+                })
+            self.fetcher.write_json(Path(tmp) / self.fetcher.PENDING_LEDGER_REL_PATH, ledger)
+            for day in range(2):
+                stamp = now_dt + timedelta(days=day)
+                result = self.fetcher.incremental_etf_backfill_candidates(
+                    universe, 40, 720, pending_ledger=ledger, now_dt=stamp, natural_general_priority=True)
+                self.assertGreater(result["priority_selector"]["eligible_counts"]["oldest_stale"], 40)
+                self.assertEqual(result["priority_selector"]["selected_counts"]["pending_retry"], 10)
+                selected = result["selected"]
+                self.assertEqual(len(selected), 40)
+                self.assertEqual(len({row["ticker"] for row in selected}), 40)
+                attempted.update(row["ticker"] for row in selected if row["ticker"] in retry)
+                for row in selected:
+                    if row["ticker"] in stale:
+                        path = Path(tmp) / "etfs" / f"{row['ticker']}.json"
+                        payload = self.fetcher.read_json(path)
+                        payload.update({"source_as_of": stamp.isoformat(), "fetched_at": stamp.isoformat()})
+                        self.fetcher.write_json(path, payload)
+                outcomes = [{"ticker": row["ticker"], "asset_type": "etf", "provider": "stockanalysis",
+                             "status": "error" if row["ticker"] in retry else "ok",
+                             "error": "HTTP Error 500" if row["ticker"] in retry else None} for row in selected]
+                ledger = self.fetcher.update_pending_ledger(outcomes, selected, 7, 3, False, now_dt=stamp)
+            self.assertEqual(attempted, set(retry))
 
     def test_incremental_etf_backfill_retries_latest_invalid_primary_observation(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR

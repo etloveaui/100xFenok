@@ -97,6 +97,7 @@ def latest_recorded_observations(
             candidate_order = (
                 _timestamp_key(row["observed_at"]),
                 row["endpoint_family"] != LEGACY_YAHOO_ENDPOINT_FAMILY,
+                row.get("validation_scope") == "serving_detail",
                 row.get("observation_origin") == "migration",
                 row["event_id"],
             )
@@ -104,6 +105,7 @@ def latest_recorded_observations(
                 (
                     _timestamp_key(previous["observed_at"]),
                     previous["endpoint_family"] != LEGACY_YAHOO_ENDPOINT_FAMILY,
+                    previous.get("validation_scope") == "serving_detail",
                     previous.get("observation_origin") == "migration",
                     previous["event_id"],
                 )

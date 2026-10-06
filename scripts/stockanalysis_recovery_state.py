@@ -22,6 +22,9 @@ _SURFACE_DATE_KEYS = {
     "as_of", "date", "event_date", "filing_date", "filingdate",
     "ipo_date", "priced_date", "trade_date", "updated", "week_of",
 }
+_EVENT_DATE_SURFACES = {
+    "earnings_calendar", "ipos_calendar", "actions_recent", "actions_splits",
+}
 MAX_ETF_HISTORY_ARCHIVE_BYTES = 2_000_000
 
 SYSTEMIC_FAILURE_MARKERS = {
@@ -296,6 +299,87 @@ def validate_etf_history_archive(payload: dict) -> bool:
     return all(_archive_record_dates(item, ticker) is not None for item in archives)
 
 
+def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
+    """Compare displayed detail, independently of provider rank and fetch time."""
+    old = baseline.get("normalized")
+    new = candidate.get("normalized")
+    if not isinstance(old, dict):
+        return None
+    if not isinstance(new, dict) or not isinstance(new.get("overview"), dict):
+        return "normalized.overview"
+
+    def present(value: Any) -> bool:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return math.isfinite(value)
+        if isinstance(value, str):
+            return value.strip().lower() not in {"", "-", "—", "n/a", "none", "null", "nan"}
+        return value is not None and value != "" and value != [] and value != {}
+
+    old_overview = old.get("overview") if isinstance(old.get("overview"), dict) else {}
+    for field in ("aum", "expenseRatio", "dividendYield", "inception", "sharesOut"):
+        if present(old_overview.get(field)) and not present(new["overview"].get(field)):
+            return f"overview.{field}"
+    old_holdings = old.get("holdings") if isinstance(old.get("holdings"), list) else []
+    new_holdings = new.get("holdings") if isinstance(new.get("holdings"), list) else []
+    def holding_rows(rows: list) -> int:
+        return sum(isinstance(row, dict) and any(present(row.get(key)) for key in ("symbol", "ticker", "name")) for row in rows)
+    if old_holdings and holding_rows(new_holdings) < holding_rows(old_holdings):
+        return "holdings"
+    primary_recovery = (candidate.get("source") == "stockanalysis"
+                        and baseline.get("source_provider") == "yahoo_finance")
+    # Primary recovery still preserves holdings, prices, financial essentials
+    # and history. Yahoo-only allocation enrichments are optional for that
+    # provider transition; they cannot make a one-holding fallback authoritative.
+    surfaces = () if primary_recovery else ("countries", "sectors", "asset_allocation")
+    for field in ("holding_count", "holdings_updated", *surfaces):
+        if present(old.get(field)) and not present(new.get(field)):
+            return field
+    old_count, new_count = old.get("holding_count"), new.get("holding_count")
+    if present(old_count):
+        if (not isinstance(new_count, (int, float)) or isinstance(new_count, bool)
+                or not math.isfinite(new_count) or new_count < len(new_holdings)):
+            return "holding_count"
+        # A provider's total fund count is not equivalent to another provider's
+        # top-holdings sample count. Same-provider counts can honestly change.
+        if (baseline.get("source") != candidate.get("source")
+                and isinstance(old_count, (int, float)) and new_count < old_count):
+            return "holding_count"
+    old_quote = old.get("quote") if isinstance(old.get("quote"), dict) else {}
+    new_quote = new.get("quote") if isinstance(new.get("quote"), dict) else {}
+    old_price, new_price = old_quote.get("p"), new_quote.get("p")
+    if isinstance(old_price, (int, float)) and not isinstance(old_price, bool) and math.isfinite(old_price) and old_price > 0:
+        if (not isinstance(new_price, (int, float)) or isinstance(new_price, bool)
+                or not math.isfinite(new_price) or new_price <= 0):
+            return "quote"
+
+    old_periods = dict(old.get("history_periods") or {})
+    new_periods = dict(new.get("history_periods") or {})
+    if old.get("history") and not old_periods.get("daily_1y"):
+        old_periods["daily_1y"] = old["history"]
+    if new.get("history") and not new_periods.get("daily_1y"):
+        new_periods["daily_1y"] = new["history"]
+    archive = archived_etf_history(candidate)
+    previous_archive = archived_etf_history(baseline)
+    if archive is None or previous_archive is None or not previous_archive <= archive:
+        return "history_archive"
+    for period, rows in old_periods.items():
+        old_dates = _etf_history_date_set(rows)
+        if not old_dates:
+            continue
+        new_dates = _etf_history_date_set(new_periods.get(period))
+        if not new_dates or max(new_dates) < max(old_dates):
+            return f"history_periods.{period}"
+        # A rolling window may retire its oldest prefix as the tail advances;
+        # an unchanged tail cannot excuse fewer dates or a missing interior.
+        advance = _iso_timestamp(max(new_dates)) - _iso_timestamp(max(old_dates))
+        floor = _iso_timestamp(min(old_dates)) + advance
+        retained = {day for day in old_dates if _iso_timestamp(day) >= floor}
+        available = new_dates | (archive if period == "daily_1y" else set())
+        if not retained <= available:
+            return f"history_periods.{period}"
+    return None
+
+
 def _validate_identity(kind: str, entity: str) -> None:
     if kind not in ARTIFACT_KINDS:
         raise ValueError(f"unsupported StockAnalysis recovery artifact kind: {kind}")
@@ -392,9 +476,9 @@ def _stock_source_as_of(payload: dict) -> str | None:
 
 
 def _surface_source_as_of(payload: dict) -> str | None:
-    if payload.get("surface") in {"earnings_calendar", "ipos_calendar"}:
-        # Scheduled event dates describe the calendar, not when its provider
-        # measured the data. An unknown aggregate source date stays unknown.
+    if payload.get("surface") in _EVENT_DATE_SURFACES:
+        # Calendar and corporate-action dates describe events, not when their
+        # provider measured the data. An unknown source date stays unknown.
         source = _iso_timestamp(payload.get("source_as_of"))
         return source.strftime("%Y-%m-%dT%H:%M:%SZ") if source else None
     candidates = [payload.get("source_as_of")]
@@ -631,6 +715,10 @@ class StockAnalysisRecoveryStateStore:
         if kind == "etf" and prior:
             prior_path = self._lkg_path(kind, entity) if state.get("retry") is True else self.canonical_path(kind, entity)
             bound = self._valid_bytes(kind, entity, prior_path)
+            if (not bound or prior.get("path") != self._relative(prior_path)
+                    or _sha256(bound[0]) != prior.get("payload_sha256")
+                    or etf_detail_regression(payload, bound[1]) is not None):
+                return False
             new_clocks = _etf_component_clocks(payload)
             old_official = bool(bound and isinstance(bound[1].get("raw"), dict)
                                 and isinstance(bound[1]["raw"].get("official_holdings"), dict))
@@ -649,9 +737,9 @@ class StockAnalysisRecoveryStateStore:
                     return True
                 if old_official:
                     return False
-        if kind == "surface" and entity in {"earnings_calendar", "ipos_calendar"} and prior:
-            # Older metadata derived the marker from scheduled events. Re-read
-            # only its exact bound bytes when this calendar is touched.
+        if kind == "surface" and entity in _EVENT_DATE_SURFACES and prior:
+            # Older metadata derived the marker from event dates. Re-read
+            # only its exact bound bytes when this surface is touched.
             prior_path = self._lkg_path(kind, entity) if state.get("retry") is True else self.canonical_path(kind, entity)
             bound = self._valid_bytes(kind, entity, prior_path)
             if (bound and prior.get("path") == self._relative(prior_path)

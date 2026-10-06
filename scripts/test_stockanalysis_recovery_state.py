@@ -22,6 +22,7 @@ from stockanalysis_recovery_state import (  # noqa: E402
     StockAnalysisRecoveryStateError,
     StockAnalysisRecoveryStateStore,
     archived_etf_history,
+    etf_detail_regression,
     payload_source_fields,
     validate_etf_history_archive,
 )
@@ -254,6 +255,15 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             self.assertEqual(first["normalized"]["history_periods"]["monthly_1y"], [{"t": "2026-10-01", "c": 25.0}])
             self.assertEqual(first["normalized"]["history_archive"][0]["source_payload"].encode(), source_bytes)
             self.assertTrue(validate_etf_history_archive(first))
+            dropped_archive = json.loads(json.dumps(first))
+            dropped_archive["normalized"].pop("history_archive")
+            self.assertTrue(validate_etf_history_archive(dropped_archive))
+            self.assertEqual(etf_detail_regression(dropped_archive, first), "history_archive")
+            country_only = primary(native)
+            country_only.update({"detail_status": "stockanalysis_partial",
+                                 "partial_reason_codes": ["holdings_countries_unavailable"]})
+            fetcher.retain_yahoo_etf_history_archive("IBIC", country_only)
+            self.assertEqual(country_only["normalized"]["history_archive"], first["normalized"]["history_archive"])
             write_json(fetcher.OUT_DIR / "etfs/IBIC.json", first)
             selected["provider"] = "stockanalysis"
             # The native tail advances and omits an interior Yahoo date. Its
@@ -425,7 +435,7 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         stock["normalized"]["quote"]["td"] = "2026-07-14"
         stock["normalized"]["history"] = [{"t": "2026-07-13", "c": 10}]
         surface = surface_payload(
-            "actions_recent", "2026-07-15T07:00:00Z", "AAPL", "Jul 14, 2026"
+            "market_gainers", "2026-07-15T07:00:00Z", "AAPL", "Jul 14, 2026"
         )
         self.assertEqual(
             payload_source_fields("stock", stock)["source_as_of"],
@@ -482,6 +492,55 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         for candidate in ({**payload, "source_as_of": "2099-01-01T00:00:00Z"},
                           {**payload, "fetched_at": "2099-01-01T00:00:00Z"}):
             self.assertFalse(self.store.recovery_candidate_advances("surface", "ipos_calendar", candidate))
+
+    def test_corporate_action_event_dates_do_not_invent_source_freshness(self):
+        for name in ("actions_recent", "actions_splits"):
+            with self.subTest(surface=name):
+                payload = surface_payload(name, "2026-09-30T02:31:15Z", "MYPS", "Oct 1, 2026")
+                if name == "actions_splits":
+                    payload["format"] = "html_table"
+                    payload["tables"] = [{"records": payload.pop("records")}]
+                    payload["counts"] = {"tables": 1, "rows": 1}
+                self.assertIsNone(payload_source_fields("surface", payload)["source_as_of"])
+                self.assertTrue(self.store.recovery_candidate_advances("surface", name, payload))
+                path = self.data_root / "surfaces" / f"{name}.json"
+                original = write_json(path, payload)
+                self.store.bootstrap_existing({})
+                state_path = self.state_root / "states" / "surface" / f"{name}.json"
+                legacy_state = json.loads(state_path.read_bytes())
+                legacy_state["current"]["source_as_of"] = "2026-10-01T00:00:00Z"
+                for field, invalid_value in (("path", "wrong.json"), ("payload_sha256", "0" * 64)):
+                    invalid_state = {
+                        **legacy_state,
+                        "current": {**legacy_state["current"], field: invalid_value},
+                    }
+                    write_json(state_path, invalid_state)
+                    self.assertFalse(self.store.recovery_candidate_advances("surface", name, payload))
+                write_json(state_path, legacy_state)
+                self.assertTrue(self.store.recovery_candidate_advances("surface", name, payload))
+                self.store.record_failure("surface", name, "HTTP 503", {})
+                self.assertEqual((self.state_root / "lkg" / "surface" / f"{name}.json").read_bytes(), original)
+                retained_state = json.loads(state_path.read_bytes())
+                for field in ("current", "lkg"):
+                    retained_state[field]["source_as_of"] = "2026-10-01T00:00:00Z"
+                write_json(state_path, retained_state)
+                self.assertTrue(self.store.recovery_candidate_advances("surface", name, payload))
+                state = self.store.record_success("surface", name, payload, {})
+                self.assertFalse(state["retry"])
+                self.assertEqual(state["failure_count"], 0)
+                self.assertIsNone(state["current"]["source_as_of"])
+                self.assertEqual(state["current"]["fetched_at"], payload["fetched_at"])
+                self.assertEqual(path.read_bytes(), original)
+                for field in ("source_as_of", "fetched_at"):
+                    self.assertFalse(self.store.recovery_candidate_advances(
+                        "surface", name, {**payload, field: "2099-01-01T00:00:00Z"}
+                    ))
+                dated = {**payload, "source_as_of": "2026-09-30T00:00:00Z"}
+                write_json(path, dated)
+                self.store.bootstrap_existing({})
+                self.assertFalse(self.store.recovery_candidate_advances(
+                    "surface", name, {**dated, "source_as_of": "2026-09-29T00:00:00Z"}
+                ))
 
     def test_calendar_still_refuses_future_provider_source_or_observation(self):
         payload = surface_payload("earnings_calendar", "2026-07-15T07:00:00Z", "AAPL", "2099-01-01")
