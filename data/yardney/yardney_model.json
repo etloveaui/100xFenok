@@ -4,9 +4,9 @@
     "model_version": "feno_yardeni_fred_v1",
     "description": "Feno Yardeni Bond PER to S&P 500 Fair Value",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-09-25",
-    "total_records": 1900,
-    "generated_at": "2026-10-03T14:32:18.001Z",
+    "date_range": "1990-02-02 ~ 2026-10-02",
+    "total_records": 1901,
+    "generated_at": "2026-10-06T02:21:39.927Z",
     "generated_by": "build-feno-yardeni-model.mjs",
     "calculation_source": "FRED series/observations API corporate bond yields plus 100x benchmark S&P 500 price/EPS; benchmark EPS/SPX currently comes from the existing Bloomberg-sourced benchmarks pipeline; pre-benchmark history preserved from verified seed.",
     "source_components": {
@@ -14,12 +14,12 @@
         {
           "series_id": "WAAA",
           "label": "Moody's Seasoned Aaa Corporate Bond Yield",
-          "latest_date": "2026-09-25"
+          "latest_date": "2026-10-02"
         },
         {
           "series_id": "WBAA",
           "label": "Moody's Seasoned Baa Corporate Bond Yield",
-          "latest_date": "2026-09-25"
+          "latest_date": "2026-10-02"
         }
       ],
       "spx_eps_input": {
@@ -30,8 +30,8 @@
           "best_eps"
         ],
         "source": "Bloomberg Terminal",
-        "version": "2026-09-25",
-        "generated": "2026-09-28T16:42:47.393143"
+        "version": "2026-10-02",
+        "generated": "2026-10-06T11:10:18.967451"
       },
       "preserved_seed_input": {
         "file": "data/yardney/yardney_model.json",
@@ -47,12 +47,12 @@
     "last_update": {
       "mode": "feno_yardeni_rebuild",
       "seed_preserved_records": 1026,
-      "computed_records": 874,
+      "computed_records": 875,
       "skipped_benchmark_records": 0,
       "skipped_benchmark_dates_sample": [],
       "first_computed_date": "2010-01-01",
-      "last_computed_date": "2026-09-25",
-      "last_public_date": "2026-09-25"
+      "last_computed_date": "2026-10-02",
+      "last_public_date": "2026-10-02"
     },
     "columns": {
       "date": "Weekly Friday date",
@@ -15266,6 +15266,14 @@
       "bond_per": 15.94,
       "fair_value": 6405.4,
       "premium_pct": 20.89
+    },
+    {
+      "date": "2026-10-02",
+      "spx": 7722.72,
+      "eps": 405.3713,
+      "bond_per": 15.38,
+      "fair_value": 6234.61,
+      "premium_pct": 23.87
     }
   ]
 }
