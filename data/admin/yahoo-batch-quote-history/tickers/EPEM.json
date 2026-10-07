@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:35:59Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/EPEM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPEM.json",
     "payload_sha256": "1da2cc0a714df90f9486f98fcab3b7cd3e0c11da0209adea3cfd3754a44bea98",
     "quote_as_of": "2026-09-30T13:46:03Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for EPEM: quote_as_of",
     "failures": [],
-    "latency_ms": 583,
-    "observed_at": "2026-09-30T14:35:59Z",
-    "outcome": "fresh"
+    "latency_ms": 1109,
+    "observed_at": "2026-10-07T06:02:02Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for EPEM: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T06:02:02Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T03:23:03Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:35:59Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EPEM.json",
-    "payload_sha256": "15c0dad3b6b5547a22b7c12e8673a00274a87e9ec12dd4cf1b591ff39e85adbf",
-    "quote_as_of": "2026-09-08T15:20:46Z",
-    "source_as_of": "2026-09-08T15:20:46Z"
+    "payload_sha256": "1da2cc0a714df90f9486f98fcab3b7cd3e0c11da0209adea3cfd3754a44bea98",
+    "quote_as_of": "2026-09-30T13:46:03Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 14,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-08T15:20:46Z"
   },
   "ticker": "EPEM",
-  "updated_at": "2026-09-30T14:35:59Z"
+  "updated_at": "2026-10-07T06:02:02Z"
 }

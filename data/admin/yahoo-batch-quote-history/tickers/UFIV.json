@@ -1,82 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 658,
-      "natural": true,
-      "observed_at": "2026-08-01T18:41:58Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711925747",
-      "schedule": "",
-      "shard": "4/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1181,
-      "natural": true,
-      "observed_at": "2026-08-07T22:50:55Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31225112049",
-      "schedule": "7 22 * * 0-5",
-      "shard": "71/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 466,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T06:37:10Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-07T06:21:55Z",
+    "history_as_of": "2026-10-06",
     "path": "data/yf/finance/UFIV.json",
-    "payload_sha256": "34bf77c700e1911b20decc9d03ece9f461866a081ae921dd5b051e4c80bed85e",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "994bdd1d9c8e318a359753ec5ae0d95ec54a75455b00dcfa7fd8c4813cd5021e",
+    "quote_as_of": "2026-10-06T20:00:00Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 466,
-    "natural": false,
-    "observed_at": "2026-09-28T06:30:00Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 955,
+    "observed_at": "2026-10-07T06:21:55Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-07T22:52:28Z",
@@ -86,25 +26,12 @@
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T06:30:00Z",
-    "payload_sha256": "c300cb005a7db9d7fe421d53b0ebf08d9a3bde043bf201c88d8683440da93319",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36367836615",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "UFIV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -112,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "UFIV",
-  "updated_at": "2026-09-28T06:30:00Z"
+  "updated_at": "2026-10-07T06:21:55Z"
 }

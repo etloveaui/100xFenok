@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:43:09Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/XIGV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XIGV.json",
     "payload_sha256": "c9c4f7db523c6587f0b9d9f846af880bf640fcc642b308054d89828dacd14138",
     "quote_as_of": "2026-09-30T13:46:08Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for XIGV: quote_as_of",
     "failures": [],
-    "latency_ms": 600,
-    "observed_at": "2026-09-30T14:43:09Z",
-    "outcome": "fresh"
+    "latency_ms": 963,
+    "observed_at": "2026-10-07T06:24:05Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for XIGV: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T06:24:05Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:45:39Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:43:09Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XIGV.json",
-    "payload_sha256": "77aa6461238e01aa33ece074ae7d9d1c52ec4e3dc37e981bdb1b6a7bd686a877",
-    "quote_as_of": "2026-09-17T18:12:27Z",
-    "source_as_of": "2026-09-17T18:12:27Z"
+    "payload_sha256": "c9c4f7db523c6587f0b9d9f846af880bf640fcc642b308054d89828dacd14138",
+    "quote_as_of": "2026-09-30T13:46:08Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-17T18:12:27Z"
   },
   "ticker": "XIGV",
-  "updated_at": "2026-09-30T14:43:09Z"
+  "updated_at": "2026-10-07T06:24:05Z"
 }

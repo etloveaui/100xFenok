@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:32:43Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/BABC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BABC.json",
     "payload_sha256": "abe930d5bd0265600320e30d32ec23efb06390c53c5acfedd14a2f2624e818ae",
     "quote_as_of": "2026-09-30T13:46:01Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for BABC: quote_as_of",
     "failures": [],
-    "latency_ms": 613,
-    "observed_at": "2026-09-30T14:32:43Z",
-    "outcome": "fresh"
+    "latency_ms": 2067,
+    "observed_at": "2026-10-07T05:55:26Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for BABC: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T05:55:26Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T01:25:54Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:32:43Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BABC.json",
-    "payload_sha256": "15859999f30f21f0a1063fd5e9903891b1f0aa57a30fbb7daead0f3d21897399",
-    "quote_as_of": "2026-09-21T16:01:20Z",
-    "source_as_of": "2026-09-21T16:01:20Z"
+    "payload_sha256": "abe930d5bd0265600320e30d32ec23efb06390c53c5acfedd14a2f2624e818ae",
+    "quote_as_of": "2026-09-30T13:46:01Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-21T16:01:20Z"
   },
   "ticker": "BABC",
-  "updated_at": "2026-09-30T14:32:43Z"
+  "updated_at": "2026-10-07T05:55:26Z"
 }

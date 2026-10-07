@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T05:30:00Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MBCE.json",
-    "payload_sha256": "87ff94e262f6a0821c3a6c587b72e32264b9d10a213a3ab0e6133896ba560647",
-    "quote_as_of": "2026-09-25T18:12:20Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-07T06:11:19Z",
+    "history_as_of": "2026-10-06",
+    "path": "data/yf/finance/MBCE.json",
+    "payload_sha256": "660d020f950665fc781b871c92646fa51447d8da3b958b24b82d9eb872d773c2",
+    "quote_as_of": "2026-10-06T19:59:51Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 481,
-    "observed_at": "2026-09-28T05:23:15Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1357,
+    "observed_at": "2026-10-07T06:11:19Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T18:12:20Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "MBCE",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-07T06:11:19Z"
 }

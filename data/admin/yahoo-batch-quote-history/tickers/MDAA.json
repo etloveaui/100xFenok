@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:38:16Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/MDAA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MDAA.json",
     "payload_sha256": "db23ab293bd584d9c8b4e7018a2c6dc44ea1b18ba87db071f9935a4ce937e4ef",
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MDAA: quote_as_of",
     "failures": [],
-    "latency_ms": 2659,
-    "observed_at": "2026-09-30T14:38:16Z",
-    "outcome": "fresh"
+    "latency_ms": 843,
+    "observed_at": "2026-10-07T06:11:23Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MDAA: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T06:11:23Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:30:17Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:38:16Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MDAA.json",
-    "payload_sha256": "2b510c7eefec7cb76c015bfa84abc1b079b6e043b4524e2dc07680b1c7e4bef2",
-    "quote_as_of": "2026-09-09T19:55:05Z",
-    "source_as_of": "2026-09-09T19:55:05Z"
+    "payload_sha256": "db23ab293bd584d9c8b4e7018a2c6dc44ea1b18ba87db071f9935a4ce937e4ef",
+    "quote_as_of": "2026-09-30T13:46:05Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 13,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-09T19:55:05Z"
   },
   "ticker": "MDAA",
-  "updated_at": "2026-09-30T14:38:16Z"
+  "updated_at": "2026-10-07T06:11:23Z"
 }

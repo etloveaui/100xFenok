@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:39:45Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/PSCJ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PSCJ.json",
     "payload_sha256": "f7c2340accd278e97acd12276b7c40e6f30fc9e32b1f8bf31d8600eab0a9e373",
     "quote_as_of": "2026-09-30T13:46:06Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for PSCJ: quote_as_of",
     "failures": [],
-    "latency_ms": 553,
-    "observed_at": "2026-09-30T14:39:45Z",
-    "outcome": "fresh"
+    "latency_ms": 884,
+    "observed_at": "2026-10-07T06:15:33Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for PSCJ: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T06:15:33Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:04:36Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:39:45Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PSCJ.json",
-    "payload_sha256": "66b1ad13627685dead93582213824139e3ddf1956fc1de6fa1335765c407d21c",
-    "quote_as_of": "2026-09-21T19:49:51Z",
-    "source_as_of": "2026-09-21T19:49:51Z"
+    "payload_sha256": "f7c2340accd278e97acd12276b7c40e6f30fc9e32b1f8bf31d8600eab0a9e373",
+    "quote_as_of": "2026-09-30T13:46:06Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-21T19:49:51Z"
   },
   "ticker": "PSCJ",
-  "updated_at": "2026-09-30T14:39:45Z"
+  "updated_at": "2026-10-07T06:15:33Z"
 }

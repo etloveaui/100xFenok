@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:34:11Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/CIEI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CIEI.json",
     "payload_sha256": "9ea098eb9bdad019e6124adfdc92f18b0aee9c4cf83741fea856823f0747e932",
     "quote_as_of": "2026-09-30T13:46:02Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for CIEI: quote_as_of",
     "failures": [],
-    "latency_ms": 622,
-    "observed_at": "2026-09-30T14:34:11Z",
-    "outcome": "fresh"
+    "latency_ms": 844,
+    "observed_at": "2026-10-07T05:58:06Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for CIEI: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T05:58:06Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T01:36:13Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:34:11Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CIEI.json",
-    "payload_sha256": "c458915b3c2f006baf28c767eead40621de926b8404165bff79383142742570a",
-    "quote_as_of": "2026-09-16T13:30:05Z",
-    "source_as_of": "2026-09-16T13:30:05Z"
+    "payload_sha256": "9ea098eb9bdad019e6124adfdc92f18b0aee9c4cf83741fea856823f0747e932",
+    "quote_as_of": "2026-09-30T13:46:02Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-16T13:30:05Z"
   },
   "ticker": "CIEI",
-  "updated_at": "2026-09-30T14:34:11Z"
+  "updated_at": "2026-10-07T05:58:06Z"
 }

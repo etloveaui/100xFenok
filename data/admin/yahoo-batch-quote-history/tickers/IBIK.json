@@ -1,94 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 602,
-      "natural": true,
-      "observed_at": "2026-07-27T22:58:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30312518312",
-      "schedule": "0 22 * * 1",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1130,
-      "natural": true,
-      "observed_at": "2026-08-07T07:38:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31158308843",
-      "schedule": "7 6 * * 0-5",
-      "shard": "63/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1119,
-      "natural": true,
-      "observed_at": "2026-08-12T19:14:55Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31631524598",
-      "schedule": "7 18 * * 0-5",
-      "shard": "45/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 486,
-      "natural": false,
-      "observed_at": "2026-09-28T04:37:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367831133",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-28T04:48:43Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-07T06:07:30Z",
+    "history_as_of": "2026-10-06",
     "path": "data/yf/finance/IBIK.json",
-    "payload_sha256": "af717c63da0896b0bf75ec145e918bd6321e4d4b1b66cea482c714c3ae11ddca",
-    "quote_as_of": "2026-09-25T19:31:28Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "6e6f8f2fd1417c787e17099a2a66c1ac56b96ee2a7fb0750bd8898d143c785d8",
+    "quote_as_of": "2026-10-06T20:00:00Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 486,
-    "natural": false,
-    "observed_at": "2026-09-28T04:37:06Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schedule": "",
-    "shard": ""
+    "latency_ms": 803,
+    "observed_at": "2026-10-07T06:07:30Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T19:18:14Z",
@@ -98,25 +26,12 @@
     "quote_as_of": "2026-08-12T19:03:14Z",
     "source_as_of": "2026-08-12"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-25",
-    "observed_at": "2026-09-28T04:37:06Z",
-    "payload_sha256": "8d86abc6ec3b2dd1b6b64d22030e9bce6170a38f261c046a17780238ea2a8a4c",
-    "quote_as_of": "2026-09-25T19:31:28Z",
-    "run_attempt": 1,
-    "run_id": "36367831133",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-25"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
     "classified_at": "2026-08-21T23:43:33Z",
-    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "IBIK holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -124,5 +39,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "IBIK",
-  "updated_at": "2026-09-28T04:37:06Z"
+  "updated_at": "2026-10-07T06:07:30Z"
 }

@@ -1,108 +1,22 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 633,
-      "natural": true,
-      "observed_at": "2026-08-01T18:21:41Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711922590",
-      "schedule": "",
-      "shard": "1/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 665,
-      "natural": true,
-      "observed_at": "2026-08-07T17:02:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31200268852",
-      "schedule": "7 16 * * 0-5",
-      "shard": "68/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1348,
-      "natural": true,
-      "observed_at": "2026-08-09T07:09:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31300442711",
-      "schedule": "7 6 * * 0-5",
-      "shard": "3/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 752,
-      "natural": true,
-      "observed_at": "2026-09-27T05:14:22Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36296516883",
-      "schedule": "7 0 * * 0-5",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 652,
-      "natural": true,
-      "observed_at": "2026-09-30T05:28:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36673340106",
-      "schedule": "7 0 * * 0-5",
-      "shard": "3/6"
-    }
-  ],
   "current": {
-    "fetched_at": "2026-09-30T05:28:43Z",
-    "history_as_of": "2026-09-29",
+    "fetched_at": "2026-10-07T06:15:05Z",
+    "history_as_of": "2026-10-06",
     "path": "data/yf/finance/PJUL.json",
-    "payload_sha256": "8b1d812a2db22dd8b8a2039e2de5fab1717c88cf099821608ffce724121d7961",
-    "quote_as_of": "2026-09-29T19:56:32Z",
-    "source_as_of": "2026-09-29"
+    "payload_sha256": "37f74164aefdf33d3f2a88470c88f180987903d6ca51e96a652760100fedab79",
+    "quote_as_of": "2026-10-06T19:59:45Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
-    "core_daily_basket"
+    "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "failure_count": 0,
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 652,
-    "natural": true,
-    "observed_at": "2026-09-30T05:28:05Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36673340106",
-    "schedule": "7 0 * * 0-5",
-    "shard": "3/6"
+    "latency_ms": 1090,
+    "observed_at": "2026-10-07T06:15:05Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-09T07:13:58Z",
@@ -112,25 +26,12 @@
     "quote_as_of": "2026-08-07T19:58:49Z",
     "source_as_of": "2026-08-07"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-29",
-    "observed_at": "2026-09-30T05:28:05Z",
-    "payload_sha256": "783af91b54617ba8574680ab05be2287a6b890717eb356e0a26cc2f68211d24a",
-    "quote_as_of": "2026-09-29T19:56:32Z",
-    "run_attempt": 1,
-    "run_id": "36673340106",
-    "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-29"
-  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
     "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "PJUL holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -138,5 +39,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "PJUL",
-  "updated_at": "2026-09-30T05:28:05Z"
+  "updated_at": "2026-10-07T06:15:05Z"
 }

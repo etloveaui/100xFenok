@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T03:28:34Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FFSM.json",
-    "payload_sha256": "737ed0eea82e6cbe22755711147807da5dc15edfb52506f84ac13a97fe7af41c",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-07T06:03:43Z",
+    "history_as_of": "2026-10-06",
+    "path": "data/yf/finance/FFSM.json",
+    "payload_sha256": "830171f467dfa5557c4ead285c2426acba56eb22b677eee07ce434dd68e8f695",
+    "quote_as_of": "2026-10-06T20:00:00Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 500,
-    "observed_at": "2026-09-28T03:11:20Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FFSM: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1146,
+    "observed_at": "2026-10-07T06:03:43Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "FFSM",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-07T06:03:43Z"
 }

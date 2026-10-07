@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T04:39:18Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FTPA.json",
-    "payload_sha256": "0b9452a80911f5cc595fc2cf918602196cbe786c100d9faadab650577fb693bd",
-    "quote_as_of": "2026-09-25T19:49:42Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-07T06:04:48Z",
+    "history_as_of": "2026-10-06",
+    "path": "data/yf/finance/FTPA.json",
+    "payload_sha256": "ca738390c6e5b1f3bbb177d0015dbc108df68ee6f2cc535cacab24e2d9b15c2c",
+    "quote_as_of": "2026-10-06T20:00:00Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 505,
-    "observed_at": "2026-09-28T04:37:06Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: FTPA: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FTPA: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FTPA: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FTPA: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FTPA: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: FTPA: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1093,
+    "observed_at": "2026-10-07T06:04:48Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:49:42Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "FTPA",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-07T06:04:48Z"
 }

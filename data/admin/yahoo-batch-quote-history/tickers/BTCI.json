@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T01:32:15Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BTCI.json",
-    "payload_sha256": "b44a5fa9ad9a908b78b30e1b26af8fdbc0d62c1ba95b17619e8904c4facc3833",
-    "quote_as_of": "2026-09-25T20:00:00Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-07T05:56:57Z",
+    "history_as_of": "2026-10-06",
+    "path": "data/yf/finance/BTCI.json",
+    "payload_sha256": "dbaad0461aca14c35b41f6fdfc8cef7cb196d64483486d7ed893eb2e5345cbc4",
+    "quote_as_of": "2026-10-06T20:00:00Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 469,
-    "observed_at": "2026-09-28T01:17:59Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: BTCI: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: BTCI: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: BTCI: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: BTCI: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: BTCI: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: BTCI: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1299,
+    "observed_at": "2026-10-07T05:56:57Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T20:00:00Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "BTCI",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-07T05:56:57Z"
 }

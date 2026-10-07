@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:39:20Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/OGSP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/OGSP.json",
     "payload_sha256": "0b9fd8116e53b5aa48f620733e9a4c43bcf3075d2bbc552ec406c0ae06cd3c08",
     "quote_as_of": "2026-09-30T13:46:06Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for OGSP: quote_as_of",
     "failures": [],
-    "latency_ms": 669,
-    "observed_at": "2026-09-30T14:39:20Z",
-    "outcome": "fresh"
+    "latency_ms": 959,
+    "observed_at": "2026-10-07T06:13:43Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for OGSP: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T06:13:43Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:39:00Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:39:20Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/OGSP.json",
-    "payload_sha256": "71f0b95e88460a90381f2555856922c5761aacb6dd998068c353053fa9c2cfba",
-    "quote_as_of": "2026-09-17T18:45:12Z",
-    "source_as_of": "2026-09-17T18:45:12Z"
+    "payload_sha256": "0b9fd8116e53b5aa48f620733e9a4c43bcf3075d2bbc552ec406c0ae06cd3c08",
+    "quote_as_of": "2026-09-30T13:46:06Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-17T18:45:12Z"
   },
   "ticker": "OGSP",
-  "updated_at": "2026-09-30T14:39:20Z"
+  "updated_at": "2026-10-07T06:13:43Z"
 }

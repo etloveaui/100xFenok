@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T01:19:42Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ACVU.json",
-    "payload_sha256": "f99d9046024f68cd7283c4ff7158a657f938689e5468eba46ae9898ca889e7a1",
-    "quote_as_of": "2026-09-25T19:59:46Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-07T05:52:46Z",
+    "history_as_of": "2026-10-06",
+    "path": "data/yf/finance/ACVU.json",
+    "payload_sha256": "de43e35bdef86c87665cc978260a7ed80c9e20527dc94b974cb1cb893e37fa9a",
+    "quote_as_of": "2026-10-06T18:59:29Z",
+    "source_as_of": "2026-10-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 505,
-    "observed_at": "2026-09-28T01:17:59Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ACVU: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1039,
+    "observed_at": "2026-10-07T05:52:46Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:59:46Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "ACVU",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-07T05:52:46Z"
 }

@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:40:00Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/RCLY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RCLY.json",
     "payload_sha256": "d4677b1805e30d08b97b5e4798cb6075917a39e9a8b4ef82459e09e0043c2587",
     "quote_as_of": "2026-09-30T13:46:07Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for RCLY: quote_as_of",
     "failures": [],
-    "latency_ms": 2705,
-    "observed_at": "2026-09-30T14:40:00Z",
-    "outcome": "fresh"
+    "latency_ms": 1157,
+    "observed_at": "2026-10-07T06:16:51Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for RCLY: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-07T06:16:51Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T06:09:43Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:40:00Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/RCLY.json",
-    "payload_sha256": "45684fbae44714cae15874bc2afee506e6584cabe78b72cdcbcb7ace2e32ec68",
-    "quote_as_of": "2026-09-10T13:52:21Z",
-    "source_as_of": "2026-09-10T13:52:21Z"
+    "payload_sha256": "d4677b1805e30d08b97b5e4798cb6075917a39e9a8b4ef82459e09e0043c2587",
+    "quote_as_of": "2026-09-30T13:46:07Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 12,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-10T13:52:21Z"
   },
   "ticker": "RCLY",
-  "updated_at": "2026-09-30T14:40:00Z"
+  "updated_at": "2026-10-07T06:16:51Z"
 }
