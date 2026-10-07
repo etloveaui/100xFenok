@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-korea-krx-bridge/v1",
-  "generated_at": "2026-10-04T09:28:32.615Z",
+  "generated_at": "2026-10-06T16:56:18.367Z",
   "market": "Korea",
   "source": "KRX_OPEN_API",
   "raw_public": false,
@@ -11,8 +11,8 @@
     "source_date_min": "2026-10-02",
     "source_date_max": "2026-10-02",
     "date_count": 1,
-    "fetched_at": "2026-10-04T09:28:14.574Z",
-    "completed_at": "2026-10-04T09:28:32.609Z"
+    "fetched_at": "2026-10-06T16:56:02.304Z",
+    "completed_at": "2026-10-06T16:56:18.361Z"
   },
   "feno_data_read": {
     "category": "admin",
@@ -20,17 +20,17 @@
     "jq_example": "jq '{as_of, freshness, latest_run, normalized_score_candidates}' \"$DATA_ROOT/admin/fenok-edge-korea-krx-daily-index.json\""
   },
   "private_artifacts": {
-    "output_root": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002",
-    "top_manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/manifest.json",
-    "raw_root": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/raw",
+    "output_root": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004",
+    "top_manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/manifest.json",
+    "raw_root": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/raw",
     "group_manifests": {
-      "core_stock_index": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/core_stock_index/manifest.json",
-      "derivatives_products": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/derivatives_products/manifest.json",
-      "bond_commodity_esg": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/bond_commodity_esg/manifest.json"
+      "core_stock_index": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/core_stock_index/manifest.json",
+      "derivatives_products": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/derivatives_products/manifest.json",
+      "bond_commodity_esg": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/bond_commodity_esg/manifest.json"
     }
   },
   "latest_run": {
-    "run_id": "krx_daily_20261002",
+    "run_id": "krx_daily_20261004",
     "backfill_type": "krx-daily-scheduled-accumulation",
     "full_252_status": "not_run_heavy",
     "planned_full_trading_day_count": 252,
@@ -50,7 +50,7 @@
     },
     "group_summaries": {
       "core_stock_index": {
-        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/core_stock_index/manifest.json",
+        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/core_stock_index/manifest.json",
         "endpoint_count": 9,
         "date_count": 1,
         "summary": {
@@ -67,7 +67,7 @@
         }
       },
       "derivatives_products": {
-        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/derivatives_products/manifest.json",
+        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/derivatives_products/manifest.json",
         "endpoint_count": 10,
         "date_count": 1,
         "summary": {
@@ -83,7 +83,7 @@
         }
       },
       "bond_commodity_esg": {
-        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/bond_commodity_esg/manifest.json",
+        "manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/bond_commodity_esg/manifest.json",
         "endpoint_count": 12,
         "date_count": 1,
         "summary": {
@@ -136,13 +136,13 @@
   },
   "derived_rim_inputs": {
     "schema_version": "krx_derived_rim_inputs.v1",
-    "generated_at": "2026-10-04T09:28:32.609Z",
+    "generated_at": "2026-10-06T16:56:18.361Z",
     "as_of": "2026-10-02",
     "raw_public": false,
     "status": "ready",
     "missing": [],
     "kospi_weights": {
-      "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/raw/core_stock_index/stk_bydd_trd/20261002.json",
+      "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/raw/core_stock_index/stk_bydd_trd/20261002.json",
       "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
       "as_of": "2026-10-02",
       "raw_public": false,
@@ -5813,7 +5813,7 @@
       "value": 0.04357,
       "date": "2026-10-02",
       "raw_value_percent": 4.357,
-      "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/raw/bond_commodity_esg/kts_bydd_trd/20261002.json",
+      "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/raw/bond_commodity_esg/kts_bydd_trd/20261002.json",
       "source_field": "OutBlock_1[ISU_NM=국고04250-3606(26-6),BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100",
       "label": "KRX KTS 10Y benchmark government bond yield",
       "raw_public": false
@@ -5837,8 +5837,8 @@
   "daily_command": "KRX_END_DATE=YYYYMMDD KRX_DAYS=1 KRX_RUN_ID=krx_daily_YYYYMMDD KRX_BRIDGE_INDEX=data/admin/fenok-edge-korea-krx-daily-index.json node scripts/fetch-fenok-krx-daily-private.mjs",
   "daily_accumulation": {
     "automatic_cron_installed": true,
-    "latest_daily_manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261002/manifest.json",
-    "latest_run_id": "krx_daily_20261002",
+    "latest_daily_manifest_path": "_private/admin/fenok-edge-korea/daily/krx_daily_20261004/manifest.json",
+    "latest_run_id": "krx_daily_20261004",
     "raw_storage_policy": "_private/admin only",
     "bridge_index_path": "data/admin/fenok-edge-korea-krx-daily-index.json",
     "public_bridge_history_path": "data/computed/fenok-edge-korea-krx-bridge-history.json",
