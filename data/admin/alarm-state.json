@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-07T09:16:21.003Z",
+  "generated_at": "2026-10-07T10:49:09.709Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fetch-defillama.yml",
@@ -41,8 +41,32 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "retention-restore.yml",
       "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -405,15 +429,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37599022023",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37599022023",
-    "observed_at": "2026-10-07T09:16:21.003Z",
+    "run_id": "37609467091",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37609467091",
+    "observed_at": "2026-10-07T10:49:09.709Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-defillama.yml",
       "fetch-yahoo-ticker.yml",
       "fetch-yf-finance.yml",
+      "global-writer-queue-observer.yml",
       "retention-restore.yml",
+      "worker-request-budget-alarm.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
