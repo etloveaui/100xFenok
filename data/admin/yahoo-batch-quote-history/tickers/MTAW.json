@@ -1,85 +1,42 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 452,
-      "natural": false,
-      "observed_at": "2026-09-28T05:23:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367832955",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 479,
-      "natural": true,
-      "observed_at": "2026-09-29T02:52:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 711,
-      "natural": true,
-      "observed_at": "2026-09-30T02:24:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-30T02:28:32Z",
     "history_as_of": "2026-09-29",
-    "path": "data/yf/finance/MTAW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MTAW.json",
     "payload_sha256": "c8f1dde4b2c9856a45152e67ba8443db19fb73022890605f15a4eb7a4c71ed31",
     "quote_as_of": "2026-09-28T19:40:40Z",
     "source_as_of": "2026-09-28T19:40:40Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
     "latency_ms": 711,
-    "natural": true,
     "observed_at": "2026-09-30T02:24:19Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-30T02:28:32Z",
     "history_as_of": "2026-09-29",
-    "observed_at": "2026-09-30T02:24:19Z",
-    "payload_sha256": "350a697e83be5abff25360f9221c0e4d2cf4ed2e2b83c42b94f8066f2884e0a9",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MTAW.json",
+    "payload_sha256": "c8f1dde4b2c9856a45152e67ba8443db19fb73022890605f15a4eb7a4c71ed31",
     "quote_as_of": "2026-09-28T19:40:40Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-28T19:40:40Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-07T02:30:07Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "MTAW holds LKG because Yahoo source date 2026-09-28T19:40:40Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-28T19:40:40Z"
+  },
   "ticker": "MTAW",
-  "updated_at": "2026-09-30T02:24:19Z"
+  "updated_at": "2026-10-07T02:30:07Z"
 }

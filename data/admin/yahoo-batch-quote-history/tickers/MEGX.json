@@ -8,46 +8,17 @@
     "source_as_of": "2026-10-01"
   },
   "discovered_from": [
+    "market_facts",
+    "same_security_successor:MGKX",
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 4,
   "last_result": {
     "attempts_used": 1,
     "error": "ValueError: Yahoo provider source timestamp regresses for MEGX: quote_as_of",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 577,
-    "observed_at": "2026-10-06T06:31:10Z",
+    "failures": [],
+    "latency_ms": 649,
+    "observed_at": "2026-10-07T02:30:33Z",
     "outcome": "failed"
   },
   "latest_failure": {
@@ -55,41 +26,10 @@
     "data_loss": false,
     "deferred_acquisition": false,
     "error": "ValueError: Yahoo provider source timestamp regresses for MEGX: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MEGX: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
+    "failure_kind": "candidate_rejected",
+    "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-10-06T06:31:10Z"
+    "observed_at": "2026-10-07T02:30:33Z"
   },
   "lkg": {
     "fetched_at": "2026-10-01T14:19:14Z",
@@ -103,5 +43,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MEGX",
-  "updated_at": "2026-10-06T06:31:10Z"
+  "updated_at": "2026-10-07T02:30:33Z"
 }
