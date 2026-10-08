@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:36:39Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/IGGY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IGGY.json",
     "payload_sha256": "7dfcaa12a2882263082838b5170eb281940acaaa73e3f34f896add32e508d59a",
     "quote_as_of": "2026-09-30T13:46:04Z",
     "source_as_of": "2026-09-30"
@@ -10,24 +10,35 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for IGGY: quote_as_of",
     "failures": [],
-    "latency_ms": 2660,
-    "observed_at": "2026-09-30T14:36:39Z",
-    "outcome": "fresh"
+    "latency_ms": 576,
+    "observed_at": "2026-10-08T06:09:56Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for IGGY: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-08T06:09:56Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T04:50:24Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:36:39Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IGGY.json",
-    "payload_sha256": "96c8fb3d0623c12546a055ccd0cb11aa7b93ad725a99d2487f7ac0b323945d56",
-    "quote_as_of": "2026-09-16T14:19:42Z",
-    "source_as_of": "2026-09-16T14:19:42Z"
+    "payload_sha256": "7dfcaa12a2882263082838b5170eb281940acaaa73e3f34f896add32e508d59a",
+    "quote_as_of": "2026-09-30T13:46:04Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-16T14:19:42Z"
   },
   "ticker": "IGGY",
-  "updated_at": "2026-09-30T14:36:39Z"
+  "updated_at": "2026-10-08T06:09:56Z"
 }
