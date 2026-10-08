@@ -10,6 +10,7 @@ Live run: wait for the AA morning brief -> market pack -> 시장 체력 -> write
 from __future__ import annotations
 
 import argparse
+import hashlib
 import copy
 import datetime as dt
 import json
@@ -198,7 +199,9 @@ def main(argv: list[str] | None = None) -> int:
             sha = publish.commit_and_push(doc, repo)
             state["publish"] = {"status": "pushed", "sha": sha, "at": now_kst().isoformat(timespec="seconds")}
             save(state)
-        live = publish.wait_published(edition)
+        pushed = repo / CFG["repo"]["data_dir"] / "morning" / f"{edition}.json"
+        expect = hashlib.sha256(pushed.read_bytes()).hexdigest() if pushed.exists() else None
+        live = publish.wait_published(edition, expect_sha=expect)
         state["publish"]["live"] = live
         save(state)
         if not live["ok"]:

@@ -160,3 +160,24 @@ class NotifyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WaitPublishedFreshness(unittest.TestCase):
+    def test_waits_for_pushed_bytes(self):
+        import hashlib, io
+        from unittest import mock
+        from briefing import publish
+        new, old = b'{"edition_date":"2026-10-08","v":2}', b'{"edition_date":"2026-10-08","v":1}'
+        bodies = [old, new]
+
+        class Resp(io.BytesIO):
+            status = 200
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake_open(req, timeout=20):
+            return Resp(bodies.pop(0) if len(bodies) > 1 else bodies[0])
+
+        with mock.patch.object(publish.urllib.request, "urlopen", fake_open), mock.patch.object(publish.time, "sleep", lambda s: None):
+            res = publish.wait_published("2026-10-08", timeout=60, poll=1, expect_sha=hashlib.sha256(new).hexdigest())
+        self.assertTrue(res["ok"])

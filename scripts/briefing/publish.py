@@ -5,6 +5,7 @@ A push to main under data/briefing/ triggers publish-briefing.yml, which copies 
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import subprocess
 import time
@@ -122,8 +123,8 @@ def article_url(date: str) -> str:
     return s["base_url"] + s["article_path"].format(date=date)
 
 
-def wait_published(date: str, timeout: int | None = None, poll: int | None = None) -> dict:
-    """Poll the public data URL until it returns 200 for this edition."""
+def wait_published(date: str, timeout: int | None = None, poll: int | None = None, expect_sha: str | None = None) -> dict:
+    """Poll the public data URL until it serves this edition; with expect_sha, until it serves exactly the pushed bytes."""
     s = CFG["site"]
     timeout = s["publish_wait_seconds"] if timeout is None else timeout
     poll = poll or s["publish_poll_seconds"]
@@ -133,13 +134,17 @@ def wait_published(date: str, timeout: int | None = None, poll: int | None = Non
             req = urllib.request.Request(f"{data_url(date)}?t={int(time.time())}", headers={"User-Agent": CFG["sources"]["user_agent"]})
             with urllib.request.urlopen(req, timeout=20) as r:
                 status = r.status
-                body = r.read(400).decode("utf-8", "replace")
-            if status == 200 and date in body:
+                raw = r.read()
+            body = raw[:400].decode("utf-8", "replace")
+            fresh = expect_sha is None or hashlib.sha256(raw).hexdigest() == expect_sha
+            if status == 200 and date in body and fresh:
                 return {"ok": True, "status": status, "seconds": round(time.time() - t0)}
         except urllib.error.HTTPError as e:
             status = e.code
         except Exception as e:  # noqa: BLE001
             status = str(e)[:80]
+        if status == 200:
+            status = "200 (older version)"
         if time.time() - t0 + poll > timeout:
             return {"ok": False, "status": status, "seconds": round(time.time() - t0)}
         time.sleep(poll)
