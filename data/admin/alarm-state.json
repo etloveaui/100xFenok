@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-08T12:51:16.270Z",
+  "generated_at": "2026-10-08T13:56:07.717Z",
   "status": "open",
-  "open_incident_count": 11,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "data-plane-serving-probe.yml",
@@ -17,32 +17,8 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "deploy-worker.yml",
-      "label": "Deploy Worker (Cloudflare)",
-      "streak": 4,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 37607430543,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37607430543",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
       "workflow": "fetch-defillama.yml",
       "label": "Fetch DefiLlama Stablecoins Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "fetch-treasury-tga.yml",
-      "label": "Fetch Treasury TGA Data",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -89,30 +65,6 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "retention-restore.yml",
-      "label": "R2 Retention Restore Watchdog",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "update-manifest.yml",
-      "label": "Update Manifest",
-      "streak": 4,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 37597348707,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37597348707",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
       "workflow": "worker-request-budget-alarm.yml",
       "label": "Worker Request Budget Alarm",
       "streak": 0,
@@ -123,18 +75,6 @@
         "missed_schedule_window"
       ],
       "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "data-health-kpi",
-      "label": "Data stopped advancing",
-      "alarm_reasons": [
-        "data_stopped_two_generations"
-      ],
-      "stopped_sets": [
-        "yahoo_batch_quote_history"
-      ],
-      "latest_generated_at": "2026-10-08T03:25:26.425Z",
-      "previous_generated_at": "2026-10-08T02:10:39.890Z"
     }
   ],
   "watched_workflows": [
@@ -477,22 +417,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37779337037",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37779337037",
-    "observed_at": "2026-10-08T12:51:16.270Z",
+    "run_id": "37787717831",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37787717831",
+    "observed_at": "2026-10-08T13:56:07.717Z",
     "event": "workflow_run",
     "workflows": [
       "data-plane-serving-probe.yml",
-      "deploy-worker.yml",
       "fetch-defillama.yml",
-      "fetch-treasury-tga.yml",
       "fetch-yahoo-ticker.yml",
       "fetch-yf-finance.yml",
       "global-writer-queue-observer.yml",
-      "retention-restore.yml",
-      "update-manifest.yml",
-      "worker-request-budget-alarm.yml",
-      "data-health-kpi"
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
