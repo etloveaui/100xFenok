@@ -32,6 +32,7 @@ assert.deepEqual(
   "final patterns must derive from generated enrollment authority",
 );
 assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, [
+  "/data/briefing/*",
   "/data/computed/*",
   "/data/damodaran/*",
   "/data/earnings-overview/*",
@@ -44,7 +45,7 @@ assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, [
   "/data/yardney/*",
   "/data/sec-13f/investors/griffin.json",
   "/admin/*",
-], "selective contract preserves the ten public families, Griffin, and the admin asset tree");
+], "selective contract preserves the eleven public families, Griffin, and the admin asset tree");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob is absent");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.some((pattern) => pattern.startsWith("!")), false, "no negative override can bypass Worker-first");
 assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");

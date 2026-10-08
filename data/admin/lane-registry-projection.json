@@ -3,7 +3,7 @@
   "generated_at": "2026-10-08T03:25:27.592Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
-  "lane_count": 35,
+  "lane_count": 36,
   "lanes": [
     {
       "id": "fred_macro",
@@ -543,6 +543,56 @@
           "source_date": "2026-10-02",
           "source_date_reason": "global_scouter_metadata.source_date",
           "evidence_status": "observed",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
+    },
+    {
+      "id": "briefing",
+      "label": "100x Briefing editions (owner-run editorial export)",
+      "store_kind": "artifact_only",
+      "cadence": {
+        "kind": "daily",
+        "provider": "100x Briefing desk"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "source SLA is not declared",
+          "evidence_status": "unavailable",
           "sla": null
         },
         "recovery": {

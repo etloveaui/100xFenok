@@ -1065,9 +1065,9 @@ try {
         }}),
       }),
     });
-    assert.equal(states.length, 26);
-    assert.equal(calls.length, 26);
-    assert.equal(new Set(calls).size, 26);
+    assert.equal(states.length, 27);
+    assert.equal(calls.length, 27);
+    assert.equal(new Set(calls).size, 27);
     assert.deepEqual(states.map(row => row.name), calls);
     console.log("retention safety 17 ok (fresh coordinator states reuse one listing snapshot)");
   }

@@ -508,6 +508,22 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "briefing": {
+    // Owner-run 100x briefing editions: index.json plus one JSON per edition
+    // (morning/YYYY-MM-DD.json, ~22 KB each). The tree grows by one edition a
+    // day. Gate declaration: >= 2x a ~400-file / ~9 MB tree.
+    root: "data/briefing",
+    manifest_prefix: "public/data/briefing",
+    privacy_class: "public",
+    // The index names the newest edition date; never the acquisition time.
+    source_as_of: { file: "index.json", key: ["latest", "morning"] },
+    plan: { class_a: 1000, bytes: 20_000_000 },
+    policy: { max_assets: 2000, max_total_bytes: 44_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
   "yahoo-ticker-macro": {
     root: "data/macro",
     manifest_prefix: "public/data/macro",

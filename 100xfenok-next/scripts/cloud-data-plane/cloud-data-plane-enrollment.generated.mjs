@@ -616,6 +616,7 @@ export const PLANE_ENROLLMENT_EXACT = Object.freeze([
   ["/data/yardney/yardney_model.json","fred-yardeni"],
 ]);
 export const PLANE_ENROLLMENT_PREFIXES = Object.freeze([
+  {"prefix":"/data/briefing/","family":"briefing"},
   {"prefix":"/data/edgar-korean-summaries/","family":"edgar-korean-summaries"},
   {"prefix":"/data/global-scouter/","family":"global-scouter"},
 ]);

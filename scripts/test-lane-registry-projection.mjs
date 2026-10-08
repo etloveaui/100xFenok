@@ -182,7 +182,7 @@ assert.equal(
 );
 assert.deepEqual(
   controlRows.map((lane) => lane.id),
-  ["yahoo_ticker_macro", "sentiment", "admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv", "global_scouter"],
+  ["yahoo_ticker_macro", "sentiment", "admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv", "global_scouter", "briefing"],
   "control-room lanes must derive from provider classes",
 );
 for (const lane of controlRows) {

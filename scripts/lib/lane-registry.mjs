@@ -152,6 +152,7 @@ const providers = [
   { id: "gdelt", label: "GDELT", class: "external_data" },
   { id: "mona_life_ssot", label: "Mona Life SSOT", class: "owner_managed_data" },
   { id: "global_scouter", label: "Global Scouter", class: "owner_managed_data" },
+  { id: "fenok_briefing", label: "100x Briefing desk", class: "owner_managed_data" },
   { id: "fenok_ticker_api", label: "Fenok ticker API", class: "platform_proxy" },
   { id: "fenok_cnn_proxy", label: "Fenok CNN proxy", class: "platform_proxy" },
   { id: "local_mac_bridge", label: "Local Mac bridge", class: "platform_runtime" },
@@ -977,6 +978,36 @@ const lanes = [
     },
   }),
   record({
+    id: "briefing",
+    label: "100x Briefing editions (owner-run editorial export)",
+    owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "fenok_briefing", role: "source", members: null }],
+    store_kind: "artifact_only",
+    // Owned editorial content, not a financial-source acquisition lane, so it
+    // stays outside the detection floor.
+    lane_class: "auxiliary",
+    cadence: { kind: "daily" },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    // index.json plus one JSON per edition (morning/YYYY-MM-DD.json).
+    canonical_outputs: ["data/briefing"],
+    public_mirror: ["100xfenok-next/public/data/briefing"],
+    commit_shards: [],
+    recovery_store: null,
+    declared_exception: "owner-run editorial export has no GitHub attempt shard; cadence is evidenced by the index's latest edition date",
+    // The push-triggered caller publishes the committed editions to the cloud
+    // data plane without owning acquisition or any Git write.
+    caller_workflows: {
+      ".github/workflows/publish-briefing.yml": {
+        commit_shards: [],
+        script_sources: ["scripts/publish-cloud-data-generation.mjs"],
+      },
+    },
+  }),
+  record({
     id: "damodaran",
     label: "Damodaran valuation data",
     owner_workflow: ".github/workflows/fetch-damodaran-shadow.yml",
@@ -1693,6 +1724,11 @@ workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = polic
   always_if_exists: [
   ],
 });
+// The briefing publisher stages nothing: the owner-run editions are committed
+// before the push that triggers it.
+workflow_policies[".github/workflows/publish-briefing.yml"] = policy([], {
+  always_if_exists: [],
+});
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = lanePolicy(".github/workflows/fenok-edge-krx-daily.yml", {
   always_if_exists: [
     commitSpec("data/admin/krx/index.json", "file"),
@@ -1787,6 +1823,7 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
 
 // Family-to-workflow attribution used for publish admission and workflow health.
 export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "briefing": Object.freeze({ lane_id: "briefing", workflow: ".github/workflows/publish-briefing.yml" }),
   "computed-signals": Object.freeze({ lane_id: "computed_signals", workflow: ".github/workflows/coordinate-computed-signals.yml" }),
   "damodaran": Object.freeze({ lane_id: "damodaran", workflow: ".github/workflows/fetch-damodaran-shadow.yml" }),
   "defillama-stablecoins": Object.freeze({ lane_id: "defillama_stablecoins", workflow: ".github/workflows/fetch-defillama.yml" }),

@@ -296,7 +296,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 31, auxiliary: 4 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 31, auxiliary: 5 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
       "yahoo_batch_quote_history is a standard detection-floor producer");
     for (const id of ["benchmarks", "global_scouter"]) {
