@@ -1,85 +1,42 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 419,
-      "natural": false,
-      "observed_at": "2026-09-28T06:02:24Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367834787",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 558,
-      "natural": true,
-      "observed_at": "2026-09-29T02:57:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 518,
-      "natural": true,
-      "observed_at": "2026-09-30T02:19:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-30T02:23:55Z",
     "history_as_of": "2026-09-29",
-    "path": "data/yf/finance/TDNA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TDNA.json",
     "payload_sha256": "24c8d73ab73b975e546f4a97e02cda4bfa5aadf08161b601038018a752ce5111",
     "quote_as_of": "2026-09-29T20:00:00Z",
     "source_as_of": "2026-09-29"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
     "latency_ms": 518,
-    "natural": true,
     "observed_at": "2026-09-30T02:19:44Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-30T02:23:55Z",
     "history_as_of": "2026-09-29",
-    "observed_at": "2026-09-30T02:19:44Z",
-    "payload_sha256": "096ddbac8f2b557ff3967d515e2bc82b3a8bdca5502057fca87a418b01e0787f",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TDNA.json",
+    "payload_sha256": "24c8d73ab73b975e546f4a97e02cda4bfa5aadf08161b601038018a752ce5111",
     "quote_as_of": "2026-09-29T20:00:00Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-29"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-08T02:46:27Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "TDNA holds LKG because Yahoo source date 2026-09-29 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-29"
+  },
   "ticker": "TDNA",
-  "updated_at": "2026-09-30T02:19:44Z"
+  "updated_at": "2026-10-08T02:46:27Z"
 }

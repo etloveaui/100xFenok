@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-04T17:29:49Z",
     "history_as_of": "2026-10-02",
-    "path": "data/yf/finance/AUGC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AUGC.json",
     "payload_sha256": "9cac36115f613333a48c931c823104869493bf9f5dddff134724876b3ff47999",
     "quote_as_of": "2026-09-29T14:10:57Z",
     "source_as_of": "2026-09-29T14:10:57Z"
@@ -18,9 +18,26 @@
     "observed_at": "2026-10-04T17:29:49Z",
     "outcome": "fresh"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-10-04T17:29:49Z",
+    "history_as_of": "2026-10-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AUGC.json",
+    "payload_sha256": "9cac36115f613333a48c931c823104869493bf9f5dddff134724876b3ff47999",
+    "quote_as_of": "2026-09-29T14:10:57Z",
+    "source_as_of": "2026-09-29T14:10:57Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-08T02:46:27Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "AUGC holds LKG because Yahoo source date 2026-09-29T14:10:57Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-29T14:10:57Z"
+  },
   "ticker": "AUGC",
-  "updated_at": "2026-10-04T17:29:49Z"
+  "updated_at": "2026-10-08T02:46:27Z"
 }

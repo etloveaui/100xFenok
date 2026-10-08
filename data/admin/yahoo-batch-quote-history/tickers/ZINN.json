@@ -1,85 +1,42 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 410,
-      "natural": false,
-      "observed_at": "2026-09-28T06:30:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367836615",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 427,
-      "natural": true,
-      "observed_at": "2026-09-29T02:38:15Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 820,
-      "natural": true,
-      "observed_at": "2026-09-30T02:24:19Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-30T02:29:47Z",
     "history_as_of": "2026-09-29",
-    "path": "data/yf/finance/ZINN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZINN.json",
     "payload_sha256": "f05bf60f18ab8fa81e14bb592935214e8aa9a736651d5d4bd6098b8aeac5535f",
     "quote_as_of": "2026-09-29T19:55:13Z",
     "source_as_of": "2026-09-29"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
     "latency_ms": 820,
-    "natural": true,
     "observed_at": "2026-09-30T02:24:19Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-30T02:29:47Z",
     "history_as_of": "2026-09-29",
-    "observed_at": "2026-09-30T02:24:19Z",
-    "payload_sha256": "d97e932d8c0becff9fd803691ce0f38928462517eae32ba9731671ebb0650048",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZINN.json",
+    "payload_sha256": "f05bf60f18ab8fa81e14bb592935214e8aa9a736651d5d4bd6098b8aeac5535f",
     "quote_as_of": "2026-09-29T19:55:13Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-29"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-08T02:46:27Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "ZINN holds LKG because Yahoo source date 2026-09-29 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-29"
+  },
   "ticker": "ZINN",
-  "updated_at": "2026-09-30T02:24:19Z"
+  "updated_at": "2026-10-08T02:46:27Z"
 }

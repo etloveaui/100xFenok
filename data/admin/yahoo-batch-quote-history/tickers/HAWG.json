@@ -1,85 +1,42 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 426,
-      "natural": false,
-      "observed_at": "2026-09-28T03:11:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36367829153",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 562,
-      "natural": true,
-      "observed_at": "2026-09-29T02:52:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36513342846",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 526,
-      "natural": true,
-      "observed_at": "2026-09-30T02:29:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "36658577543",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    }
-  ],
   "current": {
     "fetched_at": "2026-09-30T02:32:35Z",
     "history_as_of": "2026-09-29",
-    "path": "data/yf/finance/HAWG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HAWG.json",
     "payload_sha256": "2e4d254a3ebc79cbf6182de40f2f363195cbfe0506c6f47455b352a619314c10",
     "quote_as_of": "2026-09-29T19:37:42Z",
     "source_as_of": "2026-09-29"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
-  "last_attempt": {
+  "last_result": {
     "attempts_used": 1,
-    "event_name": "schedule",
     "failures": [],
     "latency_ms": 526,
-    "natural": true,
     "observed_at": "2026-09-30T02:29:48Z",
-    "outcome": "fresh",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "outcome": "fresh"
   },
-  "promotion_contract": "provider_observation/v2",
-  "provider_observation": {
-    "event_name": "schedule",
+  "lkg": {
+    "fetched_at": "2026-09-30T02:32:35Z",
     "history_as_of": "2026-09-29",
-    "observed_at": "2026-09-30T02:29:48Z",
-    "payload_sha256": "1baa602853953bb3116dd82a8e65327eb79b7a8a93c2c041922e84b8e392c469",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HAWG.json",
+    "payload_sha256": "2e4d254a3ebc79cbf6182de40f2f363195cbfe0506c6f47455b352a619314c10",
     "quote_as_of": "2026-09-29T19:37:42Z",
-    "run_attempt": 1,
-    "run_id": "36658577543",
-    "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-29"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-08T02:46:27Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "HAWG holds LKG because Yahoo source date 2026-09-29 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-29"
+  },
   "ticker": "HAWG",
-  "updated_at": "2026-09-30T02:29:48Z"
+  "updated_at": "2026-10-08T02:46:27Z"
 }

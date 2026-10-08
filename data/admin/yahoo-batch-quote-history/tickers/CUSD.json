@@ -1,19 +1,4 @@
 {
-  "attempts": [
-    {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    }
-  ],
   "current": {
     "fetched_at": "2026-06-29T23:52:32Z",
     "history_as_of": "2026-06-29",
@@ -23,20 +8,64 @@
     "source_as_of": "2026-06-29"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
-  "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
-    "failures": [],
+  "failure_count": 1,
+  "last_result": {
+    "attempts_used": 2,
+    "error": "empty payload",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
-    "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "observed_at": "2026-10-08T02:46:48Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 2,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "empty payload",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-08T02:46:48Z"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:52:32Z",
@@ -52,7 +81,6 @@
   "stale": {
     "age_business_days": 9,
     "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "CUSD holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -60,5 +88,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "CUSD",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-10-08T02:46:48Z"
 }
