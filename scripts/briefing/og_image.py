@@ -179,8 +179,8 @@ def chart(c: Canvas, pack: dict) -> None:
     vals = [v for _, v in pts] + ([prev] if prev else [])
     lo, hi = min(vals), max(vals)
     span = (hi - lo) or 1.0
-    lo, hi = lo - span * 0.34, hi + span * 0.34  # room for the low/high labels
-    Y = lambda v: cy1 - (v - lo) / (hi - lo) * (cy1 - cy0)  # noqa: E731
+    top_y, bottom_y = cy0 + 34, cy1 - 30  # the line stays clear of the high label above and the low label below
+    Y = lambda v: bottom_y - (v - lo) / span * (bottom_y - top_y)  # noqa: E731
     line = [(X(m) * S, Y(v) * S) for m, v in pts]
     # soft fill under the line
     mask = Image.new("L", c.img.size, 0)
