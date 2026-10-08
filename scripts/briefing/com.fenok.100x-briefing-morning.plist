@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- M4 launchd agent for the 100x Morning Brief article. Install: copy to ~/Library/LaunchAgents/ and
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.fenok.100x-briefing-morning.plist
+     Runs 06:05 local time (M4 is on KST) Tuesday to Saturday. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fenok.100x-briefing-morning</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>/Users/fenomenokim/.local/share/100x-briefing/repo/scripts/briefing/run_m4.sh</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>5</integer></dict>
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>5</integer></dict>
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>5</integer></dict>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>5</integer></dict>
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>5</integer></dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/Users/fenomenokim/.local/state/100x-briefing/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/fenomenokim/.local/state/100x-briefing/launchd.err.log</string>
+    <key>Nice</key>
+    <integer>5</integer>
+</dict>
+</plist>

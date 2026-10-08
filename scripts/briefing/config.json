@@ -1,0 +1,92 @@
+{
+  "schema": "briefing-job-config/v1",
+  "clock": {"kst": "Asia/Seoul", "et": "America/New_York"},
+  "writer": {
+    "api_key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY",
+    "attempts": [
+      {"model": "claude-opus-5-5", "effort": "medium", "max_tokens": 64000},
+      {"model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000}
+    ],
+    "server_side_fallback": {"beta": "server-side-fallback-2026-07-01", "fallbacks": "default", "models": ["claude-opus-5-5", "claude-sonnet-5-5"]},
+    "prompt_movers_limit": 25,
+    "intraday_prompt_step": 6
+  },
+  "prices_usd_per_mtok": {
+    "source": "platform.claude.com pricing, read 2026-10-08",
+    "claude-opus-5-5": {"input": 4.0, "output": 20.0, "cache_write": 5.0, "cache_read": 0.2},
+    "claude-sonnet-5-5": {"input": 2.0, "output": 10.0, "cache_write": 2.5, "cache_read": 0.2},
+    "claude-haiku-5-5": {"input": 0.1, "output": 0.5, "cache_write": 0.125, "cache_read": 0.01}
+  },
+  "aa": {
+    "root": "~/agents-workspace/00_my_data/01_El_Fenomeno/00_Project/Asset_Allocator",
+    "brief": "docs/outputs/intelligence/morning_brief_{ymd}.md",
+    "brief_glob": "docs/outputs/intelligence/morning_brief_*.md",
+    "fact_cards_glob": "scripts/morning_brief/debug/newsdesk_fact_cards_{ymd}_*.json",
+    "prompt_glob": "scripts/morning_brief/debug/prompt_{ymd}_*.txt",
+    "fear_greed_pattern": "CNN Fear&Greed:\\s*([0-9]+(?:\\.[0-9]+)?)",
+    "min_brief_bytes": 2000,
+    "python": "~/.feno/python/venv/bin/python3",
+    "product_id": "morning_brief",
+    "message_class": "publication",
+    "delivery_run_id": "morning_article:{date}"
+  },
+  "readiness": {"poll_seconds": 180, "deadline_kst": "09:30"},
+  "site": {
+    "base_url": "https://100xfenok.etloveaui.workers.dev",
+    "article_path": "/brief/morning/{date}/",
+    "data_path": "/data/briefing/morning/{date}.json",
+    "publish_wait_seconds": 900,
+    "publish_poll_seconds": 30
+  },
+  "repo": {
+    "worktree": "~/.local/share/100x-briefing/repo",
+    "remote": "origin",
+    "branch": "main",
+    "data_dir": "data/briefing",
+    "fear_greed": "data/sentiment/cnn-fear-greed.json",
+    "push_attempts": 3,
+    "commit_message": "data(briefing): morning brief {date}"
+  },
+  "state": {"dir": "~/.local/state/100x-briefing", "usage": "usage.jsonl", "editions": "editions", "runs": "runs", "cache": "cache"},
+  "sources": {
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+    "sec_tickers_url": "https://www.sec.gov/files/company_tickers.json",
+    "sec_cache_days": 7,
+    "fred_api": "https://api.stlouisfed.org/fred/series/observations",
+    "fred_csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd={start}",
+    "fred_api_key_env": "FRED_API_KEY",
+    "sec_user_agent_env": "SEC_USER_AGENT",
+    "treasury_csv": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/{year}/all?type=daily_treasury_yield_curve&field_tdr_date_value={year}",
+    "finviz": "https://finviz.com/",
+    "nasdaq_api": "https://api.nasdaq.com/api/",
+    "nasdaq_headers": {"Accept": "application/json", "Origin": "https://www.nasdaq.com", "Referer": "https://www.nasdaq.com/"}
+  },
+  "market": {
+    "indices": {"^GSPC": "S&P 500", "^IXIC": "나스닥", "^NDX": "나스닥100", "^DJI": "다우", "^RUT": "러셀2000", "^SOX": "SOX"},
+    "etfs": {"SPY": "SPY", "QQQ": "QQQ", "DIA": "DIA", "IWM": "IWM", "SOXX": "SOXX", "TQQQ": "TQQQ", "SOXL": "SOXL"},
+    "bigtech": {"AAPL": "애플", "MSFT": "마이크로소프트", "NVDA": "엔비디아", "GOOGL": "알파벳", "AMZN": "아마존", "META": "메타", "TSLA": "테슬라", "AVGO": "브로드컴"},
+    "sectors": {"XLK": "기술", "XLC": "커뮤니케이션", "XLY": "경기소비재", "XLF": "금융", "XLV": "헬스케어", "XLI": "산업재", "XLE": "에너지", "XLB": "소재", "XLRE": "부동산", "XLU": "유틸리티", "XLP": "필수소비재"},
+    "intraday": {"S&P 500": "^GSPC", "러셀2000": "^RUT", "미 10년물": "^TNX"},
+    "rate_fallback": {"us10y": "^TNX", "us30y": "^TYX"},
+    "earnings_limit": 12,
+    "economic_limit": 12,
+    "extra_closed_dates": [],
+    "ticker_stopwords": ["ETF", "AI", "FOMC", "CPI", "PCE", "GDP", "FDA", "FTC", "EIA", "IIF", "ECB", "IMO", "LNG", "LPG", "HBM", "OCP", "CEO", "USD", "KRW", "EPS", "NDF", "SOX", "IPO", "ADR", "NYSE", "BofA", "UBS", "CBAM", "CMS", "OAT", "MSCI", "EM", "US", "UK", "PFS", "HER", "NHC", "ES", "NQ", "YM", "RTY", "VIX", "MOVE", "CFTC", "CNN", "WTI", "XLI", "XLB", "XLRE", "XLE", "XLF", "XLC", "XLY", "XLK", "XLP", "XLU", "XLV", "EWY", "EEM", "DJT", "SEC"]
+  },
+  "edge": {
+    "formula": "100x 시장 체력: 투자 심리 45% + 섹터 확산 35% + 스트레스 완화 20%",
+    "weights": {"fear_greed": 0.45, "breadth": 0.35, "calm": 0.2},
+    "stress": {"hy_weight": 0.8, "hy_floor": 2.5, "hy_span": 3.5, "rate_weight": 0.2, "rate_span": 0.8, "rate_window": 20},
+    "labels": [[0.62, "위험 선호"], [0.45, "중립"], [0.0, "방어"]],
+    "hy_series": "BAMLH0A0HYM2",
+    "rate_series": "DGS10",
+    "week_len": 7
+  },
+  "products": [
+    {"id": "morning", "name": "모닝 브리프", "cadence": "매일 07:00", "desc": "방금 끝난 미국장 리뷰", "status": "live"},
+    {"id": "digest", "name": "데일리 다이제스트", "cadence": "매일 11:00", "desc": "하루 시장 흐름 한 장 요약", "status": "coming-soon"},
+    {"id": "premarket", "name": "프리마켓 브리프", "cadence": "매일 밤", "desc": "미국 장 시작 전 점검", "status": "coming-soon"},
+    {"id": "weekly-recap", "name": "위클리 리캡", "cadence": "매주", "desc": "한 주 마감 정리", "status": "coming-soon"},
+    {"id": "weekly-brief", "name": "위클리 브리프", "cadence": "매주", "desc": "다음 주를 여는 주간 브리프", "status": "coming-soon"}
+  ]
+}
