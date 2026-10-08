@@ -3552,12 +3552,16 @@ module.main()
                     "partial_reason_codes": reasons,
                 }), encoding="utf-8")
 
-            summary = self.fetcher.incremental_etf_backfill_candidates(
-                universe_payload={"records": [{"ticker": ticker} for ticker in ("OLD", "DFQ", "DFH", "CNT")]},
-                limit=10,
-                max_age_hours=1,
-                exclude=set(),
-            )
+            # These fixtures reuse real tickers (FNG, ADIU); without this patch the
+            # selector reads the repository's live observation history, so a real
+            # invalid observation for FNG flips its reason from fallback_retry.
+            with patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={}):
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": [{"ticker": ticker} for ticker in ("OLD", "DFQ", "DFH", "CNT")]},
+                    limit=10,
+                    max_age_hours=1,
+                    exclude=set(),
+                )
         self.fetcher.OUT_DIR = original_out_dir
 
         selected = {row["ticker"]: row["reason"] for row in summary["selected"]}
@@ -3920,12 +3924,15 @@ module.main()
                 encoding="utf-8",
             )
 
-            summary = self.fetcher.incremental_etf_backfill_candidates(
-                universe_payload={"records": [{"ticker": "BETA"}]},
-                limit=2,
-                max_age_hours=720,
-                exclude=set(),
-            )
+            # Isolate from the repository's live observation history (see the
+            # selects_missing_fallback_and_stale test): FNG must stay a fallback retry.
+            with patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={}):
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": [{"ticker": "BETA"}]},
+                    limit=2,
+                    max_age_hours=720,
+                    exclude=set(),
+                )
         self.fetcher.OUT_DIR = original_out_dir
 
         self.assertEqual([row["ticker"] for row in summary["selected"]], ["ADIU", "BETA"])
