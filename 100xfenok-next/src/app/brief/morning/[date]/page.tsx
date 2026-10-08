@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import BriefArticleClient from "@/components/brief/BriefArticleClient";
 import AppShell from "@/components/shell/AppShell";
-import { BRIEF_DATE_RE, briefMorningDataUrl, dateline } from "@/lib/brief/brief";
+import { BRIEF_DATE_RE, BRIEF_OG_IMAGE, briefMorningDataUrl, briefMorningOgImageUrl, dateline } from "@/lib/brief/brief";
 import { ROUTES } from "@/lib/routes";
 import { readDataAsset } from "@/lib/server/data-asset-reader";
-import { canonicalPath, canonicalUrl } from "@/lib/site-url";
+import { canonicalPath, canonicalUrl, siteOrigin } from "@/lib/site-url";
 
 interface Props {
   params: Promise<{ date: string }>;
@@ -35,6 +35,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const summary = await readEditionSummary(date);
   const title = summary?.headline ?? (valid ? `모닝 브리프 · ${dateline(date)}` : "모닝 브리프");
   const description = summary?.thesis ?? FALLBACK_DESCRIPTION;
+  // The job publishes the preview PNG with the edition; absolute because link-preview bots need it.
+  const image = summary
+    ? { url: new URL(briefMorningOgImageUrl(date), siteOrigin).toString(), ...BRIEF_OG_IMAGE, alt: title }
+    : null;
   return {
     title: { absolute: title },
     description,
@@ -46,8 +50,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: canonicalUrl(path),
+      ...(image ? { images: [image] } : {}),
     },
-    twitter: { card: "summary", title, description },
+    twitter: image
+      ? { card: "summary_large_image", title, description, images: [image.url] }
+      : { card: "summary", title, description },
   };
 }
 

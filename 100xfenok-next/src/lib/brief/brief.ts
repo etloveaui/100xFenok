@@ -11,6 +11,13 @@ export function briefMorningDataUrl(date: string): string {
   return `/data/briefing/morning/${date}.json`;
 }
 
+/** Link-preview image (1200x630 PNG) the morning job renders and publishes with each edition. */
+export const BRIEF_OG_IMAGE = { width: 1200, height: 630 } as const;
+
+export function briefMorningOgImageUrl(date: string): string {
+  return `/data/briefing/og/${date}.png`;
+}
+
 export type BriefEdge = {
   session?: string;
   score: number;
