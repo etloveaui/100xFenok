@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s0-finra-occ-mapping-ledger/v0.1",
-  "generated_at": "2026-10-07T01:41:15.458Z",
+  "generated_at": "2026-10-08T01:25:39.669Z",
   "generated_by": "scripts/audit-fenok-s0-source-gaps.mjs --write-ledger",
   "purpose": "Durable no-fetch control-plane ledger for S0 FINRA/OCC rows that are source-ready by daily market data but need explicit universe mapping, symbol normalization, or null-evidence semantics before flow/options proxy metrics can be required.",
   "raw_policy": {
@@ -12,7 +12,7 @@
   },
   "source_audit": {
     "schema_version": "fenok-s0-source-gap-audit/v0.2",
-    "generated_at": "2026-10-07T01:41:15.458Z",
+    "generated_at": "2026-10-08T01:25:39.669Z",
     "input_files": {
       "active_signals": "data/computed/fenok_signals.json",
       "finra_flow_proxy": "data/computed/fenok_flow_proxies.json",
@@ -21,10 +21,10 @@
       "flow_backfill_index": "data/admin/fenok-flow-backfill-index.json"
     },
     "source_dates": {
-      "signals_generated_at": "2026-10-07T01:39:40.265Z",
-      "finra_source_date": "20261005",
-      "occ_source_date": "20261005",
-      "coverage_index_generated_at": "2026-10-07T01:41:00.165Z",
+      "signals_generated_at": "2026-10-08T01:24:11.593Z",
+      "finra_source_date": "20261006",
+      "occ_source_date": "20261006",
+      "coverage_index_generated_at": "2026-10-08T01:25:25.791Z",
       "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
     },
     "acceptance_ok": true
@@ -37,14 +37,14 @@
   "counts": {
     "active_us_total": 757,
     "plain_us_finra_denominator": 697,
-    "plain_us_finra_source_ready": 696,
+    "plain_us_finra_source_ready": 697,
     "finra_excluded_us_class_or_non_plain_daily_ready": 60,
     "finra_mapping_required_missing_row": 50,
-    "finra_source_ready_no_reported_row": 7,
+    "finra_source_ready_no_reported_row": 9,
     "finra_low_confidence_placeholder_policy_rows": 9,
     "plain_us_occ_denominator": 697,
-    "plain_us_occ_source_ready": 696,
-    "plain_us_occ_no_listed_options_source_ready": 5,
+    "plain_us_occ_source_ready": 697,
+    "plain_us_occ_no_listed_options_source_ready": 6,
     "occ_non_plain_mapping_required": 58,
     "occ_class_share_normalization_required": 2,
     "occ_excluded_us_class_or_non_plain_daily_ready": 60
@@ -1913,6 +1913,22 @@
         }
       },
       {
+        "ticker": "PSKY",
+        "company": "Paramount Skydance Corporation",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_finra_metric_gap",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/PSKY.json",
+          "market_facts_file": "data/computed/market_facts/tickers/PSKY.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NMS",
+          "currency": "USD",
+          "country": null,
+          "sector": "Communication Services"
+        }
+      },
+      {
         "ticker": "QRVO",
         "company": "Qorvo",
         "market": "US",
@@ -1939,6 +1955,22 @@
           "market_facts_file": "data/computed/market_facts/tickers/SATS.json",
           "market_facts_asset_type": "stock",
           "exchange": "NGM",
+          "currency": "USD",
+          "country": null,
+          "sector": "Communication Services"
+        }
+      },
+      {
+        "ticker": "WBD",
+        "company": "Warner Bros. Discovery Series A",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_finra_metric_gap",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/WBD.json",
+          "market_facts_file": "data/computed/market_facts/tickers/WBD.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NMS",
           "currency": "USD",
           "country": null,
           "sector": "Communication Services"
@@ -3134,6 +3166,22 @@
           "currency": "USD",
           "country": null,
           "sector": "Technology"
+        }
+      },
+      {
+        "ticker": "VYLR",
+        "company": "Vylor Inc.",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/VYLR.json",
+          "market_facts_file": "data/computed/market_facts/tickers/VYLR.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Financial Services"
         }
       }
     ]
