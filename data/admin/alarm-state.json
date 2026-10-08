@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-08T09:09:39.038Z",
+  "generated_at": "2026-10-08T09:30:58.056Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-yf-finance.yml",
@@ -25,6 +25,18 @@
       "first_failing_run_url": null,
       "alarm_reasons": [
         "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 3,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 37597348707,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37597348707",
+      "alarm_reasons": [
+        "failure_streak"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -381,13 +393,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37754249617",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37754249617",
-    "observed_at": "2026-10-08T09:09:39.038Z",
-    "event": "schedule",
+    "run_id": "37756764396",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37756764396",
+    "observed_at": "2026-10-08T09:30:58.056Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-yf-finance.yml",
       "retention-restore.yml",
+      "update-manifest.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
