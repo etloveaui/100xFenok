@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "BRCE",
   "asset_type": "etf",
-  "generated_at": "2026-10-05T03:18:56Z",
-  "source_as_of": "2026-07-08",
+  "generated_at": "2026-10-08T13:30:41Z",
+  "source_as_of": null,
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": null,
+  "source_as_of_reason": "selected price fact has no provider source date",
   "identity": {
     "name": "BRCE",
     "exchange": null,
@@ -16,144 +16,6 @@
     "category": null
   },
   "facts": {
-    "price": {
-      "value": 29.190000534057617,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "yf.fast_info",
-        "stockanalysis.quote",
-        "yf.stockanalysis_fallback.quote",
-        "slickcharts"
-      ],
-      "candidates": [
-        {
-          "value": 29.190000534057617,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "change": {
-      "value": 0.02810053405761792,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "observed",
-      "policy": [
-        "stockanalysis.quote",
-        "yf",
-        "yf.derived",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": 0.02810053405761792,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "change_pct": {
-      "value": 0.09636043624598507,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "observed",
-      "policy": [
-        "stockanalysis.quote",
-        "yf",
-        "yf.derived",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": 0.09636043624598507,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "total_assets": {
-      "value": 34324440.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 34324440.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "expense_ratio": {
-      "value": 0.24,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.24,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
     "return_1m": {
       "value": 1.06,
       "source": "stockanalysis.etf_universe.performance",
@@ -174,29 +36,6 @@
           "as_of": null,
           "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_3m": {
-      "value": 14.774039622177806,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:26Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
-        {
-          "value": 14.774039622177806,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:26Z",
-          "confidence": "derived",
           "unit": "percent_points"
         }
       ],
@@ -230,171 +69,33 @@
     }
   },
   "etf": {
-    "holdings_count": 10,
-    "holdings_updated": "2026-07-09T09:20:26Z",
-    "top_holdings": [
-      {
-        "rank": 1,
-        "symbol": "NVDA",
-        "name": "NVIDIA Corp",
-        "weight_pct": 8.51231,
-        "raw": {
-          "_index": "NVDA",
-          "Name": "NVIDIA Corp",
-          "Holding Percent": 0.0851231
-        }
-      },
-      {
-        "rank": 2,
-        "symbol": "AAPL",
-        "name": "Apple Inc",
-        "weight_pct": 7.524119999999999,
-        "raw": {
-          "_index": "AAPL",
-          "Name": "Apple Inc",
-          "Holding Percent": 0.0752412
-        }
-      },
-      {
-        "rank": 3,
-        "symbol": "AMZN",
-        "name": "Amazon.com Inc",
-        "weight_pct": 4.139869999999999,
-        "raw": {
-          "_index": "AMZN",
-          "Name": "Amazon.com Inc",
-          "Holding Percent": 0.0413987
-        }
-      },
-      {
-        "rank": 4,
-        "symbol": "MSFT",
-        "name": "Microsoft Corp",
-        "weight_pct": 3.99495,
-        "raw": {
-          "_index": "MSFT",
-          "Name": "Microsoft Corp",
-          "Holding Percent": 0.0399495
-        }
-      },
-      {
-        "rank": 5,
-        "symbol": "GOOGL",
-        "name": "Alphabet Inc Class A",
-        "weight_pct": 2.8863799,
-        "raw": {
-          "_index": "GOOGL",
-          "Name": "Alphabet Inc Class A",
-          "Holding Percent": 0.028863799
-        }
-      },
-      {
-        "rank": 6,
-        "symbol": "JNJ",
-        "name": "Johnson & Johnson",
-        "weight_pct": 2.3809400000000003,
-        "raw": {
-          "_index": "JNJ",
-          "Name": "Johnson & Johnson",
-          "Holding Percent": 0.0238094
-        }
-      },
-      {
-        "rank": 7,
-        "symbol": "LRCX",
-        "name": "Lam Research Corp",
-        "weight_pct": 2.2862400000000003,
-        "raw": {
-          "_index": "LRCX",
-          "Name": "Lam Research Corp",
-          "Holding Percent": 0.0228624
-        }
-      },
-      {
-        "rank": 8,
-        "symbol": "AVGO",
-        "name": "Broadcom Inc",
-        "weight_pct": 2.2774,
-        "raw": {
-          "_index": "AVGO",
-          "Name": "Broadcom Inc",
-          "Holding Percent": 0.022774
-        }
-      },
-      {
-        "rank": 9,
-        "symbol": "KLAC",
-        "name": "KLA Corp",
-        "weight_pct": 2.27131,
-        "raw": {
-          "_index": "KLAC",
-          "Name": "KLA Corp",
-          "Holding Percent": 0.0227131
-        }
-      },
-      {
-        "rank": 10,
-        "symbol": "META",
-        "name": "Meta Platforms Inc Class A",
-        "weight_pct": 2.2138601,
-        "raw": {
-          "_index": "META",
-          "Name": "Meta Platforms Inc Class A",
-          "Holding Percent": 0.022138601
-        }
-      }
-    ],
-    "asset_allocation": {
-      "cashPosition": 0.0015,
-      "stockPosition": 0.9986,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.0111,
-      "consumer_cyclical": 0.0925,
-      "basic_materials": 0.0053,
-      "consumer_defensive": 0.0538,
-      "technology": 0.3728,
-      "communication_services": 0.095,
-      "financial_services": 0.1195,
-      "utilities": 0.0292,
-      "industrials": 0.0983,
-      "energy": 0.028499998,
-      "healthcare": 0.094
-    },
+    "holdings_count": null,
+    "holdings_updated": null,
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
     "countries": null,
-    "classification": {
-      "is_leveraged": false,
-      "leverage_factor": null,
-      "is_inverse": false,
-      "is_single_stock": false,
-      "underlying": null,
-      "source": "stockanalysis.overview.description",
-      "confidence": "high"
-    },
+    "classification": null,
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/BRCE.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:unavailable",
     "field_source_policy": {
       "price": [
         "yf",

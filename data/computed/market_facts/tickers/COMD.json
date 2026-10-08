@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "COMD",
   "asset_type": "etf",
-  "generated_at": "2026-10-05T03:18:56Z",
-  "source_as_of": "2026-07-08",
+  "generated_at": "2026-10-08T13:30:41Z",
+  "source_as_of": null,
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": null,
+  "source_as_of_reason": "selected price fact has no provider source date",
   "identity": {
     "name": "COMD",
     "exchange": null,
@@ -16,144 +16,6 @@
     "category": null
   },
   "facts": {
-    "price": {
-      "value": 26.75,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "yf.fast_info",
-        "stockanalysis.quote",
-        "yf.stockanalysis_fallback.quote",
-        "slickcharts"
-      ],
-      "candidates": [
-        {
-          "value": 26.75,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "change": {
-      "value": 0.35660000000000025,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "observed",
-      "policy": [
-        "stockanalysis.quote",
-        "yf",
-        "yf.derived",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": 0.35660000000000025,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "change_pct": {
-      "value": 1.3510953495949753,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "observed",
-      "policy": [
-        "stockanalysis.quote",
-        "yf",
-        "yf.derived",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": 1.3510953495949753,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "total_assets": {
-      "value": 3068470.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 3068470.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "expense_ratio": {
-      "value": 0.55,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.55,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
     "return_1m": {
       "value": 0.2123,
       "source": "stockanalysis.etf_universe.performance",
@@ -178,86 +40,36 @@
         }
       ],
       "candidate_count": 1
-    },
-    "return_3m": {
-      "value": -1.9428177173945647,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:20:56Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
-        {
-          "value": -1.9428177173945647,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:20:56Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": 1,
-    "holdings_updated": "2026-07-09T09:20:56Z",
-    "top_holdings": [
-      {
-        "rank": 1,
-        "symbol": "CLIP",
-        "name": "Global X 1-3 Month T-Bill ETF",
-        "weight_pct": 88.2538,
-        "raw": {
-          "_index": "CLIP",
-          "Name": "Global X 1-3 Month T-Bill ETF",
-          "Holding Percent": 0.882538
-        }
-      }
-    ],
-    "asset_allocation": {
-      "cashPosition": 0.8973,
-      "stockPosition": 0.0,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.1027
-    },
+    "holdings_count": null,
+    "holdings_updated": null,
+    "top_holdings": [],
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": {
-      "is_leveraged": false,
-      "leverage_factor": null,
-      "is_inverse": false,
-      "is_single_stock": false,
-      "underlying": null,
-      "source": "stockanalysis.overview.description",
-      "confidence": "high"
-    },
+    "classification": null,
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/COMD.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:unavailable",
     "field_source_policy": {
       "price": [
         "yf",

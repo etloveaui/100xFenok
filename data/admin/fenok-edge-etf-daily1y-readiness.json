@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-10-08T03:24:30.535Z",
-  "classification_as_of": "2026-10-08T03:23:21.796Z",
+  "generated_at": "2026-10-08T13:33:46.436Z",
+  "classification_as_of": "2026-10-08T13:32:38.131Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -25,10 +25,10 @@
     "fetchable_plan_output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json"
   },
   "daily_1y_readiness": {
-    "managed_etf_count": 118,
+    "managed_etf_count": 117,
     "scored_universe_total": 4619,
-    "denominator": 118,
-    "daily_1y_complete": 118,
+    "denominator": 117,
+    "daily_1y_complete": 117,
     "daily_1y_missing": 0,
     "daily_1y_fetchable": 0,
     "inception_limited_daily_1y_gap": 0,
@@ -53,24 +53,24 @@
   },
   "generated_count_checks": {
     "summary_rows": 4619,
-    "managed_etf_count": 118,
+    "managed_etf_count": 117,
     "scored_universe_total": 4619,
-    "core_basket_ticker_count": 118,
+    "core_basket_ticker_count": 117,
     "core_tickers_missing_from_summary": 0,
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 19,
-    "coverage_index_inception_limited_daily_1y_gap": 761,
-    "coverage_index_terminal_limited_daily_1y_gap": 25,
+    "coverage_index_fetchable_daily_1y_gap": 15,
+    "coverage_index_inception_limited_daily_1y_gap": 744,
+    "coverage_index_terminal_limited_daily_1y_gap": 43,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4619,
-    "history_gap_report_fetchable_daily_1y_gap": 19,
-    "history_gap_report_inception_limited_daily_1y_gap": 761,
-    "history_gap_report_terminal_limited_daily_1y_gap": 25
+    "history_gap_report_fetchable_daily_1y_gap": 15,
+    "history_gap_report_inception_limited_daily_1y_gap": 744,
+    "history_gap_report_terminal_limited_daily_1y_gap": 43
   },
   "samples": {
     "fetchable": [],
@@ -79,7 +79,7 @@
     "complete": [
       {
         "ticker": "AOA",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -87,7 +87,7 @@
       },
       {
         "ticker": "AOM",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -95,7 +95,15 @@
       },
       {
         "ticker": "AOR",
-        "actual_rows": 251,
+        "actual_rows": 252,
+        "missing_file": false,
+        "inception_date": null,
+        "classification_reason": null,
+        "effective_start_source": null
+      },
+      {
+        "ticker": "AVDE",
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -103,15 +111,7 @@
       },
       {
         "ticker": "AVDV",
-        "actual_rows": 251,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
-      {
-        "ticker": "AVEM",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -125,8 +125,8 @@
     "ticker_count": 0,
     "full_scored_scope": "full_scored_etf_universe",
     "full_scored_candidate_status": "complete",
-    "full_scored_candidate_count": 19,
-    "full_scored_candidate_ticker_count": 19,
+    "full_scored_candidate_count": 15,
+    "full_scored_candidate_ticker_count": 15,
     "full_scored_dispatch_authorized": false,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 0,
@@ -148,17 +148,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 51,
+      "ticker_count": 49,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 51,
+          "ticker_count": 49,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "AMJB,AMUB,ATMP,BCOM,BDCX,BDCZ,CEFD,COIO,DGZ,DVIN,DVRE,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,FEAT,FIVY,GLDI,GRN,HDLB,IFED,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MN,MSOO,MTUL,MVRL,NVDO,PFFL,PLOO,QULL,SCDL,SLVO,SMHB,TSLO,UCIB,USML,USOI,VXX,VXZ,VYLD"
+            "etfs": "AMJB,ATMP,BCOM,BDCX,BDCZ,CEFD,COIO,DVIN,DVRE,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,FEAT,FIVY,GLDI,GRN,HDLB,IFED,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MN,MSOO,MTUL,MVRL,NVDO,PFFL,PLOO,QULL,SCDL,SLVO,SMHB,TSLO,UCIB,USML,USOI,VXX,VXZ,VYLD"
           }
         }
       ]
