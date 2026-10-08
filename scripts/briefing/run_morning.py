@@ -4,8 +4,9 @@ python -m briefing.run_morning [--edition YYYY-MM-DD] [--dry-run] [--no-wait] [-
 
 Live run: wait for the AA morning brief -> market pack -> 시장 체력 -> writer (Opus 5.5, Sonnet 5.5 on failure)
 -> gates -> commit data/briefing/** from the job worktree and push -> wait for the public data URL
--> Telegram link once per date. A failure writes the log and the edition state file and sends nothing.
---dry-run: no commit, no push, no Telegram; outputs go to ~/.local/state/100x-briefing/runs/<date>-dry/.
+-> Telegram link once per date. The edition's link-preview PNG (og_image.py) is pushed and checked with the JSON.
+A failure writes the log and the edition state file and sends one ops alert per edition and failed step (alert.py).
+--dry-run: no commit, no push, no Telegram, no alert; outputs go to ~/.local/state/100x-briefing/runs/<date>-dry/.
 """
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import edge, market_pack, notify, publish, stats, validate, writer
+from . import alert, edge, market_pack, notify, publish, stats, validate, writer
 from .common import CFG, KST, et_to_kst, expand, now_kst, read_json, state_path, write_json
 
 log = logging.getLogger("briefing")
@@ -79,7 +80,9 @@ def aa_prompt(ymd: str) -> Path | None:
     return c[-1] if c else None
 
 
-def generate(edition: str, session: str, index: dict | None, fg_history: Path, run_dir: Path, latest_session: bool) -> tuple[dict, dict]:
+def generate(edition: str, session: str, index: dict | None, fg_history: Path, run_dir: Path, latest_session: bool,
+             step: dict | None = None) -> tuple[dict, dict]:
+    step = step if step is not None else {}
     ymd = edition.replace("-", "")
     brief_p, cards_p = find_inputs(ymd)
     prev_p = previous_brief(ymd)
@@ -89,6 +92,7 @@ def generate(edition: str, session: str, index: dict | None, fg_history: Path, r
     inputs = {"brief": str(brief_p), "prev_brief": str(prev_p) if prev_p else None, "fact_cards": str(cards_p)}
     log.info("inputs %s", inputs)
 
+    step["now"] = "market_pack"
     sec = validate.load_sec_tickers()
     t0 = time.time()
     pack = market_pack.build_pack(session, today, cards, set(sec), breadth=latest_session)
@@ -100,7 +104,9 @@ def generate(edition: str, session: str, index: dict | None, fg_history: Path, r
     log.info("시장 체력 %s %s (F&G %s from %s)", pack["edge"]["score"], pack["edge"]["label"], fg, fg_src)
     write_json(run_dir / "pack.json", pack)
 
+    step["now"] = "writer"
     raw, meta = writer.write(edition, session, today, prev, cards, pack)
+    step["now"] = "validation"
     (run_dir / "writer.raw.json").write_text(meta.pop("text"), encoding="utf-8")
     log.info("writer %s", json.dumps({k: v for k, v in meta.items()}, ensure_ascii=False))
 
@@ -131,6 +137,22 @@ def generate(edition: str, session: str, index: dict | None, fg_history: Path, r
     if errors:
         raise RuntimeError(f"briefing-morning/v1 gate failed: {errors[:5]}")
     return doc, report
+
+
+def render_og(doc: dict, run_dir: Path, dry_run: bool) -> bytes | None:
+    """The link-preview PNG; on any failure the edition goes out without it and one alert is sent."""
+    try:
+        from . import og_image  # Pillow lives only in the job venv; a missing install must not stop the article
+
+        png = og_image.render_bytes(doc)
+        (run_dir / "og.png").write_bytes(png)
+        log.info("og image %d bytes", len(png))
+        return png
+    except Exception as e:  # noqa: BLE001
+        log.exception("og image failed; publishing without it")
+        if not dry_run:
+            alert.send_failure(doc["edition_date"], "og_image", f"{type(e).__name__}: {e}", run_dir / "run.log")
+        return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -164,9 +186,10 @@ def main(argv: list[str] | None = None) -> int:
         save(state)
         return 0
     session = session_d.isoformat()
-    state.update({"edition": edition, "session": session, "status": "running", "error": None})
+    state.update({"edition": edition, "session": session, "status": "running", "step": None, "error": None})
     save(state)
     t_start = time.time()
+    step = {"now": "run"}
     try:
         repo = publish.worktree()
         if not a.dry_run:
@@ -174,47 +197,59 @@ def main(argv: list[str] | None = None) -> int:
         latest_session = edition == now_kst().date().isoformat()
         resumed = state.get("publish", {}).get("status") == "pushed" and not a.force
         doc_path = repo / CFG["repo"]["data_dir"] / "morning" / f"{edition}.json"
+        og_png = None
         if resumed and doc_path.exists():
             doc = read_json(doc_path)
             log.info("resuming after an earlier push (%s)", state["publish"].get("sha", "")[:10])
         else:
+            step["now"] = "aa_brief"
             if not a.dry_run:
                 wait_inputs(edition_d, a.no_wait)
             elif not all(find_inputs(edition.replace("-", ""))):
                 raise RuntimeError("AA brief or fact cards missing for the dry run")
             index = read_json(Path(a.index)) if a.index else read_json(repo / CFG["repo"]["data_dir"] / "index.json")
-            doc, report = generate(edition, session, index, repo / CFG["repo"]["fear_greed"], run_dir, latest_session)
+            doc, report = generate(edition, session, index, repo / CFG["repo"]["fear_greed"], run_dir, latest_session, step)
             state["writer"] = {k: report["writer"].get(k) for k in ("model", "served_by", "usd", "seconds", "failures")}
+            step["now"] = "og_image"
+            og_png = render_og(doc, run_dir, a.dry_run)
         if a.dry_run:
             out_root = run_dir / "briefing"
             if a.index:
                 write_json(out_root / "index.json", read_json(Path(a.index)))
             elif (repo / CFG["repo"]["data_dir"] / "index.json").exists():
                 write_json(out_root / "index.json", read_json(repo / CFG["repo"]["data_dir"] / "index.json"))
-            paths = publish.write_outputs(out_root, doc)
+            paths = publish.write_outputs(out_root, doc, og_png)
             (run_dir / "message.html").write_text(notify.compose(doc), encoding="utf-8")
             log.info("dry run done in %.0fs: %s", time.time() - t_start, [str(p) for p in paths])
             return 0
         if not resumed:
-            sha = publish.commit_and_push(doc, repo)
+            step["now"] = "push"
+            sha = publish.commit_and_push(doc, repo, og_png)
             state["publish"] = {"status": "pushed", "sha": sha, "at": now_kst().isoformat(timespec="seconds")}
             save(state)
-        pushed = repo / CFG["repo"]["data_dir"] / "morning" / f"{edition}.json"
+        step["now"] = "publish_live"
+        data_dir = repo / CFG["repo"]["data_dir"]
+        pushed, pushed_og = data_dir / "morning" / f"{edition}.json", data_dir / publish.og_relpath(edition)
         expect = hashlib.sha256(pushed.read_bytes()).hexdigest() if pushed.exists() else None
-        live = publish.wait_published(edition, expect_sha=expect)
+        og_sha = hashlib.sha256(pushed_og.read_bytes()).hexdigest() if pushed_og.exists() else None
+        live = publish.wait_published(edition, expect_sha=expect, og_sha=og_sha)
         state["publish"]["live"] = live
         save(state)
         if not live["ok"]:
-            raise RuntimeError(f"{publish.data_url(edition)} not 200 after {live['seconds']}s (last status {live['status']})")
+            raise RuntimeError(f"{publish.data_url(edition)} not live after {live['seconds']}s (last status {live['status']})")
+        step["now"] = "notify"
         notify.send_once(doc, state, save)
         state.update({"status": "done", "seconds": round(time.time() - t_start)})
         save(state)
         log.info("edition %s done in %.0fs", edition, time.time() - t_start)
         return 0
-    except Exception as e:  # noqa: BLE001 - failure notice goes to the log and the state file only
-        log.exception("edition %s failed", edition)
-        state.update({"status": "failed", "error": f"{type(e).__name__}: {str(e)[:500]}", "seconds": round(time.time() - t_start)})
+    except Exception as e:  # noqa: BLE001 - the log, the state file and one ops alert per edition+step
+        log.exception("edition %s failed at %s", edition, step["now"])
+        state.update({"status": "failed", "step": step["now"], "error": f"{type(e).__name__}: {str(e)[:500]}",
+                      "seconds": round(time.time() - t_start)})
         save(state)
+        if not a.dry_run:
+            alert.send_failure(edition, step["now"], f"{type(e).__name__}: {e}", run_dir / "run.log")
         return 1
 
 

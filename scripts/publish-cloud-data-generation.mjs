@@ -509,17 +509,27 @@ export const FAMILIES = {
     },
   },
   "briefing": {
-    // Owner-run 100x briefing editions: index.json plus one JSON per edition
-    // (morning/YYYY-MM-DD.json, ~22 KB each). The tree grows by one edition a
-    // day. Gate declaration: >= 2x a ~400-file / ~9 MB tree.
+    // Owner-run 100x briefing editions: index.json plus, per edition, one JSON
+    // (morning/YYYY-MM-DD.json, ~22 KB) and its link-preview image
+    // (og/YYYY-MM-DD.png, ~140 KB, capped at 400 KB below). The tree grows by
+    // one edition a day. Gate declaration: >= 2x a ~400-edition / ~800-file /
+    // ~65 MB tree; a daily publish writes only the new objects.
     root: "data/briefing",
     manifest_prefix: "public/data/briefing",
     privacy_class: "public",
     // The index names the newest edition date; never the acquisition time.
     source_as_of: { file: "index.json", key: ["latest", "morning"] },
     plan: { class_a: 1000, bytes: 20_000_000 },
-    policy: { max_assets: 2000, max_total_bytes: 44_000_000 },
-    validate_public_payload({ bytes }) {
+    policy: { max_assets: 2000, max_total_bytes: 140_000_000 },
+    validate_public_payload({ asset, bytes }) {
+      // The preview images are the only non-JSON assets: a dated PNG under og/
+      // with the PNG signature and a bounded size. Anything else is JSON.
+      if (asset?.path !== undefined && asset.path.endsWith(".png")) {
+        const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+        return /\/og\/\d{4}-\d{2}-\d{2}\.png$/.test(asset.path)
+          && bytes.byteLength <= 400_000
+          && PNG_SIGNATURE.every((byte, index) => bytes[index] === byte);
+      }
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
@@ -820,6 +830,7 @@ export const FAMILIES = {
 
 const CONTENT_TYPES = {
   ".json": "application/json",
+  ".png": "image/png",
   ".ndjson": "application/x-ndjson",
   ".csv": "text/csv",
   ".md": "text/markdown",

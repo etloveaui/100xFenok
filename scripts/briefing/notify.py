@@ -26,7 +26,7 @@ sys.path.insert(0, str(root / "scripts"))
 from publication import Gateway
 content = sys.stdin.read()
 try:
-    res = Gateway(project_root=root).send(content, message_class=sys.argv[3], product_id=sys.argv[2],
+    res = Gateway(project_root=root).send(content, message_class=sys.argv[3], product_id=sys.argv[2] or None,
                                            parse_mode="HTML", delivery_run_id=sys.argv[4])
 except RuntimeError as e:
     res = {"status": "already_delivered" if "blocking delivery state" in str(e) else "error", "errors": [str(e)[:300]]}
@@ -45,9 +45,12 @@ def compose(doc: dict) -> str:
     return "\n".join(lines)
 
 
-def gateway_send(content: str, run_id: str) -> dict:
+def gateway_send(content: str, run_id: str, message_class: str | None = None, product_id: str | None = None) -> dict:
+    """One Gateway.send under AA's interpreter. Defaults: the edition link (class publication, product morning_brief)."""
     root = expand(A["root"])
-    p = subprocess.run([str(expand(A["python"])), "-c", DRIVER, str(root), A["product_id"], A["message_class"], run_id],
+    cls = message_class or A["message_class"]
+    pid = A["product_id"] if product_id is None else product_id
+    p = subprocess.run([str(expand(A["python"])), "-c", DRIVER, str(root), pid, cls, run_id],
                        input=content, capture_output=True, text=True, cwd=root, timeout=300)
     line = next((x for x in reversed(p.stdout.splitlines()) if x.startswith("GATEWAY_RESULT ")), "")
     if not line:

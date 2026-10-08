@@ -26,17 +26,29 @@ Design and owner decisions: `claude-code-hub/docs/planning/PLAN_100x-morning-bri
    - Ticker fixes: mover tickers that are not on the SEC list, or not named in the sources, are blanked.
    - Warnings only: the number check (it accepts rounded values, Korean unit forms such as 48만6,532 and 8.9만,
      and computed ratios) and polite-ending checks.
-7. **Publish (`publish.py`).**
+7. **Preview image (`og_image.py`).** Pillow draws a 1200x630 PNG from the edition JSON (headline, index chips,
+   the S&P 500 intraday line with its low/high, 시장 체력, 100x wordmark; Pretendard from `~/Library/Fonts`). If it
+   fails, the edition goes out without it and one `og_image` alert is sent. The edition page's `og:image` points
+   to `/data/briefing/og/<date>.png`. Re-render by hand: `python -m briefing.og_image <edition.json>... --out-dir DIR`.
+8. **Publish (`publish.py`).**
    - The job uses a dedicated sparse worktree, `~/.local/share/100x-briefing/repo`, and moves it to `origin/main`.
-   - It writes `morning/<date>.json` and merges `index.json`.
-   - It commits only those two paths and pushes them to `main`. If the push is rejected, it regenerates on a fresh tip.
-   - `publish-briefing.yml` then copies the folder to R2.
-   - The job waits up to 15 minutes for `/data/briefing/morning/<date>.json` to return 200.
-8. **Telegram (`notify.py`).**
+   - It writes `morning/<date>.json` and `og/<date>.png`, and merges `index.json`.
+   - It commits only those paths and pushes them to `main`. If the push is rejected, it regenerates on a fresh tip.
+   - `publish-briefing.yml` then copies the folder to R2 (the family accepts dated PNGs under `og/`).
+   - The job waits up to 15 minutes until the JSON and the PNG URLs both serve exactly the pushed bytes.
+9. **Telegram (`notify.py`).**
    - The job sends once per date, through the AA Publication Gateway (product `morning_brief`, class
      `publication`, run id `morning_article:<date>`).
    - The message carries the headline, the thesis, the two `story.why` lines and the article link.
-   - A failure sends nothing. It is written to the run log and to `editions/<date>.json`.
+   - A failure is written to the run log and to `editions/<date>.json` (`status: failed`, `step`).
+10. **Failure alerts (`alert.py`, `watchdog.py`).**
+   - A failed step (`aa_brief`, `market_pack`, `writer`, `validation`, `og_image`, `push`, `publish_live`,
+     `notify`, `run`) sends one line (date, step, reason, M4 log path) through AA's Gateway class `ops_alert`,
+     which AA routes to `main_ops` (Cortex News general topic), never the product topic.
+   - One alert per edition and step: `alerts.json` in the state folder and the Gateway run id
+     `morning_article_alert:<date>:<step>`. Dry runs and successful runs send none.
+   - `com.fenok.100x-briefing-watchdog` runs `python -m briefing.watchdog` at 06:30 KST Tue-Sat. When an edition
+     that needs an article has no `editions/<date>.json` yet, the job did not start, and it sends `missed_run`.
 
 ## Commands (M4)
 
@@ -64,9 +76,9 @@ Other flags:
 
 | Item | Path |
 |---|---|
-| venv (`anthropic jsonschema yfinance pandas`) | `~/.local/share/100x-briefing/venv` |
+| venv (`anthropic jsonschema yfinance pandas pillow`; add with `uv pip install --python <venv>/bin/python`) | `~/.local/share/100x-briefing/venv` |
 | job worktree (sparse: `scripts/briefing`, `data/briefing`, `data/sentiment/cnn-fear-greed.json`) | `~/.local/share/100x-briefing/repo` |
-| launchd agent (template in this folder) | `~/Library/LaunchAgents/com.fenok.100x-briefing-morning.plist` |
+| launchd agents (templates in this folder) | `~/Library/LaunchAgents/com.fenok.100x-briefing-morning.plist`, `com.fenok.100x-briefing-watchdog.plist` |
 | logs, run outputs, state, usage ledger, caches | `~/.local/state/100x-briefing/` |
 
 `run_m4.sh` exports only `ANTHROPIC_PLAN_CREDIT_API_KEY`, `SEC_USER_AGENT` and `FRED_API_KEY` from

@@ -462,6 +462,19 @@ assert.equal(FAMILIES["yahoo-finance"].reuse_active_generation, true);
 assert.equal(FAMILIES["stockanalysis-etf-detail"].reuse_active_generation, true);
 assert.notEqual(FAMILIES["oecd-cli"].reuse_active_generation, true);
 
+// The briefing family carries dated link-preview PNGs next to its JSON: only a
+// real PNG under og/YYYY-MM-DD.png passes, and JSON keeps the key check.
+{
+  const validate = FAMILIES.briefing.validate_public_payload;
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]);
+  const json = (value) => new TextEncoder().encode(JSON.stringify(value));
+  assert.equal(validate({ asset: { path: "public/data/briefing/og/2026-10-08.png" }, bytes: png }), true);
+  assert.equal(validate({ asset: { path: "public/data/briefing/og/latest.png" }, bytes: png }), false);
+  assert.equal(validate({ asset: { path: "public/data/briefing/og/2026-10-08.png" }, bytes: json({}) }), false);
+  assert.equal(validate({ asset: { path: "public/data/briefing/index.json" }, bytes: json({ latest: {} }) }), true);
+  assert.equal(validate({ bytes: json({ api_token: "x" }) }), false);
+}
+
 // --- putIfAbsent readback reduction contract --------------------------------
 {
   const immutableObjectCount = new Set(manifest.assets.map((asset) => asset.object_key)).size + 1;

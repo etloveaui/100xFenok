@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- M4 launchd agent: missed-run check for the 100x Morning Brief (briefing.watchdog). Install: copy to
+     ~/Library/LaunchAgents/ and launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.fenok.100x-briefing-watchdog.plist
+     Runs 06:30 local time (M4 is on KST) Tuesday to Saturday, from the job worktree the 06:05 run has synced. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fenok.100x-briefing-watchdog</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/fenomenokim/.local/share/100x-briefing/venv/bin/python</string>
+        <string>-m</string>
+        <string>briefing.watchdog</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/fenomenokim/.local/share/100x-briefing/repo/scripts</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/fenomenokim/.local/bin</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/Users/fenomenokim/.local/state/100x-briefing/watchdog.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/fenomenokim/.local/state/100x-briefing/watchdog.log</string>
+</dict>
+</plist>

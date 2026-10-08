@@ -69,13 +69,25 @@ def merge_index(prev: dict | None, entries: list[dict]) -> dict:
     return prev
 
 
-def write_outputs(root: Path, doc: dict) -> list[Path]:
-    """Write morning/<date>.json and the merged index.json under `root` (= <repo>/data/briefing or a dry-run dir)."""
+def og_relpath(date: str) -> str:
+    """The preview image path under data/briefing (the public URL is the same path under /data/briefing/)."""
+    return f"og/{date}.png"
+
+
+def write_outputs(root: Path, doc: dict, og_png: bytes | None = None) -> list[Path]:
+    """Write morning/<date>.json, og/<date>.png (when given) and the merged index.json under `root`
+    (= <repo>/data/briefing or a dry-run dir)."""
     f = root / "morning" / f"{doc['edition_date']}.json"
     write_json(f, doc, indent=None)
+    out = [f]
+    if og_png:
+        png = root / og_relpath(doc["edition_date"])
+        png.parent.mkdir(parents=True, exist_ok=True)
+        png.write_bytes(og_png)
+        out.append(png)
     idx_path = root / "index.json"
     write_json(idx_path, merge_index(read_json(idx_path), [index_entry(doc, f.stat().st_size)]))
-    return [f, idx_path]
+    return out + [idx_path]
 
 
 def git(*args: str, repo: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -89,14 +101,14 @@ def sync(repo: Path | None = None) -> str:
     return git("rev-parse", "HEAD", repo=repo).stdout.strip()
 
 
-def commit_and_push(doc: dict, repo: Path | None = None) -> str:
+def commit_and_push(doc: dict, repo: Path | None = None, og_png: bytes | None = None) -> str:
     """Write, commit only data/briefing paths, push to main; regenerate on a fresh tip if the push is rejected."""
     repo = repo or worktree()
     msg = R["commit_message"].format(date=doc["edition_date"])
     last_err = ""
     for attempt in range(1, R["push_attempts"] + 1):
         base = sync(repo)
-        paths = write_outputs(repo / R["data_dir"], doc)
+        paths = write_outputs(repo / R["data_dir"], doc, og_png)
         rel = [str(p.relative_to(repo)) for p in paths]
         git("add", "--", *rel, repo=repo)
         if not git("diff", "--cached", "--quiet", "--", *rel, repo=repo, check=False).returncode:
@@ -118,33 +130,52 @@ def data_url(date: str) -> str:
     return s["base_url"] + s["data_path"].format(date=date)
 
 
+def og_url(date: str) -> str:
+    return CFG["site"]["base_url"] + CFG["og"]["data_path"].format(date=date)
+
+
 def article_url(date: str) -> str:
     s = CFG["site"]
     return s["base_url"] + s["article_path"].format(date=date)
 
 
-def wait_published(date: str, timeout: int | None = None, poll: int | None = None, expect_sha: str | None = None) -> dict:
-    """Poll the public data URL until it serves this edition; with expect_sha, until it serves exactly the pushed bytes."""
+def _probe(url: str, expect_sha: str | None, must_contain: str | None) -> tuple[bool, object]:
+    """One GET; ok when it is 200, carries `must_contain` (if any) and, with expect_sha, exactly the pushed bytes."""
+    try:
+        req = urllib.request.Request(f"{url}?t={int(time.time())}", headers={"User-Agent": CFG["sources"]["user_agent"]})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            status = r.status
+            raw = r.read()
+    except urllib.error.HTTPError as e:
+        return False, e.code
+    except Exception as e:  # noqa: BLE001
+        return False, str(e)[:80]
+    fresh = expect_sha is None or hashlib.sha256(raw).hexdigest() == expect_sha
+    found = must_contain is None or must_contain in raw[:400].decode("utf-8", "replace")
+    if status == 200 and fresh and found:
+        return True, status
+    return False, "200 (older version)" if status == 200 else status
+
+
+def wait_published(date: str, timeout: int | None = None, poll: int | None = None, expect_sha: str | None = None,
+                   og_sha: str | None = None) -> dict:
+    """Poll the public data URL until it serves this edition; with expect_sha, until it serves exactly the pushed bytes.
+    With og_sha, the preview image URL must also serve exactly the pushed PNG."""
     s = CFG["site"]
     timeout = s["publish_wait_seconds"] if timeout is None else timeout
     poll = poll or s["publish_poll_seconds"]
-    t0, status = time.time(), None
+    t0 = time.time()
+    pending = {"json": (data_url(date), expect_sha, date)}
+    if og_sha:
+        pending["og"] = (og_url(date), og_sha, None)
+    status: dict = {}
     while True:
-        try:
-            req = urllib.request.Request(f"{data_url(date)}?t={int(time.time())}", headers={"User-Agent": CFG["sources"]["user_agent"]})
-            with urllib.request.urlopen(req, timeout=20) as r:
-                status = r.status
-                raw = r.read()
-            body = raw[:400].decode("utf-8", "replace")
-            fresh = expect_sha is None or hashlib.sha256(raw).hexdigest() == expect_sha
-            if status == 200 and date in body and fresh:
-                return {"ok": True, "status": status, "seconds": round(time.time() - t0)}
-        except urllib.error.HTTPError as e:
-            status = e.code
-        except Exception as e:  # noqa: BLE001
-            status = str(e)[:80]
-        if status == 200:
-            status = "200 (older version)"
+        for k, (url, sha, must) in list(pending.items()):
+            ok, status[k] = _probe(url, sha, must)
+            if ok:
+                pending.pop(k)
+        if not pending:
+            return {"ok": True, "status": 200, "seconds": round(time.time() - t0)}
         if time.time() - t0 + poll > timeout:
-            return {"ok": False, "status": status, "seconds": round(time.time() - t0)}
+            return {"ok": False, "status": "; ".join(f"{k} {status[k]}" for k in pending), "seconds": round(time.time() - t0)}
         time.sleep(poll)

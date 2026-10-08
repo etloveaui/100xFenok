@@ -47,7 +47,25 @@
     "push_attempts": 3,
     "commit_message": "data(briefing): morning brief {date}"
   },
-  "state": {"dir": "~/.local/state/100x-briefing", "usage": "usage.jsonl", "editions": "editions", "runs": "runs", "cache": "cache"},
+  "state": {"dir": "~/.local/state/100x-briefing", "usage": "usage.jsonl", "editions": "editions", "runs": "runs", "cache": "cache", "alerts": "alerts.json"},
+  "og": {
+    "width": 1200,
+    "height": 630,
+    "max_bytes": 240000,
+    "data_path": "/data/briefing/og/{date}.png",
+    "fonts": ["~/Library/Fonts/Pretendard-{weight}.otf", "/Library/Fonts/Pretendard-{weight}.otf",
+              "~/Library/Fonts/NotoSansCJKkr-Bold.otf", "/System/Library/Fonts/AppleSDGothicNeo.ttc"]
+  },
+  "alerts": {
+    "message_class": "ops_alert",
+    "delivery_run_id": "morning_article_alert:{date}:{step}",
+    "missed_run_kst": "06:30",
+    "steps": {
+      "aa_brief": "AA 브리프 대기", "market_pack": "시장 데이터", "writer": "기사 작성", "validation": "검증",
+      "og_image": "미리보기 이미지", "push": "푸시", "publish_live": "공개 확인", "notify": "텔레그램 발송",
+      "missed_run": "실행 누락", "run": "실행"
+    }
+  },
   "sources": {
     "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
     "sec_tickers_url": "https://www.sec.gov/files/company_tickers.json",
