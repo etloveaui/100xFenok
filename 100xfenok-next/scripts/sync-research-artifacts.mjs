@@ -33,7 +33,8 @@ const SAMPLE_TITLES = {
 };
 
 const PRODUCTS = [
-  { id: "product-morning-brief", title: "모닝 브리프", detail: "매일 아침 여는 시장 브리프" },
+  // A product with an href is live and links to its in-app route (not a copied artifact).
+  { id: "product-morning-brief", title: "모닝 브리프", detail: "매일 아침 여는 시장 브리프", href: "/brief" },
   { id: "product-premarket-brief", title: "프리마켓 브리프", detail: "장 시작 전 프리마켓 점검" },
   { id: "product-daily-digest", title: "데일리 다이제스트", detail: "하루 시장 흐름 한 장 요약" },
   { id: "product-weekly-recap", title: "위클리 리캡", detail: "한 주 마감 정리" },
@@ -172,8 +173,8 @@ const productItems = PRODUCTS.map((product) => ({
   title: `${product.title} — ${product.detail}`,
   ticker: null,
   date: null,
-  status: "coming-soon",
-  href: null,
+  status: product.href ? "live" : "coming-soon",
+  href: product.href ?? null,
   source: null,
   size_bytes: null,
 }));

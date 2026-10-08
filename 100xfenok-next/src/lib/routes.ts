@@ -9,6 +9,8 @@ export const ROUTES = {
   workbench: "/workbench",
   // Legacy alias only. It redirects to home and must not appear as a separate nav/sitemap product.
   briefing: "/briefing",
+  /** 100x briefing hub (morning brief and the other daily briefing products). */
+  brief: "/brief",
   market: "/market-valuation",
   // Legacy bookmark target only; `/market` redirects to `ROUTES.market`.
   marketLegacy: "/market",
@@ -46,6 +48,8 @@ export const ROUTES = {
   stock: (ticker: string, returnTo?: string | null) => withJourneyReturnTo(`/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}`, returnTo),
   stockFilings: (ticker: string, returnTo?: string | null) => withJourneyReturnTo(`/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}?tab=filings`, returnTo),
   etf: (ticker: string) => `/etfs/${encodeURIComponent(normalizeForRouteTicker(ticker))}`,
+  /** One morning-brief edition, by KST edition date (YYYY-MM-DD). */
+  briefMorning: (date: string) => `/brief/morning/${encodeURIComponent(date)}`,
   screenerTicker: (ticker: string) => withQuery("/screener", { ticker: normalizeForRouteTicker(ticker) }),
   portfolioTicker: (ticker: string) => withQuery("/portfolio", { ticker: normalizeForRouteTicker(ticker) }),
   superinvestorsByTicker: (ticker: string, returnTo?: string | null) =>
@@ -65,6 +69,8 @@ export const APP_ROUTE_PATTERNS = [
   "/explore",
   "/workbench",
   "/briefing",
+  "/brief",
+  "/brief/morning/[date]",
   "/market",
   "/market-valuation",
   "/market-valuation/structure",
@@ -99,6 +105,7 @@ export const APP_ROUTE_PATTERNS = [
 
 export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.home,
+  ROUTES.brief,
   ROUTES.explore,
   ROUTES.workbench,
   ROUTES.market,
@@ -163,6 +170,7 @@ export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
 
 export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.home, changeFrequency: "daily", priority: 1 },
+  { path: ROUTES.brief, changeFrequency: "daily", priority: 0.8 },
   { path: ROUTES.market, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.marketStructure, changeFrequency: "daily", priority: 0.8 },
   { path: ROUTES.regime, changeFrequency: "daily", priority: 0.8 },

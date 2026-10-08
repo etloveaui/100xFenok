@@ -28,6 +28,10 @@ test("resolves static and dynamic shell routes", () => {
   // Job-grouped rail: the two pages it now lists light their own item.
   assert.equal(resolveShellRoute("/changes/")?.active, "changes");
   assert.equal(resolveShellRoute("/market/events")?.active, "events");
+  // Briefing hub and its dated editions light the 브리핑 rail item.
+  assert.deepEqual(resolveShellRoute("/brief/"), { active: "brief", title: "브리핑" });
+  assert.deepEqual(resolveShellRoute("/brief/morning/2026-10-08/"), { active: "brief", title: "모닝 브리프" });
+  assert.equal(resolveShellRoute("/briefing"), null);
 });
 
 test("keeps immersive and private surfaces out of the shell", () => {

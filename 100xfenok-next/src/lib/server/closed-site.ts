@@ -90,6 +90,8 @@ export function isGated(request: Request, mode: GateMode): boolean {
 /**
  * Paths that are always accessible even when the site is closed:
  * - /intro (the intro face / login entrance)
+ * - /brief and /brief/* (the public 100x briefing hub and its editions; owner
+ *   approval 2026-10-08)
  * - /api/auth/* (Google OAuth exchange & logout handlers)
  * - /_next/* (Next.js assets and chunks)
  * - /api/health (health check endpoints)
@@ -97,6 +99,9 @@ export function isGated(request: Request, mode: GateMode): boolean {
  */
 export function isAlwaysOpenPath(pathname: string): boolean {
   if (pathname === "/intro" || pathname.startsWith("/intro/")) {
+    return true;
+  }
+  if (pathname === "/brief" || pathname.startsWith("/brief/")) {
     return true;
   }
   if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {

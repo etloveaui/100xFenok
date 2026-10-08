@@ -49,6 +49,7 @@ import { openCommandPalette } from "@/components/ui/CommandPalette";
 
 export type ShellPage =
   | "explore"
+  | "brief"
   | "workbench"
   | "market"
   | "regime"
@@ -74,7 +75,7 @@ export type ShellPage =
  * 내 투자 = my holdings, 도구 = calculators and reading. URLs are unchanged.
  */
 type NavGroupName = "오늘" | "시장" | "발견" | "내 투자" | "도구";
-type NavItem = { id: ShellPage; group: NavGroupName; label: string; href: string; icon: ReactNode };
+type NavItem = { id: ShellPage; group: NavGroupName; label: string; href: string; icon: ReactNode; badge?: string };
 type MobileTabId = ShellPage | "more";
 type NavGroup = { label: NavGroupName; items: NavItem[] };
 
@@ -90,6 +91,20 @@ const NAV: NavItem[] = [
         <path d="M3.5 9.2L10 3.8l6.5 5.4" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M5.4 8.6v7.2h9.2V8.6" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M8.4 15.8v-4.2h3.2v4.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: "brief",
+    group: "오늘",
+    label: "브리핑",
+    href: ROUTES.brief,
+    badge: "NEW",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.8 3.8h9v11.7c0 .8.6 1.5 1.4 1.5H4.8c-.8 0-1.5-.7-1.5-1.5V5.3c0-.8.7-1.5 1.5-1.5z" />
+        <path d="M13.8 7.5h1.9c.6 0 1 .4 1 1v7c0 .8-.7 1.5-1.5 1.5" />
+        <path d="M6.3 7.3h4.5M6.3 10.3h4.5M6.3 13.3h3" />
       </svg>
     ),
   },
@@ -279,6 +294,7 @@ const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfo
 const TAB_LABELS: Partial<Record<ShellPage, string>> = { market: "시장" };
 /** Every nav page except the primary tabs, in nav order. */
 const MORE_TAB_IDS: ShellPage[] = [
+  "brief",
   "changes",
   "regime",
   "events",
@@ -571,6 +587,7 @@ function ShellChrome({
                     aria-current={n.id === navActive ? "page" : undefined}
                   >
                     {n.icon} {n.label}
+                    {n.badge ? <span className="nav-badge">{n.badge}</span> : null}
                     <NavItemPending />
                   </TransitionLink>
                 );
@@ -747,6 +764,7 @@ function ShellChrome({
                       >
                         <span className="mobile-more-icon">{n.icon}</span>
                         <span className="mobile-more-label">{n.label}</span>
+                        {n.badge ? <span className="nav-badge">{n.badge}</span> : null}
                       </TransitionLink>
                     ))}
                   </div>

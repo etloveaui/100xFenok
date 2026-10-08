@@ -48,6 +48,11 @@ function kindLabel(kind: string): string {
   return KIND_LABEL[kind] ?? kind;
 }
 
+/** Catalog hrefs outside /research/ are app routes, opened by navigation rather than the embed viewer. */
+function isAppRoute(href: string | null): boolean {
+  return Boolean(href && href.startsWith(ROUTES.home) && !href.startsWith(`${ROUTES.research}/`));
+}
+
 export default function ResearchClient() {
   const [catalog, setCatalog] = useState<ResearchCatalog | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +87,9 @@ export default function ResearchClient() {
   });
   const liveCount = items.filter((item) => item.status === "live").length;
   const soonCount = items.filter((item) => item.status === "coming-soon").length;
-  const opened = openId ? items.find((item) => item.id === openId && item.status === "live" && item.href) ?? null : null;
+  const opened = openId
+    ? items.find((item) => item.id === openId && item.status === "live" && item.href && !isAppRoute(item.href)) ?? null
+    : null;
 
   const openItem = (id: string) => setOpenId(id);
 
@@ -176,6 +183,26 @@ export default function ResearchClient() {
           <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" aria-label="리서치 목록">
             {visible.map((item) => {
               const live = item.status === "live" && item.href;
+              if (live && isAppRoute(item.href)) {
+                // An in-app product (the briefing) navigates instead of opening an embedded viewer.
+                return (
+                  <li key={item.id} data-research-card={item.id}>
+                    <TransitionLink
+                      href={item.href ?? ROUTES.research}
+                      aria-label={`${item.title} 열기`}
+                      className="flex min-h-44 flex-col rounded-[10px] border border-slate-200 bg-white p-4 transition hover:-translate-y-px hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-slate-900"
+                    >
+                      <span className="font-mono text-[12px] font-bold tracking-wide text-slate-500">
+                        {kindLabel(item.kind)}
+                      </span>
+                      <h3 className="mt-1 text-base font-extrabold leading-snug text-slate-900">{item.title}</h3>
+                      <span className="mt-auto pt-3 text-sm font-bold text-blue-700" data-research-open={item.id}>
+                        열기 →
+                      </span>
+                    </TransitionLink>
+                  </li>
+                );
+              }
               if (live) {
                 const meta = [item.ticker, item.date].filter(Boolean).join(" · ");
                 return (

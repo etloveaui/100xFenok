@@ -22,6 +22,7 @@ import { PERSONAL_DOC_KEYS, readPersonalFlags, type Flag } from "@/lib/personal/
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import WeekAheadStrip from "@/components/market/WeekAheadStrip";
+import HomeBriefCard from "@/components/brief/HomeBriefCard";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
 
 type IndexSymbol = "SPY" | "QQQ" | "DIA";
@@ -746,6 +747,8 @@ export default function HomeCanvasPlusClient() {
         </div>
 
         <WeekAheadStrip />
+
+        <HomeBriefCard />
 
         <section aria-label="주요 지수">
           <div className="grid grid-cols-2 gap-[10px] md:grid-cols-4 md:gap-3">

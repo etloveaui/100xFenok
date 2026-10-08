@@ -204,6 +204,10 @@ test("closed-site: isAlwaysOpenPath accurately identifies un-gated routes", () =
   assert.equal(isAlwaysOpenPath("/sitemap.xml"), true);
   assert.equal(isAlwaysOpenPath("/manifest.webmanifest"), true);
   assert.equal(isAlwaysOpenPath("/manifest.json"), true);
+  assert.equal(isAlwaysOpenPath("/brief"), true);
+  assert.equal(isAlwaysOpenPath("/brief/"), true);
+  assert.equal(isAlwaysOpenPath("/brief/morning/2026-10-08"), true);
+  assert.equal(isAlwaysOpenPath("/brief/morning/2026-10-08/"), true);
 
   // Gated routes
   assert.equal(isAlwaysOpenPath("/"), false);
@@ -214,6 +218,9 @@ test("closed-site: isAlwaysOpenPath accurately identifies un-gated routes", () =
   assert.equal(isAlwaysOpenPath("/admin/users"), false);
   assert.equal(isAlwaysOpenPath("/api/ticker/AAPL"), false);
   assert.equal(isAlwaysOpenPath("/data/benchmarks/summaries.json"), false);
+  // Only the briefing tree opens; the legacy alias and look-alike roots stay gated.
+  assert.equal(isAlwaysOpenPath("/briefing"), false);
+  assert.equal(isAlwaysOpenPath("/briefs"), false);
 });
 
 // ---------------------------------------------------------------------------
