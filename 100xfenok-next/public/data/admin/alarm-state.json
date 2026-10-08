@@ -1,18 +1,18 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-07T01:40:05.279Z",
+  "generated_at": "2026-10-07T22:06:27.514Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-yf-finance.yml",
       "label": "Fetch YF Finance Data",
-      "streak": 3,
+      "streak": 5,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 37267952595,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37267952595",
       "alarm_reasons": [
-        "missed_schedule_window"
+        "failure_streak"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -29,6 +29,18 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 37597348707,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37597348707",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
       "alarm_reasons": [
@@ -37,8 +49,8 @@
       "stopped_sets": [
         "yahoo_batch_quote_history"
       ],
-      "latest_generated_at": "2026-10-07T01:14:34.501Z",
-      "previous_generated_at": "2026-10-07T00:49:06.295Z"
+      "latest_generated_at": "2026-10-07T01:42:05.979Z",
+      "previous_generated_at": "2026-10-07T01:14:34.501Z"
     }
   ],
   "watched_workflows": [
@@ -381,13 +393,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "37557995763",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37557995763",
-    "observed_at": "2026-10-07T01:40:05.279Z",
+    "run_id": "37693586683",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/37693586683",
+    "observed_at": "2026-10-07T22:06:27.514Z",
     "event": "schedule",
     "workflows": [
       "fetch-yf-finance.yml",
       "retention-restore.yml",
+      "update-manifest.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
