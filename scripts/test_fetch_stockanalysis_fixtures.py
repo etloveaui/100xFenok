@@ -784,6 +784,17 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 self.assertEqual(case["active"]["current"]["AFK"]["provider"], "stockanalysis")
                 self.assertEqual(case["selected_payload"], case["candidate"])
 
+    def test_preserved_partial_candidate_leaves_no_private_path_in_public_index_row(self):
+        case = self.complete_primary_preservation_case()
+        result = case["result"]
+        self.assertEqual(result["status"], "partial_observed_complete_primary_preserved")
+        self.assertIsNone(result["candidate_path"])
+        self.assertIs(result["partial_candidate_preserved"], True)
+        self.assertTrue(case["diagnostic"]["provider_path"].startswith("data/admin/data-supply-state/v1/partial_candidates/AFK/"))
+        index_text = self.fetcher.json_payload_bytes({"results": [result]}).decode("utf-8")
+        self.assertNotIn("data/admin/", index_text)
+        self.assertNotIn("admin/data-supply-state/", index_text)
+
     def test_preserved_partial_actual_bytes_stay_inside_existing_private_public_sync_boundary(self):
         import subprocess
         case = self.complete_primary_preservation_case()

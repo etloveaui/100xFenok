@@ -7207,7 +7207,6 @@ def run_one(
                                            or detail_regression is not None))
                 if detail_regression and not protected_complete:
                     raise ValueError(f"StockAnalysis ETF candidate loses canonical {detail_regression}")
-                partial_candidate_path = None
                 if payload.get("detail_status") == "stockanalysis_partial":
                     source = parse_iso_timestamp(payload.get("source_as_of"))
                     if isinstance(canonical, dict) and canonical.get("source") == "stockanalysis":
@@ -7229,7 +7228,9 @@ def run_one(
                     canonical_bytes = canonical_path.read_bytes()
                     if json.loads(canonical_bytes) != canonical:
                         raise ValueError("StockAnalysis ETF complete canonical changed before preservation")
-                    partial_candidate_path = preserve_partial_etf_candidate(
+                    # The private evidence path stays in the observation record only;
+                    # the run summary is published, so it carries a non-path marker.
+                    preserve_partial_etf_candidate(
                         ticker, payload, canonical_bytes, collection_origin=collection_origin,
                     )
                 if yf_fallback and payload.get("detail_status") == "stockanalysis_partial":
@@ -7250,7 +7251,7 @@ def run_one(
                     return {
                         "ticker": ticker, "asset_type": kind, "status": "partial_observed_complete_primary_preserved",
                         "provider": "stockanalysis", "selected_provider": None, "canonical_write": False,
-                        "path": rel_path, "candidate_path": partial_candidate_path,
+                        "path": rel_path, "candidate_path": None, "partial_candidate_preserved": True,
                         "fallback_candidate_path": f"data/yf/etf-details/{ticker}.json" if fallback_refresh_status == "ok" else None,
                         "financials_path": None, "financials_error": None,
                         "fallback_refresh_status": fallback_refresh_status, "fallback_refresh_error": fallback_refresh_error,
