@@ -10,9 +10,9 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 4,
   "last_result": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "error": "empty payload",
     "failures": [
       {
@@ -28,14 +28,28 @@
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
       }
     ],
     "latency_ms": 0,
-    "observed_at": "2026-10-05T13:10:15Z",
+    "observed_at": "2026-10-09T06:18:32Z",
     "outcome": "failed"
   },
   "latest_failure": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
     "error": "empty payload",
@@ -54,10 +68,24 @@
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-10-05T13:10:15Z"
+    "observed_at": "2026-10-09T06:18:32Z"
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:47:07Z",
@@ -80,5 +108,5 @@
     "source_as_of": "2026-07-14T17:31:32Z"
   },
   "ticker": "LEAD",
-  "updated_at": "2026-10-05T13:10:15Z"
+  "updated_at": "2026-10-09T06:18:32Z"
 }

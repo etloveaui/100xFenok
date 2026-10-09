@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T03:15:21Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DDX.json",
-    "payload_sha256": "547db3f330f495de39704cdf3db06c73522dcbc905d5ed5350a2924ab9877631",
-    "quote_as_of": "2026-09-25T19:44:09Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-09T06:09:37Z",
+    "history_as_of": "2026-10-08",
+    "path": "data/yf/finance/DDX.json",
+    "payload_sha256": "a4c23626662a514f3dee087eb4fb047e5fcd60086b725897f909b02dbf6bb139",
+    "quote_as_of": "2026-10-08T19:43:14Z",
+    "source_as_of": "2026-10-08"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 517,
-    "observed_at": "2026-09-28T03:11:20Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: DDX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DDX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DDX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DDX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DDX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DDX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 841,
+    "observed_at": "2026-10-09T06:09:37Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:44:09Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "DDX",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-09T06:09:37Z"
 }

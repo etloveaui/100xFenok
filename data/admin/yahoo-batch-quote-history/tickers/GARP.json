@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T04:40:26Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GARP.json",
-    "payload_sha256": "f8edbffd725d442951b8e56574f17585ede21c53b6e8e1c68e125ffc6cc647cd",
-    "quote_as_of": "2026-09-25T20:00:01Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-09T06:13:35Z",
+    "history_as_of": "2026-10-08",
+    "path": "data/yf/finance/GARP.json",
+    "payload_sha256": "6e637084f2e37002acc7e359b445672b24b30b829768ea2f2d26bf0c727d27f2",
+    "quote_as_of": "2026-10-08T20:00:01Z",
+    "source_as_of": "2026-10-08"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 506,
-    "observed_at": "2026-09-28T04:37:06Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: GARP: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GARP: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GARP: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GARP: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GARP: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: GARP: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 785,
+    "observed_at": "2026-10-09T06:13:35Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T20:00:01Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "GARP",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-09T06:13:35Z"
 }

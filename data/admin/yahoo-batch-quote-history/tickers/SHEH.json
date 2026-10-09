@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T06:16:04Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SHEH.json",
-    "payload_sha256": "e1f5f8358156dffc8fff737507a0095055bee9e1e224126de75320df0fbd6942",
-    "quote_as_of": "2026-09-25T19:51:31Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-09T06:25:24Z",
+    "history_as_of": "2026-10-08",
+    "path": "data/yf/finance/SHEH.json",
+    "payload_sha256": "15c9cbd292c18783b9e308ac642275ef6e12afa94502ea63385429eb29ba8688",
+    "quote_as_of": "2026-10-08T14:27:31Z",
+    "source_as_of": "2026-10-08"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 521,
-    "observed_at": "2026-09-28T06:02:24Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: SHEH: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SHEH: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SHEH: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SHEH: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SHEH: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: SHEH: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 746,
+    "observed_at": "2026-10-09T06:25:24Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,8 +57,8 @@
     "quote_as_of": "2026-09-25T19:51:31Z",
     "source_as_of": "2026-09-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -38,5 +70,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "SHEH",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-09T06:25:24Z"
 }

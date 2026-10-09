@@ -1,20 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-09-28T05:29:25Z",
-    "history_as_of": "2026-09-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MAGC.json",
-    "payload_sha256": "727ec3eba57b805c36bc7462749cb7df7e7e8afe18456fa225e0b11aeba92b63",
-    "quote_as_of": "2026-09-25T19:50:07Z",
-    "source_as_of": "2026-09-25"
+    "fetched_at": "2026-10-09T06:19:01Z",
+    "history_as_of": "2026-10-08",
+    "path": "data/yf/finance/MAGC.json",
+    "payload_sha256": "e8d6159e26d80c4882f93472fa710c467b96fdb18a917fe3248dbecb71a7fb9e",
+    "quote_as_of": "2026-10-08T17:57:15Z",
+    "source_as_of": "2026-10-08"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 470,
-    "observed_at": "2026-09-28T05:23:15Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: MAGC: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MAGC: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MAGC: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MAGC: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MAGC: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MAGC: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 802,
+    "observed_at": "2026-10-09T06:19:01Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -26,8 +58,8 @@
     "source_as_of": "2026-09-25"
   },
   "recovered_at": "2026-09-28T05:23:15Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +71,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "MAGC",
-  "updated_at": "2026-10-06T03:07:39Z"
+  "updated_at": "2026-10-09T06:19:01Z"
 }

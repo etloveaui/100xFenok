@@ -10,13 +10,24 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for CTWO: quote_as_of",
     "failures": [],
-    "latency_ms": 629,
-    "observed_at": "2026-09-30T14:35:00Z",
-    "outcome": "fresh"
+    "latency_ms": 750,
+    "observed_at": "2026-10-09T06:09:10Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for CTWO: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-09T06:09:10Z"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:35:00Z",
@@ -39,5 +50,5 @@
     "source_as_of": "2026-09-30"
   },
   "ticker": "CTWO",
-  "updated_at": "2026-10-09T03:01:27Z"
+  "updated_at": "2026-10-09T06:09:10Z"
 }
