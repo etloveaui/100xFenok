@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "MMID",
   "asset_type": "etf",
-  "generated_at": "2026-10-05T03:18:56Z",
-  "source_as_of": "2026-07-08",
+  "generated_at": "2026-10-09T03:57:02Z",
+  "source_as_of": null,
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": null,
+  "source_as_of_reason": "selected price fact has no provider source date",
   "identity": {
     "name": "MMID",
     "exchange": null,
@@ -16,144 +16,6 @@
     "category": null
   },
   "facts": {
-    "price": {
-      "value": 26.222000122070312,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "yf.fast_info",
-        "stockanalysis.quote",
-        "yf.stockanalysis_fallback.quote",
-        "slickcharts"
-      ],
-      "candidates": [
-        {
-          "value": 26.222000122070312,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "change": {
-      "value": -0.4010998779296884,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "observed",
-      "policy": [
-        "stockanalysis.quote",
-        "yf",
-        "yf.derived",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": -0.4010998779296884,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "change_pct": {
-      "value": -1.5065859269945587,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "observed",
-      "policy": [
-        "stockanalysis.quote",
-        "yf",
-        "yf.derived",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
-        {
-          "value": -1.5065859269945587,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "total_assets": {
-      "value": 35595552.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 35595552.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "expense_ratio": {
-      "value": 0.59,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.59,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
     "return_1m": {
       "value": -5.99053,
       "source": "stockanalysis.etf_universe.performance",
@@ -174,29 +36,6 @@
           "as_of": null,
           "fetched_at": "2026-10-05T02:06:18Z",
           "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "return_3m": {
-      "value": 6.450328308593431,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:22:57Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
-        {
-          "value": 6.450328308593431,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:22:57Z",
-          "confidence": "derived",
           "unit": "percent_points"
         }
       ],
@@ -230,171 +69,33 @@
     }
   },
   "etf": {
-    "holdings_count": 10,
-    "holdings_updated": "2026-07-09T09:22:57Z",
-    "top_holdings": [
-      {
-        "rank": 1,
-        "symbol": "GWW",
-        "name": "W.W. Grainger Inc",
-        "weight_pct": 1.54295005,
-        "raw": {
-          "_index": "GWW",
-          "Name": "W.W. Grainger Inc",
-          "Holding Percent": 0.0154295005
-        }
-      },
-      {
-        "rank": 2,
-        "symbol": "FANG",
-        "name": "Diamondback Energy Inc",
-        "weight_pct": 1.5095101,
-        "raw": {
-          "_index": "FANG",
-          "Name": "Diamondback Energy Inc",
-          "Holding Percent": 0.015095101
-        }
-      },
-      {
-        "rank": 3,
-        "symbol": "GPN",
-        "name": "Global Payments Inc",
-        "weight_pct": 1.4969701,
-        "raw": {
-          "_index": "GPN",
-          "Name": "Global Payments Inc",
-          "Holding Percent": 0.014969701
-        }
-      },
-      {
-        "rank": 4,
-        "symbol": "LNG",
-        "name": "Cheniere Energy Inc",
-        "weight_pct": 1.4835301,
-        "raw": {
-          "_index": "LNG",
-          "Name": "Cheniere Energy Inc",
-          "Holding Percent": 0.014835301
-        }
-      },
-      {
-        "rank": 5,
-        "symbol": "MCHP",
-        "name": "Microchip Technology Inc",
-        "weight_pct": 1.45543,
-        "raw": {
-          "_index": "MCHP",
-          "Name": "Microchip Technology Inc",
-          "Holding Percent": 0.0145543
-        }
-      },
-      {
-        "rank": 6,
-        "symbol": "WAT",
-        "name": "Waters Corp",
-        "weight_pct": 1.41665,
-        "raw": {
-          "_index": "WAT",
-          "Name": "Waters Corp",
-          "Holding Percent": 0.0141665
-        }
-      },
-      {
-        "rank": 7,
-        "symbol": "WAB",
-        "name": "Westinghouse Air Brake Technologies Corp",
-        "weight_pct": 1.41298,
-        "raw": {
-          "_index": "WAB",
-          "Name": "Westinghouse Air Brake Technologies Corp",
-          "Holding Percent": 0.0141298
-        }
-      },
-      {
-        "rank": 8,
-        "symbol": "LNT",
-        "name": "Alliant Energy Corp",
-        "weight_pct": 1.40795,
-        "raw": {
-          "_index": "LNT",
-          "Name": "Alliant Energy Corp",
-          "Holding Percent": 0.0140795
-        }
-      },
-      {
-        "rank": 9,
-        "symbol": "H",
-        "name": "Hyatt Hotels Corp Class A",
-        "weight_pct": 1.38151,
-        "raw": {
-          "_index": "H",
-          "Name": "Hyatt Hotels Corp Class A",
-          "Holding Percent": 0.0138151
-        }
-      },
-      {
-        "rank": 10,
-        "symbol": "MTB",
-        "name": "M&T Bank Corp",
-        "weight_pct": 1.3636201000000001,
-        "raw": {
-          "_index": "MTB",
-          "Name": "M&T Bank Corp",
-          "Holding Percent": 0.013636201
-        }
-      }
-    ],
-    "asset_allocation": {
-      "cashPosition": 0.0041,
-      "stockPosition": 0.9959,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
-    "sectors": {
-      "realestate": 0.0747,
-      "consumer_cyclical": 0.111999996,
-      "basic_materials": 0.0462,
-      "consumer_defensive": 0.045900002,
-      "technology": 0.12109999,
-      "communication_services": 0.0137,
-      "financial_services": 0.13229999,
-      "utilities": 0.0681,
-      "industrials": 0.2219,
-      "energy": 0.0619,
-      "healthcare": 0.1022
-    },
+    "holdings_count": null,
+    "holdings_updated": null,
+    "top_holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
     "countries": null,
-    "classification": {
-      "is_leveraged": false,
-      "leverage_factor": null,
-      "is_inverse": false,
-      "is_single_stock": false,
-      "underlying": null,
-      "source": "stockanalysis.overview.description",
-      "confidence": "high"
-    },
+    "classification": null,
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/MMID.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:unavailable",
     "field_source_policy": {
       "price": [
         "yf",

@@ -1,7 +1,7 @@
 {
   "stockanalysis": {
     "universe_records": 5701,
-    "etf_detail_files": 5872,
+    "etf_detail_files": 5874,
     "stock_detail_files": 49,
     "financial_detail_files": 43,
     "etf_backfill_progress": "103.0%"
@@ -39,7 +39,7 @@
     ],
     "next_expected_offset": 5100,
     "ready_for_finalize": false,
-    "detail_minus_backfill_ok": 1441,
+    "detail_minus_backfill_ok": 1443,
     "transient_file_count": 0,
     "transient_files": {
       "source": [],
@@ -181,19 +181,19 @@
     ]
   },
   "market_facts": {
-    "count": 7069,
+    "count": 7071,
     "coverage": {
       "yf": 1281,
-      "stockanalysis": 5620,
-      "stockanalysis_yf_fallback": 215,
+      "stockanalysis": 5622,
+      "stockanalysis_yf_fallback": 197,
       "stockanalysis_financials": 43,
       "stockanalysis_etf_catalog": 5701,
       "slickcharts": 544,
-      "etf": 5850,
+      "etf": 5852,
       "stock": 1219
     },
-    "audited_ticker_files": 7069,
-    "candidate_fields": 87840,
+    "audited_ticker_files": 7071,
+    "candidate_fields": 87749,
     "multi_candidate_fields": 28515,
     "policy_mismatch_fields": 0,
     "percent_scale_warnings": 4,
@@ -206,19 +206,19 @@
         "yf_info": 0,
         "stockanalysis_history": 0,
         "stockanalysis_performance": 5619,
-        "etf_coverage_pct": 97.44,
+        "etf_coverage_pct": 97.4,
         "stockanalysis_universe_pct": 99.98
       },
       "return_3m": {
-        "total": 6605,
-        "etf": 5419,
-        "stock": 1186,
-        "yf_history_1y": 1267,
+        "total": 6589,
+        "etf": 5402,
+        "stock": 1187,
+        "yf_history_1y": 1268,
         "yf_info": 0,
-        "stockanalysis_history": 5338,
+        "stockanalysis_history": 5321,
         "stockanalysis_performance": 0,
-        "etf_coverage_pct": 92.63,
-        "stockanalysis_universe_pct": 95.05
+        "etf_coverage_pct": 92.31,
+        "stockanalysis_universe_pct": 94.76
       },
       "return_ytd": {
         "total": 5909,
@@ -228,7 +228,7 @@
         "yf_info": 0,
         "stockanalysis_history": 0,
         "stockanalysis_performance": 4634,
-        "etf_coverage_pct": 80.68,
+        "etf_coverage_pct": 80.66,
         "stockanalysis_universe_pct": 82.79
       },
       "return_1y": {
@@ -239,7 +239,7 @@
         "yf_info": 0,
         "stockanalysis_history": 0,
         "stockanalysis_performance": 4265,
-        "etf_coverage_pct": 74.38,
+        "etf_coverage_pct": 74.35,
         "stockanalysis_universe_pct": 76.32
       },
       "return_3y_avg": {
@@ -250,7 +250,7 @@
         "yf_info": 37,
         "stockanalysis_history": 2938,
         "stockanalysis_performance": 0,
-        "etf_coverage_pct": 50.85,
+        "etf_coverage_pct": 50.84,
         "stockanalysis_universe_pct": 52.18
       },
       "return_5y_avg": {
@@ -261,7 +261,7 @@
         "yf_info": 18,
         "stockanalysis_history": 0,
         "stockanalysis_performance": 2081,
-        "etf_coverage_pct": 35.88,
+        "etf_coverage_pct": 35.87,
         "stockanalysis_universe_pct": 36.82
       },
       "return_10y_avg": {
@@ -272,7 +272,7 @@
         "yf_info": 0,
         "stockanalysis_history": 0,
         "stockanalysis_performance": 1225,
-        "etf_coverage_pct": 20.94,
+        "etf_coverage_pct": 20.93,
         "stockanalysis_universe_pct": 21.49
       },
       "return_max_avg": {
@@ -283,70 +283,68 @@
         "yf_info": 0,
         "stockanalysis_history": 0,
         "stockanalysis_performance": 4320,
-        "etf_coverage_pct": 73.85,
+        "etf_coverage_pct": 73.82,
         "stockanalysis_universe_pct": 75.78
       }
     },
     "return_field_denominators": {
-      "etf": 5850,
+      "etf": 5852,
       "stockanalysis_universe": 5701,
       "stock": 1219
     }
   },
   "market_source_parity": {
-    "generated_at": "2026-10-09T02:24:32Z",
+    "generated_at": "2026-10-09T03:57:37Z",
     "summary": {
-      "inspected_ticker_files": 7069,
+      "inspected_ticker_files": 7071,
       "fields": 19,
       "multi_candidate_fields": 28515,
       "divergence_rows": 28511,
-      "percent_scale_warnings": 9,
+      "percent_scale_warnings": 5,
       "diagnosis_counts": {
-        "agreement": 26032,
-        "scale_mismatch": 9,
-        "sign_divergence": 88,
-        "stale": 1149,
-        "value_drift": 1233
+        "agreement": 23916,
+        "scale_mismatch": 5,
+        "sign_divergence": 79,
+        "stale": 3502,
+        "value_drift": 1009
       },
-      "stale_rows": 1149,
-      "scale_mismatch_rows": 9,
-      "sign_divergence_rows": 88
+      "stale_rows": 3502,
+      "scale_mismatch_rows": 5,
+      "sign_divergence_rows": 79
     }
   },
   "incremental_etf": {
-    "status": "pass",
+    "status": "fail",
     "has_run_evidence": true,
     "index_file_exists": true,
     "proof_file_exists": true,
     "plan_file_exists": true,
-    "index_generated_at": "2026-10-09T01:17:29Z",
-    "proof_generated_at": "2026-10-08T03:05:24Z",
+    "index_generated_at": "2026-10-09T03:20:36Z",
+    "proof_generated_at": "2026-10-09T03:13:06Z",
     "plan_generated_at": "2026-09-27T22:47:42Z",
     "counts": {
       "candidates": 5614,
       "selected": 100,
-      "missing": 1,
+      "missing": 3,
       "fallback_retry": 0,
-      "stale": 144,
+      "stale": 83,
       "plan_selected": 0,
       "plan_candidates": 0,
       "plan_history_gap": 0,
       "plan_inception_limited_history_gap": 0,
       "plan_total_history_gap": 0,
-      "no_actionable_plan": 1,
-      "cooldown_skipped": 26,
-      "pending_ledger_tracked": 186,
-      "pending_ledger_cooldown": 29,
-      "etfs_stockanalysis_ok": 0,
-      "etfs_yahoo_fallback_ok": 0,
+      "no_actionable_plan": 0,
+      "cooldown_skipped": 29,
+      "pending_ledger_tracked": 198,
+      "pending_ledger_cooldown": 34,
+      "etfs_stockanalysis_ok": 197,
+      "etfs_yahoo_fallback_ok": 1,
       "etfs_still_pending": 0,
-      "hard_failed": 0,
-      "market_facts_yf_fallback": 215
+      "hard_failed": 19,
+      "market_facts_yf_fallback": 197
     },
     "notes": [
-      "incremental_plan_available",
-      "incremental_not_reflected_in_fetch_index",
-      "cooldown_tracked_no_actionable_plan"
+      "incremental_plan_available"
     ]
   }
 }
