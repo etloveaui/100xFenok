@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-09-30T14:35:55Z",
     "history_as_of": "2026-09-30",
-    "path": "data/yf/finance/EMAU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EMAU.json",
     "payload_sha256": "ae1f9b20e8cd997fc0ce3da9f4f1e24deb1e8c46bbdf147ef1ad68283e8380e6",
     "quote_as_of": "2026-09-30T13:46:03Z",
     "source_as_of": "2026-09-30"
@@ -19,25 +19,25 @@
     "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T01:38:16Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-09-30T14:35:55Z",
+    "history_as_of": "2026-09-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EMAU.json",
-    "payload_sha256": "47569cf322f58291e38da3dda153086c5f75e52656607994ec0ad9863f9a433f",
-    "quote_as_of": "2026-09-14T13:32:18Z",
-    "source_as_of": "2026-09-14T13:32:18Z"
+    "payload_sha256": "ae1f9b20e8cd997fc0ce3da9f4f1e24deb1e8c46bbdf147ef1ad68283e8380e6",
+    "quote_as_of": "2026-09-30T13:46:03Z",
+    "source_as_of": "2026-09-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-09-28T03:11:20Z",
-    "expected_resolution": "next_natural_yahoo_run",
+    "age_business_days": 7,
+    "classified_at": "2026-10-09T03:01:27Z",
+    "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "EMAU holds LKG because Yahoo source date 2026-09-14T13:32:18Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EMAU holds LKG because Yahoo source date 2026-09-30 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-09-14T13:32:18Z"
+    "source_as_of": "2026-09-30"
   },
   "ticker": "EMAU",
-  "updated_at": "2026-09-30T14:35:55Z"
+  "updated_at": "2026-10-09T03:01:27Z"
 }
