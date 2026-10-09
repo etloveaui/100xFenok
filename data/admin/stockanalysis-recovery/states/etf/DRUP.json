@@ -2,9 +2,9 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "etf",
   "entity": "DRUP",
-  "resolution_state": "fresh_primary",
-  "retry": false,
-  "updated_at": "2026-10-04T16:01:06Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "updated_at": "2026-10-09T03:12:10Z",
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/etf/DRUP.json",
     "payload_sha256": "45675dcc0dfd9ad0394ed2156c628ce6b3b249a3188b595bf16ed60ad92cb7de",
@@ -12,10 +12,17 @@
     "fetched_at": "2026-07-18T18:38:14Z"
   },
   "current": {
-    "path": "data/stockanalysis/etfs/DRUP.json",
-    "payload_sha256": "2f461fc90a119fe8cd7a27e682a4fbc02a5968526fbce336396b7b534bda80c9",
-    "source_as_of": "2026-10-02T20:00:00Z",
-    "fetched_at": "2026-10-04T16:01:22Z"
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/DRUP.json",
+    "payload_sha256": "45675dcc0dfd9ad0394ed2156c628ce6b3b249a3188b595bf16ed60ad92cb7de",
+    "source_as_of": "2025-10-31T00:00:00Z",
+    "fetched_at": "2026-07-18T18:38:14Z"
   },
-  "failure_count": 0
+  "failure_count": 1,
+  "latest_failure": {
+    "observed_at": "2026-10-09T03:12:10Z",
+    "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "45675dcc0dfd9ad0394ed2156c628ce6b3b249a3188b595bf16ed60ad92cb7de",
+    "data_loss": false
+  }
 }
