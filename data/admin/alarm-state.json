@@ -1,12 +1,24 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-10T09:02:08.101Z",
+  "generated_at": "2026-10-10T10:22:34.142Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-defillama.yml",
       "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -31,6 +43,30 @@
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -381,14 +417,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38039753202",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38039753202",
-    "observed_at": "2026-10-10T09:02:08.101Z",
+    "run_id": "38044421817",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38044421817",
+    "observed_at": "2026-10-10T10:22:34.142Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-defillama.yml",
+      "fetch-yahoo-ticker.yml",
       "fetch-yf-finance.yml",
-      "global-writer-queue-observer.yml"
+      "global-writer-queue-observer.yml",
+      "retention-restore.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
