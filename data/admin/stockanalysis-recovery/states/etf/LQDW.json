@@ -2,20 +2,27 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "etf",
   "entity": "LQDW",
-  "resolution_state": "fresh_primary",
-  "retry": false,
-  "updated_at": "2026-09-30T15:15:34Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "updated_at": "2026-10-10T02:51:36Z",
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/etf/LQDW.json",
-    "payload_sha256": "055778adca03b94e69353e0c14ecefb7367a25c062e7d73286a5326415cde56f",
-    "source_as_of": null,
-    "fetched_at": "2026-07-18T21:47:40Z"
-  },
-  "current": {
-    "path": "data/stockanalysis/etfs/LQDW.json",
     "payload_sha256": "afd842518f1718f28cdce1ac72d0a8b9589eb3509d4846e2807fc8469d75d197",
     "source_as_of": "2026-09-30T14:58:13Z",
     "fetched_at": "2026-09-30T15:17:42Z"
   },
-  "failure_count": 0
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/LQDW.json",
+    "payload_sha256": "afd842518f1718f28cdce1ac72d0a8b9589eb3509d4846e2807fc8469d75d197",
+    "source_as_of": "2026-09-30T14:58:13Z",
+    "fetched_at": "2026-09-30T15:17:42Z"
+  },
+  "failure_count": 1,
+  "latest_failure": {
+    "observed_at": "2026-10-10T02:51:36Z",
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "afd842518f1718f28cdce1ac72d0a8b9589eb3509d4846e2807fc8469d75d197",
+    "data_loss": false
+  }
 }

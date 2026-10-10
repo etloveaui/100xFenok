@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-10-09T03:20:28Z",
+  "generated_at": "2026-10-10T02:59:46Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
@@ -10,43 +10,32 @@
   },
   "counts": {
     "tracked": 198,
-    "cooldown": 34,
-    "provider_coverage_gaps": 27,
-    "updated": 23,
-    "cleared": 6
+    "cooldown": 35,
+    "provider_coverage_gaps": 28,
+    "updated": 10,
+    "cleared": 8
   },
   "updated": [
-    "ABXB",
-    "CTJL",
-    "DRUP",
-    "DVIN",
-    "DVRE",
-    "HJLY",
-    "IDJL",
-    "JADB",
-    "JELM",
-    "JUDB",
-    "JULC",
-    "KMEM",
-    "LCTO",
-    "MMID",
-    "NUIF",
-    "OCDB",
-    "PQX",
-    "PQXV",
-    "QJL",
-    "QQJL",
-    "QULL",
-    "SCJL",
-    "TCAN"
+    "EJUN",
+    "HYGW",
+    "LQDW",
+    "MAPP",
+    "SCDL",
+    "VCHY",
+    "WAGN",
+    "WAMA",
+    "WDIG",
+    "WDRN"
   ],
   "cleared": [
-    "ATMP",
-    "BDCX",
-    "BDCZ",
-    "CEFD",
-    "DGP",
-    "RSSB"
+    "PFFL",
+    "PHYS",
+    "PSLV",
+    "PWRD",
+    "SFGV",
+    "SLVO",
+    "SMHB",
+    "SPPP"
   ],
   "entries": {
     "AAPE": {
@@ -731,10 +720,10 @@
     },
     "EJUN": {
       "ticker": "EJUN",
-      "last_attempt_utc": "2026-09-24T15:15:17Z",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
       "failure_reason": "RuntimeError: empty payload",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": "yahoo_finance"
@@ -1013,6 +1002,16 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
+    },
+    "HYGW": {
+      "ticker": "HYGW",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
     },
     "HYSA": {
       "ticker": "HYSA",
@@ -1299,6 +1298,16 @@
       "last_provider": "stockanalysis",
       "fallback_provider": null
     },
+    "LQDW": {
+      "ticker": "LQDW",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: Yahoo ETF canonical history close is invalid",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "LVIG": {
       "ticker": "LVIG",
       "last_attempt_utc": "2026-10-05T02:15:12Z",
@@ -1306,6 +1315,16 @@
       "failure_class": "hard_error",
       "consecutive_failures": 3,
       "next_attempt_after_utc": "2026-10-12T02:15:12Z",
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "MAPP": {
+      "ticker": "MAPP",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
@@ -1504,16 +1523,6 @@
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
-    "PFFL": {
-      "ticker": "PFFL",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "hard_error",
-      "consecutive_failures": 3,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "fallback_observed_primary_preserved",
-      "last_provider": "yahoo_finance"
-    },
     "PFRX": {
       "ticker": "PFRX",
       "last_attempt_utc": "2026-10-05T02:15:12Z",
@@ -1523,16 +1532,6 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
-    },
-    "PHYS": {
-      "ticker": "PHYS",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 5,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
     },
     "PLOO": {
       "ticker": "PLOO",
@@ -1569,16 +1568,6 @@
       "last_status": "error",
       "last_provider": null
     },
-    "PSLV": {
-      "ticker": "PSLV",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 5,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
     "PUL": {
       "ticker": "PUL",
       "last_attempt_utc": "2026-10-08T03:12:29Z",
@@ -1588,16 +1577,6 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
-    },
-    "PWRD": {
-      "ticker": "PWRD",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "hard_error",
-      "consecutive_failures": 3,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "fallback_observed_primary_preserved",
-      "last_provider": "yahoo_finance"
     },
     "QJL": {
       "ticker": "QJL",
@@ -1696,13 +1675,18 @@
     },
     "SCDL": {
       "ticker": "SCDL",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "hard_error",
-      "consecutive_failures": 3,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "fallback_observed_primary_preserved",
-      "last_provider": "yahoo_finance"
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "availability_status": "provider_absent",
+      "availability_reason": "provider_coverage_gap",
+      "provider_response": "HTTP 404",
+      "failure_reason": null,
+      "failure_class": "provider_coverage_gap",
+      "consecutive_failures": 0,
+      "next_probe_after_utc": "2026-10-17T02:59:46Z",
+      "next_attempt_after_utc": "2026-10-17T02:59:46Z",
+      "last_status": "provider_coverage_gap",
+      "last_provider": "stockanalysis",
+      "fallback_provider": null
     },
     "SCJL": {
       "ticker": "SCJL",
@@ -1722,26 +1706,6 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
-    },
-    "SFGV": {
-      "ticker": "SFGV",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
-    },
-    "SLVO": {
-      "ticker": "SLVO",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "hard_error",
-      "consecutive_failures": 3,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "fallback_observed_primary_preserved",
-      "last_provider": "yahoo_finance"
     },
     "SMAP": {
       "ticker": "SMAP",
@@ -1773,16 +1737,6 @@
       "last_provider": "stockanalysis",
       "fallback_provider": null
     },
-    "SMHB": {
-      "ticker": "SMHB",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "hard_error",
-      "consecutive_failures": 3,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "fallback_observed_primary_preserved",
-      "last_provider": "yahoo_finance"
-    },
     "SMTG": {
       "ticker": "SMTG",
       "last_attempt_utc": "2026-10-07T02:56:01Z",
@@ -1812,16 +1766,6 @@
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": null
-    },
-    "SPPP": {
-      "ticker": "SPPP",
-      "last_attempt_utc": "2026-09-24T17:00:10Z",
-      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
-      "failure_class": "hard_error",
-      "consecutive_failures": 4,
-      "next_attempt_after_utc": "2026-10-01T17:00:10Z",
-      "last_status": "error",
-      "last_provider": "yahoo_finance"
     },
     "STRC": {
       "ticker": "STRC",
@@ -2073,6 +2017,16 @@
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
+    "VCHY": {
+      "ticker": "VCHY",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
     "VIAG": {
       "ticker": "VIAG",
       "last_attempt_utc": "2026-10-08T03:12:29Z",
@@ -2132,6 +2086,46 @@
       "next_attempt_after_utc": "2026-10-04T22:47:35Z",
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
+    },
+    "WAGN": {
+      "ticker": "WAGN",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "WAMA": {
+      "ticker": "WAMA",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "WDIG": {
+      "ticker": "WDIG",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
+    },
+    "WDRN": {
+      "ticker": "WDRN",
+      "last_attempt_utc": "2026-10-10T02:59:46Z",
+      "failure_reason": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": null
     },
     "XVO": {
       "ticker": "XVO",
