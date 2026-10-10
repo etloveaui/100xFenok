@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-09T03:15:04Z",
     "history_as_of": "2026-10-08",
-    "path": "data/yf/finance/ORCL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ORCL.json",
     "payload_sha256": "5b18308b92f16c98900661d0fa08af14a57dcd692210054213c0e3242441271c",
     "quote_as_of": "2026-10-08T20:04:23Z",
     "source_as_of": "2026-10-08"
@@ -11,25 +11,36 @@
     "global_scouter_stock",
     "market_facts"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "failures": [],
-    "latency_ms": 767,
-    "observed_at": "2026-10-09T03:15:04Z",
-    "outcome": "fresh"
+    "latency_ms": 698,
+    "observed_at": "2026-10-10T02:41:40Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-10T02:41:40Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-08T01:27:22Z",
-    "history_as_of": "2026-09-04",
+    "fetched_at": "2026-10-09T03:15:04Z",
+    "history_as_of": "2026-10-08",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ORCL.json",
-    "payload_sha256": "96540bb42de12f9c2f10c2747767e298cf64a974625cb6844170e5b60a99c779",
-    "quote_as_of": "2026-09-04T20:04:22Z",
-    "source_as_of": "2026-09-04"
+    "payload_sha256": "5b18308b92f16c98900661d0fa08af14a57dcd692210054213c0e3242441271c",
+    "quote_as_of": "2026-10-08T20:04:23Z",
+    "source_as_of": "2026-10-08"
   },
   "recovered_at": "2026-09-20T11:24:11Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -41,5 +52,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ORCL",
-  "updated_at": "2026-10-09T03:15:04Z"
+  "updated_at": "2026-10-10T02:41:40Z"
 }

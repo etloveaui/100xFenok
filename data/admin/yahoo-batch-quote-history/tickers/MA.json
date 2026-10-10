@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-09T03:10:08Z",
     "history_as_of": "2026-10-08",
-    "path": "data/yf/finance/MA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MA.json",
     "payload_sha256": "d90bf737364e8e22c661ef29d78a4baef7260d38d38821e111c92a694e406ba1",
     "quote_as_of": "2026-10-08T20:00:02Z",
     "source_as_of": "2026-10-08"
@@ -11,26 +11,37 @@
     "global_scouter_stock",
     "market_facts"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "failures": [],
-    "latency_ms": 722,
-    "observed_at": "2026-10-09T03:10:08Z",
-    "outcome": "fresh"
+    "latency_ms": 787,
+    "observed_at": "2026-10-10T02:36:38Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-10T02:36:38Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-02T01:15:45Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-10-09T03:10:08Z",
+    "history_as_of": "2026-10-08",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MA.json",
-    "payload_sha256": "0669fc9d0276c025270e67c0ee6b84357904c563635b749aa412e5296632544b",
-    "quote_as_of": "2026-09-01T20:00:02Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "d90bf737364e8e22c661ef29d78a4baef7260d38d38821e111c92a694e406ba1",
+    "quote_as_of": "2026-10-08T20:00:02Z",
+    "source_as_of": "2026-10-08"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MA",
-  "updated_at": "2026-10-09T03:10:08Z"
+  "updated_at": "2026-10-10T02:36:38Z"
 }

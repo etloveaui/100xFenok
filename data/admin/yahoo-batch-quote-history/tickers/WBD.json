@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-09T03:02:10Z",
     "history_as_of": "2026-10-06",
-    "path": "data/yf/finance/WBD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WBD.json",
     "payload_sha256": "ead7b9c64fa08bf689713c86ec396886f2fa903642d13a37384873a20674c556",
     "quote_as_of": "2026-10-05T20:00:01Z",
     "source_as_of": "2026-10-05T20:00:01Z"
@@ -11,25 +11,36 @@
     "global_scouter_stock",
     "market_facts"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for WBD: history_as_of",
     "failures": [],
-    "latency_ms": 630,
-    "observed_at": "2026-10-09T03:02:10Z",
-    "outcome": "fresh"
+    "latency_ms": 720,
+    "observed_at": "2026-10-10T02:47:09Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for WBD: history_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-10T02:47:09Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-07T02:49:04Z",
+    "fetched_at": "2026-10-09T03:02:10Z",
     "history_as_of": "2026-10-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/WBD.json",
-    "payload_sha256": "79cdeb46ae09ae0f68431c9bdaf859880c1383f0ad3a6ef681bb32ad4efa034d",
+    "payload_sha256": "ead7b9c64fa08bf689713c86ec396886f2fa903642d13a37384873a20674c556",
     "quote_as_of": "2026-10-05T20:00:01Z",
     "source_as_of": "2026-10-05T20:00:01Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WBD",
-  "updated_at": "2026-10-09T03:02:10Z"
+  "updated_at": "2026-10-10T02:47:09Z"
 }
