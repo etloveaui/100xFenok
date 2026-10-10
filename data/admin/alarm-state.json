@@ -1,12 +1,12 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-10T13:51:55.575Z",
+  "generated_at": "2026-10-10T15:46:37.050Z",
   "status": "open",
   "open_incident_count": 4,
   "open_incidents": [
     {
-      "workflow": "fetch-yahoo-ticker.yml",
-      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "workflow": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -29,8 +29,8 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "retention-restore.yml",
-      "label": "R2 Retention Restore Watchdog",
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -41,8 +41,8 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
+      "workflow": "retention-restore.yml",
+      "label": "R2 Retention Restore Watchdog",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -393,15 +393,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38057136328",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38057136328",
-    "observed_at": "2026-10-10T13:51:55.575Z",
-    "event": "schedule",
+    "run_id": "38064728538",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38064728538",
+    "observed_at": "2026-10-10T15:46:37.050Z",
+    "event": "workflow_run",
     "workflows": [
-      "fetch-yahoo-ticker.yml",
+      "fetch-defillama.yml",
       "fetch-yf-finance.yml",
-      "retention-restore.yml",
-      "worker-request-budget-alarm.yml"
+      "global-writer-queue-observer.yml",
+      "retention-restore.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
