@@ -3520,6 +3520,68 @@ assert callable(namespace["load_universe"])
         self.assertEqual(set(current), {"VMRK", "MEGX"})
         self.assertEqual(current["VMRK"], ["same_security_successor:EQR", "stock"])
 
+    def test_leading_dividend_events_do_not_invalidate_returned_prices(self) -> None:
+        from data_supply_stock_detail import _validate_yahoo, StockDetailValidationError
+
+        event = {key: float("nan") for key in ("Open", "High", "Low", "Close")}
+        event.update(Volume=0, Dividends=0.76)
+        price = {"Open": 590, "High": 591, "Low": 588, "Close": 589.14, "Volume": 20}
+
+        def compact(rows, limit=260):
+            frame = types.SimpleNamespace(empty=False, iterrows=lambda: iter(rows))
+            return self.fetcher.compact_history(frame, limit)
+
+        def validate(history):
+            payload = self._daily_payload("MA")
+            payload["data"]["info"].update(currentPrice=589.14, previousClose=588)
+            payload["data"]["history_1y"] = history
+            _validate_yahoo("MA", payload)
+
+        rows = [("2025-10-09", event), ("2025-10-10", price), ("2025-10-13", price)]
+        retained = compact(rows)
+        self.assertEqual([row["date"] for row in retained], ["2025-10-10", "2025-10-13"])
+        self.assertEqual([row["Close"] for row in retained], [589.14, 589.14])
+        validate(retained)
+        # The same null event inside the returned range is an unresolved hole.
+        interior = [("2025-10-09", price), ("2025-10-10", event), ("2025-10-13", price)]
+        for limit in (260, 2):
+            with self.assertRaises(StockDetailValidationError):
+                validate(compact(interior, limit))
+        # A partial price row is not a dividend-only placeholder.
+        partial = dict(event, Open=590)
+        with self.assertRaises(StockDetailValidationError):
+            validate(compact([("2025-10-09", partial), ("2025-10-10", price)]))
+        self.assertIsNone(compact([("2025-10-09", event)]))
+        with self.assertRaises(StockDetailValidationError):
+            validate(compact([("2025-10-09", event)]))
+
+    def test_october_refused_terminal_members_retain_bytes_and_leave_selection(self) -> None:
+        ended = {"DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK",
+                 "DVXP", "DVXV", "DVXY", "USML", "QRVO", "WBD", "CUSD", "BLD", "DAY", "HOLX"}
+        retired = ended | {"PSKY"}
+        sources = {ticker: ["universe"] for ticker in retired | {"MA", "ORCL", "USMX", "USSX"}}
+        current = self.fetcher.current_yahoo_universe_sources(sources, "2026-10-11T00:00:00Z")
+        self.assertEqual(set(current), {"MA", "ORCL", "USMX", "USSX", "SKYD"})
+        self.assertIn("same_security_successor:PSKY", current["SKYD"])
+        before = self.fetcher.current_yahoo_universe_sources({"PSKY": ["universe"]}, "2026-10-05T23:59:59Z")
+        self.assertEqual(set(before), {"PSKY"})
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        snapshots = {}
+        for ticker in retired:
+            path = self.fetcher.OUT_DIR / f"{ticker}.json"
+            write_json(path, self._daily_payload(ticker))
+            snapshots[path] = path.read_bytes()
+        evidence = self.fetcher.verified_yahoo_terminal_evidence("2026-10-11T00:00:00Z")
+        store.transition_terminal_tickers(retired, evidence, self._run("verified-retirement"))
+        for ticker in retired:
+            state = json.loads(store._state_path(ticker).read_text())
+            self.assertEqual(state["resolution_state"], "terminal_provider_unsupported")
+            self.assertFalse(state["retry"])
+            self.assertTrue(evidence["tickers"][ticker][0]["source_url"].startswith("https://"))
+        for path, original in snapshots.items():
+            self.assertEqual(path.read_bytes(), original)
+        self.assertFalse((self.fetcher.OUT_DIR / "SKYD.json").exists())
+
     def test_confirmed_ihyf_successor_routes_once_without_rewriting_history(self) -> None:
         sources = {"IHYF": ["stockanalysis_etf"], "GTOQ": ["stockanalysis_etf"]}
         before = self.fetcher.current_yahoo_universe_sources(sources, "2026-02-26T23:59:59Z")

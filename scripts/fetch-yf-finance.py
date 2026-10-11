@@ -114,6 +114,7 @@ YAHOO_SAME_SECURITY_SUCCESSORS = {
     "EQR": "VMRK", "BK": "BNY", "SATS": "ECHO", "MMC": "MRSH",
     "MGKX": "MEGX", "VBX": "USSX", "VOOX": "USLX",
     "XVO": "USMX", "XVUG": "USGX", "EWCO": "RSPC", "IHYF": "GTOQ",
+    "PSKY": "SKYD",
 }
 YAHOO_SAME_SECURITY_EFFECTIVE = {
     "EQR": "2026-08-18", "BK": "2026-05-21", "SATS": "2026-06-24",
@@ -123,10 +124,20 @@ YAHOO_SAME_SECURITY_EFFECTIVE = {
     # Conservative routing cutoff: this dated SEC prospectus confirms the
     # completed rename. This is not a claim about the first GTOQ trading day.
     "IHYF": "2026-02-27",
+    "PSKY": "2026-10-06",
 }
 # Public securities ended; merger consideration is not a ticker alias.
 # AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
 YAHOO_ENDED_SECURITIES = {
+    **{symbol: "WEBs SEC liquidation supplement; trading halted after 2026-08-26"
+       for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
+    "USML": "UBS redemption settled 2026-08-19",
+    "QRVO": "Skyworks merger closed 2026-10-05; cash and 0.960 SWKS shares per QRVO share",
+    "WBD": "Skydance cash acquisition closed 2026-10-06; WBD shares ceased trading",
+    "CUSD": "SEC liquidation supplement; trading ceased after 2026-06-26",
+    "BLD": "SEC closing 8-K; trading suspended before 2026-07-01 open",
+    "DAY": "Thoma Bravo cash acquisition closed 2026-02-04; shares ceased trading",
+    "HOLX": "SEC closing 8-K; taken private 2026-04-07",
     "AVB": "SEC closing 8-K 2026-08-17; 2.793 VMRK shares per AVB share",
     "EA": "SEC closing 8-K 2026-08-04; public shares cancelled",
     "CTRA": "SEC closing 8-K 2026-05-07; 0.70 DVN shares per CTRA share",
@@ -141,6 +152,10 @@ YAHOO_ENDED_SECURITIES = {
     "230360.KQ": "KRX final cash share exchange notice; delisted 2026-06-30",
 }
 YAHOO_SECURITY_END_DATES = {
+    **{symbol: "2026-08-27" for symbol in
+       ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
+    "USML": "2026-08-19", "QRVO": "2026-10-05", "WBD": "2026-10-06",
+    "CUSD": "2026-06-27", "BLD": "2026-07-01", "DAY": "2026-02-04", "HOLX": "2026-04-07",
     "AVB": "2026-08-17", "EA": "2026-08-05", "CTRA": "2026-05-07",
     "IWDL": "2026-08-19", "IWFL": "2026-08-19", "IWML": "2026-08-19",
     "MTUL": "2026-08-19", "QULL": "2026-08-19", "SCDL": "2026-08-19",
@@ -148,6 +163,16 @@ YAHOO_SECURITY_END_DATES = {
     "012510.KS": "2026-07-15", "230360.KQ": "2026-06-30",
 }
 YAHOO_LIFECYCLE_SOURCES = {
+    **{symbol: "https://www.sec.gov/Archives/edgar/data/1580843/000121390026090266/ea0302118-01_497.htm"
+       for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
+    "USML": "https://etracs.ubs.com/news/show-article/id/724",
+    "QRVO": "https://www.qorvo.com/about/news-events/news-releases/2026/skyworks-completes-combination-with-qorvo",
+    "WBD": "https://www.sec.gov/Archives/edgar/data/2041610/000110465926113913/tm2626659d7_ex99-1.htm",
+    "PSKY": "https://www.sec.gov/Archives/edgar/data/2041610/000110465926113913/tm2626659d7_ex99-1.htm",
+    "CUSD": "https://www.sec.gov/Archives/edgar/data/1141819/000089418926019839/cusd497eliquidation.htm",
+    "BLD": "https://www.sec.gov/Archives/edgar/data/1633931/000110465926079876/tm2618991d10_8k.htm",
+    "DAY": "https://www.thomabravo.com/press-releases/thoma-bravo-completes-acquisition-of-dayforce",
+    "HOLX": "https://www.sec.gov/Archives/edgar/data/859737/000119312526144632/d135035d8k.htm",
     "EQR": "https://www.sec.gov/Archives/edgar/data/915912/000110465926097833/tm2623381d1_8k.htm",
     "BK": "https://www.bny.com/corporate/global/en/about-us/newsroom/press-release/bny-announces-planned-change-of-stock-ticker-symbol-to-bny-130465.html",
     "SATS": "https://ir.echostar.com/news-releases/news-release-details/echostar-changing-stocker-ticker-sats-echo-marking-companys-next",
@@ -781,9 +806,14 @@ def small_series(series, max_items=None):
 def compact_history(df, max_rows=HISTORY_ENTRIES):
     if df is None or getattr(df, "empty", True):
         return None
-    rows = df.tail(max_rows)
     out = []
-    for idx, row in rows.iterrows():
+    for idx, row in df.iterrows():
+        # Yahoo can prepend dividend-only events before its returned price range.
+        # Only those leading events are omitted; later gaps remain for validation.
+        if (not out and all(clean_value(row.get(key)) is None for key in ("Open", "High", "Low", "Close"))
+                and clean_value(row.get("Volume")) == 0
+                and any(clean_value(row.get(key)) not in (None, 0) for key in ("Dividends", "Stock Splits"))):
+            continue
         rec = {"date": _iso(idx)}
         for key in ("Open", "High", "Low", "Close", "Volume", "Dividends", "Stock Splits"):
             if key in row:
@@ -792,7 +822,7 @@ def compact_history(df, max_rows=HISTORY_ENTRIES):
                     rec[key] = clean
         if len(rec) > 1:
             out.append(rec)
-    return out or None
+    return out[-max_rows:] or None
 
 
 def news_records(items, max_items=NEWS_ENTRIES):
