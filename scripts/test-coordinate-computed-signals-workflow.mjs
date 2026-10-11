@@ -108,14 +108,16 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
   assert.ok(source.includes("    branches:\n      - main"), "workflow_run must be scoped to main");
 
   // Fail-closed gate on the job itself.
-  assert.ok(
-    source.includes("if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}"),
-    "coordinator job must be fail-closed to successful main completions",
-  );
+  const coordinator = source.slice(source.indexOf("\n  coordinate-computed-signals:"));
+  const gate = /^    if: (.+)$/m.exec(coordinator)?.[1] ?? "";
+  assert.match(gate,
+    /github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main'/,
+    "coordinator job must be fail-closed to successful main completions");
+  assert.doesNotMatch(gate, /\|\|/, "another condition cannot bypass successful main completion");
 
   // Exporter dependency must be present in the sparse checkout. Prove both the
   // import and its resolved file, not only a hand-written workflow string.
-  const sparseBlock = source.slice(source.indexOf("sparse-checkout: |"), source.indexOf("\n\n      - name: Start from latest main"));
+  const sparseBlock = coordinator.slice(coordinator.indexOf("sparse-checkout: |"), coordinator.indexOf("\n\n      - name: Start from latest main"));
   assert.match(sparseBlock, /^            tools\/macro-monitor\/shared$/m,
     "coordinator sparse checkout must include the exporter dependency tree");
   const exporterSource = fs.readFileSync(path.join(repoRoot, "scripts", "export-computed-signals.mjs"), "utf8");
