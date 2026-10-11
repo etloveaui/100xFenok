@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "surface_index",
-  "generated_at": "2026-10-10T02:52:27Z",
+  "generated_at": "2026-10-11T12:09:01Z",
   "source_as_of": {
     "market_events": null,
     "sectors": null,
@@ -18,7 +18,7 @@
     "ok": 25,
     "failed": 0,
     "tables": 37,
-    "rows": 5160
+    "rows": 10924
   },
   "results": [
     {
@@ -41,8 +41,8 @@
       "path": "surfaces/etf_screener.json",
       "endpoint": "/etf/screener/__data.json?x-sveltekit-invalidated=01",
       "tables": 0,
-      "rows": 20,
-      "latency_ms": 12772,
+      "rows": 5784,
+      "latency_ms": 11264,
       "error": null
     },
     {
@@ -323,27 +323,15 @@
     }
   ],
   "latest_attempt": {
-    "generated_at": "2026-10-10T02:52:27Z",
+    "generated_at": "2026-10-11T12:09:01Z",
     "counts": {
-      "surfaces_requested": 25,
-      "ok": 25,
+      "surfaces_requested": 1,
+      "ok": 1,
       "failed": 0,
-      "tables": 37,
-      "rows": 5160
+      "tables": 0,
+      "rows": 5784
     },
     "results": [
-      {
-        "surface": "new_etfs",
-        "group": "etf",
-        "format": "svelte_devalue",
-        "status": "ok",
-        "path": "surfaces/new_etfs.json",
-        "endpoint": "/etf/list/new/__data.json?x-sveltekit-invalidated=01",
-        "tables": 0,
-        "rows": 100,
-        "latency_ms": 296,
-        "error": null
-      },
       {
         "surface": "etf_screener",
         "group": "etf",
@@ -352,284 +340,8 @@
         "path": "surfaces/etf_screener.json",
         "endpoint": "/etf/screener/__data.json?x-sveltekit-invalidated=01",
         "tables": 0,
-        "rows": 20,
-        "latency_ms": 12772,
-        "error": null
-      },
-      {
-        "surface": "etf_provider_blackrock",
-        "group": "etf_provider",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/etf_provider_blackrock.json",
-        "endpoint": "/etf/provider/blackrock/",
-        "tables": 1,
-        "rows": 478,
-        "latency_ms": 415,
-        "error": null
-      },
-      {
-        "surface": "etf_provider_proshares",
-        "group": "etf_provider",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/etf_provider_proshares.json",
-        "endpoint": "/etf/provider/proshares/",
-        "tables": 1,
-        "rows": 173,
-        "latency_ms": 481,
-        "error": null
-      },
-      {
-        "surface": "list_bitcoin_etfs",
-        "group": "theme_list",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/list_bitcoin_etfs.json",
-        "endpoint": "/list/bitcoin-etfs/",
-        "tables": 1,
-        "rows": 77,
-        "latency_ms": 288,
-        "error": null
-      },
-      {
-        "surface": "ipos_recent",
-        "group": "ipo",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/ipos_recent.json",
-        "endpoint": "/ipos/",
-        "tables": 2,
-        "rows": 203,
-        "latency_ms": 243,
-        "error": null
-      },
-      {
-        "surface": "ipos_statistics",
-        "group": "ipo",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/ipos_statistics.json",
-        "endpoint": "/ipos/statistics/",
-        "tables": 1,
-        "rows": 5,
-        "latency_ms": 175,
-        "error": null
-      },
-      {
-        "surface": "ipos_calendar",
-        "group": "ipo",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/ipos_calendar.json",
-        "endpoint": "/ipos/calendar/",
-        "tables": 2,
-        "rows": 5,
-        "latency_ms": 221,
-        "error": null
-      },
-      {
-        "surface": "ipos_filings",
-        "group": "ipo",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/ipos_filings.json",
-        "endpoint": "/ipos/filings/",
-        "tables": 2,
-        "rows": 477,
-        "latency_ms": 259,
-        "error": null
-      },
-      {
-        "surface": "ipos_withdrawn",
-        "group": "ipo",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/ipos_withdrawn.json",
-        "endpoint": "/ipos/withdrawn/",
-        "tables": 2,
-        "rows": 148,
-        "latency_ms": 264,
-        "error": null
-      },
-      {
-        "surface": "actions_recent",
-        "group": "corporate_actions",
-        "format": "svelte_devalue",
-        "status": "ok",
-        "path": "surfaces/actions_recent.json",
-        "endpoint": "/actions/__data.json?x-sveltekit-invalidated=01",
-        "tables": 0,
-        "rows": 1950,
-        "latency_ms": 382,
-        "error": null
-      },
-      {
-        "surface": "actions_splits",
-        "group": "corporate_actions",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/actions_splits.json",
-        "endpoint": "/actions/splits/",
-        "tables": 1,
-        "rows": 500,
-        "latency_ms": 348,
-        "error": null
-      },
-      {
-        "surface": "market_gainers",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_gainers.json",
-        "endpoint": "/markets/gainers/",
-        "tables": 1,
-        "rows": 20,
-        "latency_ms": 259,
-        "error": null
-      },
-      {
-        "surface": "market_losers",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_losers.json",
-        "endpoint": "/markets/losers/",
-        "tables": 1,
-        "rows": 20,
-        "latency_ms": 286,
-        "error": null
-      },
-      {
-        "surface": "market_active",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_active.json",
-        "endpoint": "/markets/active/",
-        "tables": 1,
-        "rows": 20,
-        "latency_ms": 239,
-        "error": null
-      },
-      {
-        "surface": "market_premarket",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_premarket.json",
-        "endpoint": "/markets/premarket/",
-        "tables": 2,
-        "rows": 20,
-        "latency_ms": 226,
-        "error": null
-      },
-      {
-        "surface": "market_afterhours",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_afterhours.json",
-        "endpoint": "/markets/afterhours/",
-        "tables": 2,
-        "rows": 20,
-        "latency_ms": 207,
-        "error": null
-      },
-      {
-        "surface": "market_gainers_week",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_gainers_week.json",
-        "endpoint": "/markets/gainers/week/",
-        "tables": 1,
-        "rows": 20,
-        "latency_ms": 279,
-        "error": null
-      },
-      {
-        "surface": "market_gainers_month",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_gainers_month.json",
-        "endpoint": "/markets/gainers/month/",
-        "tables": 1,
-        "rows": 20,
-        "latency_ms": 231,
-        "error": null
-      },
-      {
-        "surface": "market_losers_ytd",
-        "group": "market_movers",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/market_losers_ytd.json",
-        "endpoint": "/markets/losers/ytd/",
-        "tables": 1,
-        "rows": 20,
-        "latency_ms": 338,
-        "error": null
-      },
-      {
-        "surface": "earnings_calendar",
-        "group": "earnings",
-        "format": "svelte_devalue",
-        "status": "ok",
-        "path": "surfaces/earnings_calendar.json",
-        "endpoint": "/stocks/earnings-calendar/__data.json?x-sveltekit-invalidated=01",
-        "tables": 0,
-        "rows": 5,
-        "latency_ms": 155,
-        "error": null
-      },
-      {
-        "surface": "industries",
-        "group": "industry",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/industries.json",
-        "endpoint": "/stocks/industry/",
-        "tables": 11,
-        "rows": 145,
-        "latency_ms": 310,
-        "error": null
-      },
-      {
-        "surface": "industries_all",
-        "group": "industry",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/industries_all.json",
-        "endpoint": "/stocks/industry/all/",
-        "tables": 1,
-        "rows": 145,
-        "latency_ms": 274,
-        "error": null
-      },
-      {
-        "surface": "sector_technology",
-        "group": "industry",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/sector_technology.json",
-        "endpoint": "/stocks/sector/technology/",
-        "tables": 1,
-        "rows": 500,
-        "latency_ms": 341,
-        "error": null
-      },
-      {
-        "surface": "industry_semiconductors",
-        "group": "industry",
-        "format": "html_table",
-        "status": "ok",
-        "path": "surfaces/industry_semiconductors.json",
-        "endpoint": "/stocks/industry/semiconductors/",
-        "tables": 1,
-        "rows": 69,
-        "latency_ms": 164,
+        "rows": 5784,
+        "latency_ms": 11264,
         "error": null
       }
     ]
