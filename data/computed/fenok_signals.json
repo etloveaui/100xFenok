@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-11T00:37:38.289Z",
+  "generated_at": "2026-10-11T03:32:51.542Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-10-02",
   "source_date_reason": null,
-  "source_generated_at": "2026-10-11T00:37:35.576Z",
+  "source_generated_at": "2026-10-11T03:32:49.372Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -97225,9 +97225,9 @@
         "action_bucket": "smart_money"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 45.9,
+        "common_basis_score_0_100": 46.66,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 50.22,
+        "conviction_score_0_100": 50.68,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -97510,41 +97510,41 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 55.34,
-          "direction": "constructive",
+          "score_0_100": 53.74,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 1633180567.749,
-              "score": 80.33,
+              "value": 1685064161.2976,
+              "score": 80.67,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.9981,
-              "score": 40.96,
+              "value": 1.0077,
+              "score": 42.08,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.1935,
-              "score": 46.23,
+              "value": 0.8473,
+              "score": 23.15,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0166,
-              "score": 40.18,
+              "value": 0.0366,
+              "score": 46.06,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 41.09,
+          "score_0_100": 44.97,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -97552,20 +97552,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0054,
-              "score": 38.21,
+              "value": 0.0146,
+              "score": 44.88,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": 0.0376,
-              "score": 45.32,
+              "value": 0.0335,
+              "score": 44.47,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0166,
-              "score": 40.18,
+              "value": 0.0366,
+              "score": 46.06,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -116885,9 +116885,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 30.4,
+        "common_basis_score_0_100": 35.71,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 48.78,
+        "conviction_score_0_100": 51.97,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1",
@@ -117170,7 +117170,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 53.2,
+          "score_0_100": 50.79,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -117178,54 +117178,54 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 4567878418.9377,
-              "score": 91.49,
+              "value": 4372962370.2415,
+              "score": 91.02,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.0956,
-              "score": 52.42,
+              "value": 1.0226,
+              "score": 43.83,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.2543,
-              "score": 50.29,
+              "value": 0.8243,
+              "score": 21.62,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.1128,
-              "score": 2.12,
+              "value": -0.0556,
+              "score": 18.94,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 12.66,
-          "direction": "stressed",
+          "score_0_100": 31.02,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.1348,
-              "score": 0,
+              "value": -0.0776,
+              "score": 14.14,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0122,
-              "score": 34.96,
+              "value": 0.1063,
+              "score": 59.64,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.1128,
-              "score": 2.12,
+              "value": -0.0556,
+              "score": 18.94,
               "peer_group": "rule",
               "peer_count": null
             }
