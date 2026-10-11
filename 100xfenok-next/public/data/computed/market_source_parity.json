@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-10-11T00:36:41Z",
+  "generated_at": "2026-10-11T03:32:21Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7071,
@@ -9,11 +9,11 @@
     "divergence_rows": 28532,
     "percent_scale_warnings": 6,
     "diagnosis_counts": {
-      "agreement": 23924,
+      "agreement": 23923,
       "scale_mismatch": 6,
       "sign_divergence": 72,
       "stale": 3502,
-      "value_drift": 1028
+      "value_drift": 1029
     },
     "stale_rows": 3502,
     "scale_mismatch_rows": 6,
@@ -3230,48 +3230,6 @@
       }
     },
     {
-      "ticker": "ORCL",
-      "asset_type": "stock",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 155.818739,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 3.06
-        },
-        {
-          "source": "yf",
-          "value": -5.48203
-        },
-        {
-          "source": "yf.derived",
-          "value": -5.482028420172753
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 155.818739,
-      "fresh_spread_pct": 2.9e-05,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 6.0,
-        "yf": 0.0,
-        "yf.derived": 0.0
-      }
-    },
-    {
       "ticker": "HWAY",
       "asset_type": "etf",
       "field": "return_1m",
@@ -3415,48 +3373,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.history": 8.0
-      }
-    },
-    {
-      "ticker": "ORCL",
-      "asset_type": "stock",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 153.748412,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 4.23
-        },
-        {
-          "source": "yf",
-          "value": -7.87
-        },
-        {
-          "source": "yf.derived",
-          "value": -7.8700000000000045
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 153.748412,
-      "fresh_spread_pct": 0.0,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 6.0,
-        "yf": 0.0,
-        "yf.derived": 0.0
       }
     },
     {
@@ -4053,6 +3969,78 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.history": 8.0
+      }
+    },
+    {
+      "ticker": "CNP",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 145.248572,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 0.889039243973159
+        },
+        {
+          "source": "yf",
+          "value": -1.9647896
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 145.248572,
+      "fresh_spread_pct": 145.248572,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "SMCF",
+      "asset_type": "etf",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 145.016101,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 0.21
+        },
+        {
+          "source": "yf",
+          "value": -0.46649975
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 145.016101,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 95.0,
+        "yf": 0.0
       }
     }
   ],
@@ -6269,48 +6257,6 @@
       }
     },
     {
-      "ticker": "ORCL",
-      "asset_type": "stock",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 155.818739,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 3.06
-        },
-        {
-          "source": "yf",
-          "value": -5.48203
-        },
-        {
-          "source": "yf.derived",
-          "value": -5.482028420172753
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 155.818739,
-      "fresh_spread_pct": 2.9e-05,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 6.0,
-        "yf": 0.0,
-        "yf.derived": 0.0
-      }
-    },
-    {
       "ticker": "HWAY",
       "asset_type": "etf",
       "field": "return_1m",
@@ -6419,48 +6365,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.history": 8.0
-      }
-    },
-    {
-      "ticker": "ORCL",
-      "asset_type": "stock",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 153.748412,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 4.23
-        },
-        {
-          "source": "yf",
-          "value": -7.87
-        },
-        {
-          "source": "yf.derived",
-          "value": -7.8700000000000045
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 153.748412,
-      "fresh_spread_pct": 0.0,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 6.0,
-        "yf": 0.0,
-        "yf.derived": 0.0
       }
     },
     {
@@ -7066,43 +6970,6 @@
       }
     },
     {
-      "ticker": "MA",
-      "asset_type": "stock",
-      "field": "return_3m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 139.887909,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 9.11645601654116
-        },
-        {
-          "source": "stockanalysis.detail.history",
-          "value": -3.6363636363636416
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 139.887909,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.detail.history"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 7.0
-      }
-    },
-    {
       "ticker": "UPSG",
       "asset_type": "etf",
       "field": "return_1m",
@@ -7251,24 +7118,24 @@
       }
     },
     {
-      "ticker": "ORCL",
+      "ticker": "MA",
       "asset_type": "stock",
       "field": "return_3m",
       "selected_source": "yf.history_1y",
       "candidate_count": 2,
-      "relative_spread_pct": 136.7734,
+      "relative_spread_pct": 137.362051,
       "values": [
         {
           "source": "yf.history_1y",
-          "value": -3.519622418745917
+          "value": 9.732773009507815
         },
         {
           "source": "stockanalysis.detail.history",
-          "value": 9.571109571109575
+          "value": -3.6363636363636416
         }
       ],
       "diagnosis": "stale",
-      "spread_pct": 136.7734,
+      "spread_pct": 137.362051,
       "fresh_spread_pct": null,
       "stale_sources": [
         "stockanalysis.detail.history"
@@ -7284,7 +7151,7 @@
       },
       "freshness": {
         "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 7.0
+        "stockanalysis.detail.history": 8.0
       }
     },
     {
@@ -8141,6 +8008,122 @@
       "freshness": {
         "stockanalysis.quote": 43.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "EQR",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 125.90177,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 6.792048974086873
+        },
+        {
+          "source": "yf",
+          "value": -1.7592609
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 125.90177,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 4.0
+      }
+    },
+    {
+      "ticker": "DKNX",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 125.799613,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -19.00028535206148
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 4.902
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 125.799613,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 53.0
+      }
+    },
+    {
+      "ticker": "LRCX",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 125.155253,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 2.17
+        },
+        {
+          "source": "yf",
+          "value": -0.545869
+        },
+        {
+          "source": "yf.derived",
+          "value": -0.5458685548519917
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 125.155253,
+      "fresh_spread_pct": 8.2e-05,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 7.0,
+        "yf": 0.0,
+        "yf.derived": 0.0
       }
     }
   ],
