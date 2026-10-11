@@ -251,41 +251,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          for attempt in 1 2 3; do
-            git fetch origin main
-            git reset --hard origin/main
-            node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset
-            node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset
-            node scripts/materialize-update-manifest-routes.mjs --all --validate-only --assert-no-untracked
-            bash scripts/update-manifest-projections.sh
-
-            set +e
-            node scripts/stage-update-manifest-central.mjs --check
-            central_status=$?
-            set -e
-            if [ "$central_status" -eq 3 ]; then
-              echo "Attempt $attempt: manifest already current on latest main — nothing to push"
-              echo "pushed=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            if [ "$central_status" -ne 0 ]; then
-              exit "$central_status"
-            fi
-            node scripts/stage-update-manifest-central.mjs --stage
-            git commit -m "chore: update computed signals and manifest"
-
-            if git push origin HEAD:main; then
-              echo "Attempt $attempt: push succeeded"
-              echo "pushed=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-
-            echo "Attempt $attempt: push rejected, retrying..."
-            sleep $((attempt * 3))
-          done
-
-          echo "All 3 attempts failed"
-          exit 1
+          bash scripts/publish-update-manifest.sh
 
       # X7 (2026-10-11): data-only commits no longer enqueue a full Worker
       # build. The 03:30 UTC daily deploy and any intervening code deploy pick
