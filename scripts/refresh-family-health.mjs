@@ -10,7 +10,8 @@ import { FAMILIES, resolveSourceAsOf } from "./publish-cloud-data-generation.mjs
 import { createDefaultMaterializePlane, readActiveFamilyIdentity } from "./materialize-cloud-data-plane-family.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { sha256Bytes, sha256Canonical, validateActivePointer, validateGenerationManifest } from "./lib/cloud-data-plane-generation.mjs";
-import { ETF_FAMILY, healthKey, validateFamilyHealth, buildFamilyHealth } from "./lib/family-health.mjs";
+import { ETF_FAMILY, healthKey, validateFamilyHealth, buildFamilyHealth, etfSourceMembers, buildDetailRefreshCadence } from "./lib/family-health.mjs";
+import { DATA_SUPPLY_POLICY_REGISTRY } from "./data-supply-policy-registry.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PREFIX = "data/stockanalysis/etfs";
@@ -29,6 +30,17 @@ export async function readHealthRecord(bucket) {
 export async function readCanonicalReference({ root = ROOT, ref = "origin/main" } = {}) {
   const commit = git(root, ["rev-parse", "--verify", `${ref}^{commit}`]);
   const tree = git(root, ["rev-parse", `${commit}:${PREFIX}`]);
+  const readReferenceJson = relative => {
+    if (!git(root, ["ls-tree", commit, "--", relative])) return null;
+    return JSON.parse(git(root, ["show", `${commit}:${relative}`]));
+  };
+  const servedIndex = readReferenceJson("data/computed/data-supply/etf-detail/index.json");
+  const cadence = servedIndex?.detail_refresh_cadence ?? buildDetailRefreshCadence(
+    readReferenceJson("data/stockanalysis/etf_universe.json"),
+    readReferenceJson("data/admin/fenok-etf-core-daily-basket.json"));
+  const { fresh_ttl_hours, emergency_lkg_ttl_days } = DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail;
+  const sourcePolicy = { fresh_ttl_hours, emergency_lkg_ttl_days };
+  const sourceMembers = etfSourceMembers(servedIndex, sourcePolicy, cadence);
   const rows = git(root, ["ls-tree", "-rz", commit, "--", PREFIX]).split("\0").filter(Boolean).map(row => {
     const match = /^(100644) blob ([a-f0-9]{40})\t(.+)$/.exec(row);
     if (!match || !match[3].endsWith(".json")) throw new Error("CANONICAL_MEMBER_INVALID");
@@ -77,7 +89,9 @@ export async function readCanonicalReference({ root = ROOT, ref = "origin/main" 
     const lifecycle = JSON.parse(execFileSync("python3", [path.join(ROOT, "scripts/stockanalysis_etf_lifecycle.py"),
       "--root", root, "--git-ref", commit], { encoding: "utf8", timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }));
     if (lifecycle.detail_count !== assets.length) throw new Error("HEALTH_LIFECYCLE_MEMBERSHIP_INVALID");
-    return { kind: "git_commit", commit, tree, prefix: PREFIX, total_bytes: total, assets, lifecycle };
+    return { kind: "git_commit", commit, tree, prefix: PREFIX, total_bytes: total, assets, lifecycle,
+      source_members: sourceMembers, source_policy: sourcePolicy,
+      source_index_sha256: servedIndex?.index_sha256 ?? null };
   } finally {
     clearTimeout(timer);
     if (child.exitCode === null) child.kill("SIGTERM");
@@ -132,8 +146,9 @@ export async function commitHealth({ plane, bucket, snapshot, cycle = null, runI
   await bucket.put(healthKey(), bytes);
   const actual = await bucket.get(healthKey());
   if (!actual || sha256Bytes(new Uint8Array(await actual.arrayBuffer())) !== sha256Bytes(bytes)) throw new Error("HEALTH_RECORD_READBACK_INVALID");
-  return { result: "health_record_updated", family: ETF_FAMILY, reference: record.reference,
-    parity: record.parity, observed_at: record.observed_at,
+  return { result: "health_record_updated", family: ETF_FAMILY,
+    reference: { ...record.reference, source_members: undefined },
+    parity: record.parity, source_health: record.source_health, observed_at: record.observed_at,
     commit_elapsed_ms: Math.round(performance.now() - started) };
 }
 

@@ -5,7 +5,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { createMemoryCloudDataPlane, publishGeneration, sha256Canonical } from "./lib/cloud-data-plane-generation.mjs";
 import { buildFamilyManifest, computeRetentionPlan, runPublisherCli } from "./publish-cloud-data-generation.mjs";
-import { ETF_FAMILY, healthKey, buildFamilyHealth, classifyFamilyHealth, compareFamilyMembers } from "./lib/family-health.mjs";
+import { ETF_FAMILY, healthKey, buildFamilyHealth, classifyFamilyHealth, compareFamilyMembers, buildDetailRefreshCadence, summarizeSourceHealth } from "./lib/family-health.mjs";
 import { prepareHealth, commitHealth, readCanonicalReference, readHealthRecord } from "./refresh-family-health.mjs";
 import { fetchEtfFamilyHealth, buildIssueBody } from "./ops/check-pipeline-job-health.mjs";
 import { buildAlarmState } from "./ops/emit-alarm-state.mjs";
@@ -23,6 +23,14 @@ try {
   for (const filename of ["etf_universe.json", "surfaces/etf_screener.json"]) {
     await fs.writeFile(path.join(root, "data/stockanalysis", filename), JSON.stringify({ records: [{ ticker: "ONE" }] }));
   }
+  await fs.mkdir(path.join(root, "data/computed/data-supply/etf-detail"), { recursive: true });
+  await fs.writeFile(path.join(root, "data/computed/data-supply/etf-detail/index.json"), JSON.stringify({
+    schema_version: "data-supply-etf-detail-public-index/v1", enrolled_count: 1,
+    detail_refresh_cadence: buildDetailRefreshCadence({ records: [{ ticker: "ONE", aum: 1 }] },
+      { daily_refresh_universe: { tickers: ["ONE"] } }),
+    entries: { ONE: { ticker: "ONE", enrollment_state: "enrolled", resolution_state: "fresh_primary",
+      source_as_of: "2026-10-10T00:00:00Z", provider_role: "primary" } },
+  }));
   const git = args => execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
   git(["init", "-b", "main"]); git(["config", "user.name", "Health fixture"]); git(["config", "user.email", "fixture@example.invalid"]);
   git(["add", "."]); git(["commit", "-m", "canonical reference"]);
@@ -42,7 +50,13 @@ try {
   const bucket = { get: async () => stored ? { arrayBuffer: async () => stored } : null,
     put: async (key, body) => { assert.equal(key, healthKey()); puts += 1; stored = body.slice(); } };
   let record = buildFamilyHealth({ snapshot, now });
-  assert.equal(record.source_health.status, "not_evaluated");
+  assert.equal(record.source_health.status, "fresh");
+  assert.equal(record.source_health.total_members, 1, "served enrollment and raw publication membership are different scopes");
+  assert.equal(record.source_health.fresh_members, 1);
+  assert.deepEqual(record.source_health, summarizeSourceHealth(original.source_members, now, original.source_policy));
+  const aged = buildFamilyHealth({ snapshot, now: "2026-10-15T10:00:00Z" });
+  assert.equal(aged.source_health.status, "stopped", "matching bytes cannot freeze a fresh source verdict");
+  assert.equal(aged.parity.matched, 2);
   assert.equal(record.parity.matched, 2);
   assert.equal(record.lifecycle.orphan_count, 1);
   const oldOrphan = structuredClone(snapshot);

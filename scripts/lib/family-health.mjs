@@ -1,7 +1,6 @@
 import rotation from "./etf-detail-rotation-policy.json" with { type: "json" };
 
-// One family record. Source freshness is deliberately unevaluated until the
-// shared calendar model supplies it; byte parity is not a freshness verdict.
+// One family record, with separate served-source and publication-parity scopes.
 export const ETF_FAMILY = "stockanalysis-etf-detail";
 export const FAMILY_HEALTH_SCHEMA = "family-health/1";
 export const HEALTH_REFRESH_MS = 24 * 60 * 60 * 1000;
@@ -40,6 +39,17 @@ export function detailSourcePolicy(ticker, cadence, emergencyDays) {
   return { interval_days: interval, grace_days: grace,
     fresh_ttl_hours: (interval + grace) * 24,
     emergency_lkg_ttl_days: Math.max(interval * rotation.expiry_interval_multiplier, emergencyDays, interval + grace) };
+}
+
+export function etfSourceMembers(index, policy, cadence = index?.detail_refresh_cadence, fallbackOnly = false) {
+  if (index?.schema_version !== "data-supply-etf-detail-public-index/v1"
+    || !index.entries || typeof index.entries !== "object" || Array.isArray(index.entries)) return null;
+  const entries = Object.entries(index.entries);
+  if (entries.length !== index.enrolled_count
+    || entries.some(([ticker, row]) => row?.ticker !== ticker || row.enrollment_state !== "enrolled")) return null;
+  return entries.filter(([, row]) => !fallbackOnly || row.provider_role === "fallback")
+    .map(([member, row]) => ({ member, source_as_of: row.resolution_state === "unavailable" ? null : row.source_as_of,
+      refresh_policy: detailSourcePolicy(member, cadence, policy.emergency_lkg_ttl_days) }));
 }
 
 export function summarizeSourceHealth(members, now, policy) {
@@ -156,7 +166,9 @@ export function buildFamilyHealth({ snapshot, previous = null, cycle = null, now
     observed_at: snapshot.observed_at, updated_at: now,
     reference: { ...snapshot.reference, assets: undefined, lifecycle: undefined },
     plane: { generation_id: snapshot.manifest.generation_id, pointer_sequence: snapshot.pointer.sequence },
-    source_health: { status: "not_evaluated", reason: "shared_calendar_model_pending" },
+    source_health: Array.isArray(snapshot.reference.source_members)
+      ? summarizeSourceHealth(snapshot.reference.source_members, now, snapshot.reference.source_policy)
+      : { status: "unavailable", reason: "served_source_members_unavailable" },
     last_publication_cycle: newCycle ? cycle : last,
     members,
     lifecycle: { orphan_count: orphanRows.length, orphans: orphanRows, overdue_count: overdue,
