@@ -125,6 +125,10 @@ INDEX_SOURCE_FILES = [
 DATA_SUPPLY_ETF_DETAIL = Path("computed/data-supply/etf-detail")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 BETA_BENCHMARK = "SPY"
+KOREAN_BETA_BENCHMARKS = {
+    ".KS": ("^KS11", "KOSPI"),
+    ".KQ": ("^KQ11", "KOSDAQ"),
+}
 BETA_MIN_BARS = 200
 
 
@@ -664,15 +668,31 @@ def stockanalysis_history_points(sa_payload, period_key=None):
 def beta_history(yf_payload, sa_payload, source_path=None):
     """Use only adjusted daily histories already admitted by the caller."""
     if yf_payload:
-        points = yf_history_points(yf_payload)
         payload = yf_payload
+        raw_points = (payload.get("data") or {}).get("history_1y") or []
+        date_key, close_value = "date", history_close
         source = "yf.history_1y"
     else:
-        points = stockanalysis_history_points(sa_payload, "daily_1y")
         payload = sa_payload or {}
+        periods = (payload.get("normalized") or {}).get("history_periods") or {}
+        raw_points = periods.get("daily_1y")
+        if not isinstance(raw_points, list):
+            raw_points = ((payload.get("raw") or {}).get("history_periods") or {}).get("daily_1y") or []
+        date_key, close_value = "t", stockanalysis_history_close
         source = ("yf.stockanalysis_fallback.history_periods.daily_1y"
                   if payload.get("source_provider", payload.get("source")) == "yahoo_finance"
                   else "stockanalysis.history_periods.daily_1y")
+    # A corrupt bar must not be discarded and silently bridged over.
+    points = []
+    for row in raw_points:
+        if not isinstance(row, dict):
+            return None
+        day = parse_history_date(row.get(date_key) or row.get("date"))
+        close = close_value(row)
+        if day is None or close is None or close <= 0 or not math.isfinite(close):
+            return None
+        points.append({"date": day, "close": close})
+    points.sort(key=lambda point: point["date"])
     if (len(points) < BETA_MIN_BARS
             or len({point["date"] for point in points}) != len(points)
             or any(not math.isfinite(point["close"]) or point["date"] > datetime.now(timezone.utc).date()
@@ -683,14 +703,28 @@ def beta_history(yf_payload, sa_payload, source_path=None):
 
 
 def daily_beta_fact(ticker, yf_payload, sa_payload, benchmark, source_path=None):
-    """One-year adjusted daily-return beta against SPY for USD listings.
+    """One-year adjusted daily-return beta against the listing's market.
 
     Join returns by BOTH interval endpoints: dropping a date in just one series
     must not pair its two-day return with the benchmark's one-day return.
     """
     currency = (((yf_payload or {}).get("data") or {}).get("info") or {}).get("currency")
-    if ticker.endswith((".KS", ".KQ")) or (currency and currency != "USD") or not benchmark:
+    if not benchmark:
         return None
+    korean = next((value for suffix, value in KOREAN_BETA_BENCHMARKS.items()
+                   if ticker.endswith(suffix)), None)
+    if korean:
+        benchmark_ticker, benchmark_name = korean
+        if (currency != "KRW" or benchmark.get("currency") != "KRW"
+                or benchmark.get("ticker") != benchmark_ticker):
+            return None
+        currency_scope = "KRW listings"
+    else:
+        if ((currency and currency != "USD")
+                or benchmark.get("ticker", BETA_BENCHMARK) != BETA_BENCHMARK):
+            return None
+        benchmark_ticker = benchmark_name = BETA_BENCHMARK
+        currency_scope = "USD listings"
     instrument = beta_history(yf_payload, sa_payload, source_path)
     if not instrument:
         return None
@@ -719,8 +753,9 @@ def daily_beta_fact(ticker, yf_payload, sa_payload, benchmark, source_path=None)
                   fetched_at=instrument["fetched_at"], confidence="derived", unit="ratio")
     result["provenance"] = {
         "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
-        "benchmark": BETA_BENCHMARK,
-        "currency_scope": "USD listings",
+        "benchmark": benchmark_name,
+        "benchmark_ticker": benchmark_ticker,
+        "currency_scope": currency_scope,
         "window_days": 365,
         "minimum_bars": BETA_MIN_BARS,
         "paired_returns": len(intervals),
@@ -1203,7 +1238,17 @@ def main(argv=None) -> None:
     else:
         benchmark_path = f"yf/finance/{BETA_BENCHMARK}.json"
         beta_benchmark = beta_history(load_json(DATA / benchmark_path), None, benchmark_path)
-    all_tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows) | enrolled_etfs)
+    beta_benchmarks = {BETA_BENCHMARK: beta_benchmark}
+    for benchmark_ticker, _ in KOREAN_BETA_BENCHMARKS.values():
+        benchmark_path = f"yf/finance/{benchmark_ticker}.json"
+        payload = load_json(DATA / benchmark_path)
+        history = beta_history(payload, None, benchmark_path)
+        if history:
+            history.update(ticker=benchmark_ticker,
+                           currency=(((payload or {}).get("data") or {}).get("info") or {}).get("currency"))
+        beta_benchmarks[benchmark_ticker] = history
+    benchmark_symbols = {item[0] for item in KOREAN_BETA_BENCHMARKS.values()}
+    all_tickers = sorted((set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows) | enrolled_etfs) - benchmark_symbols)
     available_tickers = set(all_tickers)
     if target_tickers:
         missing = sorted(target_tickers - available_tickers)
@@ -1259,7 +1304,9 @@ def main(argv=None) -> None:
             sa_catalog_rows.get(ticker),
             detail_source_path=detail_source_path,
             detail_authority=detail_authority,
-            beta_benchmark=beta_benchmark,
+            beta_benchmark=beta_benchmarks.get(next(
+                (symbol for suffix, (symbol, _) in KOREAN_BETA_BENCHMARKS.items() if ticker.endswith(suffix)),
+                BETA_BENCHMARK)),
         )
         payload["generated_at"] = generated_at
         if sa_financials and payload["asset_type"] != "etf":

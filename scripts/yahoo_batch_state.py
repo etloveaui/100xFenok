@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 
 
-SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
+SYMBOL_RE = re.compile(r"^(?:[A-Z0-9][A-Z0-9.\-]{0,11}|\^(?:KS11|KQ11))$")
 NEW_LISTING_PENDING_DAYS = 31
 ERROR_TEXT_LIMIT = 1000
 ACTIVE_UNIVERSE_SCHEMA_VERSION = "yahoo-batch-active-universe/v1"

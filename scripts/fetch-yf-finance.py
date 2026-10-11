@@ -125,6 +125,7 @@ from yahoo_batch_state import (
 # row. They are pinned ahead of the shard page and are exempt from the daily
 # limit.
 RIM_TRACKER_ETFS = {"SPY", "QQQ", "ONEQ", "SOXX", "IWM", "EWY"}
+BETA_BENCHMARK_SYMBOLS = {"^KS11", "^KQ11"}
 TRACKER_UNADJUSTED_SCHEMA_VERSION = "yahoo_finance_tracker_unadjusted.v1"
 
 ANNUAL_PERIODS = 4
@@ -1068,6 +1069,8 @@ def fetch_ticker(ticker, profile="full", include_options=False, include_shares_f
     start = time.perf_counter()
     t = yf.Ticker(yahoo_symbol(ticker))
     data = {}
+    if ticker in BETA_BENCHMARK_SYMBOLS:
+        profile = "daily"
 
     info = safe(lambda: t.info, {}) or {}
     fund_like = is_fund_like(info)
@@ -1561,6 +1564,7 @@ def load_universe_sources(stocks_only=False, stockanalysis_etfs=False):
     add({p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}, "global_scouter_stock")
     add(load_market_facts_stocks(), "market_facts")
     add(load_sox_giw_symbols(), "nasdaq_giw_sox")
+    add(BETA_BENCHMARK_SYMBOLS, "korean_beta_benchmark")
     if not stocks_only:
         add(load_scouter_etfs(), "global_scouter_etf")
         add(load_dashboard_etfs(), "dashboard_configuration")
@@ -1704,12 +1708,14 @@ def select_ticker_plan(
     return_retry_overflow_to_regular=False,
 ):
     ticker_set = set(tickers)
+    benchmark_members = BETA_BENCHMARK_SYMBOLS & ticker_set if natural else set()
     retry_order = (
         sorted(retry_tickers)
         if isinstance(retry_tickers, (set, frozenset))
         else list(dict.fromkeys(retry_tickers))
     )
-    all_retry = [ticker for ticker in retry_order if ticker in ticker_set] if natural else []
+    all_retry = [ticker for ticker in retry_order if ticker in ticker_set
+                 and ticker not in benchmark_members] if natural else []
     retry = all_retry
     if retry_limit is not None:
         if retry_limit < 0:
@@ -1718,7 +1724,7 @@ def select_ticker_plan(
     # The bounded core lane returns retry overflow to stable-shard ownership;
     # broad/manual lanes preserve their historical full retry-set exclusion.
     retry_set = set(retry if return_retry_overflow_to_regular else all_retry)
-    regular = [ticker for ticker in tickers if ticker not in retry_set]
+    regular = [ticker for ticker in tickers if ticker not in retry_set and ticker not in benchmark_members]
     shard_index = None
     if shard:
         shard_index, shard_count = (int(value) for value in shard.split("/"))
@@ -1741,7 +1747,11 @@ def select_ticker_plan(
         if pin_rim_trackers
         else []
     )
-    return [*pinned, *selected]
+    # Refresh the stock lane's two index histories every natural day.
+    # In a weekly all-shards run, the first shard owns this shared set.
+    benchmarks = (benchmark_members
+                  if natural and (not all_shards or shard_index in {None, 0}) else set())
+    return list(dict.fromkeys([*sorted(benchmarks), *pinned, *selected]))
 
 
 def extend_weekly_etf_plan(tickers, regular_tickers, scheduled_symbols, rotation, *, regular_limit, total_limit):
