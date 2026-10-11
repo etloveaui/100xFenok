@@ -273,6 +273,18 @@ function findOccurrence(schedule, calendar, fromEpoch, direction) {
 }
 
 function normalizeScheduleRows(lane, context) {
+  if (lane.external_timer) {
+    let source = "";
+    try { source = fs.readFileSync(path.join(context.repoRoot, lane.external_timer), "utf8"); } catch {}
+    const daily = source.match(/^OnCalendar=\*-\*-\* (\d{2}):(\d{2}):00 UTC$/m);
+    const calendar = context.calendars?.calendars?.find((row) => row.id === "utc");
+    const status = readJson(path.join(context.repoRoot, lane.external_status));
+    return daily && calendar ? [{
+      cron: `${Number(daily[2])} ${Number(daily[1])} * * *`,
+      calendar_id: "utc", calendar,
+      grace: Number.isFinite(status?.grace_hours) ? { unit: "hours", value: status.grace_hours } : null,
+    }] : [];
+  }
   const workflow = basename(lane.owner_workflow);
   if (!workflow) return [];
   const explicit = context.workflowSchedules?.[workflow];
@@ -400,7 +412,7 @@ export function normalizeAttempt(row) {
   if (row.outcome === "error" || row.execution === "threw" || row.payload === "empty") {
     return { observed_at: observedAt, outcome: "failed", failure_class: "unknown" };
   }
-  if (row.execution === "returned" || row.outcome === "success") {
+  if (row.execution === "returned" || ["success", "published"].includes(row.outcome)) {
     return { observed_at: observedAt, outcome: "success", failure_class: null };
   }
   return { observed_at: observedAt, outcome: "unknown", failure_class: "unknown" };
@@ -524,11 +536,13 @@ function safeIncidentClass(value) {
 
 function buildIncidentState(lane, context) {
   const workflow = basename(lane.owner_workflow);
-  const matching = (context.alarm?.open_incidents || []).filter((incident) => incident?.workflow === workflow);
+  const externalIncident = lane.external_status ? `a1-${lane.id.replaceAll("_", "-")}` : null;
+  const matching = (context.alarm?.open_incidents || []).filter((incident) =>
+    (workflow && incident?.workflow === workflow) || (externalIncident && incident?.workflow === externalIncident));
   const incident = matching[0] || null;
   return {
     status: incident ? "open" : context.alarm?.status === "clear" ? "clear" : "unknown",
-    workflow,
+    workflow: workflow || externalIncident,
     class: safeIncidentClass(incident?.class),
   };
 }
@@ -573,6 +587,18 @@ function buildScheduleState(lane, context, attempt) {
 // clocks never become collection attempts.
 export function readLaneAttempt(lane, context = {}) {
   const normalized = { ...context, repoRoot: context.repoRoot || REPO_ROOT };
+  if (lane.external_status) {
+    const status = readJson(path.join(normalized.repoRoot, lane.external_status));
+    if (status?.last_run) {
+      const epoch = Date.parse(status.last_run.observed_at);
+      return normalizeAttempt({ ...status.last_run,
+        observed_at: Number.isFinite(epoch) ? new Date(epoch).toISOString() : null });
+    }
+    if (status?.enabled && status.updated_at) return normalizeAttempt({
+      observed_at: status.updated_at,
+      outcome: status.consecutive_failures > 0 ? "failed" : "success",
+    });
+  }
   return normalizeAttempt(latestAttempt(readAttemptRows(lane, normalized, recoveryStoreFor(lane, normalized))));
 }
 
@@ -593,7 +619,7 @@ export function buildControlRoomState(lane, context = {}) {
   if (!attempt.observed_at || ["unobserved", "unknown"].includes(attempt.outcome)) missing.push("attempt");
   if (!kpiLane) missing.push("health");
   if (state.source.evidence_status !== "observed") missing.push("source");
-  if (lane.owner_workflow && !state.schedule.cron) missing.push("schedule");
+  if ((lane.owner_workflow || lane.external_timer) && !state.schedule.cron) missing.push("schedule");
   state.coverage = { status: missing.length ? "not_covered" : "covered", missing };
   // Keep this assertion local so a future field cannot silently become a
   // public/private boundary regression.
