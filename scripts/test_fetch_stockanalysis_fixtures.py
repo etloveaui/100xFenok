@@ -3638,6 +3638,15 @@ module.main()
             selected, _ = self.fetcher.select_natural_general_incremental_candidates(
                 rows, contexts, now_dt=now, limit=1)
             self.assertEqual(selected[0]["ticker"], "RECUR")
+        # The reserve is a minimum, not a ceiling on an overdue retry once the
+        # first-pass queue leaves spare capacity. Fresh repeats must not delay it.
+        retries = [{**rows[0], "ticker": f"PENDING{i}", "age_hours": 60 * 24,
+                    "prior_failures": 1} for i in range(13)]
+        fresh = [{**rows[0], "ticker": "FRESH", "age_hours": 24}]
+        selected, _ = self.fetcher.select_natural_general_incremental_candidates(
+            retries + fresh, {}, now_dt=now, limit=14)
+        self.assertEqual([row["selection_bucket"] for row in selected[:13]], ["pending_retry"] * 13)
+        self.assertEqual(selected[-1]["ticker"], "FRESH")
 
     def test_natural_tiers_capacity_includes_retry_reserve(self) -> None:
         f = self.fetcher

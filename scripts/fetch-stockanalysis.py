@@ -5678,22 +5678,27 @@ def select_natural_general_incremental_candidates(
     # daily budget. The remaining slots still drain those older source gaps.
     pending_minimum = min(NATURAL_GENERAL_PENDING_RESERVE, len(buckets["pending_retry"]), limit)
     for bucket, rows in buckets.items():
+        if bucket == "fresh":
+            pending_tail = buckets["pending_retry"][selected_counts["pending_retry"]:]
+            pending_tickers = {row["ticker"] for row in pending_tail}
+            tail = sorted(rows + pending_tail, key=lambda row: (
+                -overdue_hours(row), row.get("last_attempt_utc") or "", *incremental_candidate_sort_key(row)))
+            chosen = tail[:max(0, limit - len(selected))]
+            selected.extend(selection(row, "pending_retry" if row["ticker"] in pending_tickers else "fresh")
+                            for row in chosen)
+            retries = sum(row["ticker"] in pending_tickers for row in chosen)
+            selected_counts["pending_retry"] += retries
+            selected_counts["fresh"] = len(chosen) - retries
+            continue
         ceiling = limit - pending_minimum if bucket in {"new_listings", "missing", "oldest_stale"} else limit
         available = max(0, ceiling - len(selected))
         # Retry debt has its reserved slots; spare capacity then follows the
         # nearest tier deadline instead of draining every pending name first.
-        if bucket == "pending_retry" and buckets["fresh"]:
+        if bucket == "pending_retry":
             available = min(available, pending_minimum)
         chosen = rows[:available]
         selected.extend(selection(row, bucket) for row in chosen)
         selected_counts[bucket] = len(chosen)
-    # If the ordinary tail is smaller than the remaining budget, use the
-    # already-eligible retries without bypassing their upstream cooldown.
-    for row in buckets["pending_retry"][selected_counts["pending_retry"]:]:
-        if len(selected) >= limit:
-            break
-        selected.append(selection(row, "pending_retry"))
-        selected_counts["pending_retry"] += 1
     return selected, {
         "profile": f"natural_non_history_general_{NATURAL_GENERAL_INCREMENTAL_LIMIT}",
         "quota_policy": {
