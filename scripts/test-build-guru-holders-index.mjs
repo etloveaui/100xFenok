@@ -81,6 +81,7 @@ try {
   fs.copyFileSync(BUILDER, path.join(fixtureScripts, "build-guru-holders-index.mjs"));
   fs.copyFileSync(GUARDED_JSON, path.join(fixtureLib, "guarded-json.mjs"));
   fs.copyFileSync(path.join(ROOT, "scripts/lib/sec13f-symbols.mjs"), path.join(fixtureLib, "sec13f-symbols.mjs"));
+  fs.copyFileSync(path.join(ROOT, "scripts/lib/sec13f-holding-identity.mjs"), path.join(fixtureLib, "sec13f-holding-identity.mjs"));
   writeJson("data/edgar/company_tickers.json", {
     rows: Object.entries(FIXTURE_ISSUERS).map(([ticker, issuer]) => ({ ticker, title: `${issuer} Inc` })),
   });
@@ -123,8 +124,11 @@ try {
   // Alpha deliberately presents Q2 before Q1 and repeats AAA with mixed case;
   // the builder must order quarters and aggregate the ticker before comparing.
   writeJson("data/sec-13f/investors/alpha.json", investorFile("alpha", [
-    filing("2026-Q2", [holding("aaa", 0.03), holding("AAA", 0.02)]),
-    filing("2026-Q1", [holding("AAA", 0.03)]),
+    filing("2026-Q2", [holding("aaa", 0.03), holding("AAA", 0.02),
+      { ...holding("AAA", 0.75), put_call: "Call" },
+      { ...holding("AAA", 0.15), share_type: "PRN" }]),
+    filing("2026-Q1", [holding("AAA", 0.03),
+      { ...holding("AAA", 0.25), put_call: "Put" }]),
   ]));
   writeJson("data/sec-13f/investors/beta.json", investorFile("beta", [
     filing("2026-Q1", [holding("AAA", 0.05)]),
@@ -259,18 +263,9 @@ try {
     current_quarter: "2026-Q2",
     previous_quarter: "2026-Q1",
   });
-  assert.deepEqual(output.holding_changes.NEW, {
-    held_count: 1,
-    new_count: 0,
-    increased_count: 0,
-    decreased_count: 0,
-    unchanged_count: 0,
-    sold_count: 0,
-    comparable_count: 0,
-    mean_weight_delta: null,
-    current_quarter: "2026-Q2",
-    previous_quarter: "2026-Q1",
-  });
+  // Neither side of a conflicting CUSIP has a confirmed ticker. The resolver
+  // must not turn the reported NEW token into an issuer-confirmed event.
+  assert.equal(Object.hasOwn(output.holding_changes, "NEW"), false);
   assert.deepEqual(output.holding_changes.NEG, {
     held_count: 1,
     new_count: 0,

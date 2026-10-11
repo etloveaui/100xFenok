@@ -42,6 +42,46 @@ function confirmedSymbol(holding) {
     ? symbol.trim().toUpperCase().replaceAll("-", ".") : null;
 }
 
+/** Classify the reported position separately from its underlying ticker.
+ * provider_unsupported describes this resolver's evidence boundary, not an
+ * assertion that a security is unlisted or absent from every data provider.
+ */
+export function classifyHoldingResolution(holding, resolution) {
+  const title = String(holding?.title_of_class ?? "").trim().toUpperCase().replace(/\s+/g, " ");
+  const putCall = String(holding?.put_call ?? "").trim().toUpperCase();
+  const units = [holding?.share_type, holding?.ssh_prnamt_type]
+    .map((value) => String(value ?? "").trim().toUpperCase());
+  const result = (outcome, reason, evidence) => ({ outcome, reason, evidence,
+    equity_holder_eligible: outcome === "confirmed_security" });
+  if (["PUT", "CALL"].includes(putCall) || /\bOPTION\b/.test(title)) {
+    return result("not_equity_holding", "reported_option", "reported:put_call,title_of_class");
+  }
+  if (units.includes("PRN") || /^(?:(?:CONVERTIBLE|CONV|SENIOR|SR|SUBORDINATED)\s+)*(?:NOTE|BOND|DEBENTURE)\b/.test(title)) {
+    return result("not_equity_holding", "reported_debt", "reported:share_type,ssh_prnamt_type,title_of_class");
+  }
+  if (/\bWARRANTS?\b|\bW EXP\b/.test(title)) {
+    return result("not_equity_holding", "reported_warrant", "reported:title_of_class");
+  }
+  // A dated acquisition unit bundles securities. ETF trust and partnership
+  // units are not assumed to be the same instrument from the word UNIT alone.
+  if (/^UNITS?\s+\d{2}\/\d{2}\/\d{4}$/.test(title)) {
+    return result("not_equity_holding", "reported_bundled_unit", "reported:title_of_class");
+  }
+  if (putCall && putCall !== "COMMON") {
+    return result("provider_unsupported", "unrecognized_position_type", "reported:put_call");
+  }
+  if (resolution?.symbol) {
+    return result("confirmed_security", "existing_resolver_binding", `resolver:${resolution.source ?? "confirmed"}`);
+  }
+  let reason = "exact_cusip_class_ticker_not_confirmed";
+  if (!normalizedCusip(holding?.cusip)) reason = "missing_or_invalid_cusip";
+  else if (!title) reason = "missing_reported_security_class";
+  else if (/\b(?:ADR|ADS|SPONSORED|SPONSORD)\b/.test(title)) reason = "depositary_receipt_class_ticker_not_confirmed";
+  else if (/\b(?:ETF|FUND|TRUST|UNIT|UT)\b/.test(title)) reason = "fund_or_unit_class_ticker_not_confirmed";
+  else if (/^[A-Z]/.test(normalizedCusip(holding.cusip))) reason = "foreign_cusip_us_trading_class_not_confirmed";
+  return result("provider_unsupported", reason, `resolver:${resolution?.source ?? "unmapped"}`);
+}
+
 /** Add confirmed security identity without changing any reported 13F field. */
 export function annotateHoldingIdentity(holding, resolver) {
   const raw = holding && typeof holding === "object" && !Array.isArray(holding) ? holding : {};
@@ -51,7 +91,8 @@ export function annotateHoldingIdentity(holding, resolver) {
   const symbol = typeof result?.symbol === "string" && result.symbol.trim()
     ? result.symbol.trim().toUpperCase()
     : null;
-  return { ...raw, resolved_ticker: symbol, security_key: holdingIdentity(raw)?.security_key ?? null };
+  return { ...raw, resolved_ticker: symbol, security_key: holdingIdentity(raw)?.security_key ?? null,
+    resolution_classification: classifyHoldingResolution(raw, result) };
 }
 
 function quarterOrdinal(value) {

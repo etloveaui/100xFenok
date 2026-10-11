@@ -22,6 +22,7 @@ import {
   requireObject,
 } from "./lib/guarded-json.mjs";
 import { loadTickerResolver, SYMBOL_RE } from "./lib/sec13f-symbols.mjs";
+import { classifyHoldingResolution } from "./lib/sec13f-holding-identity.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
@@ -68,6 +69,9 @@ let activeInvestors = 0;
 let sourceRows = 0;
 let mappedRows = 0;
 let unmappedRows = 0;
+const unresolvedPositions = [];
+const classificationCounts = { confirmed_security: 0, not_equity_holding: 0, provider_unsupported: 0 };
+let excludedNonEquityMappedRows = 0;
 
 function aliasKey(rawKey, symbol) {
   return `${rawKey}::${symbol}`;
@@ -140,16 +144,27 @@ for (const file of investorFiles) {
     : filings.at(-1);
   if (!filing) continue;
   activeInvestors += 1;
-  for (const holding of filing.holdings ?? []) {
+  for (const [rowIndex, holding] of (filing.holdings ?? []).entries()) {
     sourceRows += 1;
     const result = resolveHoldingSymbol(holding);
+    const classification = classifyHoldingResolution(holding, result);
+    classificationCounts[classification.outcome] += 1;
     if (!result.symbol || !SYMBOL_RE.test(result.symbol)) {
       unmappedRows += 1;
       recordUnmapped(result, holding, id);
+      unresolvedPositions.push({ investor: id, quarter: filing.quarter, row_index: rowIndex,
+        raw_key: result.rawKey ?? null, cusip: holding.cusip ?? null,
+        name: holding.name ?? null, title_of_class: holding.title_of_class ?? null,
+        put_call: holding.put_call ?? null, share_type: holding.share_type ?? holding.ssh_prnamt_type ?? null,
+        ...classification });
       continue;
     }
     mappedRows += 1;
     recordAlias(result, holding);
+    if (!classification.equity_holder_eligible) {
+      excludedNonEquityMappedRows += 1;
+      continue;
+    }
     addHolding(result.symbol, id, holding);
   }
 }
@@ -189,6 +204,11 @@ const aliasOutput = {
   source_rows: sourceRows,
   mapped_rows: mappedRows,
   unmapped_rows: unmappedRows,
+  classification_counts: classificationCounts,
+  unclassified_rows: unresolvedPositions.filter((row) => !row.outcome || !row.reason).length,
+  excluded_non_equity_mapped_rows: excludedNonEquityMappedRows,
+  classification_scope: "Current cohort reported positions; provider_unsupported means the checked-in resolver inputs do not confirm the exact CUSIP, class and ticker. It does not establish absence from all providers or absence of a US listing.",
+  unresolved_positions: unresolvedPositions,
   aliases: [...aliases.values()]
     .sort((a, b) => a.raw_key.localeCompare(b.raw_key))
     .map((row) => ({

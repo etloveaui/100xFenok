@@ -18,6 +18,7 @@ import {
 } from "./lib/guarded-json.mjs";
 import { PRIVATE_PUBLIC_PATH_VALUES } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
+import { classifyHoldingResolution } from "./lib/sec13f-holding-identity.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "data/sec-13f/analytics/consensus.json");
@@ -126,7 +127,9 @@ function roundRatio(value) {
 function aggregateHoldings(filing) {
   const bySecurity = new Map();
   for (const holding of Array.isArray(filing?.holdings) ? filing.holdings : []) {
-    const ticker = normalizeTicker(resolveHoldingSymbol(holding).symbol);
+    const resolution = resolveHoldingSymbol(holding);
+    if (classifyHoldingResolution(holding, resolution).outcome === "not_equity_holding") continue;
+    const ticker = normalizeTicker(resolution.symbol);
     const cusip = normalizeCusip(holding?.cusip);
     const key = ticker ? `ticker:${ticker}` : cusip ? `cusip:${cusip}` : null;
     if (!key) continue;

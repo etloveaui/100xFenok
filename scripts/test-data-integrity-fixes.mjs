@@ -10,7 +10,7 @@ import {
   computeLiquidityFlowSnapshot,
 } from "../tools/macro-monitor/shared/signals-core.mjs";
 import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
-import { annotateHoldingIdentity, buildConfirmedChanges } from "./lib/sec13f-holding-identity.mjs";
+import { annotateHoldingIdentity, buildConfirmedChanges, classifyHoldingResolution } from "./lib/sec13f-holding-identity.mjs";
 import {
   aggregateFilingHoldings,
   mergePortfolioAggregates,
@@ -106,6 +106,7 @@ try {
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, null);
   const exactPrimaryIdentities = [
     ["025537101", "AEP"], ["064058100", "BNY"], ["12504L109", "CBRE"],
+    ["464286772", "EWY"],
     ["219350105", "GLW"], ["46428Q109", "SLV"], ["49177J102", "KVUE"],
     ["56585A102", "MPC"], ["693475105", "PNC"], ["74762E102", "PWR"],
     ["77543R102", "ROKU"], ["780087102", "RY"], ["872540109", "TJX"],
@@ -359,7 +360,7 @@ try {
     assert.equal(resolver.resolveHoldingSymbol({ cusip: ` ${cusip.toLowerCase()} ` }).symbol, symbol);
   }
   assert.equal(resolver.resolveHoldingSymbol({ name: "Unrelated fixture name" }).symbol, null);
-  assert.equal(resolver.resolveHoldingSymbol({ cusip: "464286772", name: "Unknown iShares class" }).symbol, null);
+  assert.equal(resolver.resolveHoldingSymbol({ cusip: "999286772", name: "Unknown iShares class" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "42824C208", name: "HEWLETT PACKARD ENTERPRISE C" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "000000000", name: "ACUITY INC" }).symbol, null);
   assert.equal(resolver.resolveHoldingSymbol({ cusip: "21874A106", name: "CORE SCIENTIFIC INC", put_call: "Call" }).symbol, null);
@@ -490,9 +491,25 @@ try {
   const raw = { cusip: " 060505104 ", shares: 100, ticker: "BAD", name: "BANK OF AMER CORP",
     title_of_class: "COM", confirmed: "BAC", sector: "Financials" };
   const annotated = annotateHoldingIdentity(raw, identityResolver);
-  assert.deepEqual({ ...annotated, resolved_ticker: undefined, security_key: undefined },
-    { ...raw, resolved_ticker: undefined, security_key: undefined });
+  assert.deepEqual({ ...annotated, resolved_ticker: undefined, security_key: undefined, resolution_classification: undefined },
+    { ...raw, resolved_ticker: undefined, security_key: undefined, resolution_classification: undefined });
   assert.equal(annotated.resolved_ticker, "BAC");
+  assert.equal(annotated.resolution_classification.outcome, "confirmed_security");
+  for (const fields of [{ put_call: "Call" }, { title_of_class: "ETF Option" },
+    { title_of_class: "NOTE 6/1" }, { ssh_prnamt_type: "PRN" },
+    { title_of_class: "*W EXP 01/23/202" }, { title_of_class: "UNIT 99/99/9999" }]) {
+    const position = row("060505104", 10, { confirmed: "BAC", ...fields });
+    assert.equal(position.resolved_ticker, "BAC", "classification must preserve prior bindings");
+    assert.equal(position.resolution_classification.outcome, "not_equity_holding");
+    assert.equal(position.resolution_classification.equity_holder_eligible, false);
+  }
+  for (const title of ["UT SER 1", "COM UNIT REP LTD", "SPONSORED ADR", "ORDINARY SHARES", "TOTAL BOND ETF"]) {
+    const unresolved = classifyHoldingResolution({ cusip: "N12345678", title_of_class: title }, { symbol: null, source: "unmapped" });
+    assert.equal(unresolved.outcome, "provider_unsupported", "unit/foreign text alone does not prove non-equity or no US listing");
+    assert.ok(unresolved.reason);
+    assert.equal(unresolved.equity_holder_eligible, false);
+    assert.equal(classifyHoldingResolution({ cusip: "N12345678", title_of_class: title }, { symbol: "BAC" }).outcome, "confirmed_security");
+  }
   assert.equal(annotated.security_key, "060505104|COMMON|SH");
   assert.equal(row("bad", 10, { confirmed: "BAC" }).security_key, null);
   assert.equal(row("060505104", 10, { put_call: "SWAP" }).security_key, null);
