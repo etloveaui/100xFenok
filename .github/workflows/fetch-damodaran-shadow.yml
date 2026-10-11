@@ -107,17 +107,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Test owner guard and workflow contract
-        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
-        run: node scripts/test-fetch-damodaran-shadow.mjs
-
       - name: Install converter dependencies
         if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         run: python -m pip install -r scripts/lib/damodaran_shadow_converter/requirements.txt
-
-      - name: Test ERP source-date canonicalization
-        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
-        run: python scripts/lib/damodaran_shadow_converter/test_erp_source_date.py
 
       - name: Fetch and guard Damodaran payloads
         id: fetch

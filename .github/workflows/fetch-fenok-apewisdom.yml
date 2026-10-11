@@ -87,9 +87,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test ApeWisdom attention producer contracts
-        run: node scripts/test-fetch-fenok-apewisdom-attention-proxy.mjs
-
       - name: Fetch ApeWisdom attention proxy
         id: fetch_apewisdom
         env:

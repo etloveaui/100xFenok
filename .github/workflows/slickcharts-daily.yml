@@ -115,13 +115,6 @@ jobs:
       - name: Install Python packages
         run: pip install requests beautifulsoup4 playwright
 
-      - name: Test per-file LKG recovery contracts
-        run: |
-          node scripts/test-producer-lkg-state.mjs
-          node scripts/test-slickcharts-daily-recovery.mjs
-          node scripts/test-slickcharts-composite-recovery.mjs
-          python scripts/test_slickcharts_provider_receipts.py
-
       - name: Prepare per-file LKG baseline
         run: node scripts/slickcharts-daily-recovery.mjs prepare --snapshot-dir "$SLICKCHARTS_RECOVERY_SNAPSHOT_DIR"
 

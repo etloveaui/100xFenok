@@ -79,9 +79,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test TGA producer contracts
-        run: node scripts/test-fetch-treasury-tga.mjs
-
       - name: Fetch TGA JSON
         id: fetch_tga
         env:

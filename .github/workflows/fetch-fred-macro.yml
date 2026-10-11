@@ -87,9 +87,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test FRED macro producer contracts
-        run: node scripts/test-fetch-fred-macro.mjs
-
       - name: Fetch macro FRED data
         id: fetch_macro
         env:

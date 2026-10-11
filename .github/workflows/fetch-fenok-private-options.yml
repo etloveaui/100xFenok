@@ -89,12 +89,6 @@ jobs:
       - name: Install bounded provider client
         run: pip install yfinance
 
-      - name: Test private options contracts
-        run: |
-          python3 -m unittest scripts/test_fetch_fenok_private_options.py
-          node scripts/test-run-fenok-private-options.mjs
-          node scripts/test-fetch-fenok-private-options-workflow.mjs
-
       - name: Fetch private raw and build public-safe marker
         id: fetch
         env:

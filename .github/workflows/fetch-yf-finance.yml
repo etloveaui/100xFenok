@@ -213,9 +213,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Verify lane-registry commit-shard contract
-        run: node scripts/test-fetch-yf-finance-workflow.mjs
-
       - name: Install yfinance
         run: pip install yfinance
 

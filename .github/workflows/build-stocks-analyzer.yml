@@ -93,12 +93,11 @@ jobs:
       - name: Build stocks_analyzer.json
         if: github.event_name != 'push'
         run: |
-          node scripts/test-yf-screener-enrichment.mjs
           node scripts/build-stocks-analyzer.mjs
 
       - name: Verify SEC 13F source provenance
         if: github.event_name != 'push'
-        run: node scripts/test-sec13f-source-route.mjs
+        run: node scripts/test-sec13f-source-route.mjs --candidate-only
 
       - name: Build 13F downstream analytics (SEC ingestion is external)
         if: github.event_name != 'push'

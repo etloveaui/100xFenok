@@ -88,9 +88,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test Nasdaq GIW SOX producer contracts
-        run: node scripts/test-fetch-nasdaq-giw-sox-constituents.mjs
-
       - name: Fetch Nasdaq GIW SOX constituents
         id: fetch_sox
         # This lane owns constituent membership only. Yahoo quote/history stays

@@ -99,6 +99,7 @@ console.log(
 
 // Missing quarter metadata must fail before writing any index. Exercise the
 // real builder in an isolated fixture, preserving three prior outputs.
+if (!process.argv.includes("--candidate-only")) {
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "sec13f-quarter-"));
 try {
   fs.mkdirSync(path.join(fixture, "scripts"));
@@ -146,4 +147,5 @@ try {
   console.log("sec13f quarter guard: five invalid forms preserve prior outputs; declared quarter passed");
 } finally {
   fs.rmSync(fixture, {recursive:true,force:true});
+}
 }

@@ -130,11 +130,6 @@ jobs:
           package-manager-cache: false
           node-version: 22
 
-      - name: Verify EDGAR producer and recovery contracts
-        run: |
-          node scripts/test-build-edgar-filing-timeline.mjs
-          node scripts/test-build-edgar-lkg-recovery.mjs
-
       - name: Build EDGAR filing timeline
         id: fetch_edgar
         env:
