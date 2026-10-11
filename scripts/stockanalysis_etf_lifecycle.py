@@ -12,10 +12,29 @@ from yahoo_batch_state import source_business_day_age, verified_yahoo_terminal_e
 from stockanalysis_recovery_state import _atomic_write_json, _iso_timestamp, _read_json, _valid_payload
 
 ORPHAN_PROBE_LIMIT = 60
+ROTATION_POLICY = json.loads(Path(__file__).with_name("etf_detail_rotation_policy.json").read_text())
 CATALOGUES = {
     "etf_universe": "data/stockanalysis/etf_universe.json",
     "etf_screener": "data/stockanalysis/surfaces/etf_screener.json",
 }
+
+
+def detail_refresh_cadence(root):
+    """Publish the same whole-catalogue AUM ranking used by the rotation."""
+    root = Path(root)
+    universe = _read_json(root / CATALOGUES["etf_universe"]) or {}
+    core = _read_json(root / "data/admin/fenok-etf-core-daily-basket.json") or {}
+    records = universe.get("records")
+    core_tickers = (core.get("daily_refresh_universe") or {}).get("tickers")
+    if not isinstance(records, list) or not records or not isinstance(core_tickers, list):
+        return None
+    aums = {str(row.get("ticker") or row.get("s") or "").upper(): row.get("aum")
+            for row in records if isinstance(row, dict)
+            and isinstance(row.get("aum"), (int, float)) and row["aum"] > 0}
+    ranked = sorted(aums, key=lambda ticker: (-aums[ticker], ticker))
+    return {"schema_version": ROTATION_POLICY["schema_version"],
+            "core_tickers": sorted(set(core_tickers)),
+            "tier2_tickers": ranked[:ROTATION_POLICY["tier2_size"]]}
 
 
 def symbols(payload):
