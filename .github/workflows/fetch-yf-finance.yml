@@ -3,8 +3,11 @@
 # Output: owned canonical Yahoo data. Update Manifest owns shared/public projections.
 
 name: Fetch YF Finance Data
+run-name: ${{ github.event.client_payload.external_clock == 'a1-v1' && format('external-clock/a1/v1 fetch-yf-finance.yml {0}', github.event.client_payload.external_clock_slot) || github.workflow }}
 
 on:
+  repository_dispatch:
+    types: [external-clock-yf-finance]
   schedule:
     # Weekday measured-stock refresh after US close (KST Tue-Sat 08:20).
     - cron: '20 23 * * 1-5'
@@ -135,7 +138,37 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+      automatic: ${{ steps.slot.outputs.automatic }}
+      event_name: ${{ steps.slot.outputs.event_name }}
+      mode: ${{ steps.slot.outputs.mode }}
+      schedule: ${{ steps.slot.outputs.schedule }}
+      slot: ${{ steps.slot.outputs.slot }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+            /.github/workflows/
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs fetch-yf-finance.yml
+
   acquire-yf-finance:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:
@@ -215,8 +248,10 @@ jobs:
           INPUT_SHARD_CYCLE_INDEX: ${{ github.event.inputs.shard_cycle_index || '' }}
           INPUT_SCHEDULED_WEEKDAY: ${{ github.event.inputs.scheduled_weekday || '' }}
           INPUT_STABLE_SHARDS: ${{ github.event.inputs.stable_shards || 'false' }}
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          EVENT_NAME: ${{ needs.clock-admission.outputs.event_name }}
+          EVENT_SCHEDULE: ${{ needs.clock-admission.outputs.schedule }}
+          CLOCK_MODE: ${{ needs.clock-admission.outputs.mode }}
+          CLOCK_SLOT: ${{ needs.clock-admission.outputs.slot }}
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then
             if [ "$INPUT_STABLE_SHARDS" != "true" ] || [ -z "$INPUT_SHARD" ] || [ -z "$INPUT_SHARD_CYCLE_INDEX" ] || [ -z "$INPUT_SCHEDULED_WEEKDAY" ]; then
@@ -243,7 +278,7 @@ jobs:
             INPUT_STOCKANALYSIS_ETFS="false"
           fi
           if [ "$EVENT_NAME" = "schedule" ]; then
-            if [ "$EVENT_SCHEDULE" = "20 23 * * 1-5" ]; then
+            if [ "$CLOCK_MODE" = "stocks" ]; then
               INPUT_DAILY_STOCK_SHARDS="${YF_DAILY_STOCK_SHARDS:-5}"
               INPUT_DAILY_ALL_SHARDS="${YF_DAILY_STOCK_ALL_SHARDS:-true}"
               # Default to full coverage across all daily stock shards. A cap
@@ -263,11 +298,15 @@ jobs:
               INPUT_STOCKANALYSIS_ETFS="false"
               INPUT_STOCKS_ONLY="true"
             else
-              case "$EVENT_SCHEDULE" in
-                '7 0 * * 0-5') : ;;
+              case "$CLOCK_MODE" in
+                etfs) : ;;
                 *) echo "::error::unrecognized scheduled ETF slot: $EVENT_SCHEDULE" >&2; exit 2 ;;
               esac
-              SLOT_WEEKDAY="$(date -u +%w)"
+              if [ -n "$CLOCK_SLOT" ]; then
+                SLOT_WEEKDAY="$(date -u -d "$CLOCK_SLOT" +%w)"
+              else
+                SLOT_WEEKDAY="$(date -u +%w)"
+              fi
               if [ "$SLOT_WEEKDAY" -gt 5 ]; then SLOT_WEEKDAY=5; fi
               # One slot a day, Sunday-Friday: the weekday is the shard index
               # of the six-shard weekly cycle, so no hour or slot arithmetic
@@ -288,6 +327,9 @@ jobs:
               INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-1100}"
               INPUT_UNTRACKED_LIMIT="${YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80}"
               INPUT_SHARD_CYCLE_INDEX="${YF_WEEKLY_ETF_SHARD_CYCLE_INDEX:-}"
+              if [ -z "$INPUT_SHARD_CYCLE_INDEX" ] && [ -n "$CLOCK_SLOT" ]; then
+                INPUT_SHARD_CYCLE_INDEX="$(python3 -c 'import sys; from datetime import datetime; d=datetime.fromisoformat(sys.argv[1].replace("Z", "+00:00")); y,w,_=d.isocalendar(); print(datetime.fromisocalendar(y,w,1).toordinal()//7)' "$CLOCK_SLOT")"
+              fi
               # The weekday stays the real weekday, because the weekly cycle
               # index is derived from the calendar occurrence. With one slot
               # a day the slot index is the weekday itself.
@@ -330,7 +372,7 @@ jobs:
           # to cross the job boundary as an output; GITHUB_ENV does not.
           # Written before the provider call so a failed fetch still carries it.
           echo "plan_only=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_OUTPUT"
-          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state"
+          ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --event-name $EVENT_NAME"
           # This flag selects the bounded retry/shard lane; valid acquisition
           # and recovery do not depend on invocation identity.
           if [ "$EVENT_NAME" = "schedule" ] || [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then ARGS="$ARGS --natural-run"; fi
@@ -516,12 +558,12 @@ jobs:
           retention-days: 1
 
   publish-yf-finance:
-    needs: acquire-yf-finance
+    needs: [clock-admission, acquire-yf-finance]
     # Runs even when acquisition failed, because the pre-split persist step ran
     # under always(): a failed fetch still persists its partial candidates and
     # its recovery state. It is skipped only when the run was plan-only, was
     # cancelled, or produced no candidate at all.
-    if: ${{ always() && needs.acquire-yf-finance.result != 'cancelled' && needs.acquire-yf-finance.outputs.plan_only != 'true' && needs.acquire-yf-finance.outputs.artifact_ready == 'true' }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (always() && needs.acquire-yf-finance.result != 'cancelled' && needs.acquire-yf-finance.outputs.plan_only != 'true' && needs.acquire-yf-finance.outputs.artifact_ready == 'true') }}
     runs-on: ubuntu-latest
     # The serialized critical section is apply, stage, commit, push and
     # readback. Cloud publication is a separate job so provider I/O cannot
@@ -768,13 +810,14 @@ jobs:
   # pushed. It carries no Git write and therefore uses only a family-local
   # concurrency group.
   publish-yf-cloud:
-    needs: [acquire-yf-finance, publish-yf-finance]
+    needs: [clock-admission, acquire-yf-finance, publish-yf-finance]
     # Publish confirmed canonical bytes, including accepted partial batches.
     # Rejected acquisition candidates never enter these bytes; failures stay visible.
     if: >-
-      always() &&
+      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
+      (always() &&
       needs.publish-yf-finance.result == 'success' &&
-      needs.publish-yf-finance.outputs.readback_confirmed == 'true'
+      needs.publish-yf-finance.outputs.readback_confirmed == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 75
     permissions:

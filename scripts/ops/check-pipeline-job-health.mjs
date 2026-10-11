@@ -5,7 +5,7 @@ import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
 import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
 import { STATE_TITLE as RETENTION_STATE_TITLE, classifyRetentionSchedule } from "./retention-schedule.mjs";
-import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
+import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot, externalClockEvent } from "../../ops/a1-lanes/external-clock.mjs";
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
@@ -165,12 +165,12 @@ function workflowMetadata(file, source) {
   const scheduled = triggers.includes("schedule");
   // Carried so a watched workflow can be measured against its own declared
   // schedule; a slot that never became a run leaves no other evidence.
-  const githubCrons = [...source.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*$/gm)].map((match) => match[1]);
+  const githubCrons = [...source.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*(?:#.*)?$/gm)].map((match) => match[1]);
 
   // X7b's external hourly deploy catch-up is intentionally not a second
   // GitHub hourly schedule. The clock declaration is its cadence authority;
   // GitHub's daily fallback remains separately visible.
-  const crons = [...new Set([...githubCrons, ...(file === "deploy-worker.yml" ? externalClockCrons(file) : [])])];
+  const crons = [...new Set([...githubCrons, ...externalClockCrons(file)])];
   return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled, triggers, crons };
 }
 
@@ -261,7 +261,7 @@ export function deriveWorkflowWatchPolicy({
     .filter((row) => (row.scheduled && !(row.file in scheduledExclusions)) || row.file in nonScheduledInclusions)
     .map(({ file, label, triggers, crons }) => {
       const events = inclusionConfigs.get(file)?.events
-        ?? triggers.filter((event) => event !== "workflow_dispatch");
+        ?? triggers.filter((event) => !["workflow_dispatch", "repository_dispatch"].includes(event));
       if (events.length === 0) {
         throw new Error(`${file}: watched workflow has no countable automatic event`);
       }
@@ -806,7 +806,7 @@ export function aggregateExternalClockHealth(rows) {
 export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeScheduledRuns = [] } = {}) {
   const countedRuns = runs.filter((run) => {
     if (run?.status && run.status !== "completed") return false;
-    if (run?.event === "workflow_dispatch") return externalClockSlot(workflow, run) !== null;
+    if (["workflow_dispatch", "repository_dispatch"].includes(run?.event)) return externalClockSlot(workflow, run) !== null;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
   const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
@@ -1237,9 +1237,8 @@ export async function main() {
       // workflow_dispatch is fetched even when it is not a counted event:
       // evaluateWorkflow admits marked external slots for trigger liveness;
       // ordinary dispatch successes remain recovery evidence only.
-      const fetchEvents = workflow.events.includes("workflow_dispatch")
-        ? workflow.events
-        : [...workflow.events, "workflow_dispatch"];
+      const fetchEvents = [...new Set([...workflow.events, "workflow_dispatch",
+        ...(EXTERNAL_CLOCK_CRONS[workflow.file] ? [externalClockEvent(workflow.file)] : [])])];
       for (const event of fetchEvents) {
         batches.push(await fetchWorkflowRuns({
           token,
@@ -1248,14 +1247,14 @@ export async function main() {
           file: workflow.file,
           branch,
           event,
-          perPage: event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file] ? 100 : RUNS_PER_PAGE,
+          perPage: event === externalClockEvent(workflow.file) && EXTERNAL_CLOCK_CRONS[workflow.file] ? 100 : RUNS_PER_PAGE,
           status: (workflow.scheduled_producer && event === "schedule")
-            || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file]) ? null : "completed",
+            || (event === externalClockEvent(workflow.file) && EXTERNAL_CLOCK_CRONS[workflow.file]) ? null : "completed",
         }));
       }
       const fetchInProgressScheduledRuns = async () => {
         if (!MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)) return [];
-        const activeBatches = await Promise.all(["schedule", "workflow_dispatch"].map((event) => fetchWorkflowRuns({
+        const activeBatches = await Promise.all([...new Set(["schedule", "workflow_dispatch", externalClockEvent(workflow.file)])].map((event) => fetchWorkflowRuns({
           token,
           owner,
           repo,
@@ -1286,7 +1285,7 @@ export async function main() {
             event,
             perPage: 100,
             status: (workflow.scheduled_producer && event === "schedule")
-              || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file]) ? null : "completed",
+              || (event === externalClockEvent(workflow.file) && EXTERNAL_CLOCK_CRONS[workflow.file]) ? null : "completed",
           }));
         }
         activeScheduledRuns = await fetchInProgressScheduledRuns();
@@ -1322,7 +1321,7 @@ export async function main() {
     try {
       const workflow = workflowMetadata(file, fs.readFileSync(path.join(WORKFLOWS_DIR, file), "utf8"));
       const runs = await fetchWorkflowRuns({ token, owner, repo, file, branch,
-        event: "workflow_dispatch", perPage: 100, status: null });
+        event: externalClockEvent(file), perPage: 100, status: null });
       clockChecks.push(evaluateExternalClock(workflow, runs));
     } catch (error) {
       clockChecks.push({ file, status: "unknown", message: error.message });

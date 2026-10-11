@@ -10,7 +10,7 @@
 # Reference: docs/planning/slickcharts-data-pipeline.md
 
 name: SlickCharts Weekly
-run-name: SlickCharts Weekly (${{ github.event.inputs.scraper || 'all' }})
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 slickcharts-weekly.yml {0}', inputs.external_clock_slot) || format('SlickCharts Weekly ({0})', inputs.scraper || 'all') }}
 
 on:
   schedule:
@@ -18,6 +18,16 @@ on:
     - cron: '0 7 * * 0'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Existing A1 clock marker'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Bound UTC schedule slot'
+        required: false
+        default: ''
+        type: string
       scraper:
         description: 'Which scraper to run'
         required: false
@@ -45,7 +55,32 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+            /.github/workflows/
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs slickcharts-weekly.yml
+
   scrape-weekly:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 90
 

@@ -559,6 +559,20 @@ function activeRetryFixture(prefix) {
     created_at: "2026-08-29T23:20:00Z",
   };
   const delayedBackup = { ...backup, id: 104, created_at: "2026-08-30T00:20:00Z" };
+  const clockPrimary = { ...primary, event: "workflow_dispatch",
+    display_title: "external-clock/a1/v1 fetch-damodaran-shadow.yml 2026-08-29T11:17:00.000Z" };
+  const clockBackup = { ...delayedBackup, event: "workflow_dispatch",
+    display_title: "external-clock/a1/v1 fetch-damodaran-shadow.yml 2026-08-29T23:17:00.000Z" };
+  for (const [previous, expected] of [
+    [clockPrimary, "skip"],
+    [{ ...clockPrimary, conclusion: "failure" }, "run"],
+    [{ ...clockPrimary, display_title: "Human repair" }, "run"],
+  ]) {
+    assert.equal(BackupGate.decideDamodaranExecution({
+      eventName: "schedule", eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: clockBackup.id, runs: [clockBackup, previous],
+    }).action, expected, "the backup accepts only successful automatic primary evidence");
+  }
 
   assert.deepStrictEqual(
     BackupGate.decideDamodaranExecution({ eventName: "workflow_dispatch" }),

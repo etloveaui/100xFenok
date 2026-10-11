@@ -1,38 +1,81 @@
 #!/usr/bin/env node
 // B-434: the A1 clock dispatches these existing workflows at their declared UTC minutes.
 import fs from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
 
-const WORKER_BUDGET_CRONS = Object.freeze({ requests: "7 * * * *", telemetry: "17 2,14 * * *" });
+// Workflow schedule declarations are the clock source. The installed A1
+// service reads the matching published workflow snapshot through this path.
+const WORKFLOW_DIRECTORY = process.env.FENOK_CLOCK_WORKFLOWS
+  || fileURLToPath(new URL("../../.github/workflows/", import.meta.url));
+const CLOCK_FILES = [
+  "deploy-worker.yml",
+  "fetch-fred-macro.yml",
+  "fetch-fred-banking.yml",
+  "fetch-sentiment.yml",
+  "fetch-us-indices-daily.yml",
+  "fetch-nasdaq-giw-sox.yml",
+  "slickcharts-daily.yml",
+  "fetch-fenok-apewisdom.yml",
+  "fetch-fenok-private-options.yml",
+  "fenok-edge-daily.yml",
+  "fenok-edge-krx-daily.yml",
+  "check-sec13f-live-parity.yml",
+  "build-stocks-analyzer.yml",
+  "update-manifest.yml",
+  "fetch-defillama.yml",
+  "fetch-yahoo-ticker.yml",
+  "global-writer-queue-observer.yml",
+  "pins-autosync.yml",
+  "pipeline-failure-alarm.yml",
+  "retention-restore.yml",
+  "worker-request-budget-alarm.yml",
+  "fetch-treasury-tga.yml",
+  "data-plane-serving-probe.yml",
+  "fetch-fenok-news-tone.yml",
+  "fetch-damodaran-shadow.yml",
+  "fetch-edgar-filings.yml",
+  "fetch-finra-ats-weekly.yml",
+  "fetch-fred-yardeni.yml",
+  "fetch-oecd-cli.yml",
+  "fetch-stockanalysis.yml",
+  "fetch-yf-finance.yml",
+  "slickcharts-history.yml",
+  "slickcharts-monthly.yml",
+  "slickcharts-weekly.yml",
+];
+function declaredCrons(file) {
+  const source = readFileSync(path.join(WORKFLOW_DIRECTORY, file), "utf8");
+  const crons = [...source.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*(?:#.*)?$/gm)].map(match => match[1]);
+  if (!crons.length) throw new Error(`Missing workflow schedules: ${file}`);
+  return crons;
+}
+export const EXTERNAL_CLOCK_CRONS = Object.freeze(Object.fromEntries(CLOCK_FILES.map(file => [file,
+  Object.freeze([...new Set([...declaredCrons(file), ...(file === "deploy-worker.yml" ? ["49 * * * *"] : [])])]),
+])));
+const budgetCrons = EXTERNAL_CLOCK_CRONS["worker-request-budget-alarm.yml"];
+const WORKER_BUDGET_CRONS = Object.freeze({ requests: budgetCrons[0], telemetry: budgetCrons[1] });
 
-export const EXTERNAL_CLOCK_CRONS = Object.freeze({
-  "deploy-worker.yml": ["49 * * * *", "30 3 * * *"],
-  "fetch-fred-macro.yml": "0 8 * * *",
-  "fetch-fred-banking.yml": "0 7 * * *",
-  "fetch-sentiment.yml": "0 22 * * 1-5",
-  "fetch-us-indices-daily.yml": "0 22 * * 1-5",
-  "fetch-nasdaq-giw-sox.yml": "50 23 * * 1-5",
-  "slickcharts-daily.yml": "0 6 * * *",
-  "fetch-fenok-apewisdom.yml": "17 13 * * *",
-  "fetch-fenok-private-options.yml": "10 1 * * 2-6",
-  "fenok-edge-daily.yml": "30 0 * * 2-6",
-  "fenok-edge-krx-daily.yml": "30 10 * * 1-5",
-  "check-sec13f-live-parity.yml": "15 10 * * *",
-  "build-stocks-analyzer.yml": "7 6 * * *",
-  "update-manifest.yml": ["30 2 * * *", "30 9 * * *"],
-  "fetch-defillama.yml": "12 * * * *",
-  "fetch-yahoo-ticker.yml": "5 * * * *",
-  "global-writer-queue-observer.yml": "11 * * * *",
-  "pins-autosync.yml": "7,37 * * * *",
-  "pipeline-failure-alarm.yml": "23 * * * *",
-  "retention-restore.yml": "4,19,34,49 * * * *",
-  "worker-request-budget-alarm.yml": Object.values(WORKER_BUDGET_CRONS),
-  "fetch-treasury-tga.yml": "0 */6 * * *",
-  "data-plane-serving-probe.yml": "41 */6 * * *",
-  "fetch-fenok-news-tone.yml": "43 6,14,22 * * *",
+// These collectors already use all 25 human dispatch inputs. A typed repository
+// event preserves that interface and carries only the external-clock binding.
+export const CLOCK_REPOSITORY_EVENTS = Object.freeze({
+  "fetch-stockanalysis.yml": "external-clock-stockanalysis",
+  "fetch-yf-finance.yml": "external-clock-yf-finance",
 });
+export const externalClockEvent = file => CLOCK_REPOSITORY_EVENTS[file] ? "repository_dispatch" : "workflow_dispatch";
+export function clockInputs(eventName, event) {
+  return eventName === "repository_dispatch" ? event?.client_payload || {} : event?.inputs || {};
+}
+export function collectorClockMode(file, cron) {
+  const crons = externalClockCrons(file);
+  const index = crons.indexOf(cron);
+  if (index < 0) return "manual";
+  if (file === "fetch-stockanalysis.yml") return ["stock_daily", "etf_weekday", "etf_general"][index];
+  if (file === "fetch-yf-finance.yml") return ["stocks", "etfs"][index];
+  return "scheduled";
+}
 export const EXTERNAL_CLOCK_MARKER = "external-clock/a1/v1";
 // Admission dates bound the never-ran case without inventing pre-install slots.
 export const EXTERNAL_CLOCK_ADMITTED_AT = Object.freeze(Object.fromEntries(
@@ -41,7 +84,7 @@ export const EXTERNAL_CLOCK_ADMITTED_AT = Object.freeze(Object.fromEntries(
       "global-writer-queue-observer.yml", "pins-autosync.yml", "pipeline-failure-alarm.yml",
       "retention-restore.yml", "worker-request-budget-alarm.yml", "fetch-treasury-tga.yml",
       "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file))
-      ? "2026-10-11T09:20:00.000Z"
+      ? ["fetch-damodaran-shadow.yml", "fetch-edgar-filings.yml", "fetch-finra-ats-weekly.yml", "fetch-fred-yardeni.yml", "fetch-oecd-cli.yml", "fetch-stockanalysis.yml", "fetch-yf-finance.yml", "slickcharts-history.yml", "slickcharts-monthly.yml", "slickcharts-weekly.yml"].includes(file) ? "2026-10-12T00:50:00.000Z" : "2026-10-11T09:20:00.000Z"
       : file === "deploy-worker.yml" ? "2026-10-11T08:40:00.000Z"
       : file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z"
       : ["fetch-treasury-tga.yml", "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file)
@@ -66,12 +109,15 @@ export function externalClockCrons(file) {
 
 export function clockCronMatches(cron, slot) {
   const [minute, hour, dom, month, dow, extra] = cron.split(" ");
-  if (extra !== undefined || dom !== "*" || month !== "*" || !dow) {
+  if (extra !== undefined || !dow || !Number.isFinite(slot.getTime())) {
     throw new Error(`Unsupported external clock calendar: ${cron}`);
   }
+  const day = clockFieldMatches(dom, slot.getUTCDate());
+  const weekday = clockFieldMatches(dow, slot.getUTCDay()) || (slot.getUTCDay() === 0 && clockFieldMatches(dow, 7));
+  const dayMatches = dom === "*" ? weekday : dow === "*" ? day : day || weekday;
   return clockFieldMatches(minute, slot.getUTCMinutes())
     && clockFieldMatches(hour, slot.getUTCHours())
-    && clockFieldMatches(dow, slot.getUTCDay());
+    && clockFieldMatches(month, slot.getUTCMonth() + 1) && dayMatches;
 }
 
 // Both clocks select the same declared job. Ordinary manual dispatch retains
@@ -97,7 +143,7 @@ export function dueDispatches(now = new Date()) {
 // Slot titles bind external dispatch evidence to one workflow and declared minute.
 // Ordinary human dispatches retain the workflow title and never enter this path.
 export function externalClockSlot(workflow, run) {
-  if (run?.event !== "workflow_dispatch" || !EXTERNAL_CLOCK_CRONS[workflow.file]
+  if (run?.event !== externalClockEvent(workflow.file) || !EXTERNAL_CLOCK_CRONS[workflow.file]
       || !externalClockCrons(workflow.file).every((cron) => workflow.crons?.includes(cron))) return null;
   const prefix = `${EXTERNAL_CLOCK_MARKER} ${workflow.file} `;
   if (!run.display_title?.startsWith(prefix)) return null;
@@ -111,18 +157,17 @@ export function externalClockSlot(workflow, run) {
 }
 
 export async function dispatchDue({ now = new Date(), state = {}, dispatch }) {
-  const outcomes = [];
-  for (const row of dueDispatches(now)) {
-    if (state[row.file] === row.slot) continue;
+  // Independent slots share one timer turn. A slow API route cannot block the
+  // following minute; each route has its own bounded request timeout.
+  return Promise.all(dueDispatches(now).filter(row => state[row.file] !== row.slot).map(async row => {
     try {
       const outcome = await dispatch(row);
       if (outcome === "dispatched") state[row.file] = row.slot;
-      outcomes.push({ ...row, outcome });
+      return { ...row, outcome };
     } catch (error) {
-      outcomes.push({ ...row, outcome: "failed", error: error.message });
+      return { ...row, outcome: "failed", error: error.message };
     }
-  }
-  return outcomes;
+  }));
 }
 
 async function main() {
@@ -148,9 +193,12 @@ async function main() {
   const outcomes = await dispatchDue({ state, dispatch: async ({ file, slot }) => {
     // Honor the retention pause set; this clock never enables a disabled workflow.
     if ((await metadata(file)).state !== "active") return "disabled";
-    const response = await fetch(base + file + "/dispatches", {
-      method: "POST", headers, signal: AbortSignal.timeout(20_000),
-      body: JSON.stringify({ ref: "main", inputs: { external_clock: "a1-v1", external_clock_slot: slot } }),
+    const inputs = { external_clock: "a1-v1", external_clock_slot: slot };
+    const eventType = CLOCK_REPOSITORY_EVENTS[file];
+    const url = eventType ? "https://api.github.com/repos/etloveaui/100xFenok/dispatches" : base + file + "/dispatches";
+    const body = eventType ? { event_type: eventType, client_payload: inputs } : { ref: "main", inputs };
+    const response = await fetch(url, {
+      method: "POST", headers, signal: AbortSignal.timeout(20_000), body: JSON.stringify(body),
     });
     if (!response.ok) throw new Error(`${file} dispatch HTTP ${response.status}`);
     return "dispatched";
