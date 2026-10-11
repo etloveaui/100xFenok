@@ -22,6 +22,7 @@ permissions:
 jobs:
   validate-workflow-yaml:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
