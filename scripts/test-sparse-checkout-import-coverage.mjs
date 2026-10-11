@@ -14,6 +14,7 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -65,28 +66,97 @@ export function coversDirectory(prefixes, directory, coneMode = true) {
   });
 }
 
-const violations = [];
-for (const file of fs.readdirSync(WORKFLOW_DIR).filter((name) => name.endsWith(".yml")).sort()) {
-  const source = fs.readFileSync(path.join(WORKFLOW_DIR, file), "utf8");
-  const prefixes = declaredPrefixes(source);
-  if (!prefixes) continue;
-  const coneMode = !/sparse-checkout-cone-mode:\s*false/.test(source);
-  const entries = [...new Set([...source.matchAll(SCRIPT_INVOCATION)].map((match) => match[1]))];
-  for (const entry of entries) {
-    if (!fs.existsSync(path.join(REPO_ROOT, entry))) continue;
-    for (const directory of importedDirectories(entry)) {
-      if (!coversDirectory(prefixes, directory, coneMode)) {
-        violations.push(`${file}: runs ${entry} which imports ${directory}, not in its sparse-checkout`);
+// Checkout state belongs to a job and changes in step order. A small admission
+// job cannot restrict a separate full-checkout worker. Compare actual files:
+// including one file in a directory does not include its imported siblings.
+export function importedFiles(entry, repoRoot = REPO_ROOT) {
+  const seen = new Set();
+  function visit(relative) {
+    if (seen.has(relative) || !fs.existsSync(path.join(repoRoot, relative))) return;
+    seen.add(relative);
+    const text = fs.readFileSync(path.join(repoRoot, relative), "utf8");
+    const imports = /(?:from\s+|import\s*\(|require\s*\(|import\s+)["'](\.[^"']+)["']/g;
+    for (const match of text.matchAll(imports)) visit(path.normalize(path.join(path.dirname(relative), match[1])));
+  }
+  visit(entry);
+  return [...seen].sort();
+}
+
+export function coversFile(prefixes, file, coneMode = true) {
+  let covered = coneMode && !file.includes("/");
+  for (const raw of prefixes) {
+    const negative = raw.startsWith("!");
+    const prefix = raw.replace(/^!/, "").replace(/^\/+|\/+$/g, "");
+    const glob = prefix.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^/]*");
+    const matches = !prefix || new RegExp(`^${glob}(?:/|$)`).test(file)
+      || (coneMode && `${prefix}/`.startsWith(`${path.dirname(file)}/`));
+    if (matches) covered = !negative;
+  }
+  return covered;
+}
+
+export function workflowViolations(workflow, file, repoRoot = REPO_ROOT) {
+  const violations = [];
+  for (const [jobId, job] of Object.entries(workflow.jobs ?? {})) {
+    let prefixes = null;
+    let coneMode = true;
+    for (const step of job.steps ?? []) {
+      if (/^actions\/checkout@/.test(step.uses ?? "")) {
+        const withOptions = step.with ?? {};
+        prefixes = withOptions["sparse-checkout"] == null ? null
+          : String(withOptions["sparse-checkout"]).split("\n").map((x) => x.trim()).filter(Boolean);
+        coneMode = ![false, "false"].includes(withOptions["sparse-checkout-cone-mode"]);
+      }
+      const run = String(step.run ?? "");
+      // The deploy deliberately restores the bulk tree after the early type gate.
+      if (/^\s*git sparse-checkout disable\s*$/m.test(run)) prefixes = null;
+      const set = /^\s*git sparse-checkout set (--no-cone|--cone) (.+)$/m.exec(run);
+      if (set) {
+        const tokens = set[2].match(/'[^']*'|"[^"]*"|\S+/g) ?? [];
+        if (tokens.some((token) => /[$`;&|]/.test(token))) throw new Error(`${file}:${jobId}: dynamic sparse set requires an explicit coverage rule`);
+        prefixes = tokens.map((token) => token.replace(/^['"]|['"]$/g, ""));
+        coneMode = set[1] === "--cone";
+      }
+      if (!prefixes) continue;
+      const cwd = step["working-directory"] ?? job.defaults?.run?.["working-directory"]
+        ?? workflow.defaults?.run?.["working-directory"] ?? ".";
+      for (const match of run.matchAll(SCRIPT_INVOCATION)) {
+        const entry = path.normalize(path.join(cwd, match[1]));
+        for (const imported of importedFiles(entry, repoRoot)) {
+          if (!coversFile(prefixes, imported, coneMode)) {
+            violations.push(`${file}:${jobId}: ${entry} requires ${imported}, absent from this step's checkout`);
+          }
+        }
       }
     }
   }
+  return violations;
 }
 
-assert.deepEqual(
-  [...new Set(violations)].sort(),
-  [],
-  `sparse-checkout must cover every imported directory:\n  ${[...new Set(violations)].sort().join("\n  ")}`,
-);
+// Ruby/Psych is already the preceding required YAML validator in hosted CI.
+// Parse YAML instead of associating a workflow's first sparse block with all jobs.
+const parseYaml = (source) => JSON.parse(execFileSync("ruby", ["-rjson", "-rpsych", "-rdate", "-e",
+  "puts JSON.generate(Psych.safe_load(STDIN.read, permitted_classes: [Date, Time], aliases: true))"],
+  { input: source, encoding: "utf8" }));
+const violations = fs.readdirSync(WORKFLOW_DIR).filter((name) => name.endsWith(".yml")).sort()
+  .flatMap((file) => workflowViolations(parseYaml(fs.readFileSync(path.join(WORKFLOW_DIR, file), "utf8")), file));
+assert.deepEqual(violations, [], `sparse-checkout must cover every imported file in its job:\n  ${violations.join("\n  ")}`);
+
+const sparse = { uses: "actions/checkout@v4", with: { "sparse-checkout-cone-mode": false,
+  "sparse-checkout": "/scripts/check-external-clock-slot.mjs\n/ops/a1-lanes/external-clock.mjs" } };
+const admission = { steps: [sparse, { run: "node scripts/check-external-clock-slot.mjs" }] };
+const full = { steps: [{ uses: "actions/checkout@v4" }, { run: "node scripts/ops/check-pipeline-job-health.mjs" }] };
+assert.deepEqual(workflowViolations({ jobs: { admission, full } }, "multi-job-control"), []);
+const missing = { steps: [sparse, { run: "node scripts/ops/check-pipeline-job-health.mjs" }] };
+assert.ok(workflowViolations({ jobs: { missing } }, "missing-import-fire").some((x) => x.includes("cloud-data-plane")));
+assert.equal(coversFile(["/scripts/a.mjs"], "scripts/b.mjs", false), false);
+assert.equal(coversFile(["/scripts/", "!/scripts/lib/"], "scripts/lib/a.mjs", false), false);
+assert.equal(coversFile(["/*", "!/docs/", "!/ops/"], "scripts/ops/check.mjs", false), true);
+assert.equal(coversFile(["/*", "!/docs/", "!/ops/"], "ops/a1-lanes/external-clock.mjs", false), false);
+assert.equal(coversFile(["scripts/ops"], "scripts/root-file.mjs", true), true);
+assert.deepEqual(workflowViolations({ jobs: { ordered: { steps: [sparse,
+  { run: "node scripts/check-external-clock-slot.mjs" }, { uses: "actions/checkout@v4" },
+  { run: "node scripts/ops/check-pipeline-job-health.mjs" }] } } }, "second-checkout"), []);
 
 // The recogniser must be able to fail, or it silently green-lights everything.
 assert.equal(coversDirectory(["scripts/ops"], "100xfenok-next/scripts/cloud-data-plane"), false);

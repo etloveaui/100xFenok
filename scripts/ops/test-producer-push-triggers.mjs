@@ -132,9 +132,11 @@ assert.match(
   "Update Manifest must still rebuild the bridge index; it is now the only owner",
 );
 const manifestWorkflow = fs.readFileSync(path.join(WORKFLOW_DIR, "update-manifest.yml"), "utf8");
+const manifestWriter = /^  update-manifest:\n([\s\S]*?)(?=^  [\w-]+:|(?![\s\S]))/m.exec(manifestWorkflow)?.[1];
+assert.ok(manifestWriter, "Update Manifest writer job must exist");
 assert.ok(
-  !/sparse-checkout/.test(manifestWorkflow),
-  "Update Manifest must keep a full checkout; a sparse cone would build the bridge from a partial tree",
+  !/sparse-checkout/.test(manifestWriter),
+  "Update Manifest writer must keep a full checkout; its separate clock-admission job may be sparse",
 );
 
 console.log(
