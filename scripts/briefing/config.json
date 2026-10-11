@@ -4,8 +4,12 @@
   "writer": {
     "api_key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY",
     "attempts": [
-      {"model": "claude-opus-5-5", "effort": "medium", "max_tokens": 64000},
-      {"model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000}
+      {"engine": "agy", "model": "claude-opus-5-5-medium", "timeout_s": 420},
+      {"engine": "agy2", "model": "claude-opus-5-5-medium", "timeout_s": 420},
+      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY", "model": "claude-opus-5-5", "effort": "medium", "max_tokens": 64000},
+      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY", "model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000},
+      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY", "model": "claude-opus-5-5", "effort": "medium", "max_tokens": 64000},
+      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY", "model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000}
     ],
     "server_side_fallback": {"beta": "server-side-fallback-2026-07-01", "fallbacks": "default", "models": ["claude-opus-5-5", "claude-sonnet-5-5"]},
     "prompt_movers_limit": 25,

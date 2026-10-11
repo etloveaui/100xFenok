@@ -1,4 +1,7 @@
-"""Writer: prompt, output schema and the Claude Messages API call (Opus 5.5 first, Sonnet 5.5 on failure).
+"""Writer: prompt, output schema and the model call.
+
+Attempts run in config order: Claude through AGY on account 1 and account 2 (already-paid Google quota),
+then the Messages API on plan-credit key 1 and key 2 (Opus 5.5 first, Sonnet 5.5 on failure).
 
 The model writes the article only. Every number it may use is in the AA briefs, the AA fact cards or
 the computed market pack; code fills stats, KST times and the pack afterwards.
@@ -9,7 +12,10 @@ import json
 import logging
 import os
 import re
+import subprocess
+import tempfile
 import time
+from pathlib import Path
 
 import anthropic
 import jsonschema
@@ -156,17 +162,67 @@ def _call(client: anthropic.Anthropic, attempt: dict, system: str, user: str, ed
     return parse_reply(meta["text"]), meta
 
 
+AGY_BIN = Path.home() / ".local" / "bin" / "agy"
+AGY_INLINE_MAX = 90_000  # Linux caps one argv string at 128 KiB; longer prompts go through a file
+
+
+def _call_agy(attempt: dict, system: str, user: str, edition: str) -> tuple[dict, dict]:
+    """One `agy -p` run. Account 2 keeps its login in its own HOME (see the `ad2` shell function)."""
+    if not AGY_BIN.exists():
+        raise WriterError(f"{AGY_BIN} missing")
+    env = {k: v for k, v in os.environ.items() if k not in ("GEMINI_API_KEY", "GOOGLE_API_KEY")}
+    if attempt["engine"] == "agy2":
+        home = Path(os.environ.get("FENO_AGY2_HOME", str(Path.home() / ".gemini-2")))
+        if not home.is_dir():
+            raise WriterError(f"second AGY home {home} missing")
+        env.update(HOME=str(home), FENO_AGY2_REAL_HOME=str(Path.home()))
+    prompt = f"{system}\n\n{user}\n\nReturn only the JSON object. Do not create, edit or delete any file."
+    timeout = attempt.get("timeout_s", 420)
+    t0 = time.time()
+    with tempfile.TemporaryDirectory(prefix="briefing-agy-") as work:
+        if len(prompt) > AGY_INLINE_MAX:
+            Path(work, "prompt.md").write_text(prompt, encoding="utf-8")
+            prompt = "Read prompt.md in the current directory completely and do exactly what it asks."
+        cmd = [str(AGY_BIN), "-p", prompt, "--model", attempt["model"], "--print-timeout", f"{timeout}s",
+               "--dangerously-skip-permissions"]
+        try:
+            proc = subprocess.run(cmd, cwd=work, env=env, capture_output=True, text=True, timeout=timeout + 60)
+        except subprocess.TimeoutExpired:
+            raise WriterError(f"{attempt['engine']} timed out after {timeout + 60} s") from None
+    secs = round(time.time() - t0, 1)
+    text = proc.stdout.strip()
+    if proc.returncode != 0 or not text:
+        raise WriterError(f"{attempt['engine']} exit {proc.returncode}: {(text or proc.stderr).strip()[:200]}")
+    served = re.sub(r"-(low|medium|high)$", "", attempt["model"])
+    ledger.append(f"{attempt['engine']}:{attempt['model']}", "morning_article", {}, edition, served_by=served,
+                  seconds=secs, stop_reason="end_turn", request_id=None)
+    meta = {"model": f"{attempt['engine']}:{attempt['model']}", "served_by": served, "id": None, "seconds": secs,
+            "stop_reason": "end_turn", "input_tokens": None, "output_tokens": None, "usd": 0.0, "text": text}
+    return parse_reply(text), meta
+
+
 def write(edition: str, session: str, today: str, prev: str, cards: list, pack: dict) -> tuple[dict, dict]:
-    """Return (raw article, meta). Tries each configured model in order; raises WriterError when all fail."""
-    client = anthropic.Anthropic(api_key=os.environ[W["api_key_env"]])
+    """Return (raw article, meta). Tries each configured attempt in order; raises WriterError when all fail."""
     system, user = system_prompt(), user_message(edition, session, today, prev, cards, pack)
+    clients: dict[str, anthropic.Anthropic] = {}
     failures = []
     for attempt in W["attempts"]:
+        engine = attempt.get("engine", "api")
+        label = f"{engine}:{attempt['model']}"
         try:
-            raw, meta = _call(client, attempt, system, user, edition)
+            if engine in ("agy", "agy2"):
+                raw, meta = _call_agy(attempt, system, user, edition)
+            else:
+                key_env = attempt.get("key_env", W["api_key_env"])
+                if not os.environ.get(key_env):
+                    raise WriterError(f"{key_env} not set")
+                if key_env not in clients:
+                    clients[key_env] = anthropic.Anthropic(api_key=os.environ[key_env])
+                raw, meta = _call(clients[key_env], attempt, system, user, edition)
+                meta["key_env"] = key_env
             meta["failures"] = failures
             return raw, meta
         except (WriterError, json.JSONDecodeError, anthropic.APIError) as e:
-            log.warning("writer %s failed: %s", attempt["model"], str(e)[:300])
-            failures.append({"model": attempt["model"], "error": str(e)[:300]})
+            log.warning("writer %s failed: %s", label, str(e)[:300])
+            failures.append({"model": label, "error": str(e)[:300]})
     raise WriterError(f"all writer attempts failed: {failures}")

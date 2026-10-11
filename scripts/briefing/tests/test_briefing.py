@@ -181,3 +181,52 @@ class WaitPublishedFreshness(unittest.TestCase):
         with mock.patch.object(publish.urllib.request, "urlopen", fake_open), mock.patch.object(publish.time, "sleep", lambda s: None):
             res = publish.wait_published("2026-10-08", timeout=60, poll=1, expect_sha=hashlib.sha256(new).hexdigest())
         self.assertTrue(res["ok"])
+
+
+class WriterEngineOrderTests(unittest.TestCase):
+    """AGY account 1, AGY account 2, then API key 1, then API key 2; a failure moves to the next attempt."""
+
+    def _run(self, fail: set[str], env: dict[str, str]):
+        from unittest import mock
+        from briefing import writer
+        calls = []
+
+        def fake_agy(attempt, system, user, edition):
+            calls.append(f"{attempt['engine']}:{attempt['model']}")
+            if attempt["engine"] in fail:
+                raise writer.WriterError("quota reached")
+            return {"ok": True}, {"model": attempt["engine"], "served_by": "claude-opus-5-5", "usd": 0.0}
+
+        def fake_api(client, attempt, system, user, edition):
+            label = f"{attempt['key_env']}:{attempt['model']}"
+            calls.append(label)
+            if label in fail:
+                raise writer.WriterError("credit")
+            return {"ok": True}, {"model": attempt["model"], "served_by": attempt["model"], "usd": 0.3}
+
+        with mock.patch.object(writer, "_call_agy", fake_agy), mock.patch.object(writer, "_call", fake_api), \
+                mock.patch.object(writer, "system_prompt", lambda: "s"), \
+                mock.patch.object(writer, "user_message", lambda *a: "u"), \
+                mock.patch.object(writer.anthropic, "Anthropic", lambda api_key: api_key), \
+                mock.patch.dict(writer.os.environ, env, clear=False):
+            raw, meta = writer.write("2026-10-13", "2026-10-12", "t", "p", [], {})
+        return calls, meta
+
+    def test_agy_first(self):
+        calls, meta = self._run(set(), {})
+        self.assertEqual(calls, ["agy:claude-opus-5-5-medium"])
+        self.assertEqual(meta["usd"], 0.0)
+
+    def test_falls_through_both_agy_accounts_to_key_one(self):
+        calls, meta = self._run({"agy", "agy2"}, {"ANTHROPIC_PLAN_CREDIT_API_KEY": "k1"})
+        self.assertEqual(calls[:3], ["agy:claude-opus-5-5-medium", "agy2:claude-opus-5-5-medium",
+                                     "ANTHROPIC_PLAN_CREDIT_API_KEY:claude-opus-5-5"])
+        self.assertEqual(meta["key_env"], "ANTHROPIC_PLAN_CREDIT_API_KEY")
+
+    def test_key_two_after_key_one_fails(self):
+        fail = {"agy", "agy2", "ANTHROPIC_PLAN_CREDIT_API_KEY:claude-opus-5-5",
+                "ANTHROPIC_PLAN_CREDIT_API_KEY:claude-sonnet-5-5"}
+        calls, meta = self._run(fail, {"ANTHROPIC_PLAN_CREDIT_API_KEY": "k1",
+                                       "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY": "k2"})
+        self.assertEqual(calls[-1], "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY:claude-opus-5-5")
+        self.assertEqual(meta["key_env"], "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY")

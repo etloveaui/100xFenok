@@ -1,6 +1,6 @@
 #!/bin/zsh
 # run_m4.sh [run_morning args]: M4 entry for the 100x Morning Brief job (launchd com.fenok.100x-briefing-morning).
-# Loads only the three needed secrets, moves the job worktree to origin/main, then runs the orchestrator
+# Loads only the needed secrets (plus the optional second plan-credit key), moves the job worktree to origin/main, then runs the orchestrator
 # from that worktree. BRIEFING_NO_SYNC=1 skips the worktree sync.
 # The body is one function, called on the last line, so zsh has parsed all of it before the sync rewrites this file.
 BRIEFING_HERE=${0:A:h}
@@ -14,6 +14,14 @@ main() {
   export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin
   for name in ANTHROPIC_PLAN_CREDIT_API_KEY SEC_USER_AGENT FRED_API_KEY; do
     line=$(rg -N -m1 "^(export )?${name}=" "$secrets") || { print -u2 "run_m4: $name missing in $secrets"; return 2 }
+    value=${line#*=}
+    value=${value#[\"\']}
+    value=${value%[\"\']}
+    export "$name=$value"
+  done
+  # Optional: the writer's last API attempts use the second plan-credit key when it is present.
+  for name in ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY; do
+    line=$(rg -N -m1 "^(export )?${name}=" "$secrets") || continue
     value=${line#*=}
     value=${value#[\"\']}
     value=${value%[\"\']}
