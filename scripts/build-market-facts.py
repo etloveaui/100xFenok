@@ -266,6 +266,9 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
     core_dates: list[str] = []
     core_price_missing: list[str] = []
     missing_fact_stamps = 0
+    missing_stamp_facts: list[dict] = []
+    floor_facts: list[dict] = []
+    floor_date = None
     core_price_stamped = 0
     for ticker in row_tickers:
         payload = load_json(ticker_root / f"{ticker}.json")
@@ -273,6 +276,18 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
         values = list(facts.values()) if isinstance(facts, dict) and facts else []
         if not values:
             missing_fact_stamps += 1
+            missing_stamp_facts.append({"ticker": ticker, "field": None, "source": None})
+        for field, value in (facts.items() if isinstance(facts, dict) else []):
+            value = value if isinstance(value, dict) else {}
+            stamp = source_date(value.get("as_of"))
+            member = {"ticker": ticker, "field": field, "source": value.get("source")}
+            if not stamp:
+                missing_stamp_facts.append(member)
+            elif floor_date is None or stamp <= floor_date:
+                if floor_date is None or stamp < floor_date:
+                    floor_facts = []
+                    floor_date = stamp
+                floor_facts.append({**member, "as_of": stamp})
         dates = [source_date((value or {}).get("as_of")) for value in values if isinstance(value, dict)]
         full_dates.extend(date_value for date_value in dates if date_value)
         missing_fact_stamps += sum(
@@ -321,6 +336,8 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
             "core_price_source_complete": core_valid and len(core_price_missing) == 0,
             "full_fact_stamped_count": len(full_dates),
             "full_fact_missing_stamp_count": missing_fact_stamps,
+            "full_fact_missing_stamps": missing_stamp_facts,
+            "full_universe_floor_facts": floor_facts,
             "full_fact_source_complete": missing_fact_stamps == 0,
         },
     }
@@ -485,6 +502,59 @@ def yf_fact(yf_payload, key):
     info = data.get("info") or {}
     value = info.get(key)
     return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
+
+
+def enrolled_etf_quote_facts(ticker, payload):
+    """Admit dated US ETF quotes independently of the atomic detail selection."""
+    if not isinstance(payload, dict) or payload.get("ticker") != ticker:
+        return {}
+    data = payload.get("data")
+    info = data.get("info") if isinstance(data, dict) else None
+    if (not isinstance(info, dict) or info.get("symbol") != ticker
+            or info.get("quoteType") != "ETF" or info.get("currency") != "USD"):
+        return {}
+    # A history date cannot establish the age of an independently stale quote.
+    stamp = epoch_source_date(info.get("regularMarketTime"))
+    if not stamp:
+        return {}
+
+    def finite(key):
+        value = info.get(key)
+        return float(value) if (isinstance(value, (int, float))
+                                and not isinstance(value, bool) and math.isfinite(value)) else None
+
+    price = finite("regularMarketPrice")
+    if price is None:
+        price = finite("currentPrice")
+    if price is None or price <= 0:
+        return {}
+    previous = finite("previousClose")
+    if previous is not None and previous <= 0:
+        previous = None
+    change = finite("regularMarketChange")
+    change_pct = finite("regularMarketChangePercent")
+    if previous is not None:
+        if change is None:
+            change = price - previous
+        if change_pct is None:
+            change_pct = (price / previous - 1) * 100
+    return {field: fact(value, "yf", as_of=stamp, fetched_at=payload.get("fetched_at"))
+            for field, value in {"price": price, "previous_close": previous,
+                                 "change": change, "change_pct": change_pct}.items()}
+
+
+def merge_enrolled_etf_quote(field, selected, quote):
+    if quote is None:
+        return selected
+    candidates = [quote, *((selected or {}).get("candidates") or [])]
+    # Preserve provider priority for same-day candidates; never replace a newer
+    # selected quote with an older Yahoo observation or a collection timestamp.
+    priority = FIELD_SOURCE_POLICY[field]
+    candidates.sort(key=lambda row: priority.index(row["source"]) if row["source"] in priority else len(priority))
+    candidates.sort(key=lambda row: source_date(row.get("as_of")) or "", reverse=True)
+    result = resolve_fact(field, *candidates)
+    result["selection_rule"] = "source_date_desc_then_provider_priority"
+    return result
 
 
 def yf_current_price_fact(yf_payload):
@@ -907,6 +977,7 @@ def build_one(
     detail_source_path=None,
     detail_authority=None,
     beta_benchmark=None,
+    yf_quote_payload=None,
 ):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
@@ -919,6 +990,7 @@ def build_one(
         (sa_payload or {}).get("asset_type") == "etf"
         or str(info.get("quoteType") or "").upper() == "ETF"
         or sa_catalog_payload is not None
+        or str(detail_authority or "").startswith("data_supply:")
     ):
         asset_type = "etf"
 
@@ -1009,7 +1081,11 @@ def build_one(
             stockanalysis_performance_fact(sa_catalog_payload, "return_max_avg", (sa_catalog_payload or {}).get("market_facts_source")),
         ),
     }
+    quote_facts = enrolled_etf_quote_facts(ticker, yf_quote_payload)
+    for field, quote in quote_facts.items():
+        facts[field] = merge_enrolled_etf_quote(field, facts.get(field), quote)
     facts = {key: value for key, value in facts.items() if value is not None}
+    price = facts.get("price")
 
     price_source_as_of = source_date((price or {}).get("as_of")) if isinstance(price, dict) else None
     return {
@@ -1043,6 +1119,7 @@ def build_one(
         "financials": None,
         "sources": {
             "yf": bool(yf_payload),
+            "yf_quote": bool(quote_facts),
             "stockanalysis": bool(sa_payload and not sa_is_yahoo_fallback),
             "stockanalysis_yf_fallback": bool(sa_payload and sa_is_yahoo_fallback),
             "stockanalysis_etf_catalog": bool(sa_catalog_payload),
@@ -1050,6 +1127,7 @@ def build_one(
         },
         "source_files": {
             "yf": f"yf/finance/{ticker}.json" if yf_payload else None,
+            "yf_quote": f"yf/finance/{ticker}.json" if quote_facts else None,
             "stockanalysis": (
                 detail_source_path
                 or f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"
@@ -1273,10 +1351,12 @@ def main(argv=None) -> None:
     for ticker in tickers:
         detail_authority = None
         detail_source_path = None
+        yf_quote_payload = None
         if ticker in enrolled_etfs:
             # Enrolled ETF detail is committed R2 truth. Mutable Yahoo and direct
             # StockAnalysis detail files must not bypass that selection.
             yf_payload = None
+            yf_quote_payload = load_json(yf_files[ticker]) if ticker in yf_files else None
             selected_detail = selected_etf_details.get(ticker)
             sa_payload = selected_detail["payload"] if selected_detail else None
             detail_source_path = selected_detail["source_path"] if selected_detail else None
@@ -1304,6 +1384,7 @@ def main(argv=None) -> None:
             sa_catalog_rows.get(ticker),
             detail_source_path=detail_source_path,
             detail_authority=detail_authority,
+            yf_quote_payload=yf_quote_payload,
             beta_benchmark=beta_benchmarks.get(next(
                 (symbol for suffix, (symbol, _) in KOREAN_BETA_BENCHMARKS.items() if ticker.endswith(suffix)),
                 BETA_BENCHMARK)),
