@@ -198,8 +198,13 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
   const states: CardState[] = [flow.state, stress.state, banking.state, sentiment.state];
   const readyCount = states.filter((s) => s === "ready").length;
   const missingCount = states.filter((s) => s === "missing" || s === "failed").length;
-  const basisDates = [flow.snapshot?.as_of, stress.snapshot?.as_of, banking.snapshot?.as_of].filter(Boolean) as string[];
-  const basis = basisDates.length ? basisDates.sort().reverse()[0] : null;
+  // The cards refresh on different cadences (banking is quarterly), so the
+  // header prints the oldest card date, or the range when the cards differ —
+  // never only the newest.
+  const basisDates = ([flow.snapshot?.as_of, stress.snapshot?.as_of, banking.snapshot?.as_of].filter(Boolean) as string[]).sort();
+  const oldestBasis = basisDates[0] ?? null;
+  const newestBasis = basisDates[basisDates.length - 1] ?? null;
+  const basis = oldestBasis && newestBasis && oldestBasis !== newestBasis ? `${oldestBasis} ~ ${newestBasis}` : oldestBasis;
 
   const flowSnap = flow.snapshot;
   const stressSnap = stress.snapshot;
