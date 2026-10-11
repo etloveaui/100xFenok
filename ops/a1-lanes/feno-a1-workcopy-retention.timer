@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily A1 scratch copy retention
+
+[Timer]
+OnCalendar=*-*-* 03:50:00 UTC
+Persistent=true
+AccuracySec=1min
+Unit=feno-a1-workcopy-retention.service
+
+[Install]
+WantedBy=timers.target
