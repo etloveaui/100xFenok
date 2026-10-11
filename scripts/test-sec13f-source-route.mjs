@@ -131,6 +131,18 @@ try {
   const audit = JSON.parse(fs.readFileSync(path.join(dataDir, "analytics/ticker_aliases.json")));
   assert.equal(audit.source_rows, 1, "only the declared quarter contributes rows");
   assert.equal(audit.unresolved_positions[0].quarter, "2026-Q2");
+  fs.mkdirSync(path.join(fixture, "data/edgar"), {recursive:true});
+  fs.mkdirSync(path.join(fixture, "data/yf/finance"), {recursive:true});
+  fs.writeFileSync(path.join(fixture, "data/edgar/company_tickers.json"), JSON.stringify({rows:[{ticker:"FIXTR",title:"Unconfirmed Fixture Issuer"}]}));
+  fs.writeFileSync(path.join(fixture, "data/yf/finance/FIXTR.json"), JSON.stringify({data:{info:{longName:"Unconfirmed Fixture Issuer"}}}));
+  const resolved = spawnSync(process.execPath, [path.join(fixture, "scripts/build-13f-integrity-indexes.mjs")], {encoding:"utf8"});
+  assert.equal(resolved.status, 0, resolved.stderr);
+  assert.match(resolved.stdout, /newly_resolved_positions=1 newly_unresolved_positions=0/);
+  fs.unlinkSync(path.join(fixture, "data/yf/finance/FIXTR.json"));
+  fs.writeFileSync(path.join(fixture, "data/edgar/company_tickers.json"), JSON.stringify({rows:[]}));
+  const unresolved = spawnSync(process.execPath, [path.join(fixture, "scripts/build-13f-integrity-indexes.mjs")], {encoding:"utf8"});
+  assert.equal(unresolved.status, 0, unresolved.stderr);
+  assert.match(unresolved.stdout, /newly_resolved_positions=0 newly_unresolved_positions=1/);
   console.log("sec13f quarter guard: five invalid forms preserve prior outputs; declared quarter passed");
 } finally {
   fs.rmSync(fixture, {recursive:true,force:true});

@@ -549,10 +549,11 @@ function loadYfUniverse(root, symbols, nameMap, symbolNames) {
 
     const payload = readJson(path.join(yfDir, file), {});
     const info = payload.data?.info ?? {};
-    addName(nameMap, info.longName, symbol, "yf-local");
-    addName(nameMap, info.shortName, symbol, "yf-local");
-    addSymbolName(symbolNames, symbol, info.longName);
-    addSymbolName(symbolNames, symbol, info.shortName);
+    // A cache filename and its own names cannot confirm each other. Require
+    // an independently loaded Scouter/SEC issuer before admitting a Yahoo join.
+    for (const name of [info.longName, info.shortName]) {
+      if (issuerNameConfirms(symbolNames, symbol, name)) addName(nameMap, name, symbol, "yf-local");
+    }
   }
 }
 
@@ -630,8 +631,8 @@ export function loadTickerResolver(rootPath) {
   const symbolNames = new Map();
 
   loadStockUniverse(root, symbols, nameMap, symbolNames);
-  loadYfUniverse(root, symbols, nameMap, symbolNames);
   loadSecIssuerNames(root, symbolNames);
+  loadYfUniverse(root, symbols, nameMap, symbolNames);
   loadExistingAliases(root, aliasMap, nameMap, symbolNames);
   loadInvestorHistory(root, symbols, nameMap, cusipMap, symbolNames);
   const confirmed = (symbol, issuerName) => issuerNameConfirms(symbolNames, normalizeSymbol(symbol), issuerName);

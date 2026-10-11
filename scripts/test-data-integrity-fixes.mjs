@@ -100,7 +100,19 @@ try {
       { raw_key: "PHILIP MORRIS INTL INC", normalized_key: "PHILIP MORRIS",
         symbol: "ATI", source: "13f-history", cusips: ["718172109"] }],
   }));
+  const yfDir = path.join(resolverRoot, "data/yf/finance");
+  fs.mkdirSync(yfDir, {recursive:true});
+  for (const [symbol, info] of Object.entries({
+    ATI: {longName:"PHILIP MORRIS INTL INC",shortName:"PHILIP MORRIS"},
+    GE: {longName:"GENERAL ELECTRIC CO",shortName:"PORTLAND GEN ELEC CO"},
+    ORPHAN: {longName:"Unverified Cache Issuer",shortName:"Unverified Cache Issuer"},
+  })) fs.writeFileSync(path.join(yfDir, `${symbol}.json`), JSON.stringify({data:{info}}));
   const resolver = loadTickerResolver(resolverRoot);
+  assert.equal(resolver.resolveHoldingSymbol({name:"Unverified Cache Issuer"}).symbol, null, "Yahoo cannot self-confirm its cache filename");
+  assert.equal(resolver.resolveHoldingSymbol({ticker:"ATI",name:"PHILIP MORRIS INTL INC"}).symbol, null, "wrong cached issuer cannot confirm a stored ticker");
+  assert.equal(resolver.resolveHoldingSymbol({name:"GENERAL ELECTRIC CO"}).symbol, "GE", "independent SEC name confirmation admits a Yahoo name join");
+  assert.equal(resolver.resolveHoldingSymbol({name:"PORTLAND GEN ELEC CO"}).symbol, null, "unconfirmed shortName remains excluded");
+
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909100", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVA");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", cusip: "530909308", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, "LLYVK");
   assert.equal(resolver.resolveHoldingSymbol({ ticker: "IVE", name: "LIBERTY LIVE HOLDINGS INC" }).symbol, null);

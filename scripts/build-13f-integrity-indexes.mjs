@@ -55,6 +55,7 @@ function guardInvestorDoc(data, filePath) {
 }
 
 const previousConsensus = readExistingJson(path.join(ROOT, CONSENSUS), {}, guardPreviousConsensus);
+const previousAliases = readExistingJson(path.join(ROOT, ALIASES), {}, (value, file) => requireObject(value, file));
 const metadata = previousConsensus.metadata ?? {};
 const targetQuarter = metadata.quarter;
 if (typeof targetQuarter !== "string" || !/^\d{4}-Q[1-4]$/.test(targetQuarter)) {
@@ -73,6 +74,9 @@ let sourceRows = 0;
 let mappedRows = 0;
 let unmappedRows = 0;
 const unresolvedPositions = [];
+const resolvedPositionKeys = new Set();
+const positionKey = (row) => JSON.stringify([row.investor, row.quarter, row.cusip ?? null,
+  row.name ?? null, row.title_of_class ?? null, row.put_call ?? null]);
 const classificationCounts = { confirmed_security: 0, not_equity_holding: 0, provider_unsupported: 0 };
 let excludedNonEquityMappedRows = 0;
 
@@ -161,6 +165,7 @@ for (const file of investorFiles) {
       continue;
     }
     mappedRows += 1;
+    resolvedPositionKeys.add(positionKey({investor:id, quarter:filing.quarter, ...holding}));
     recordAlias(result, holding);
     if (!classification.equity_holder_eligible) {
       excludedNonEquityMappedRows += 1;
@@ -248,6 +253,17 @@ writeJson(CONSENSUS, {
   consensus,
 });
 writeJson(ALIASES, aliasOutput);
+
+const comparablePrevious = previousAliases.quarter === targetQuarter && Array.isArray(previousAliases.unresolved_positions);
+const previousUnresolved = comparablePrevious ? previousAliases.unresolved_positions : [];
+const previousUnresolvedKeys = new Set(previousUnresolved.map(positionKey));
+const newlyResolved = comparablePrevious ? previousUnresolved.filter((row) => resolvedPositionKeys.has(positionKey(row))).length : null;
+const newlyUnresolved = comparablePrevious ? unresolvedPositions.filter((row) => !previousUnresolvedKeys.has(positionKey(row))).length : null;
+console.log(`13f_resolution_delta: previous_quarter=${previousAliases.quarter ?? "absent"} current_quarter=${targetQuarter} ` +
+  `mapped_before=${previousAliases.mapped_rows ?? "unknown"} mapped_after=${mappedRows} ` +
+  `unmapped_before=${previousAliases.unmapped_rows ?? "unknown"} unmapped_after=${unmappedRows} ` +
+  `newly_resolved_positions=${newlyResolved ?? "not_comparable"} newly_unresolved_positions=${newlyUnresolved ?? "not_comparable"} ` +
+  `basis=investor-quarter-cusip-name-class-option;new_positions_count_as_newly_unresolved`);
 
 console.log(
   `13f_integrity: quarter=${targetQuarter} tickers=${Object.keys(consensus).length} ` +
