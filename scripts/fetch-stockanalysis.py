@@ -232,8 +232,17 @@ DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
 NATURAL_GENERAL_INCREMENTAL_LIMIT = 400
-NATURAL_GENERAL_MIN_AUM = 50_000_000
-NATURAL_GENERAL_MIN_DOLLAR_VOLUME = 1_000_000
+NATURAL_GENERAL_TIER2_SIZE = 650
+NATURAL_GENERAL_TIER2_TARGET_DAYS = 7
+NATURAL_GENERAL_TIER3_TARGET_DAYS = 30
+NATURAL_GENERAL_RUNS_PER_WEEK = 6
+NATURAL_GENERAL_PENDING_RESERVE = 10
+NATURAL_GENERAL_MIN_SPARE_RATIO = 0.20
+# One bounded catch-up cohort, derived from existing source/attempt clocks.
+# Attempts after this activation count as reached even if the provider fails;
+# failures continue through the existing pending/cooldown policy.
+NATURAL_GENERAL_FIRST_PASS_SOURCE_DATE = "2026-09-30"
+NATURAL_GENERAL_FIRST_PASS_STARTED_AT = "2026-10-11T00:00:00Z"
 UNIVERSE_RECOVERY_MAX_PAGES = 100
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
@@ -5525,6 +5534,7 @@ def etf_incremental_priority_contexts(
                 {
                     "sources": set(),
                     "aum": None,
+                    "universe_aum": None,
                     "price": None,
                     "volume": None,
                     "dollar_volume": None,
@@ -5533,6 +5543,8 @@ def etf_incremental_priority_contexts(
             )
             context["sources"].add(source_name)
             context["record"] = {**context["record"], **record}
+            if source_name == "etf_universe":
+                context["universe_aum"] = parse_suffix_number(record.get("aum"))
             for key, target in (
                 ("aum", "aum"),
                 ("assets", "aum"),
@@ -5606,11 +5618,29 @@ def select_natural_general_incremental_candidates(
     now_dt: datetime,
     limit: int,
 ) -> tuple[list[dict], dict]:
-    """Spend the existing bounded budget on missing/stale work before fresh focus."""
+    """Rank source debt by explicit tier deadlines inside the existing budget."""
     buckets = {name: [] for name in (
-        "new_listings", "missing", "oldest_stale", "pending_retry", "high_impact", "fresh",
+        "new_listings", "missing", "oldest_stale", "pending_retry", "fresh",
     )}
-    default_focus = set(DEFAULT_ETFS)
+    # Rank the full catalogue, not today's eligible subset: cooldown or a core
+    # exclusion must not promote a smaller fund into a different tier.
+    ranked = sorted((ticker for ticker, context in contexts.items()
+                     if (context.get("universe_aum") or 0) > 0),
+                    key=lambda ticker: (-contexts[ticker]["universe_aum"], ticker))
+    tier2 = set(ranked[:NATURAL_GENERAL_TIER2_SIZE])
+    tier_days = lambda row: (NATURAL_GENERAL_TIER2_TARGET_DAYS if row["ticker"] in tier2
+                            else NATURAL_GENERAL_TIER3_TARGET_DAYS)
+    def overdue_hours(row: dict) -> float:
+        return (row.get("age_hours") or 0) - tier_days(row) * 24
+    def first_pass(row: dict) -> bool:
+        age = row.get("age_hours")
+        activated = parse_iso_timestamp(NATURAL_GENERAL_FIRST_PASS_STARTED_AT)
+        if age is None or now_dt < activated:
+            return False
+        source_date = (now_dt - timedelta(hours=age)).date().isoformat()
+        attempted = parse_iso_timestamp(row.get("last_attempt_utc"))
+        return (source_date <= NATURAL_GENERAL_FIRST_PASS_SOURCE_DATE
+                and (attempted is None or attempted < activated))
     for row in candidates:
         context = contexts.get(row["ticker"]) or {}
         pending = bool(row.get("prior_failures") or row.get("provider_absent"))
@@ -5620,35 +5650,50 @@ def select_natural_general_incremental_candidates(
             bucket = "new_listings"
         elif row["reason"] == "missing" or row.get("source_date_missing"):
             bucket = "missing"
-        elif row["reason"] == "stale" or row.get("source_freshness_debt"):
+        elif first_pass(row) or overdue_hours(row) >= 0:
             bucket = "oldest_stale"
         elif row["reason"] in {"invalid", "fallback_retry", "pending_retry", "deferred_detail", "history_gap"}:
             bucket = "pending_retry"
-        elif (row["ticker"] in default_focus or context.get("leveraged_focus")
-              or (context.get("aum") or 0) >= NATURAL_GENERAL_MIN_AUM
-              or (context.get("dollar_volume") or 0) >= NATURAL_GENERAL_MIN_DOLLAR_VOLUME):
-            bucket = "high_impact"
         else:
             bucket = "fresh"
         buckets[bucket].append(row)
 
     for bucket, rows in buckets.items():
         rows.sort(key=lambda row: (
-            -(row.get("age_hours") or 0) if bucket == "oldest_stale" else 0,
+            -int(first_pass(row)) if bucket == "oldest_stale" else 0,
+            -(row.get("age_hours") or 0) if bucket == "oldest_stale" and first_pass(row) else
+            -overdue_hours(row) if bucket in {"oldest_stale", "fresh"} else 0,
             row.get("last_attempt_utc") or "",
             *incremental_candidate_sort_key(row),
         ))
     selected = []
     selected_counts = {}
+    def selection(row: dict, bucket: str) -> dict:
+        return {**row, "selection_bucket": bucket, "max_age_hours": tier_days(row) * 24,
+                "source_freshness_debt": bool(row.get("source_freshness_debt") or overdue_hours(row) >= 0),
+                "selection_reason": (f"tier_{2 if row['ticker'] in tier2 else 3}_"
+                                     f"target_{tier_days(row)}d_"
+                                     f"{'first_pass' if first_pass(row) else 'source_deadline'}")}
     # Keep retries moving even while the missing/stale backlog exceeds the
     # daily budget. The remaining slots still drain those older source gaps.
-    pending_minimum = min(10, len(buckets["pending_retry"]), limit)
+    pending_minimum = min(NATURAL_GENERAL_PENDING_RESERVE, len(buckets["pending_retry"]), limit)
     for bucket, rows in buckets.items():
         ceiling = limit - pending_minimum if bucket in {"new_listings", "missing", "oldest_stale"} else limit
-        chosen = rows[:max(0, ceiling - len(selected))]
-        selected.extend({**row, "selection_bucket": bucket,
-                         "selection_reason": "source_freshness_then_oldest_attempt"} for row in chosen)
+        available = max(0, ceiling - len(selected))
+        # Retry debt has its reserved slots; spare capacity then follows the
+        # nearest tier deadline instead of draining every pending name first.
+        if bucket == "pending_retry" and buckets["fresh"]:
+            available = min(available, pending_minimum)
+        chosen = rows[:available]
+        selected.extend(selection(row, bucket) for row in chosen)
         selected_counts[bucket] = len(chosen)
+    # If the ordinary tail is smaller than the remaining budget, use the
+    # already-eligible retries without bypassing their upstream cooldown.
+    for row in buckets["pending_retry"][selected_counts["pending_retry"]:]:
+        if len(selected) >= limit:
+            break
+        selected.append(selection(row, "pending_retry"))
+        selected_counts["pending_retry"] += 1
     return selected, {
         "profile": f"natural_non_history_general_{NATURAL_GENERAL_INCREMENTAL_LIMIT}",
         "quota_policy": {
@@ -5660,7 +5705,7 @@ def select_natural_general_incremental_candidates(
         "eligible_counts": {**{name: len(rows) for name, rows in buckets.items()}, "total": len(candidates)},
         "selected_counts": {**selected_counts, "total": len(selected)},
         "cursor": {
-            "strategy": "oldest_source_then_last_attempt_with_pending_cooldown",
+            "strategy": "first_pass_then_tier_deadline_with_pending_cooldown",
             "date": now_dt.date().isoformat(),
         },
     }
@@ -5867,7 +5912,7 @@ def incremental_etf_backfill_candidates(
             "selection": (
                 "primary StockAnalysis ETF detail files missing required history_periods only"
                 if history_gaps_only
-                else "bounded new listings, missing source dates/details, oldest stale, pending retries, high-impact and already-fresh rotation"
+                else "new listings, missing source dates/details, first-pass cohort then furthest overdue tier deadline, pending retry reserve, closest tier deadline; tier 2 is the top 650 universe AUM names at 7 days, tier 3 is 30 days"
                 if priority_selector is not None
                 else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then deferred quote/history and multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
             ),

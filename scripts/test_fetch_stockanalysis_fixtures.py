@@ -3588,6 +3588,72 @@ module.main()
             self.assertEqual({row["ticker"] for row in plan["terminal_securities"]}, {"DEFI", "MGKX"})
             self.assertEqual(plan["priority_selector"]["quota_policy"]["scheduled_total_limit"], 400)
 
+    def test_natural_tiers_order_by_overdue_then_closest_target(self) -> None:
+        now = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        def candidate(ticker, age, reason="fresh", failures=0):
+            return {"ticker": ticker, "age_hours": age * 24 if age is not None else None,
+                    "reason": reason, "prior_failures": failures, "priority": 1,
+                    "reason_priority": 3, "last_attempt_utc": "2026-10-31T00:00:00Z"}
+        rows = [candidate("NEW", None, "missing"), candidate("MISSING", None, "missing"),
+                candidate("HOTDUE", 10), candidate("COLDOVER", 34),
+                candidate("PENDING", 0, "invalid", 1), candidate("HOTNEAR", 6.5),
+                candidate("COLDNEAR", 28), candidate("TAIL", 1)]
+        contexts = {row["ticker"]: {"universe_aum": 1, "sources": set()} for row in rows}
+        contexts["HOTDUE"]["universe_aum"] = 1000
+        contexts["HOTNEAR"]["universe_aum"] = 900
+        contexts["NEW"]["sources"] = {"new_etfs"}
+        with patch.object(self.fetcher, "NATURAL_GENERAL_TIER2_SIZE", 2):
+            selected, policy = self.fetcher.select_natural_general_incremental_candidates(
+                rows, contexts, now_dt=now, limit=7)
+        self.assertEqual([row["ticker"] for row in selected],
+                         ["NEW", "MISSING", "COLDOVER", "HOTDUE", "PENDING", "HOTNEAR", "COLDNEAR"])
+        self.assertIn("tier_2_target_7d", selected[3]["selection_reason"])
+        self.assertIn("tier_3_target_30d", selected[2]["selection_reason"])
+        self.assertEqual(selected[3]["max_age_hours"], 168)
+        self.assertTrue(selected[3]["source_freshness_debt"])
+        with tempfile.TemporaryDirectory() as tmp, patch.object(self.fetcher, "OUT_DIR", Path(tmp)):
+            self.fetcher.write_json(Path(tmp) / "etfs/HOTDUE.json", {
+                "source_as_of": (now - timedelta(days=10)).isoformat()})
+            ledger = self.fetcher.update_pending_ledger(
+                [{"ticker": "HOTDUE", "asset_type": "etf", "status": "ok", "provider": "stockanalysis"}],
+                [selected[3]], 7, 3, False, now_dt=now)
+            self.assertEqual(ledger["entries"]["HOTDUE"]["failure_class"], "source_date_non_advance")
+        self.assertEqual(policy["quota_policy"]["pending_retry_reserved"], 1)
+        self.assertEqual(rows[2]["age_hours"], 240, "the selector must not rewrite source ages")
+
+    def test_natural_tiers_first_pass_precedes_recurring_deadline(self) -> None:
+        now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+        rows = [{"ticker": name, "age_hours": age * 24, "reason": "fresh",
+                 "prior_failures": 0, "priority": 1, "reason_priority": 99,
+                 "last_attempt_utc": attempt} for name, age, attempt in [
+                    ("FIRST", 20, "2026-10-05T00:00:00Z"),
+                    ("RECUR", 12, "2026-10-12T00:00:00Z")]]
+        contexts = {"FIRST": {"universe_aum": 1}, "RECUR": {"universe_aum": 1000}}
+        with patch.object(self.fetcher, "NATURAL_GENERAL_TIER2_SIZE", 1):
+            selected, _ = self.fetcher.select_natural_general_incremental_candidates(
+                rows, contexts, now_dt=now, limit=1)
+            self.assertEqual(selected[0]["ticker"], "FIRST")
+            self.assertIn("first_pass", selected[0]["selection_reason"])
+            rows[0]["last_attempt_utc"] = now.isoformat()
+            selected, _ = self.fetcher.select_natural_general_incremental_candidates(
+                rows, contexts, now_dt=now, limit=1)
+            self.assertEqual(selected[0]["ticker"], "RECUR")
+
+    def test_natural_tiers_capacity_includes_retry_reserve(self) -> None:
+        f = self.fetcher
+        # Conservative current enrollment; the daily core is separate and is
+        # deliberately not subtracted here, leaving extra actual headroom.
+        members = 5752
+        per_run = (f.NATURAL_GENERAL_TIER2_SIZE / f.NATURAL_GENERAL_TIER2_TARGET_DAYS
+                   + (members - f.NATURAL_GENERAL_TIER2_SIZE) / f.NATURAL_GENERAL_TIER3_TARGET_DAYS)
+        per_run *= 7 / f.NATURAL_GENERAL_RUNS_PER_WEEK
+        per_run += f.NATURAL_GENERAL_PENDING_RESERVE
+        self.assertGreaterEqual(1 - per_run / f.NATURAL_GENERAL_INCREMENTAL_LIMIT,
+                                f.NATURAL_GENERAL_MIN_SPARE_RATIO)
+        self.assertGreaterEqual(f.NATURAL_GENERAL_TIER2_SIZE, 500)
+        self.assertEqual(f.NATURAL_GENERAL_TIER2_TARGET_DAYS, 7)
+        self.assertLessEqual(f.NATURAL_GENERAL_TIER3_TARGET_DAYS, 35)
+
     def test_natural_general_incremental_priority_rotates_tail_and_records_evidence(self) -> None:
         now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
         with tempfile.TemporaryDirectory() as tmp:
@@ -3634,7 +3700,7 @@ module.main()
                 self.assertEqual(first_stale | next_stale, set(tail))
                 self.assertTrue(set(tail) - first_stale <= next_stale)
                 self.assertEqual(first["priority_selector"]["quota_policy"]["priority_order"],
-                                 ["new_listings", "missing", "oldest_stale", "pending_retry", "high_impact", "fresh"])
+                                 ["new_listings", "missing", "oldest_stale", "pending_retry", "fresh"])
                 self.assertEqual(first["priority_selector"]["selected_counts"]["total"], 40)
 
     def test_source_date_non_advance_uses_existing_bounded_cooldown(self) -> None:
