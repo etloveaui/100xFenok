@@ -1,25 +1,13 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-11T10:15:14.144Z",
+  "generated_at": "2026-10-11T13:58:37.908Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 1,
   "open_incidents": [
-    {
-      "workflow": "fetch-fenok-news-tone.yml",
-      "label": "Fetch Fenok GDELT News Tone Proxy",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
-      "streak": 5,
+      "streak": 9,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38117226024,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38117226024",
@@ -363,6 +351,13 @@
       "events": [],
       "event": null,
       "failure_streak_threshold": 2
+    },
+    {
+      "file": "family-health:stockanalysis-etf-detail",
+      "label": "stockanalysis-etf-detail family health",
+      "events": [],
+      "event": null,
+      "failure_streak_threshold": 2
     }
   ],
   "excluded_workflows": [
@@ -376,12 +371,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38131032793",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38131032793",
-    "observed_at": "2026-10-11T10:15:14.144Z",
+    "run_id": "38145242266",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38145242266",
+    "observed_at": "2026-10-11T13:58:37.908Z",
     "event": "workflow_run",
     "workflows": [
-      "fetch-fenok-news-tone.yml",
       "global-writer-queue-observer.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
