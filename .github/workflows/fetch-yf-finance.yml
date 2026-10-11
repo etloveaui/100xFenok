@@ -279,7 +279,9 @@ jobs:
               # catalogue ETFs with canonical state or verified pending records.
               # Six stable shards cover that bounded union; the broad
               # StockAnalysis universe is not admitted as candidates.
-              # The outer limit covers both retry and regular budgets.
+              # The outer limit covers retry plus one regular shard. The fetcher
+              # reads committed completion state and may add one oldest missed
+              # regular shard (up to 2240 total), sharing these same 40 retries.
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-1140}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
               INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-1100}"

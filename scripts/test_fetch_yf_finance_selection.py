@@ -7,7 +7,7 @@ import importlib.util
 import hashlib
 import io
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import subprocess
 import sys
@@ -2928,6 +2928,83 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(index["counts"]["pending_acquisition"], 1)
         self.assertEqual(index["counts"]["untracked"], 0)
         self.assertEqual(store.pending_acquisition_tickers({"FRESH", "BLD", "PENDING"}), {"PENDING"})
+
+    def _weekly_store(self, stamp, weekday, missed=()):
+        store = self.fetcher.YahooBatchStateStore(self.root / "rotation", self.fetcher.OUT_DIR)
+        day = datetime.fromisoformat(stamp.replace("Z", "+00:00")).date()
+        sunday = day - timedelta(days=weekday)
+        visits = {}
+        for shard in range(6):
+            due = sunday + timedelta(days=shard)
+            if due > day:
+                due -= timedelta(days=7)
+            if shard not in missed:
+                visits[str(shard)] = {"completed_scheduled_date": due.isoformat(), "completed_at": stamp}
+        index = {"weekly_shard_visits": visits}
+        write_json(store.root / self.state.CORE_ETF_INDEX_FILENAME, index)
+        return store, index
+
+    def test_weekly_etf_rotation_missed_then_caught_up_without_duplicate_retry_budget(self):
+        stamp = "2026-10-12T06:00:00Z"
+        store, index = self._weekly_store(stamp, 1, missed=(0,))
+        rotation = store.weekly_etf_rotation(stamp, 1)
+        self.assertEqual([row["shard"] for row in rotation], ["1/6", "0/6"])
+        symbols = [f"T{i:03d}" for i in range(120)]
+        retry = symbols[:4]
+        own = self.fetcher.select_ticker_plan(symbols, retry, shard="1/6", natural=True,
+            retry_limit=4, regular_limit=100, stable_shards=True, pin_rim_trackers=False,
+            return_retry_overflow_to_regular=True)
+        selected, plan, ceiling = self.fetcher.extend_weekly_etf_plan(
+            own, [t for t in symbols if t not in retry], symbols, rotation, regular_limit=100, total_limit=104)
+        self.assertEqual(ceiling, 204)
+        self.assertEqual(len(selected), len(set(selected)))
+        self.assertEqual(set(selected), set(retry) | {t for t in symbols if self.fetcher.stable_shard_index(t, 6) in (0, 1)})
+        store._results = {t: {"outcome": "fresh"} for t in selected}
+        run = {"weekly_shard_plan": plan, "scheduled_universe": {"symbols": symbols}, "observed_at": stamp}
+        written = store.record_weekly_etf_visits(index, run, accepted=True)
+        self.assertEqual(written["weekly_shard_visits"]["0"]["completed_scheduled_date"], "2026-10-11")
+        self.assertEqual([row["shard"] for row in store.weekly_etf_rotation("2026-10-13T06:00:00Z", 2)], ["2/6"])
+
+    def test_weekly_etf_rotation_two_misses_oldest_first_and_no_miss_unchanged(self):
+        stamp = "2026-10-13T06:00:00Z"
+        store, index = self._weekly_store(stamp, 2, missed=(0, 1))
+        self.assertEqual([r["shard"] for r in store.weekly_etf_rotation(stamp, 2)], ["2/6", "0/6"])
+        index["weekly_shard_visits"]["0"] = {"completed_scheduled_date": "2026-10-11"}
+        write_json(store.root / self.state.CORE_ETF_INDEX_FILENAME, index)
+        self.assertEqual([r["shard"] for r in store.weekly_etf_rotation(stamp, 2)], ["2/6", "1/6"])
+        store, index = self._weekly_store(stamp, 2)
+        rotation = store.weekly_etf_rotation(stamp, 2)
+        selected, plan, limit = self.fetcher.extend_weekly_etf_plan(
+            ["AAA", "BBB"], ["AAA", "BBB"], ["AAA", "BBB"], rotation, regular_limit=1100, total_limit=1140)
+        self.assertEqual(rotation, [{"shard": "2/6", "scheduled_date": "2026-10-13", "role": "scheduled"}])
+        self.assertEqual(selected, ["AAA", "BBB"])
+        self.assertEqual(limit, 1140)
+
+    def test_weekly_etf_rotation_failed_or_unattempted_members_cannot_complete(self):
+        stamp = "2026-10-12T06:00:00Z"
+        store, index = self._weekly_store(stamp, 1, missed=(0,))
+        run = {"observed_at": stamp, "scheduled_universe": {"symbols": ["AAA", "BBB"]},
+               "weekly_shard_plan": [{"shard": "0/6", "scheduled_date": "2026-10-11", "required_symbols": ["AAA", "BBB"]}]}
+        store._results = {"AAA": {"outcome": "fresh"}}
+        index = store.record_weekly_etf_visits(index, run, accepted=True)
+        self.assertNotIn("completed_scheduled_date", index["weekly_shard_visits"]["0"])
+        self.assertEqual(index["weekly_shard_visits"]["0"]["missing_members"], 1)
+        store._results["BBB"] = {"outcome": "failed"}
+        index = store.record_weekly_etf_visits(index, run, accepted=False)
+        self.assertFalse(index["weekly_shard_visits"]["0"]["last_attempt_complete"])
+        self.assertEqual(store.weekly_etf_rotation(stamp, 1)[1]["shard"], "0/6")
+        # An accepted partial visit resumes only the remaining members; one
+        # bounded page must not repeat forever when a shard outgrows its cap.
+        self.assertEqual(store.weekly_etf_rotation(stamp, 1)[1]["covered_symbols"], ["AAA"])
+        store._results = {"BBB": {"outcome": "fresh"}}
+        index = store.record_weekly_etf_visits(index, run, accepted=True)
+        self.assertTrue(index["weekly_shard_visits"]["0"]["last_attempt_complete"])
+        # Friday's missing visit survives the weekend and a legacy empty index
+        # never invents a successful cycle.
+        store, index = self._weekly_store("2026-10-11T06:00:00Z", 0, missed=(5,))
+        self.assertEqual(store.weekly_etf_rotation("2026-10-11T06:00:00Z", 0)[1]["scheduled_date"], "2026-10-09")
+        write_json(store.root / self.state.CORE_ETF_INDEX_FILENAME, {})
+        self.assertEqual(len(store.weekly_etf_rotation(stamp, 1)), 2)
 
     def test_terminal_artifact_excludes_bld_day_holx_but_retains_mmc_alias_retry(self) -> None:
         store = self.fetcher.YahooBatchStateStore(

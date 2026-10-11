@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 import hashlib
 import json
@@ -1240,6 +1240,68 @@ class YahooBatchStateStore:
         self._remove_pending_after_state(ticker)
         return state
 
+    def weekly_etf_rotation(self, observed_at: str, scheduled_weekday: int) -> list[dict]:
+        """Today's shard plus the oldest visit lacking committed completion."""
+        if scheduled_weekday not in range(6):
+            raise ValueError("ETF rotation weekday must be in 0..5")
+        observed = datetime.fromisoformat(observed_at.replace("Z", "+00:00")).date()
+        actual_weekday = (observed.weekday() + 1) % 7
+        today = observed - timedelta(days=(actual_weekday - scheduled_weekday) % 7)
+        sunday = today - timedelta(days=scheduled_weekday)
+        index = _read_json(self.root / CORE_ETF_INDEX_FILENAME) or {}
+        visits = index.get("weekly_shard_visits") or {}
+        own = {"shard": f"{scheduled_weekday}/6", "scheduled_date": today.isoformat(), "role": "scheduled"}
+        missed = []
+        for shard in range(6):
+            if shard == scheduled_weekday:
+                continue
+            due = sunday + timedelta(days=shard)
+            if due > today:
+                due -= timedelta(days=7)
+            previous = visits.get(str(shard)) or {}
+            completed = previous.get("completed_scheduled_date") or ""
+            if completed < due.isoformat():
+                item = {"shard": f"{shard}/6", "scheduled_date": due.isoformat(), "role": "catch_up"}
+                if previous.get("last_attempt_scheduled_date") == due.isoformat() and previous.get("covered_symbols"):
+                    item["covered_symbols"] = previous["covered_symbols"]
+                missed.append(item)
+        # Missing legacy completion evidence is unknown, so startup also gets
+        # a bounded catch-up; never fabricate six successful historical visits.
+        return [own, *sorted(missed, key=lambda row: row["scheduled_date"])[:1]]
+
+    def record_weekly_etf_visits(self, index: dict, run: dict, *, accepted: bool) -> dict:
+        plan = run.get("weekly_shard_plan")
+        if not plan:
+            return index
+        visits = dict(index.get("weekly_shard_visits") or {})
+        scheduled = set((run.get("scheduled_universe") or {}).get("symbols") or [])
+        observed = set(self._results)
+        for item in plan:
+            key = item["shard"].split("/")[0]
+            required = set(item["required_symbols"]) & scheduled
+            prior = visits.get(key) or {}
+            covered = (set(prior.get("covered_symbols") or [])
+                       if prior.get("last_attempt_scheduled_date") == item["scheduled_date"] else set())
+            if accepted:
+                covered |= required & observed
+            covered &= required
+            missing = required - covered
+            complete = accepted and not missing
+            row = {**prior,
+                   "last_attempt_at": run["observed_at"],
+                   "last_attempt_scheduled_date": item["scheduled_date"],
+                   "last_attempt_complete": complete,
+                   "required_members": len(required), "observed_members": len(required & observed),
+                   "missing_members": len(missing),
+                   "covered_symbols": [] if complete else sorted(covered)}
+            if complete:
+                row["completed_scheduled_date"] = max(row.get("completed_scheduled_date", ""), item["scheduled_date"])
+                row["completed_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            visits[key] = row
+        index["weekly_shard_visits"] = visits
+        _write_json(self.root / CORE_ETF_INDEX_FILENAME, index)
+        return index
+
     def rebuild_index(self, active_universe: set[str], run: dict, batch_failure: str | None = None) -> dict:
         active = set(active_universe)
         active_universe_scope = str(run.get("active_universe_scope") or "").strip() or None
@@ -1397,6 +1459,8 @@ class YahooBatchStateStore:
             "active_universe_scope": active_universe_scope,
             "counts": counts,
             "catalogue_symbols": sorted(active),
+            **({"weekly_shard_visits": previous_index["weekly_shard_visits"]}
+               if "weekly_shard_visits" in previous_index else {}),
             **({"scheduled_universe": scheduled_universe} if isinstance(scheduled_universe, dict) else {}),
             **({"selection": run["selection"]} if isinstance(run.get("selection"), dict) else {}),
             "oldest_source_as_of": oldest[0],

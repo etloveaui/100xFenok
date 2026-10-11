@@ -1744,6 +1744,29 @@ def select_ticker_plan(
     return [*pinned, *selected]
 
 
+def extend_weekly_etf_plan(tickers, regular_tickers, scheduled_symbols, rotation, *, regular_limit, total_limit):
+    """Add at most one regular shard; the already-selected retry budget is shared."""
+    if not 1 <= len(rotation) <= 2:
+        raise ValueError("ETF rotation requires one or two shards")
+    selected = list(tickers)
+    plan = []
+    for item in rotation:
+        shard_index, shard_count = (int(value) for value in item["shard"].split("/"))
+        if shard_count != 6:
+            raise ValueError("weekly ETF rotation requires six shards")
+        required = sorted(ticker for ticker in scheduled_symbols if stable_shard_index(ticker, 6) == shard_index)
+        plan.append({**item, "required_symbols": required})
+        if item["role"] == "catch_up":
+            occurrence = datetime.fromisoformat(item["scheduled_date"])
+            remaining = [ticker for ticker in regular_tickers if ticker not in set(item.get("covered_symbols") or [])]
+            extra = select_ticker_plan(remaining, [], shard=item["shard"],
+                stable_shards=True, regular_limit=regular_limit,
+                shard_cycle_index=scheduled_shard_cycle_index(occurrence, shard_index), pin_rim_trackers=False)
+            selected = list(dict.fromkeys([*selected, *extra]))
+    ceiling = total_limit + (regular_limit if len(plan) == 2 else 0) if total_limit else 0
+    return (selected[:ceiling] if ceiling else selected), plan, ceiling
+
+
 def select_campaign_or_rotation_plan(
     regular_tickers,
     untracked_regular,
@@ -2176,6 +2199,8 @@ def plan_summary(args, tickers, candidate_count):
         "tickers_override": bool(args.tickers),
         "sample_size": args.plan_sample_size,
         "sample": tickers[: args.plan_sample_size],
+        **({"weekly_shards": args.weekly_shard_plan, "effective_limit": args.effective_limit}
+           if hasattr(args, "weekly_shard_plan") else {}),
     }
 
 
@@ -2534,11 +2559,23 @@ def main():
         )
     if args.limit:
         tickers = tickers[: args.limit]
+    if (core_retained_lane and args.natural_run and args.event_name == "schedule"
+        and args.event_schedule == "7 0 * * 0-5" and args.stable_shards
+        and args.scheduled_weekday is not None and args.shard.endswith("/6")
+        and args.regular_limit and not args.tickers and not args.history_gaps_only and not args.untracked_only):
+        rotation = state_store.weekly_etf_rotation(lifecycle_as_of, args.scheduled_weekday)
+        tickers, shard_plan, ceiling = extend_weekly_etf_plan(
+            tickers, regular_tickers, run_context["scheduled_universe"]["symbols"], rotation,
+            regular_limit=args.regular_limit, total_limit=args.limit)
+        run_context["weekly_shard_plan"] = shard_plan
+        args.weekly_shard_plan = [{key: value for key, value in row.items() if key not in {"required_symbols", "covered_symbols"}} for row in shard_plan]
+        args.effective_limit = ceiling
     run_context["selection"] = {
         "scope": "core_etf" if args.core_daily_basket else "stocks" if args.stocks_only else "selection",
         "shard": args.shard,
         "candidate_count_before_filters": candidate_count,
         "selected_symbols": list(tickers),
+        **({"weekly_shards": args.weekly_shard_plan} if hasattr(args, "weekly_shard_plan") else {}),
     }
 
     if args.plan_only:
@@ -2852,7 +2889,8 @@ def main():
     summary["exit_code"] = assessment["exit_code"]
     summary["failure_assessment"] = assessment
     # Multi-shard invocations keep raw shard exits until the aggregate decides.
-    # The scheduled ETF invocation has one shard and uses the same final rule.
+    # The scheduled ETF invocation may include one catch-up shard; it shares
+    # one retry budget and applies the same final evidence rule.
     if args.natural_run and not args.all_shards_run and isinstance(finalized_index, dict):
         verdict = yahoo_run_verdict(
             current_results=finalized_index["current_results"], errors=errors,
@@ -2863,6 +2901,10 @@ def main():
         summary["exit_code"] = verdict["exit_code"]
         print(f"[verdict] {verdict['verdict']} refused={verdict['refused']}/{verdict['attempted']} "
               f"budget={verdict['refusal_budget']}; reasons={'; '.join(verdict['reasons']) or 'none'}")
+    if state_store and run_context.get("weekly_shard_plan"):
+        finalized_index = state_store.record_weekly_etf_visits(
+            finalized_index, run_context, accepted=summary["exit_code"] == 0)
+        summary["weekly_shard_visits"] = finalized_index["weekly_shard_visits"]
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
     print(f"\n[summary] ok={len(ok)} failed={len(errors)} total={total_s}s")
     if errors:
