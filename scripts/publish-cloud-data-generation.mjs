@@ -111,6 +111,7 @@ import { readdir, readFile, lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { validFdicDocument } from "./fetch-fdic-tier1.mjs";
+import { STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
 
 import {
   GENERATION_MANIFEST_SCHEMA,
@@ -782,12 +783,11 @@ export const FAMILIES = {
     // Global Scouter's source clock is the export's provider date, not the
     // converter acquisition timestamp.
     source_as_of: { file: "core/metadata.json", key: "source_date" },
-    // The weekly scope moves with the owner export, so tests measure it rather
-    // than pinning one week's byte/count fixture. These declarations retain
-    // at least 2x headroom for the current candidate and its all-changed read
-    // model (presence + readback + parity + resume).
-    plan: { class_a: 2_200, class_b: 7_000, bytes: 180_000_000 },
-    policy: { max_assets: 1_300, max_total_bytes: 110_000_000 },
+    // Storage grows with each weekly export. Derive its planned increment
+    // from the candidate and use the account storage budget as the ceiling;
+    // the live account gate still includes all existing stored bytes.
+    plan: { class_a: 2_200, class_b: 7_000 },
+    policy: { max_assets: 1_300, max_total_bytes: STORAGE_FAIL_GB * 1e9 },
     validate_public_payload({ asset, bytes }) {
       const SENSITIVE_KEY = /token|secret|password|cookie|authorization|api[_-]?key|credential|private[_-]?key/i;
       const assetPath = asset?.path;
@@ -3102,6 +3102,7 @@ export async function runPublisherCli({
       unique_object_keys: uniqueAssetKeys + 1, // + manifest object
       objects_deduped: summary.asset_count - uniqueAssetKeys,
     };
+    const plannedFamilyBytes = family.plan.bytes ?? 2 * plan.total_bytes;
     log(`family ${args.family}: ${plan.assets} assets, ${plan.total_bytes} bytes,`
       + ` ${plan.unique_object_keys} unique objects (${plan.objects_deduped} deduped)`
       + ` -> generation ${manifest.generation_id}`);
@@ -3132,7 +3133,7 @@ export async function runPublisherCli({
         // would receive, so a reviewer can see all three declared dimensions
         // without running the publication.
         planned_class_b: family.plan.class_b ?? 0,
-        planned_bytes: family.plan.bytes,
+        planned_bytes: plannedFamilyBytes,
         gate: "not_run",
       });
       return 0;
@@ -3149,7 +3150,7 @@ export async function runPublisherCli({
     // conservative operation budget stays declared; bytes are admitted below
     // only after active-manifest and object-listing evidence is available.
     const incrementalWriteBudget = family.incremental_write_budget === true;
-    const gatePlan = { ...family.plan, bytes: incrementalWriteBudget ? 0 : family.plan.bytes };
+    const gatePlan = { ...family.plan, bytes: incrementalWriteBudget ? 0 : plannedFamilyBytes };
     // Heartbeat: this gate shell-out is the first place a publish can sit
     // silent for tens of minutes, so its start/finish always reach stderr,
     // even under --json.
