@@ -3178,6 +3178,9 @@ export async function runPublisherCli({
     const strictGate = familyDeclaresStrictGate(args.family);
     const gateBlocked = gateBlocksPublication({ gateCode: gateBefore.code, strictGate });
     if (gateBlocked) {
+      // Preserve the measured axis on JSON-mode failures too. Older strict
+      // ETF warnings reported only exit 1, losing the reason for the block.
+      if (args.json && gateBefore.stdout.trim()) stderr(gateBefore.stdout.trim());
       if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
       if (args.tolerateGateBlock && !strictGate) {
         emit({

@@ -135,7 +135,7 @@ function validatePlaneAndFamily(plane, family) {
   }
 }
 
-async function readActiveFamilyIdentity({ plane, family }) {
+export async function readActiveFamilyIdentity({ plane, family }) {
   validatePlaneAndFamily(plane, family);
   const pointer = await plane.pointerStore.get();
   if (pointer === null || pointer === undefined) fail("ACTIVE_POINTER_UNAVAILABLE", family);

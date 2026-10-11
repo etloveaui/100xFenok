@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
+import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
+import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
 import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 const GITHUB_API = "https://api.github.com";
@@ -936,6 +938,18 @@ export function buildIssueBody(alarms) {
     "",
   ];
   for (const alarm of alarms) {
+    if (alarm.family) {
+      lines.push(`## ${alarm.family} family health`);
+      lines.push(`- Alarm reasons: ${alarm.alarm_reasons.join(", ")}`);
+      lines.push(`- Last observation: ${alarm.last_timestamp ?? "missing or unreadable"}`);
+      if (alarm.parity) {
+        lines.push(`- Matched: ${alarm.parity.matched}; mismatched: ${alarm.parity.mismatched}; plane older: ${alarm.parity.plane_older}`);
+        lines.push(`- Consecutive natural publication cycles behind: ${alarm.streak}`);
+      }
+      if (alarm.message) lines.push(`- ${alarm.message}`);
+      lines.push("");
+      continue;
+    }
     if (alarm.alarm_reasons?.includes("a1_clock_stale")) {
       lines.push("## A1 external clock (`a1-external-clock`)");
       lines.push("- Alarm reasons: a1_clock_stale");
@@ -1258,7 +1272,8 @@ export async function main() {
       clockChecks.push({ file, status: "unknown", message: error.message });
     }
   }
-  const classifiedWorkflows = [...workflows, aggregateExternalClockHealth(clockChecks)];
+  const familyHealth = await fetchEtfFamilyHealth();
+  const classifiedWorkflows = [...workflows, aggregateExternalClockHealth(clockChecks), familyHealth];
   const workflowAlarms = classifiedWorkflows.filter((w) => w.status === "alarm");
   const kpiAlarm = dataHealthKpi.status === "alarm"
     ? {
@@ -1307,6 +1322,17 @@ export async function main() {
   );
 
   process.exit(alarms.length > 0 || blindness.blind ? ALERT_EXIT : 0);
+}
+
+export async function fetchEtfFamilyHealth({ env = process.env, bucket = null, now = Date.now() } = {}) {
+  let record = null;
+  try {
+    const source = bucket ?? createR2RestBucket({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
+      token: env.CLOUDFLARE_API_TOKEN, bucket: "fenok-data-plane" });
+    const body = await source.get(healthKey());
+    if (body) record = JSON.parse(Buffer.from(await body.arrayBuffer()).toString("utf8"));
+  } catch { /* Missing/unreadable records must page, independently of the writer. */ }
+  return classifyFamilyHealth(record, { now });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

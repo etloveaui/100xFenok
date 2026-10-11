@@ -1124,6 +1124,16 @@ jobs:
             });
           '
 
+  refresh-etf-health:
+    needs: [publish-stockanalysis, publish-stockanalysis-etf-plane]
+    if: ${{ always() && needs.publish-stockanalysis-etf-plane.result == 'success' }}
+    uses: ./.github/workflows/refresh-family-health.yml
+    with:
+      publication_cycle: ${{ github.event_name == 'schedule' && format('{0}', github.run_id) || '' }}
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+
   # Rebuild the shared projection after Git publication and the required cloud
   # publication both succeed. Source-only runs keep their canonical path.
   # This job stages no Git commit and holds no shared writer lock.

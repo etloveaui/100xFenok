@@ -58,6 +58,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/check-external-clock-slot.mjs data-plane-serving-probe.yml
 
+  family-health:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
+    uses: ./.github/workflows/refresh-family-health.yml
+    with:
+      once_daily: true
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+
   probe:
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
