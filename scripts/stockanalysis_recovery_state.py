@@ -947,13 +947,22 @@ class StockAnalysisRecoveryStateStore:
                         "failure_count_is_lower_bound": failure_counter(state)[1],
                         "data_loss": failure.get("data_loss") is True})
         errors = [row for row in self._results.values() if "error" in row]
+        by_kind = {}
+        for kind in ARTIFACT_KINDS:
+            results = [row for row in self._results.values() if row["artifact_kind"] == kind]
+            if results:
+                failed = sum("error" in row for row in results)
+                by_kind[kind] = {"observed_at": run.get("observed_at"),
+                    "attempted": len(results), "successes": len(results) - failed, "failed": failed}
         counts["failed"] = len(errors)
         index = {"schema_version": INDEX_SCHEMA,
             "generated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
             "counts": counts, "counts_by_kind": counts_by_kind, "retry_artifacts": retry_artifacts,
             "degraded_details": degraded_details,
             "retry_groups": retry_groups,
-            "current_results": {"failed": len(errors), "errors": errors}}
+            "current_results": {"observed_at": run.get("observed_at") if self._results else None,
+                "attempted": len(self._results), "successes": len(self._results) - len(errors),
+                "failed": len(errors), "errors": errors, "by_kind": by_kind}}
         for suffix, kinds in (("tickers", {"stock", "financial"}), ("etfs", {"etf"}),
                               ("surfaces", {"surface"}), ("universes", {"universe"})):
             index[f"degraded_{suffix}"] = sorted({row["entity"] for row in degraded_details if row["artifact_kind"] in kinds})

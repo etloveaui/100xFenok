@@ -13,6 +13,7 @@ export type LaneProjection = {
 };
 
 export type ControlRoomState = {
+  coverage?: { status?: "covered" | "not_covered"; missing?: string[] };
   schedule?: {
     workflow?: string | null;
     cron?: string | string[] | null;
@@ -116,6 +117,8 @@ const CONTROL_SCHEDULE_KO: Record<string, string> = {
 };
 const CONTROL_ATTEMPT_KO: Record<string, string> = {
   success: "성공",
+  partial: "부분 성공",
+  retained: "기존 데이터 유지",
   failed: "실패",
   provider_wait: "공급자 대기",
   unobserved: "미관측",
@@ -128,6 +131,9 @@ const CONTROL_RECOVERY_KO: Record<string, string> = {
   provider_wait: "공급자 대기",
   terminal: "종료 상태",
   unavailable: "증거 없음",
+};
+const COVERAGE_MISSING_KO: Record<string, string> = {
+  attempt: "수집 시도", health: "신선도 판단", source: "원천일", schedule: "예정 시각",
 };
 const CONTROL_QUEUE_KO: Record<string, string> = {
   measured: "측정됨",
@@ -261,7 +267,7 @@ export default function LaneBoard({
       <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3" data-admin-control-room-state="true">
         <div className="flex flex-col gap-1">
           <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Control Room State</p>
-          <p className="text-[12px] font-semibold text-slate-500">외부·런타임 운영 증거를 제품 freshness 상태와 분리해 표시합니다.</p>
+          <p className="text-[12px] font-semibold text-slate-500">등록된 모든 수집 경로의 실행과 복구 상태를 표시합니다. 빠진 관측 항목은 미연결로 표시합니다.</p>
         </div>
         <div className="mt-3 grid gap-2 lg:grid-cols-2">
           {controlRoomLanes.length > 0 ? controlRoomLanes.map((lane) => {
@@ -283,6 +289,11 @@ export default function LaneBoard({
                     스케줄 {CONTROL_SCHEDULE_KO[schedule.status || ""] || "미확인"}
                   </span>
                 </div>
+                {control.coverage?.status === "not_covered" ? (
+                  <p className="mt-2 text-[12px] font-bold text-amber-700" data-control-room-coverage="not_covered">
+                    미연결: {(control.coverage.missing || []).map((key) => COVERAGE_MISSING_KO[key] || key).join(" · ")}
+                  </p>
+                ) : null}
                 <div className="mt-2 grid grid-cols-2 gap-1 text-[12px] font-bold text-slate-600 sm:grid-cols-3">
                   <span className="rounded border border-slate-100 bg-slate-50 px-2 py-1">
                     최근 시도: <b data-control-room-attempt={attempt.outcome || "unobserved"}>{CONTROL_ATTEMPT_KO[attempt.outcome || ""] || "미확인"}</b>
@@ -294,7 +305,7 @@ export default function LaneBoard({
                     복구: <b data-control-room-recovery={recovery.state || "unavailable"}>{CONTROL_RECOVERY_KO[recovery.state || ""] || "미확인"}</b>
                   </span>
                   <span className="rounded border border-slate-100 bg-slate-50 px-2 py-1">
-                    원천: {controlDate(source.source_date) === "미확인" ? (source.source_date_reason || "미확인") : controlDate(source.source_date)}
+                    원천: {controlDate(source.source_date)}
                   </span>
                   <span className="rounded border border-slate-100 bg-slate-50 px-2 py-1">
                     SLA: {source.sla?.status || "증거 없음"}

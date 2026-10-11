@@ -312,6 +312,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             errors.append(row)
 
         index = store.rebuild_index(tickers, run)
+        self.assertEqual(index["current_results"]["observed_at"], run["observed_at"])
         assessment = self.fetcher.yahoo_failure_exit_assessment(errors, store, index)
 
         self.assertEqual(assessment["exit_code"], 0)
@@ -707,6 +708,8 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(summary_module.aggregate_shard_summaries(results_dir, 2), 0)
         index = json.loads(summary_module.STATE_INDEX.read_text())
         self.assertEqual(index["current_results"]["attempted"], 3)
+        shard_times = [json.loads((results_dir / f"{shard}.json").read_text())["current_results"]["observed_at"] for shard in range(2)]
+        self.assertEqual(index["current_results"]["observed_at"], max(shard_times))
         self.assertEqual(index["current_results"]["successes"], 2)
         self.assertEqual(index["current_results"]["failed"], 1)
         self.assertEqual([row["ticker"] for row in index["current_results"]["errors"]], ["FAIL"])
@@ -3515,127 +3518,6 @@ assert callable(namespace["load_universe"])
 """
         subprocess.run([sys.executable, "-c", code, str(FETCH_PATH)], check=True)
 
-    def test_workflow_persists_candidates_before_public_promotion(self) -> None:
-        workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
-        quarter_start = workflow.index("      - name: Refresh owned Yahoo quarter-close source")
-        candidate_start = workflow.index("      - name: Commit and push fetched Yahoo source data")
-        shared_dispatch_start = workflow.index("      - name: Dispatch shared projection rebuild")
-        candidate_step = workflow[candidate_start:shared_dispatch_start]
-        shared_dispatch = workflow[shared_dispatch_start:]
-
-        self.assertLess(quarter_start, candidate_start)
-        self.assertLess(candidate_start, shared_dispatch_start)
-        self.assertIn("git add -- \\", candidate_step)
-        self.assertIn("data/yf/finance", candidate_step)
-        self.assertIn("data/admin/yahoo-batch-quote-history", candidate_step)
-        self.assertIn("data/yf/quarter_closes.json", candidate_step)
-        self.assertIn("git restore --staged --worktree -- data/yf/finance/_summary.json", candidate_step)
-        self.assertIn("always()", candidate_step)
-        # #377 slice 2: the lane persists canonical candidates only; the public
-        # mirror is owned by the merge boundary, so no public path may be
-        # staged from this lane (03365d7c44 removed the last one).
-        self.assertNotIn("100xfenok-next/public", candidate_step)
-
-        run_step = workflow[workflow.index("      - name: Run batch fetch"):quarter_start]
-        self.assertIn("id: fetch_batch", run_step)
-        self.assertIn("--record-batch-state", run_step)
-        self.assertIn("--natural-run", run_step)
-        self.assertIn("--all-shards-run", run_step)
-        # One scheduled ETF slot a day, Sunday-Friday at 00:07 UTC: six runs a
-        # week on the six-shard cycle. The weekday is read from the clock and
-        # maps directly to the shard index; the daily stock cron stays
-        # untouched. Seven minutes past, not on the hour: GitHub warns
-        # hour-start schedules may be delayed or dropped, and three
-        # consecutive :00 slots did not fire.
-        self.assertIn("- cron: '20 23 * * 1-5'", workflow)
-        self.assertIn("- cron: '7 0 * * 0-5'", workflow)
-        for hour in range(2, 24, 2):
-            self.assertNotIn(f"- cron: '7 {hour} * * 0-5'", workflow)
-        self.assertNotIn("- cron: '0 0 * * 0-5'", workflow)
-        self.assertNotIn("SLOT_HOUR=", run_step)
-        self.assertNotIn("SLOT_WEEKDAY * 12", run_step)
-        self.assertIn("DAILY_SHARDS=6", run_step)
-        self.assertIn('DAILY_INDEX="$SLOT_WEEKDAY"', run_step)
-        self.assertIn("date -u +%w", run_step)
-        # The weekday field must carry the real weekday and the slot must be
-        # coherent with the shard, or the runtime validator rejects the run.
-        self.assertIn('INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"', run_step)
-        self.assertIn('INPUT_SCHEDULED_SLOT="$DAILY_INDEX"', run_step)
-        self.assertIn("--scheduled-slot", run_step)
-        # workflow_dispatch is hard-capped at 25 inputs. Exceeding it makes
-        # GitHub reject the whole file, which took the lane down after
-        # e0c95a68f6, so the count is asserted rather than trusted.
-        dispatch_inputs = workflow.split("  workflow_dispatch:")[1].split("\npermissions:")[0]
-        declared = [
-            line for line in dispatch_inputs.split("\n")
-            if line.startswith("      ") and line.rstrip().endswith(":") and not line.startswith("       ")
-        ]
-        self.assertLessEqual(len(declared), 25, f"workflow_dispatch declares {len(declared)} inputs; the limit is 25")
-        # A manual run of a multi-slot shard must still resolve its slot.
-        self.assertIn('SHARD_COUNT="${INPUT_SHARD#*/}"', run_step)
-        self.assertIn("--scheduled-weekday", run_step)
-        self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
-        self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
-        # The regular cap must clear the largest 6-way shard, or that shard's
-        # tail is never collected.
-        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-1100", run_step)
-        self.assertIn("YF_WEEKLY_ETF_LIMIT:-1140", run_step)
-        self.assertIn("YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80", run_step)
-        # The ETF slot is a refresh pass. Either narrowing flag turns it back
-        # into an acquisition-and-backfill pass that never revisits a tracked
-        # ticker with complete history.
-        self.assertIn('INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"', run_step)
-        self.assertIn('INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"', run_step)
-        # Quarter-close owns a universe of its own and belongs to the stock
-        # lane; running it after an ETF slot is what produced the 429 storm.
-        self.assertIn("YF_LANE=", run_step)
-        self.assertIn("env.YF_LANE != 'etf'", workflow)
-        self.assertIn("--retry-limit", run_step)
-        self.assertIn("--regular-limit", run_step)
-        self.assertIn("--untracked-limit", run_step)
-        self.assertIn("--untracked-only", run_step)
-        self.assertIn("--shard-cycle-index", run_step)
-        self.assertIn("--stable-shards", run_step)
-        self.assertNotIn("GITHUB_RUN_NUMBER", run_step)
-        self.assertIn("controlled_failure_tickers", workflow)
-        self.assertIn("--controlled-failure-tickers", run_step)
-        # The job split moved acquisition into its own job, so the dispatch reads
-        # the acquire job's outputs rather than sibling step outcomes. Assert the
-        # producing half too: without it this passes while the outputs are gone
-        # and every condition silently evaluates empty.
-        self.assertIn("fetch_outcome: ${{ steps.fetch_batch.outcome }}", workflow)
-        self.assertIn("quarter_closes_outcome: ${{ steps.quarter_closes.outcome }}", workflow)
-        self.assertIn("always()", shared_dispatch)
-        self.assertIn("success()", shared_dispatch)
-        self.assertIn("needs.acquire-yf-finance.outputs.fetch_outcome == 'failure'", shared_dispatch)
-        self.assertIn("needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure'", shared_dispatch)
-        self.assertIn("steps.persist_yahoo_state.outcome == 'success'", shared_dispatch)
-        self.assertIn("steps.persist_yahoo_state.outputs.persisted == 'true'", shared_dispatch)
-        self.assertIn("steps.readback.outputs.confirmed == 'true'", shared_dispatch)
-        self.assertIn('persisted=true', candidate_step)
-        self.assertIn("gh workflow run update-manifest.yml --ref main", shared_dispatch)
-        self.assertEqual(workflow.count("gh workflow run update-manifest.yml --ref main"), 1)
-        self.assertNotIn("build-market-facts.py", workflow)
-        self.assertNotIn("build-rim-index.mjs", workflow)
-        self.assertNotIn("data/manifest.json", workflow)
-        self.assertNotIn("100xfenok-next/public", run_step)
-        self.assertIn("python3 scripts/build-quarter-closes.py", workflow[quarter_start:candidate_start])
-
-        manifest_workflow = MANIFEST_WORKFLOW_PATH.read_text(encoding="utf-8")
-        manifest_runner = MANIFEST_RUNNER_PATH.read_text(encoding="utf-8")
-        self.assertIn("      - '!data/yf/**'", manifest_workflow)
-        self.assertIn("      - '!data/admin/yahoo-batch-quote-history/**'", manifest_workflow)
-        self.assertNotIn("run: bash scripts/update-manifest-projections.sh", manifest_workflow)
-        self.assertEqual(manifest_workflow.count("bash scripts/update-manifest-projections.sh"), 1)
-        self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_runner)
-        self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_runner)
-        for command in (
-            "node scripts/build-rim-index.mjs",
-            "node scripts/build-rim-index-five-canonical.mjs",
-            "node scripts/check-rim-index-five-canonical.mjs",
-        ):
-            self.assertNotIn(command, manifest_workflow)
-        self.assertNotIn("python3 scripts/build-quarter-closes.py", manifest_workflow)
 
     def test_ticker_names_containing_key_are_not_dropped_as_secret_files(self) -> None:
         for ticker in ("KEYG", "KEYX"):

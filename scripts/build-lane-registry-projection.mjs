@@ -33,6 +33,7 @@ const ALARM_PATH = path.join(REPO_ROOT, "data", "admin", "alarm-state.json");
 
 export const PROJECTION_SCHEMA = "lane-registry-projection/v2";
 export const CONTROL_ROOM_STATE_KEYS = Object.freeze([
+  "coverage",
   "incident",
   "latest_attempt",
   "queue",
@@ -41,19 +42,14 @@ export const CONTROL_ROOM_STATE_KEYS = Object.freeze([
   "source",
 ]);
 
-// The provider registry has 26 external-data lanes and six lanes whose
-// ownership is an owner-managed, proxy, runtime, or storage boundary. Those
-// six are the control-room slice. The selection is derived from provider
-// classes, never duplicated as a lane-id list.
-export const CONTROL_ROOM_PROVIDER_CLASSES = Object.freeze([
-  "owner_managed_data",
-  "platform_proxy",
-  "platform_runtime",
-  "platform_storage",
-]);
-
-const CONTROL_ROOM_CLASSES = new Set(CONTROL_ROOM_PROVIDER_CLASSES);
-const ATTEMPT_OUTCOMES = new Set(["success", "failed", "provider_wait", "unobserved", "unknown"]);
+const ATTEMPT_OUTCOMES = new Set(["success", "partial", "retained", "failed", "provider_wait", "unobserved", "unknown"]);
+// The shared producer stores several acquisition contracts in one index.
+const STOCKANALYSIS_KINDS = Object.freeze({
+  stockanalysis_etf_universe: ["universe"],
+  stockanalysis_etf_detail: ["etf"],
+  stockanalysis_stock_financial: ["stock", "financial"],
+  stockanalysis_surfaces: ["surface"],
+});
 const FAILURE_CLASSES = new Set([
   "transport",
   "http",
@@ -152,12 +148,6 @@ function basename(value) {
 
 function providerMap(providerRecords) {
   return new Map((Array.isArray(providerRecords) ? providerRecords : []).map((provider) => [provider.id, provider]));
-}
-
-export function isControlRoomLane(lane, providerRecords = LANE_REGISTRY.providers) {
-  const providers = providerMap(providerRecords);
-  return Array.isArray(lane?.provider_refs)
-    && lane.provider_refs.some((ref) => CONTROL_ROOM_CLASSES.has(providers.get(ref.provider_id)?.class));
 }
 
 function projectCadence(lane, providers) {
@@ -324,19 +314,65 @@ function latestAndNextSchedule(scheduleRows, nowEpoch) {
   };
 }
 
-function readAttemptRows(lane, context) {
+function recoveryStoreFor(lane, context) {
+  if (context.recoveryStores) return context.recoveryStores[lane.id] || null;
+  return lane.recovery_store ? readJson(path.join(context.repoRoot, lane.recovery_store)) : null;
+}
+
+function countAttempt(row) {
+  if (!safeIso(row?.observed_at, { allowDate: false }) || !(row.attempted > (row.skipped || 0))) return null;
+  return {
+    observed_at: row.observed_at,
+    outcome: !Number.isInteger(row.failed) || !Number.isInteger(row.successes) ? "unknown"
+      : row.failed > 0 ? row.successes > 0 ? "partial" : "failed"
+        : row.successes > 0 ? "success" : "unknown",
+  };
+}
+
+function recoveryAttemptRows(lane, store) {
+  if (!store) return [];
+  if (safeIso(store.last_run?.observed_at, { allowDate: false })) {
+    return [{ ...store.last_run, outcome: ({ published: "success", retained: "retained", unavailable: "failed" })[store.last_run.outcome] || "unknown" }];
+  }
+  if (store.current_attempt?.decision) {
+    const decision = store.current_attempt.decision;
+    return [{ observed_at: store.current_attempt.observed_at,
+      outcome: ["candidate_promoted", "recovered_and_promoted"].includes(decision) ? "success"
+        : ["retained_lkg", "bootstrap_failure_retained"].includes(decision) ? "retained" : "failed" }];
+  }
+  const kinds = STOCKANALYSIS_KINDS[lane.id];
+  if (kinds) return kinds.map((kind) => countAttempt(store.current_results?.by_kind?.[kind])).filter(Boolean);
+  const counted = countAttempt(store.current_attempt || store.current_results);
+  if (counted) return [counted];
+  // Item clocks are written by recordSuccess/recordFailure. The envelope's
+  // generated_at is not attempt evidence and must never stand in for one.
+  return Object.values(store.items || {}).map((item) => ({
+    observed_at: item.updated_at,
+    outcome: item.resolution_state === "fresh_primary" ? "success"
+      : item.resolution_state === "lkg_primary" ? "retained"
+        : item.resolution_state === "unavailable" ? "failed" : "unknown",
+  }));
+}
+
+function readAttemptRows(lane, context, store) {
   const provided = context.attempts?.[lane.id];
   if (Array.isArray(provided)) return provided;
   if (isObject(provided) && Array.isArray(provided.attempts)) return provided.attempts;
   const relative = lane.roots?.detection_attempt;
-  if (!relative) return [];
-  const document = readJson(path.join(context.repoRoot, relative));
-  return Array.isArray(document?.attempts) ? document.attempts : [];
+  const document = relative ? readJson(path.join(context.repoRoot, relative)) : null;
+  return [...(Array.isArray(document?.attempts) ? document.attempts : []), ...recoveryAttemptRows(lane, store)];
 }
 
 function latestAttempt(rows) {
   const valid = rows.filter((row) => safeIso(row?.observed_at, { allowDate: false }));
-  return [...valid].sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at))[0] || null;
+  const newest = [...valid].sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at))[0];
+  if (!newest) return null;
+  const sameRun = valid.filter((row) => Date.parse(row.observed_at) === Date.parse(newest.observed_at));
+  const outcomes = sameRun.map((row) => normalizeAttempt(row).outcome);
+  if (outcomes.includes("partial") || (outcomes.includes("success") && outcomes.some((outcome) => ["failed", "retained"].includes(outcome)))) {
+    return { observed_at: newest.observed_at, outcome: "partial" };
+  }
+  return sameRun.find((row) => normalizeAttempt(row).outcome === "failed") || newest;
 }
 
 function failedAssertion(row) {
@@ -346,6 +382,9 @@ function failedAssertion(row) {
 export function normalizeAttempt(row) {
   if (!row) return { observed_at: null, outcome: "unobserved", failure_class: null };
   const observedAt = safeIso(row.observed_at, { allowDate: false });
+  if (["partial", "retained", "failed"].includes(row.outcome)) {
+    return { observed_at: observedAt, outcome: row.outcome, failure_class: row.outcome === "failed" ? "unknown" : null };
+  }
   if (row.execution === "unobserved") return { observed_at: observedAt, outcome: "unobserved", failure_class: null };
   if (row.outcome === "primary_succeeded_skip") return { observed_at: observedAt, outcome: "success", failure_class: null };
   const providerUnsupported = [row.exception_kind, row.retry_reason, row.outcome].includes("provider_unsupported");
@@ -361,14 +400,15 @@ export function normalizeAttempt(row) {
   if (row.outcome === "error" || row.execution === "threw" || row.payload === "empty") {
     return { observed_at: observedAt, outcome: "failed", failure_class: "unknown" };
   }
-  if (row.execution === "returned" || row.outcome === "success" || row.outcome === undefined) {
+  if (row.execution === "returned" || row.outcome === "success") {
     return { observed_at: observedAt, outcome: "success", failure_class: null };
   }
   return { observed_at: observedAt, outcome: "unknown", failure_class: "unknown" };
 }
 
 function kpiLaneFor(lane, context) {
-  return (context.kpi?.lanes || []).find((candidate) => candidate?.id === lane.id) || null;
+  return (context.kpi?.sets || []).find((candidate) => candidate?.set === lane.id)
+    || (context.kpi?.lanes || []).find((candidate) => candidate?.id === lane.id) || null;
 }
 
 function sourceArtifactsFor(lane, mapping, context) {
@@ -424,7 +464,7 @@ function buildSourceState(lane, context, kpiLane) {
     ? null
     : mapping.source_artifact
       ? artifactSourceDate
-      : safeIso(kpiLane?.as_of) || null;
+      : kpiLane?.date_basis === "collected" ? null : safeIso(kpiLane?.newest_source_date || kpiLane?.as_of) || null;
   const evidenceStatus = artifactSourceDate || sourceDate
     ? "observed"
     : mapping.no_source_evidence_status || "unavailable";
@@ -432,7 +472,7 @@ function buildSourceState(lane, context, kpiLane) {
     source_date: sourceDate,
     source_date_reason: artifactSourceDate
       ? mapping.source_date_reason
-      : sourceDate ? "kpi_lane_as_of" : mapping.no_source_reason,
+      : sourceDate ? "data_health_source_date" : mapping.no_source_reason,
     evidence_status: SOURCE_EVIDENCE.has(evidenceStatus) ? evidenceStatus : "unavailable",
     sla: sourceSla ? {
       unit: sourceSla.unit,
@@ -444,27 +484,37 @@ function buildSourceState(lane, context, kpiLane) {
   };
 }
 
-function buildRecoveryState(kpiLane, attempt) {
+function buildRecoveryState(lane, store, kpiLane, attempt) {
   const details = kpiLane?.details;
   const nested = isObject(details?.recovery) ? details.recovery : null;
-  const retrySet = Array.isArray(details?.recovery_retry_set)
+  const kinds = STOCKANALYSIS_KINDS[lane.id];
+  const storedRetry = kinds ? store?.retry_artifacts?.filter((row) => kinds.includes(row.artifact_kind))
+    : store?.retry_set || store?.retry_keys || store?.retry_symbols || store?.retry_members;
+  const retrySet = Array.isArray(storedRetry) ? storedRetry : Array.isArray(details?.recovery_retry_set)
     ? details.recovery_retry_set
     : Array.isArray(nested?.retry_keys) ? nested.retry_keys : null;
   const recovered = Array.isArray(details?.recovery_recovered)
     ? details.recovery_recovered
     : Array.isArray(nested?.recovery_details) ? nested.recovery_details : null;
   let state = "unavailable";
-  if (retrySet && retrySet.length > 0) state = "retry_pending";
+  const items = Object.values(store?.items || store?.members || {});
+  const retained = items.filter((item) => item?.resolution_state === "lkg_primary");
+  const lkgCount = kinds ? kinds.reduce((sum, kind) => sum + (store?.counts_by_kind?.[kind]?.lkg || 0), 0)
+    : store?.counts?.lkg || 0;
+  if (retained.length || lkgCount || attempt.outcome === "retained") state = "retained_lkg";
+  else if (retrySet && retrySet.length > 0) state = "retry_pending";
   else if (recovered && recovered.length > 0) {
     state = recovered.some((row) => row?.resolution_state === "fresh_primary") ? "fresh_primary" : "retained_lkg";
   } else if (attempt.outcome === "provider_wait") state = "provider_wait";
+  else if (attempt.outcome === "success") state = "fresh_primary";
   const lastRecovered = recovered?.filter((row) => safeIso(row?.recovered_at, { allowDate: false }))
     .sort((a, b) => Date.parse(b.recovered_at) - Date.parse(a.recovered_at))[0] || null;
   return {
     state,
     retry_count: retrySet ? retrySet.length : null,
     recovered_at: safeIso(lastRecovered?.recovered_at, { allowDate: false }),
-    lkg_source_date: safeIso(lastRecovered?.lkg_source_as_of || lastRecovered?.source_as_of),
+    lkg_source_date: oldestSourceDate(retained.map((item) => item.current?.source_as_of))
+      || safeIso(lastRecovered?.lkg_source_as_of || lastRecovered?.source_as_of),
   };
 }
 
@@ -522,15 +572,22 @@ function buildScheduleState(lane, context, attempt) {
 export function buildControlRoomState(lane, context = {}) {
   const normalizedContext = createProjectionContext(context);
   const kpiLane = kpiLaneFor(lane, normalizedContext);
-  const attempt = normalizeAttempt(latestAttempt(readAttemptRows(lane, normalizedContext)));
+  const store = recoveryStoreFor(lane, normalizedContext);
+  const attempt = normalizeAttempt(latestAttempt(readAttemptRows(lane, normalizedContext, store)));
   const state = {
     schedule: buildScheduleState(lane, normalizedContext, attempt),
     latest_attempt: attempt,
     source: buildSourceState(lane, normalizedContext, kpiLane),
-    recovery: buildRecoveryState(kpiLane, attempt),
+    recovery: buildRecoveryState(lane, store, kpiLane, attempt),
     incident: buildIncidentState(lane, normalizedContext),
     queue: buildQueueState(lane, normalizedContext),
   };
+  const missing = [];
+  if (!attempt.observed_at || ["unobserved", "unknown"].includes(attempt.outcome)) missing.push("attempt");
+  if (!kpiLane) missing.push("health");
+  if (state.source.evidence_status !== "observed") missing.push("source");
+  if (lane.owner_workflow && !state.schedule.cron) missing.push("schedule");
+  state.coverage = { status: missing.length ? "not_covered" : "covered", missing };
   // Keep this assertion local so a future field cannot silently become a
   // public/private boundary regression.
   if (Object.keys(state).sort().join("\0") !== [...CONTROL_ROOM_STATE_KEYS].sort().join("\0")) {
@@ -574,9 +631,7 @@ export function projectLane(lane, providerRecords = LANE_REGISTRY.providers, con
     privacy_class: lane.privacy_class,
     owner_workflow: lane.owner_workflow ? basename(lane.owner_workflow) : null,
   };
-  if (isControlRoomLane(lane, providerRecords)) {
-    projected.control_room_state = buildControlRoomState(lane, context);
-  }
+  projected.control_room_state = buildControlRoomState(lane, context);
   return projected;
 }
 

@@ -1486,6 +1486,7 @@ class YahooBatchStateStore:
             ],
             "latest_failure": latest_failure,
             "current_results": {
+                "observed_at": run.get("observed_at") if attempted > skipped else None,
                 "attempted": attempted,
                 "successes": succeeded,
                 "failed": failed,

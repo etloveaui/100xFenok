@@ -15,7 +15,8 @@ import {
   projectLane,
   PROJECTION_SCHEMA,
   CONTROL_ROOM_STATE_KEYS,
-  isControlRoomLane,
+  buildControlRoomState,
+  normalizeAttempt,
 } from "./build-lane-registry-projection.mjs";
 
 // Path/privacy markers that must never appear in the admin-safe projection.
@@ -57,9 +58,7 @@ assert.deepEqual(
 
 const ALLOWED_KEYS = ["cadence", "enforcement", "id", "label", "owner_workflow", "privacy_class", "store_kind"];
 for (const lane of projection.lanes) {
-  const expectedKeys = isControlRoomLane(LANE_REGISTRY.lanes.find((candidate) => candidate.id === lane.id), LANE_REGISTRY.providers)
-    ? [...ALLOWED_KEYS, "control_room_state"]
-    : ALLOWED_KEYS;
+  const expectedKeys = [...ALLOWED_KEYS, "control_room_state"];
   assert.deepEqual(Object.keys(lane).sort(), expectedKeys.sort(), `lane ${lane.id}: unexpected key set`);
   // owner_workflow is a basename (no directory) or null.
   if (lane.owner_workflow !== null) {
@@ -81,11 +80,7 @@ assert.equal(projected.enforcement, "live");
 assert.equal(projected.cadence.provider, "FRED");
 assert.ok(!("roots" in projected) && !("recovery_store" in projected), "no path fields carried");
 
-// --- RED-first control-room projection ---
-// The six non-external-data provider/runtime lanes are derived from the provider
-// registry, not a second hand-maintained lane list. Their operating state is a
-// separate projection from product freshness enums and never carries private
-// run IDs/URLs.
+// All registered lanes expose operational evidence without private run IDs.
 const fixtureNow = "2026-08-01T08:00:00Z";
 const fixtureCalendars = {
   schema_version: "data-supply-detection-calendars/v1",
@@ -100,6 +95,7 @@ const fixtureCalendars = {
 };
 const controlProjection = buildLaneRegistryProjection(LANE_REGISTRY, {
   now: fixtureNow,
+  recoveryStores: {},
   calendars: fixtureCalendars,
   workflowSchedules: {
     "fetch-yahoo-ticker.yml": [{ cron: "5 * * * *", calendar_id: "utc" }],
@@ -177,13 +173,8 @@ const controlProjection = buildLaneRegistryProjection(LANE_REGISTRY, {
 const controlRows = controlProjection.lanes.filter((lane) => lane.control_room_state);
 assert.equal(
   controlRows.length,
-  LANE_REGISTRY.lanes.filter((lane) => isControlRoomLane(lane, LANE_REGISTRY.providers)).length,
+  LANE_REGISTRY.lanes.length,
   "every control-room lane must carry control_room_state",
-);
-assert.deepEqual(
-  controlRows.map((lane) => lane.id),
-  ["yahoo_ticker_macro", "sentiment", "admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv", "global_scouter", "briefing"],
-  "control-room lanes must derive from provider classes",
 );
 for (const lane of controlRows) {
   assert.deepEqual(Object.keys(lane.control_room_state).sort(), [...CONTROL_ROOM_STATE_KEYS].sort(), `${lane.id}: control state shape`);
@@ -230,5 +221,53 @@ for (const [laneId, reason] of Object.entries({
   assert.equal(source.source_date_reason, reason, `${laneId} source instrumentation reason`);
   assert.equal(source.evidence_status, "not_instrumented", `${laneId} source evidence status`);
 }
+
+function stateFromStore(id, store, kpi = { sets: [] }) {
+  return buildControlRoomState(LANE_REGISTRY.lanes.find((lane) => lane.id === id), {
+    now: fixtureNow, calendars: fixtureCalendars, kpi, alarm: { status: "clear" },
+    recoveryStores: { [id]: store }, sourceArtifacts: {},
+  });
+}
+const observed = "2026-07-31T07:00:00Z";
+const retained = stateFromStore("fdic_tier1", {
+  generated_at: fixtureNow, retry_set: ["tier1"], items: {
+    tier1: { updated_at: observed, resolution_state: "lkg_primary", current: { source_as_of: "2026-03-31" } },
+  },
+}, { sets: [{ set: "fdic_tier1", newest_source_date: "2026-03-31", status: "fresh" }] });
+assert.equal(retained.latest_attempt.observed_at, observed, "artifact rebuild is not a new collection attempt");
+assert.equal(retained.latest_attempt.outcome, "retained");
+assert.equal(retained.recovery.state, "retained_lkg");
+assert.equal(retained.recovery.retry_count, 1);
+assert.equal(retained.source.source_date, "2026-03-31", "v4 KPI joins by set");
+const mixed = stateFromStore("fred_macro", { items: {
+  a: { updated_at: observed, resolution_state: "fresh_primary" },
+  b: { updated_at: observed, resolution_state: "unavailable" },
+} });
+assert.equal(mixed.latest_attempt.outcome, "partial", "a same-run failure must not disappear behind a successful member");
+const gdelt = stateFromStore("gdelt_news_tone", {
+  generated_at: fixtureNow,
+  last_run: { observed_at: observed, outcome: "retained", reason: "https://private.example/token" },
+});
+assert.equal(gdelt.latest_attempt.outcome, "retained");
+assert.ok(!JSON.stringify(gdelt).includes("private.example"));
+const shared = { current_results: { by_kind: {
+  etf: { observed_at: observed, attempted: 20, successes: 19, failed: 1 },
+} }, retry_artifacts: [{ artifact_kind: "etf", entity: "X" }] };
+assert.equal(stateFromStore("stockanalysis_etf_detail", shared).latest_attempt.outcome, "partial");
+const untouched = stateFromStore("stockanalysis_etf_universe", shared);
+assert.equal(untouched.latest_attempt.outcome, "unobserved", "an ETF run does not prove a universe run");
+assert.equal(untouched.recovery.retry_count, 0);
+assert.equal(untouched.coverage.status, "not_covered");
+assert.ok(untouched.coverage.missing.includes("attempt"));
+assert.equal(stateFromStore("yahoo_batch_quote_history", {
+  current_results: { observed_at: observed, attempted: 10, successes: 9, failed: 1 },
+}).latest_attempt.outcome, "partial");
+assert.equal(stateFromStore("yahoo_batch_quote_history", {
+  generated_at: fixtureNow, current_results: { attempted: 10, successes: 10, failed: 0 },
+}).latest_attempt.outcome, "unobserved", "a legacy index without an attempt clock is not current evidence");
+assert.equal(stateFromStore("yahoo_batch_quote_history", {
+  current_results: { observed_at: observed, attempted: 10, skipped: 10, failed: 0 },
+}).latest_attempt.outcome, "unobserved");
+assert.equal(normalizeAttempt({ observed_at: observed }).outcome, "unknown");
 
 console.log(JSON.stringify({ ok: true, lanes: projection.lanes.length, red_markers_stripped: rawViolations }, null, 2));
