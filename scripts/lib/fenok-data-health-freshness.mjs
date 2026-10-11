@@ -420,7 +420,7 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
       if (typeof ticker !== "string" || !/^[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(ticker)) {
         return memberDate(null, "collected", ticker);
       }
-      const relative = `edgar-korean-summaries/by-ticker/${ticker}.json`;
+      const relative = `edgar-korean-summaries/by-ticker/${ticker.toLowerCase()}.json`;
       const manifest = readOptionalJson(dataRoot, relative);
       return memberDate(manifest?.updated, "collected", ticker, relative);
     });
