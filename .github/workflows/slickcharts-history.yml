@@ -15,6 +15,7 @@
 # Reference: Individual Stock Data Pipeline v2 (#151)
 
 name: SlickCharts History
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 slickcharts-history.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
@@ -22,6 +23,16 @@ on:
     - cron: '0 9 1 * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Existing A1 clock marker'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Bound UTC schedule slot'
+        required: false
+        default: ''
+        type: string
       scraper:
         description: 'Which scraper to run'
         required: false
@@ -59,9 +70,32 @@ permissions:
   actions: write
 
 jobs:
-  # Run membership tracker first
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+            /.github/workflows/
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs slickcharts-history.yml
+
   membership:
-    if: ${{ github.event.inputs.batch != 'single' || github.event.inputs.scraper == 'membership' || github.event_name == 'schedule' }}
+    needs: clock-admission
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event.inputs.batch != 'single' || github.event.inputs.scraper == 'membership' || github.event_name == 'schedule') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -101,8 +135,8 @@ jobs:
 
   # Scrape returns history (matrix builds)
   scrape-returns:
-    if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
-    needs: membership
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && ((github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' || github.event_name == 'schedule') && github.event.inputs.batch != 'single') }}
+    needs: [clock-admission, membership]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
@@ -157,8 +191,8 @@ jobs:
 
   # Scrape dividend history (matrix builds)
   scrape-dividends:
-    if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
-    needs: membership
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && ((github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' || github.event_name == 'schedule') && github.event.inputs.batch != 'single') }}
+    needs: [clock-admission, membership]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
@@ -217,18 +251,18 @@ jobs:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
       queue: max
-    needs: [scrape-returns, scrape-dividends]
+    needs: [clock-admission, scrape-returns, scrape-dividends]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     if: >-
-      ${{ always()
+      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
+      (always()
           && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule')
           && github.event.inputs.batch != 'single'
           && (github.event_name == 'schedule'
               || github.event.inputs.scraper == 'all'
               || github.event.inputs.scraper == 'returns'
-              || github.event.inputs.scraper == 'dividends') }}
-
+              || github.event.inputs.scraper == 'dividends'))
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -463,11 +497,12 @@ jobs:
 
   # Single symbol scraping for testing
   scrape-single:
+    needs: clock-admission
     concurrency:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
       queue: max
-    if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event.inputs.batch == 'single' && github.event.inputs.symbol != '') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
 

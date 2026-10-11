@@ -3,14 +3,14 @@
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { externalClockCrons, externalClockSlot, clockCronMatches, workerBudgetJobs } from "../ops/a1-lanes/external-clock.mjs";
+import { externalClockCrons, externalClockSlot, clockCronMatches, workerBudgetJobs, clockInputs, externalClockEvent, CLOCK_REPOSITORY_EVENTS, collectorClockMode } from "../ops/a1-lanes/external-clock.mjs";
 
 export function scheduledSlot(cron, createdAt) {
   const slot = new Date(createdAt);
   if (!Number.isFinite(slot.getTime())) throw new Error("Run creation timestamp is unavailable");
   slot.setUTCSeconds(0, 0);
-  // Current admitted calendars are daily or weekday schedules, at most 3 days apart.
-  for (let minute = 0; minute < 8 * 1440; minute += 1) {
+  // Include monthly/yearly declarations and leap-day slots.
+  for (let minute = 0; minute < 366 * 4 * 1440; minute += 1) {
     if (clockCronMatches(cron, slot)) return slot.toISOString();
     slot.setUTCMinutes(slot.getUTCMinutes() - 1);
   }
@@ -19,7 +19,11 @@ export function scheduledSlot(cron, createdAt) {
 
 export function admissionDecision({ file, eventName, event, currentRun, runs = [] }) {
   const crons = externalClockCrons(file);
-  const marked = eventName === "workflow_dispatch" && event.inputs?.external_clock === "a1-v1";
+  const inputs = clockInputs(eventName, event);
+  const marked = ["workflow_dispatch", "repository_dispatch"].includes(eventName) && inputs.external_clock === "a1-v1";
+  if (eventName === "repository_dispatch" && (!marked || event.action !== CLOCK_REPOSITORY_EVENTS[file])) {
+    throw new Error("Invalid repository clock event");
+  }
   if (eventName !== "schedule" && !marked) return { skip: false, reason: "ordinary-event" };
   if (!crons.length) throw new Error("Workflow is not admitted to the external clock");
   if (currentRun?.head_branch !== "main") throw new Error("Automatic clock runs require main");
@@ -28,8 +32,8 @@ export function admissionDecision({ file, eventName, event, currentRun, runs = [
   }
   let slot;
   if (marked) {
-    slot = event.inputs.external_clock_slot;
-    const proof = { event: "workflow_dispatch", created_at: currentRun.created_at,
+    slot = inputs.external_clock_slot;
+    const proof = { event: eventName, created_at: currentRun.created_at,
       display_title: `external-clock/a1/v1 ${file} ${slot}` };
     if (externalClockSlot({ file, crons }, proof) === null) throw new Error("Invalid external clock slot");
   } else {
@@ -54,7 +58,8 @@ export function sourceWasClockNoop(jobs) {
 }
 
 export function checkAdmission({ file, eventName, event, runId, repository, api }) {
-  const marked = eventName === "workflow_dispatch" && event.inputs?.external_clock === "a1-v1";
+  const inputs = clockInputs(eventName, event);
+  const marked = ["workflow_dispatch", "repository_dispatch"].includes(eventName) && inputs.external_clock === "a1-v1";
   if (eventName === "workflow_run" && file === "coordinate-computed-signals.yml") {
     const sourceId = event.workflow_run?.id;
     if (!Number.isSafeInteger(sourceId)) throw new Error("Missing source run ID");
@@ -62,11 +67,14 @@ export function checkAdmission({ file, eventName, event, runId, repository, api 
     if (payload.total_count > 100) throw new Error("Source job page is incomplete");
     return { skip: sourceWasClockNoop(payload.jobs), reason: "source-clock-noop-check" };
   }
-  if (eventName !== "schedule" && !marked) return { skip: false, reason: "ordinary-event" };
+  if (eventName === "repository_dispatch" && (!marked || event.action !== CLOCK_REPOSITORY_EVENTS[file])) {
+    throw new Error("Invalid repository clock event");
+  }
+  if (eventName !== "schedule" && eventName !== "repository_dispatch" && !marked) return { skip: false, reason: "ordinary-event" };
   const currentRun = api(`repos/${repository}/actions/runs/${runId}`);
   const initial = admissionDecision({ file, eventName, event, currentRun });
   if (!initial.slot) return initial;
-  const params = new URLSearchParams({ event: "workflow_dispatch", branch: "main", status: "success",
+  const params = new URLSearchParams({ event: externalClockEvent(file), branch: "main", status: "success",
     created: `>=${initial.slot}`, per_page: "100" });
   for (let page = 1; page <= 10; page += 1) {
     const payload = api(`repos/${repository}/actions/workflows/${file}/runs?${params}&page=${page}`);
@@ -90,11 +98,20 @@ function main() {
   } catch (error) {
     // API uncertainty must not suppress the fallback collection. Invalid marked
     // inputs are configuration errors and must not execute an unintended slot.
-    if (eventName === "workflow_dispatch" && event.inputs?.external_clock === "a1-v1") throw error;
+    if (eventName === "repository_dispatch" || clockInputs(eventName, event).external_clock === "a1-v1") throw error;
     console.error(`::warning::Clock duplicate evidence unavailable; preserving fallback: ${error.message}`);
     result = { skip: false, reason: "evidence-unavailable" };
   }
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `skip=${result.skip}\n`);
+  if (CLOCK_REPOSITORY_EVENTS[file] || file === "fetch-damodaran-shadow.yml") {
+    const automatic = eventName === "schedule" || clockInputs(eventName, event).external_clock === "a1-v1";
+    const cron = eventName === "schedule" ? event.schedule : automatic
+      ? externalClockCrons(file).find(value => clockCronMatches(value, new Date(result.slot))) : "";
+    const mode = automatic ? collectorClockMode(file, cron) : "manual";
+    if (automatic && (!cron || mode === "manual")) throw new Error("Unknown collector clock mode");
+    fs.appendFileSync(process.env.GITHUB_OUTPUT,
+      `automatic=${automatic}\nevent_name=${automatic ? "schedule" : eventName}\nmode=${mode}\nschedule=${cron || ""}\nslot=${result.slot || ""}\n`);
+  }
   if (file === "worker-request-budget-alarm.yml") {
     const jobs = workerBudgetJobs(eventName, event);
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `check_budget=${jobs.requests}\ncheck_telemetry=${jobs.telemetry}\n`);

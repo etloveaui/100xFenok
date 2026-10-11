@@ -2,8 +2,11 @@
 # Output: source-lane data only; the shared projection workflow owns public materialization.
 
 name: Fetch StockAnalysis Data
+run-name: ${{ github.event.client_payload.external_clock == 'a1-v1' && format('external-clock/a1/v1 fetch-stockanalysis.yml {0}', github.event.client_payload.external_clock_slot) || github.workflow }}
 
 on:
+  repository_dispatch:
+    types: [external-clock-stockanalysis]
   schedule:
     # Daily bounded stock overview + financial pair refresh (KST 06:20).
     - cron: '20 21 * * *'
@@ -115,7 +118,37 @@ on:
         default: '0.25'
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+      automatic: ${{ steps.slot.outputs.automatic }}
+      event_name: ${{ steps.slot.outputs.event_name }}
+      mode: ${{ steps.slot.outputs.mode }}
+      schedule: ${{ steps.slot.outputs.schedule }}
+      slot: ${{ steps.slot.outputs.slot }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+            /.github/workflows/
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs fetch-stockanalysis.yml
+
   acquire-stockanalysis:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -186,8 +219,9 @@ jobs:
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
           INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          EVENT_NAME: ${{ needs.clock-admission.outputs.event_name }}
+          EVENT_SCHEDULE: ${{ needs.clock-admission.outputs.schedule }}
+          CLOCK_MODE: ${{ needs.clock-admission.outputs.mode }}
         run: |
           NATURAL_RECOVERY_KINDS="all"
           INPUT_STOCK_LIMIT="0"
@@ -204,7 +238,7 @@ jobs:
             INPUT_YF_ETF_FALLBACK="true"
             INPUT_SLEEP="${STOCKANALYSIS_DAILY_SLEEP:-0.5}"
             INPUT_MAX_UNIVERSE_PAGES="${STOCKANALYSIS_DAILY_MAX_UNIVERSE_PAGES:-5}"
-            if [ "$EVENT_SCHEDULE" = "20 21 * * *" ]; then
+            if [ "$CLOCK_MODE" = "stock_daily" ]; then
               INPUT_ETFS=""
               INPUT_STOCKS="AAPL,NVDA,MSFT,AMZN,GOOGL,META,TSLA,JPM"
               INPUT_STOCKS_ONLY="true"
@@ -221,7 +255,7 @@ jobs:
               INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
               INPUT_ISOLATED_STOCK_SCHEDULE="true"
               NATURAL_RECOVERY_KINDS="stock,financial"
-            elif [ "$EVENT_SCHEDULE" = "50 23 * * 1-5" ] || [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
+            elif [ "$CLOCK_MODE" = "etf_weekday" ] || [ "$CLOCK_MODE" = "etf_general" ]; then
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
               INPUT_FETCH_SURFACES="true"
@@ -231,7 +265,7 @@ jobs:
               INPUT_INCREMENTAL_ETF_LIMIT="400"
               INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"
               NATURAL_RECOVERY_KINDS="etf,surface"
-              if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
+              if [ "$CLOCK_MODE" = "etf_general" ]; then
                 INPUT_SLEEP="2"
                 # BACKLOG #331: one complete weekly universe collection. Current
                 # measured universe is 11 pages; 100 preserves headroom without
@@ -399,7 +433,7 @@ jobs:
           if [ "$REQUIRED_HISTORY_PERIODS" = "daily_1y" ]; then ARGS="$ARGS --write-plan"; fi
           if [ -n "$MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $MAX_AGE_HOURS"; fi
           python3 scripts/fetch-stockanalysis.py $ARGS \
-            --event-name "${{ github.event_name }}" \
+            --event-name "${{ needs.clock-admission.outputs.event_name }}" \
             --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
             --no-public-mirror
 
@@ -433,7 +467,8 @@ jobs:
           retention-days: 1
 
   publish-stockanalysis:
-    needs: acquire-stockanalysis
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: [clock-admission, acquire-stockanalysis]
     runs-on: ubuntu-latest
     # Semantic validation must follow fresh-main apply while the writer lock is
     # held; cap the fail-closed critical section instead of validating a stale
@@ -718,14 +753,15 @@ jobs:
           exit 1
 
   publish-stockanalysis-etf-plane:
-    needs: acquire-stockanalysis
+    needs: [clock-admission, acquire-stockanalysis]
     if: >-
-      (github.event_name == 'schedule' &&
-       (github.event.schedule == '50 23 * * 1-5' || github.event.schedule == '20 23 * * 0')) ||
-      (github.event_name == 'workflow_dispatch' &&
+      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
+      ((needs.clock-admission.outputs.event_name == 'schedule' &&
+       (needs.clock-admission.outputs.mode == 'etf_weekday' || needs.clock-admission.outputs.mode == 'etf_general')) ||
+      (needs.clock-admission.outputs.event_name == 'workflow_dispatch' &&
        (inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
        inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
-       inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == '')
+       inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -1127,11 +1163,11 @@ jobs:
           '
 
   refresh-etf-health:
-    needs: [publish-stockanalysis, publish-stockanalysis-etf-plane]
-    if: ${{ always() && needs.publish-stockanalysis-etf-plane.result == 'success' }}
+    needs: [clock-admission, publish-stockanalysis, publish-stockanalysis-etf-plane]
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (always() && needs.publish-stockanalysis-etf-plane.result == 'success') }}
     uses: ./.github/workflows/refresh-family-health.yml
     with:
-      publication_cycle: ${{ github.event_name == 'schedule' && format('{0}', github.run_id) || '' }}
+      publication_cycle: ${{ needs.clock-admission.outputs.event_name == 'schedule' && format('{0}', github.run_id) || '' }}
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
@@ -1141,19 +1177,21 @@ jobs:
   # This job stages no Git commit and holds no shared writer lock.
   dispatch-stockanalysis-projection:
     needs:
+      - clock-admission
       - publish-stockanalysis
       - publish-stockanalysis-etf-plane
     if: >-
-      always() &&
+      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
+      (always() &&
       needs.publish-stockanalysis.result == 'success' &&
       (
         needs.publish-stockanalysis-etf-plane.result == 'success' ||
         (
-          (github.event_name != 'schedule' ||
-            (github.event.schedule != '50 23 * * 1-5' && github.event.schedule != '20 23 * * 0')) &&
+          (needs.clock-admission.outputs.event_name != 'schedule' ||
+            (needs.clock-admission.outputs.mode != 'etf_weekday' && needs.clock-admission.outputs.mode != 'etf_general')) &&
           needs.publish-stockanalysis-etf-plane.result == 'skipped'
         )
-      )
+      ))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -1172,9 +1210,11 @@ jobs:
   # this job has no dependency on acquire-stockanalysis or its provider result.
   # The reusable workflow owns its own writer lock and cloud publication.
   refresh-earnings-overview:
+    needs: clock-admission
     if: >-
-      github.event_name == 'schedule' &&
-      github.event.schedule == '20 21 * * *'
+      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
+      (needs.clock-admission.outputs.event_name == 'schedule' &&
+      needs.clock-admission.outputs.mode == 'stock_daily')
     permissions:
       contents: write
       actions: read

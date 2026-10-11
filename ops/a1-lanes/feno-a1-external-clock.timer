@@ -2,18 +2,8 @@
 Description=100xFenok declared workflow slots (UTC)
 
 [Timer]
-OnCalendar=*-*-* *:04,05,07,11,12,19,23,34,37,49:00 UTC
-OnCalendar=*-*-* 00,06,12,18:00,41:00 UTC
-OnCalendar=*-*-* 06,14,22:43:00 UTC
-OnCalendar=*-*-* 07,08:00:00 UTC
-OnCalendar=*-*-* 02,03,09:30:00 UTC
-OnCalendar=*-*-* 10:15:00 UTC
-OnCalendar=*-*-* 13:17:00 UTC
-OnCalendar=Mon..Fri *-*-* 22:00:00 UTC
-OnCalendar=Mon..Fri *-*-* 23:50:00 UTC
-OnCalendar=Mon..Fri *-*-* 10:30:00 UTC
-OnCalendar=Tue..Sat *-*-* 01:10:00 UTC
-OnCalendar=Tue..Sat *-*-* 00:30:00 UTC
+# The workflow declarations select due jobs; the timer has no copied minute table.
+OnCalendar=*-*-* *:*:00 UTC
 AccuracySec=1s
 Persistent=false
 Unit=feno-a1-external-clock.service

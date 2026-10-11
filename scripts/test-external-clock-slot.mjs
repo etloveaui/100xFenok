@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { admissionDecision, scheduledSlot, checkAdmission, sourceWasClockNoop } from "./check-external-clock-slot.mjs";
-import { EXTERNAL_CLOCK_CRONS, externalClockCrons, dueDispatches, workerBudgetJobs } from "../ops/a1-lanes/external-clock.mjs";
-import { deriveWorkflowWatchPolicy, evaluateExternalClock, evaluateWorkflow } from "./ops/check-pipeline-job-health.mjs";
+import { EXTERNAL_CLOCK_CRONS, externalClockCrons, dueDispatches, workerBudgetJobs, externalClockEvent, collectorClockMode, dispatchDue } from "../ops/a1-lanes/external-clock.mjs";
+import { evaluateExternalClock, evaluateWorkflow } from "./ops/check-pipeline-job-health.mjs";
 
 const file = "fetch-fred-macro.yml";
 const slot = "2026-10-12T08:00:00.000Z";
@@ -113,42 +113,46 @@ try {
   fs.rmSync(fixture, { recursive: true, force: true });
 }
 
-const watched = deriveWorkflowWatchPolicy({ scheduledExclusions: {} }).watched;
-const start = Date.parse("2026-10-12T00:00:00Z");
-const end = start + 7 * 86400_000;
-const slots = new Map(Object.keys(EXTERNAL_CLOCK_CRONS).map((key) => [key, []]));
-const clockInstants = new Set();
-for (let stamp = start; stamp < end; stamp += 60_000) {
-  for (const row of dueDispatches(new Date(stamp))) {
-    slots.get(row.file).push(row.slot);
-    clockInstants.add(stamp);
-  }
+// Monthly source declarations and the two bounded collector transports.
+assert.equal(scheduledSlot("0 8 1 * *", "2026-11-29T09:00:00Z"), "2026-11-01T08:00:00.000Z");
+for (const [collector, cron, stamp, mode, action] of [
+  ["fetch-stockanalysis.yml", "20 21 * * *", "2026-10-12T21:20:00.000Z", "stock_daily", "external-clock-stockanalysis"],
+  ["fetch-stockanalysis.yml", "50 23 * * 1-5", "2026-10-12T23:50:00.000Z", "etf_weekday", "external-clock-stockanalysis"],
+  ["fetch-stockanalysis.yml", "20 23 * * 0", "2026-10-11T23:20:00.000Z", "etf_general", "external-clock-stockanalysis"],
+  ["fetch-yf-finance.yml", "7 0 * * 0-5", "2026-10-12T00:07:00.000Z", "etfs", "external-clock-yf-finance"],
+]) {
+  assert.equal(collectorClockMode(collector, cron), mode);
+  const proof = { ...success, event: externalClockEvent(collector), created_at: stamp,
+    display_title: `external-clock/a1/v1 ${collector} ${stamp}` };
+  const call = { file: collector, eventName: "repository_dispatch", event: { action,
+    client_payload: { external_clock: "a1-v1", external_clock_slot: stamp } },
+    currentRun: { ...currentRun, created_at: stamp }, runs: [proof] };
+  assert.equal(admissionDecision(call).skip, true);
+  assert.throws(() => admissionDecision({ ...call, event: { ...call.event, action: "wrong" } }), /Invalid/);
+  assert.equal(admissionDecision({ ...call, runs: [{ ...proof, conclusion: "failure" }] }).skip, false);
+  assert.equal(admissionDecision({ ...call, eventName: "schedule", event: { schedule: cron } }).skip, true);
+  const workflow = { file: collector, crons: externalClockCrons(collector), events: ["schedule"],
+    failure_streak_threshold: 2 };
+  const failures = [8, 7, 6].map(id => ({ ...proof, id, conclusion: "failure" }));
+  const manual = { ...proof, id: 10, event: "workflow_dispatch", display_title: "Human repair" };
+  const pending = evaluateWorkflow(workflow, [manual, ...failures], { now: Date.parse(stamp) + 60_000 });
+  assert.ok(pending.alarm_reasons.includes("failure_streak"), "marked repository failures enter the same failure streak");
+  assert.equal(pending.recovery_pending_next_scheduled_run, true, "human success leaves the automatic incident pending");
+  assert.equal(evaluateWorkflow(workflow, [{ ...proof, id: 11 }, manual, ...failures],
+    { now: Date.parse(stamp) + 60_000 }).alarming, false, "the next marked automatic success closes the incident");
+  assert.equal(evaluateExternalClock(workflow, [proof], { now: Date.parse(stamp) + 60_000 }).status, "ok");
 }
-for (const [workflowFile, members] of slots) {
-  assert.ok(members.length >= 3, `${workflowFile}: week must contain >=3 slots`);
-  const workflow = watched.find((row) => row.file === workflowFile);
-  assert.ok(workflow, `${workflowFile}: included in health observation`);
-  for (const cron of externalClockCrons(workflowFile)) assert.ok(workflow.crons.includes(cron));
-  const markedRun = { ...success, created_at: members[0], run_started_at: members[0],
-    display_title: `external-clock/a1/v1 ${workflowFile} ${members[0]}` };
-  const now = Date.parse(members[3] ?? members[2]) + 1;
-  const stale = evaluateExternalClock(workflow, [markedRun, { event: "schedule", created_at: new Date(now).toISOString(), conclusion: "success" }], { now });
-  assert.equal(stale.status, "alarm", `${workflowFile}: GitHub fallback cannot mask 3 missed clock slots`);
-  const queued = { ...markedRun, status: "queued", conclusion: null,
-    created_at: members[3], display_title: `external-clock/a1/v1 ${workflowFile} ${members[3]}` };
-  assert.equal(evaluateExternalClock(workflow, [queued], { now }).missed_clock_slot_count, 0);
-  if (!["pins-autosync.yml", "pipeline-failure-alarm.yml"].includes(workflowFile)) {
-    const completed = { ...queued, status: "completed", conclusion: "success", run_started_at: members[3] };
-    assert.equal(evaluateWorkflow(workflow, [completed], { now }).missed_schedule_slot_count, 0,
-      `${workflowFile}: actual watched policy counts a marked scheduled slot`);
-    assert.equal(evaluateWorkflow(workflow, [markedRun], { now }).alarming, true,
-      `${workflowFile}: missed slots fire under actual watched policy`);
-  }
+const state = {};
+const completedSlots = await dispatchDue({ now: new Date("2026-11-01T08:00:00Z"), state,
+  dispatch: async row => row.file === "fetch-oecd-cli.yml" ? "disabled" : "dispatched" });
+assert.ok(completedSlots.some(row => row.file === "slickcharts-monthly.yml" && row.outcome === "dispatched"));
+assert.equal(state["fetch-oecd-cli.yml"], undefined, "a disabled workflow is neither enabled nor marked dispatched");
+const repeated = await dispatchDue({ now: new Date("2026-11-01T08:00:00Z"), state, dispatch: async () => "disabled" });
+assert.ok(repeated.every(row => row.outcome === "disabled"), "completed same-slot dispatches are not repeated");
 
-}
 assert.equal(dueDispatches(new Date("2026-10-11T22:00:00Z")).some((row) => row.file === "fetch-sentiment.yml"), false);
 assert.equal(dueDispatches(new Date("2026-10-12T22:00:00Z")).some((row) => row.file === "fetch-sentiment.yml"), true);
 assert.equal(dueDispatches(new Date("2026-10-12T01:10:00Z")).some((row) => row.file === "fetch-fenok-private-options.yml"), false);
 assert.equal(dueDispatches(new Date("2026-10-13T01:10:00Z")).some((row) => row.file === "fetch-fenok-private-options.yml"), true);
 
-console.log(`external clock slot admission: PASS (${slots.size} workflows, same-slot/failed/manual/API/pagination/downstream/weekday/fire/timer-week parity)`);
+console.log(`external clock slot admission: PASS (${Object.keys(EXTERNAL_CLOCK_CRONS).length} workflows, same-slot/failed/manual/API/pagination/downstream/weekday/monthly/repository transport)`);

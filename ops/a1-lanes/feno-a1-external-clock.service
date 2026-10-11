@@ -5,7 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+Environment=FENOK_CLOCK_WORKFLOWS=%h/.local/lib/fenok-external-clock/workflows
 EnvironmentFile=%h/.config/fenok/external-clock.env
 ExecStart=/usr/bin/node %h/.local/lib/fenok-external-clock/external-clock.mjs
-TimeoutStartSec=150
+TimeoutStartSec=55
 UMask=0077

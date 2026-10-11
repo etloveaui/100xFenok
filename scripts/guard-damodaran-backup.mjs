@@ -5,11 +5,18 @@ import { pathToFileURL } from "node:url";
 
 import { libraryTuple } from "./lib/provider-fetch-result.mjs";
 import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
+import { externalClockCrons, externalClockSlot } from "../ops/a1-lanes/external-clock.mjs";
 
 export const DAMODARAN_COMBINED_CRON = "17 11,23 * * 6";
 
 const WORKFLOW_FILE = "fetch-damodaran-shadow.yml";
 const BACKUP_THRESHOLD_HOURS = 18;
+const CLOCK_WORKFLOW = { file: WORKFLOW_FILE, crons: externalClockCrons(WORKFLOW_FILE) };
+
+function automaticRunTimestamp(run) {
+  return externalClockSlot(CLOCK_WORKFLOW, run)
+    ?? (run?.event === "schedule" ? Date.parse(run.created_at) : NaN);
+}
 
 function saturdayCycleStart(createdAt) {
   const timestamp = Date.parse(createdAt);
@@ -45,8 +52,9 @@ export function decideDamodaranExecution({
   if (!Array.isArray(runs)) return { action: "run", reason: "run_history_unavailable" };
 
   const currentRun = runs.find((run) => sameRun(run?.id, currentRunId));
-  const currentCreatedAt = Date.parse(currentRun?.created_at);
-  const cycleStart = saturdayCycleStart(currentRun?.created_at);
+  const currentCreatedAt = automaticRunTimestamp(currentRun);
+  const cycleStart = Number.isFinite(currentCreatedAt)
+    ? saturdayCycleStart(new Date(currentCreatedAt).toISOString()) : null;
   if (!currentRun || !Number.isFinite(currentCreatedAt) || cycleStart === null) {
     return { action: "run", reason: "current_run_unavailable" };
   }
@@ -58,16 +66,15 @@ export function decideDamodaranExecution({
 
   const primary = runs
     .filter((run) => {
-      const createdAt = Date.parse(run?.created_at);
+      const createdAt = automaticRunTimestamp(run);
       return !sameRun(run?.id, currentRunId)
-        && run?.event === "schedule"
         && run?.status === "completed"
         && run?.conclusion === "success"
         && Number.isFinite(createdAt)
         && createdAt >= cycleStart
         && createdAt < currentCreatedAt;
     })
-    .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))[0];
+    .sort((left, right) => automaticRunTimestamp(right) - automaticRunTimestamp(left))[0];
 
   if (primary) {
     return {
@@ -111,21 +118,25 @@ export async function fetchScheduledRuns({
     `${root}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`
       + `/actions/workflows/${encodeURIComponent(WORKFLOW_FILE)}/runs`,
   );
-  url.searchParams.set("event", "schedule");
   url.searchParams.set("branch", "main");
   url.searchParams.set("per_page", "50");
-  const response = await transport(url, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!response?.ok) throw new Error(`GitHub Actions API returned ${response?.status ?? "unknown"}`);
-  const document = await response.json();
-  if (!Array.isArray(document?.workflow_runs)) throw new Error("GitHub Actions API response is malformed");
-  return document.workflow_runs;
+  const pages = await Promise.all(["schedule", "workflow_dispatch"].map(async event => {
+    const eventUrl = new URL(url);
+    eventUrl.searchParams.set("event", event);
+    const response = await transport(eventUrl, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response?.ok) throw new Error(`GitHub Actions API returned ${response?.status ?? "unknown"}`);
+    const document = await response.json();
+    if (!Array.isArray(document?.workflow_runs)) throw new Error("GitHub Actions API response is malformed");
+    return document.workflow_runs;
+  }));
+  return pages.flat();
 }
 
 export function emitBackupSkipAttempt({
