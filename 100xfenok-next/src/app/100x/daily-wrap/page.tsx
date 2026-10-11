@@ -25,7 +25,7 @@ const DAILY_WRAP_BOUNDARY_CHIPS = [
 ] as const;
 
 const DAILY_WRAP_OWNER_LINKS = [
-  { key: "latest", label: "최신 랩", href: ROUTES.dailyWrap },
+  { key: "latest", label: "마지막 발행본", href: ROUTES.dailyWrap },
   { key: "native", label: "네이티브 미리보기", href: `${ROUTES.dailyWrap}?v2=1` },
   { key: "events", label: "이벤트 캘린더", href: ROUTES.marketEvents },
 ] as const;
@@ -77,8 +77,11 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
                 <p className="data-shell-kicker">Daily Wrap</p>
                 <h1 className="data-shell-title">100x Daily Wrap (레거시)</h1>
                 <p className="data-shell-desc">
-                  기본 경로는 레거시 Daily Wrap 뷰어입니다. 네이티브 랩은 별도 미리보기로 분리하고, 날짜별
-                  아카이브는 기존 viewer의 date 파라미터로 유지합니다.
+                  발행이 끝난 Daily Wrap 보관본입니다.{" "}
+                  {isValidDateParam(requestedDate)
+                    ? `요청한 발행일은 ${requestedDate}입니다.`
+                    : "날짜를 지정하지 않으면 마지막 발행본이 열립니다."}{" "}
+                  각 랩의 발행일은 뷰어 상단에 표시됩니다. 네이티브 랩은 별도 미리보기로 분리되어 있습니다.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
                   {DAILY_WRAP_BOUNDARY_CHIPS.map((chip) => (

@@ -16,7 +16,7 @@ import {
  * holders, index membership, single-stock ETFs) with each dataset's date.
  * It used to exist only inside the top-bar search preview drawer, one step
  * before the stock page; it now sits on the page itself. The two indexes are
- * the ones the screener and portfolio already load (force-cache, ~51KB gzip).
+ * the ones the screener and portfolio already load (~51KB gzip).
  */
 export default function StockConnectionsRail({ ticker }: { ticker: string }) {
   const [entry, setEntry] = useState<StockConnectionEntry | null | undefined>(undefined);

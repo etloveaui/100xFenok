@@ -1718,7 +1718,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     Promise.resolve().then(() => {
       if (!cancelled) setCnnComponentsState({ status: "loading" });
     });
-    fetch("/data/sentiment/cnn-components.json", { cache: "force-cache" })
+    fetch("/data/sentiment/cnn-components.json")
       .then((response) => {
         if (!response.ok) throw new Error(`CNN components ${response.status}`);
         return response.json() as Promise<unknown>;

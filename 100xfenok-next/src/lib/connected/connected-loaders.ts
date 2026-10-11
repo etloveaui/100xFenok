@@ -99,7 +99,7 @@ async function loadHoldersIndex(): Promise<Record<string, TickerHoldersResult | 
   if (holdersCache) return holdersCache;
   if (holdersPromise) return holdersPromise;
 
-  holdersPromise = fetchJsonOrNull<Record<string, Record<string, unknown>>>("/data/sec-13f/by_ticker.json", { init: { cache: "force-cache" } })
+  holdersPromise = fetchJsonOrNull<Record<string, Record<string, unknown>>>("/data/sec-13f/by_ticker.json")
     .then((raw) => {
       if (raw === null) {
         // Failure: not cached, so the next call retries (failures never stick).
@@ -154,7 +154,7 @@ export async function loadInvestorHoldings(investorName: string): Promise<Invest
   if (key in investorCache) return investorCache[key];
   if (key in investorPending) return investorPending[key];
 
-  investorPending[key] = fetchJsonOrNull<Record<string, unknown>>(`/data/sec-13f/investors/${encodeURIComponent(key)}.json`, { init: { cache: "force-cache" } })
+  investorPending[key] = fetchJsonOrNull<Record<string, unknown>>(`/data/sec-13f/investors/${encodeURIComponent(key)}.json`)
     .then(async (rawPayload) => {
       if (!rawPayload) {
         // Failure: not cached, so the next call retries (failures never stick).
@@ -214,7 +214,7 @@ export async function loadBuyingPressure(): Promise<BuyingPressureIndex | null> 
   if (bpCache) return bpCache;
   if (bpPromise) return bpPromise;
 
-  bpPromise = fetch("/data/sec-13f/analytics/buying_pressure.json", { cache: "force-cache" })
+  bpPromise = fetch("/data/sec-13f/analytics/buying_pressure.json")
     .then((r) => (r.ok ? r.json() : null))
     .then((raw: Record<string, unknown> | null) => {
       if (!raw?.buying_pressure) {
@@ -273,7 +273,7 @@ let indexCache: IndexCacheShape = null;
 let indexPromise: Promise<IndexCacheShape> | null = null;
 
 async function loadSlickchartsIndex(url: string): Promise<Record<string, IndexMembershipEntry> | null> {
-  const raw = await fetchJsonOrNull<{ holdings?: Array<Record<string, unknown>> }>(url, { init: { cache: "force-cache" } });
+  const raw = await fetchJsonOrNull<{ holdings?: Array<Record<string, unknown>> }>(url);
   if (raw === null) return null; // failure: the composite below refuses to cache
   const holdings = Array.isArray(raw?.holdings) ? raw.holdings : [];
   const map: Record<string, IndexMembershipEntry> = {};
@@ -291,7 +291,7 @@ async function loadSlickchartsIndex(url: string): Promise<Record<string, IndexMe
 }
 
 async function loadSlickchartsChanges(): Promise<Record<string, string[]> | null> {
-  const raw = await fetchJsonOrNull<{ indices?: Record<string, Record<string, string[]>> }>(INDEX_URLS.changes, { init: { cache: "force-cache" } });
+  const raw = await fetchJsonOrNull<{ indices?: Record<string, Record<string, string[]>> }>(INDEX_URLS.changes);
   if (raw === null) return null; // failure: the composite below refuses to cache
   const changes = raw?.indices ?? {};
   const map: Record<string, string[]> = {};

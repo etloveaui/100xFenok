@@ -186,7 +186,7 @@ export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.ib, changeFrequency: "monthly", priority: 0.7 },
   { path: ROUTES.vr, changeFrequency: "monthly", priority: 0.6 },
   { path: ROUTES.radar, changeFrequency: "daily", priority: 0.7 },
-  { path: ROUTES.research, changeFrequency: "weekly", priority: 0.6 },
+  { path: ROUTES.research, changeFrequency: "monthly", priority: 0.6 },
   { path: ROUTES.filings, changeFrequency: "weekly", priority: 0.6 },
   { path: ROUTES.macroChart, changeFrequency: "daily", priority: 0.75 },
   { path: ROUTES.multichart, changeFrequency: "weekly", priority: 0.6 },

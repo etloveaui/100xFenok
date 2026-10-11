@@ -247,7 +247,7 @@ export async function loadMacroSeries(
   await Promise.all(
     [...new Set(definitions.filter((definition) => sourceKind(definition) === "local-json").map((definition) => definition.sourcePath))].map(async (sourcePath) => {
       try {
-        const response = await fetch(sourcePath, { cache: "force-cache" });
+        const response = await fetch(sourcePath);
         if (!response.ok) throw new Error(`${sourcePath} ${response.status}`);
         payloads.set(sourcePath, await response.json());
       } catch (error) {

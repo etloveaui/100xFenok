@@ -121,6 +121,7 @@ export default function ResearchClient() {
         ))}
         <span className="ml-auto font-mono text-[12px] text-slate-500">
           제공 중 {liveCount} · 준비 중 {soonCount}
+          {catalog?.generated_at ? ` · 목록 갱신 ${catalog.generated_at.slice(0, 10)}` : ""}
         </span>
       </div>
 
@@ -255,7 +256,7 @@ export default function ResearchClient() {
 
       <aside className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4" aria-label="동기화 안내">
         <p className="text-sm font-bold text-slate-700">추가 리서치 자료 동기화 준비 중</p>
-        <p className="mt-1 text-sm text-slate-500">검증된 자료부터 순차적으로 목록에 추가됩니다.</p>
+        <p className="mt-1 text-sm text-slate-500">정해진 주기 없이, 검증된 자료부터 순차적으로 목록에 추가됩니다.</p>
       </aside>
     </div>
   );

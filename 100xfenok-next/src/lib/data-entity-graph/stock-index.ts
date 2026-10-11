@@ -112,7 +112,7 @@ export async function loadStockConnectionIndex(signal?: AbortSignal): Promise<St
   if (stockIndexCache) return stockIndexCache;
   if (stockIndexPromise) return stockIndexPromise;
 
-  stockIndexPromise = fetch("/data/computed/entity_graph_stock_index.json", { cache: "force-cache", signal })
+  stockIndexPromise = fetch("/data/computed/entity_graph_stock_index.json", { signal })
     .then((response) => (response.ok ? response.json() as Promise<StockConnectionIndex> : null))
     .then((payload) => {
       stockIndexCache = payload?.schema_version === "data-entity-graph-stock-index/v1" ? payload : null;
@@ -131,7 +131,7 @@ export async function loadStockServicesIndex(signal?: AbortSignal): Promise<Stoc
   if (stockServicesCache) return stockServicesCache;
   if (stockServicesPromise) return stockServicesPromise;
 
-  stockServicesPromise = fetch("/data/computed/entity_graph_stock_services.json", { cache: "force-cache", signal })
+  stockServicesPromise = fetch("/data/computed/entity_graph_stock_services.json", { signal })
     .then((response) => (response.ok ? response.json() as Promise<StockServicesIndex> : null))
     .then((payload) => {
       stockServicesCache = payload?.schema_version === "data-entity-graph-stock-services/v1" ? payload : null;

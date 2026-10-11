@@ -31,7 +31,7 @@ export function isSec13fInvestorPartsManifest(
 export async function resolveSec13fInvestorPayload<T>(payload: T): Promise<T> {
   if (!isSec13fInvestorPartsManifest(payload)) return payload;
   const responses = await Promise.all(
-    payload.parts.map((part) => fetch(part.path, { cache: "force-cache" })),
+    payload.parts.map((part) => fetch(part.path)),
   );
   const filings: unknown[] = [];
   for (let index = 0; index < responses.length; index += 1) {
