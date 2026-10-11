@@ -1,4 +1,5 @@
 name: Fetch Fenok GDELT News Tone Proxy
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 fetch-fenok-news-tone.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
@@ -7,6 +8,16 @@ on:
     - cron: '43 6,14,22 * * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       controlled_failure:
         description: 'Dispatch-only chaos: set to "transport" to force an honest provider failure shard'
         required: false

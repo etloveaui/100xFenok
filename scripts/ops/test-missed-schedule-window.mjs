@@ -378,6 +378,10 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     if (file === "worker-request-budget-alarm.yml") {
       assert.match(yaml, /check:\n    if: github.event_name == 'workflow_dispatch' \|\| github.event.schedule == '7 \* \* \* \*'/);
       assert.match(yaml, /data-supply-analytics:\n    if: \(github.event_name == 'workflow_dispatch' && inputs.external_clock == ''\) \|\| github.event.schedule == '17 2,14 \* \* \*'/);
+    } else if (["fetch-treasury-tga.yml", "fetch-fenok-news-tone.yml"].includes(file)) {
+      assert.ok(!/if:.*github\.event_name/.test(yaml), `${file} jobs cannot exclude marked dispatches`);
+      assert.match(yaml, /controlled_failure/);
+      assert.match(yaml, /default: ['"]['"]/);
     } else {
       assert.ok(!yaml.includes("event_name") && !yaml.includes("event.schedule"), `${file} must be event-independent`);
     }
@@ -435,6 +439,45 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
   assert.deepEqual(disabledState, {}, "retention-paused workflow remains undispatched");
   const failed = await dispatchDue({ now, state: {}, dispatch: async () => { throw new Error("HTTP 503"); } });
   assert.equal(failed[0].outcome, "failed", "API failure must remain observable");
+
+  for (const [file, minute, hours] of [
+    ["fetch-treasury-tga.yml", 0, [0, 6, 12, 18]],
+    ["data-plane-serving-probe.yml", 41, [0, 6, 12, 18]],
+    ["fetch-fenok-news-tone.yml", 43, [6, 14, 22]],
+  ]) {
+    const actualHours = [];
+    const workflow = deriveWorkflowWatchPolicy().watched.find((row) => row.file === file);
+    for (let hour = 0; hour < 24; hour += 1) {
+      const slotDate = new Date(Date.UTC(2026, 9, 12, hour, minute));
+      const slot = slotDate.toISOString();
+      const due = dueDispatches(slotDate).filter((row) => row.file === file);
+      if (due.length) actualHours.push(hour);
+      assert.equal(externalClockSlot(workflow, marked(file, slot)) !== null, hours.includes(hour),
+        `${file}: a marker at the correct minute but wrong hour must be rejected`);
+      if (due.length) {
+        const oneState = {};
+        const calls = [];
+        const dispatch = async (row) => { calls.push(row); return "dispatched"; };
+        await dispatchDue({ now: slotDate, state: oneState, dispatch });
+        await dispatchDue({ now: slotDate, state: oneState, dispatch });
+        assert.equal(calls.filter((row) => row.file === file).length, 1);
+        const health = evaluateWorkflow(workflow, [marked(file, slot)], { now: slotDate.getTime() + 60_000 });
+        assert.equal(health.missed_schedule_slot_count, 0, `${file}: a marked slot covers missed-window liveness`);
+      }
+    }
+    assert.deepEqual(actualHours, hours, `${file}: exact declared UTC hours only`);
+  }
+  // Issue #121 retroactively counted the previous evening's new cron and the
+  // delayed first morning slot against the last run under the old declaration.
+  const news = deriveWorkflowWatchPolicy().watched.find((row) => row.file === "fetch-fenok-news-tone.yml");
+  const beforeChange = run(38077314315, "2026-10-10T18:49:10Z");
+  assert.equal(declaredMissedSlotCount(news.crons, Date.parse(beforeChange.run_started_at),
+    Date.parse("2026-10-10T22:43:00Z")), 1);
+  assert.equal(evaluateWorkflow(news, [beforeChange], { now: Date.parse("2026-10-11T06:45:59Z") })
+    .missed_schedule_slot_count, 2);
+  const nextNews = marked(news.file, "2026-10-11T14:43:00.000Z", { status: "queued", conclusion: null });
+  assert.equal(evaluateWorkflow(news, [nextNews, beforeChange], { now: Date.parse("2026-10-11T14:44:00Z") })
+    .alarm_reasons.includes("missed_schedule_window"), false);
 }
 
 {

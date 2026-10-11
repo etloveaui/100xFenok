@@ -13,19 +13,39 @@ export const EXTERNAL_CLOCK_CRONS = Object.freeze({
   "pipeline-failure-alarm.yml": "23 * * * *",
   "retention-restore.yml": "4,19,34,49 * * * *",
   "worker-request-budget-alarm.yml": "7 * * * *",
+  "fetch-treasury-tga.yml": "0 */6 * * *",
+  "data-plane-serving-probe.yml": "41 */6 * * *",
+  "fetch-fenok-news-tone.yml": "43 6,14,22 * * *",
 });
 export const EXTERNAL_CLOCK_MARKER = "external-clock/a1/v1";
 // Admission dates bound the never-ran case without inventing pre-install slots.
 export const EXTERNAL_CLOCK_ADMITTED_AT = Object.freeze(Object.fromEntries(
   Object.keys(EXTERNAL_CLOCK_CRONS).map((file) => [file,
-    file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z" : "2026-10-11T03:34:00.000Z"]),
+    file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z"
+      : ["fetch-treasury-tga.yml", "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file)
+        ? "2026-10-11T07:18:00.000Z" : "2026-10-11T03:34:00.000Z"]),
 ));
+
+function clockFieldMatches(field, value) {
+  return field.split(",").some((part) => {
+    if (part === "*") return true;
+    if (/^\*\/[1-9]\d*$/.test(part)) return value % Number(part.slice(2)) === 0;
+    if (/^\d+$/.test(part)) return value === Number(part);
+    throw new Error(`Unsupported external clock field: ${field}`);
+  });
+}
 
 export function dueDispatches(now = new Date()) {
   const slot = new Date(now);
   slot.setUTCSeconds(0, 0);
   return Object.entries(EXTERNAL_CLOCK_CRONS)
-    .filter(([, cron]) => cron.split(" ")[0].split(",").map(Number).includes(slot.getUTCMinutes()))
+    .filter(([, cron]) => {
+      const [minute, hour, ...calendar] = cron.split(" ");
+      if (calendar.length !== 3 || calendar.some((field) => field !== "*")) {
+        throw new Error(`Unsupported external clock calendar: ${cron}`);
+      }
+      return clockFieldMatches(minute, slot.getUTCMinutes()) && clockFieldMatches(hour, slot.getUTCHours());
+    })
     .map(([file]) => ({ file, slot: slot.toISOString() }));
 }
 

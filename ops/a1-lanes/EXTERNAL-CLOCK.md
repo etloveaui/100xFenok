@@ -4,7 +4,7 @@ B-434, authorized 2026-10-11. One user timer on `ubuntu@feno-sin-a1`
 dispatches existing GitHub workflows on `etloveaui/100xFenok`, branch `main`.
 GitHub schedules remain enabled as fallback. There is no catch-up burst.
 
-| Workflow | UTC minutes each hour | Existing duplicate serialization |
+| Workflow | UTC cadence | Existing duplicate serialization |
 |---|---|---|
 | fetch-defillama.yml | 12 | global Git writer group |
 | fetch-yahoo-ticker.yml | 05 | global Git writer + yahoo-ticker-macro-publish |
@@ -13,9 +13,13 @@ GitHub schedules remain enabled as fallback. There is no catch-up burst.
 | pipeline-failure-alarm.yml | 23 | pipeline-failure-alarm + global Git writer persistence |
 | retention-restore.yml | 04, 19, 34, 49 | retention-restore; journal restore is a no-op when nothing is pending |
 | worker-request-budget-alarm.yml | 07 | worker-request-budget-alarm; marked dispatch runs hourly check only |
+| fetch-treasury-tga.yml | 00:00, 06:00, 12:00, 18:00 | global Git writer group |
+| data-plane-serving-probe.yml | 00:41, 06:41, 12:41, 18:41 | data-plane-serving-probe |
+| fetch-fenok-news-tone.yml | 06:43, 14:43, 22:43 | global Git writer group |
 
-All seven declare `workflow_dispatch`. The first six execute the same jobs for
-dispatch and schedule. Existing concurrency groups serialize duplicate GitHub/A1 runs;
+The first seven rows specify minutes each hour. All ten declare `workflow_dispatch`.
+All except the budget workflow execute the same jobs for dispatch and schedule.
+Existing concurrency groups serialize duplicate GitHub/A1 runs;
 additional runs can still consume runner/API budget. The clock checks workflow
 metadata before dispatch and leaves disabled workflows disabled, preserving the
 retention pause set. Same-slot service restarts use a local dispatch receipt.

@@ -1,4 +1,5 @@
 name: Data Plane Serving Probe
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 data-plane-serving-probe.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 # Six-hour proof that every enrolled data-plane asset is served from a published
 # generation with a fresh source date. Born 2026-08-03: the enrolled URL
@@ -14,6 +15,17 @@ on:
     # without re-reading the immutable fleet 24 times per day.
     - cron: '41 */6 * * *'
   workflow_dispatch:
+    inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
