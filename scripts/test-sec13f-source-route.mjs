@@ -7,6 +7,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -94,3 +96,42 @@ console.log(
   `latest_due_quarter=${dueQuarter} ` +
   `source_generated_at=${metadata.source_generated_at})`,
 );
+
+// Missing quarter metadata must fail before writing any index. Exercise the
+// real builder in an isolated fixture, preserving three prior outputs.
+const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "sec13f-quarter-"));
+try {
+  fs.mkdirSync(path.join(fixture, "scripts"));
+  fs.copyFileSync(path.join(root, "scripts/build-13f-integrity-indexes.mjs"), path.join(fixture, "scripts/build-13f-integrity-indexes.mjs"));
+  fs.symlinkSync(path.join(root, "scripts/lib"), path.join(fixture, "scripts/lib"), "dir");
+  const dataDir = path.join(fixture, "data/sec-13f");
+  fs.mkdirSync(path.join(dataDir, "analytics"), {recursive:true});
+  fs.mkdirSync(path.join(dataDir, "investors"));
+  const consensusFile = path.join(dataDir, "analytics/consensus.json");
+  fs.writeFileSync(path.join(dataDir, "by_ticker.json"), '{"prior":true}');
+  fs.writeFileSync(path.join(dataDir, "analytics/ticker_aliases.json"), '{"prior":true}');
+  for (const quarter of [undefined, null, "", "2026-Q5", "2026-Q2junk"]) {
+    const original = JSON.stringify({metadata:{quarter},consensus:{prior:true}});
+    fs.writeFileSync(consensusFile, original);
+    const run = spawnSync(process.execPath, [path.join(fixture, "scripts/build-13f-integrity-indexes.mjs")], {encoding:"utf8"});
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /requires valid consensus metadata.quarter/);
+    assert.equal(fs.readFileSync(consensusFile, "utf8"), original);
+    assert.equal(fs.readFileSync(path.join(dataDir, "by_ticker.json"), "utf8"), '{"prior":true}');
+    assert.equal(fs.readFileSync(path.join(dataDir, "analytics/ticker_aliases.json"), "utf8"), '{"prior":true}');
+  }
+  fs.writeFileSync(consensusFile, JSON.stringify({metadata:{quarter:"2026-Q2"}}));
+  fs.writeFileSync(path.join(dataDir, "investors/example.json"), JSON.stringify({investor:{filings:[
+    {quarter:"2026-Q2",holdings:[{name:"Unconfirmed Fixture Issuer",cusip:"000000001"}]}, {quarter:"2026-Q3",holdings:[{name:"Wrong Quarter Issuer",cusip:"000000002"},{name:"Other Quarter Issuer",cusip:"000000003"}]}
+  ]}}));
+  const valid = spawnSync(process.execPath, [path.join(fixture, "scripts/build-13f-integrity-indexes.mjs")], {encoding:"utf8"});
+  assert.equal(valid.status, 0, valid.stderr);
+  assert.equal(JSON.parse(fs.readFileSync(consensusFile)).metadata.quarter, "2026-Q2");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dataDir, "analytics/ticker_aliases.json"))).quarter, "2026-Q2");
+  const audit = JSON.parse(fs.readFileSync(path.join(dataDir, "analytics/ticker_aliases.json")));
+  assert.equal(audit.source_rows, 1, "only the declared quarter contributes rows");
+  assert.equal(audit.unresolved_positions[0].quarter, "2026-Q2");
+  console.log("sec13f quarter guard: five invalid forms preserve prior outputs; declared quarter passed");
+} finally {
+  fs.rmSync(fixture, {recursive:true,force:true});
+}

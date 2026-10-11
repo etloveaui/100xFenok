@@ -56,7 +56,10 @@ function guardInvestorDoc(data, filePath) {
 
 const previousConsensus = readExistingJson(path.join(ROOT, CONSENSUS), {}, guardPreviousConsensus);
 const metadata = previousConsensus.metadata ?? {};
-const targetQuarter = metadata.quarter ?? null;
+const targetQuarter = metadata.quarter;
+if (typeof targetQuarter !== "string" || !/^\d{4}-Q[1-4]$/.test(targetQuarter)) {
+  throw new Error("13F integrity build requires valid consensus metadata.quarter; refusing mixed-quarter output");
+}
 const excluded = new Set(metadata.excluded_stale_investors ?? []);
 const totalInvestors = Number(metadata.current_cohort_investors ?? metadata.total_investors ?? 0);
 const { resolveHoldingSymbol } = loadTickerResolver(ROOT);
@@ -139,9 +142,7 @@ for (const file of investorFiles) {
   if (excluded.has(id)) continue;
   const payload = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   const filings = payload.investor?.filings ?? [];
-  const filing = targetQuarter
-    ? filings.find((item) => item.quarter === targetQuarter)
-    : filings.at(-1);
+  const filing = filings.find((item) => item.quarter === targetQuarter);
   if (!filing) continue;
   activeInvestors += 1;
   for (const [rowIndex, holding] of (filing.holdings ?? []).entries()) {
