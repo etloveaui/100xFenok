@@ -30,10 +30,8 @@ permissions:
   contents: write
   actions: write
 
-# The global Git writer lock is taken per JOB rather than per workflow, so the
-# cloud publication - which writes to R2 and the coordinator and never to Git -
-# no longer occupies the lock every other lane queues behind. Measured on the
-# worst observed run (DEC-383): 53s occupancy, 30s of it publication.
+# Acquisition and cloud publication run outside the global Git writer queue.
+# Only a prepared canonical/recovery difference enters the short commit job.
 
 jobs:
   clock-admission:
@@ -62,17 +60,17 @@ jobs:
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     permissions:
-      contents: write
-      actions: write
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
+      contents: read
     outputs:
+      changed: ${{ steps.candidate.outputs.changed }}
       fetch_outcome: ${{ steps.fetch_yahoo.outcome }}
 
+    concurrency:
+      group: yahoo-ticker-prepare
+      cancel-in-progress: false
+      queue: max
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -108,56 +106,96 @@ jobs:
           echo "..."
           echo "Total lines: $(wc -l < data/macro/yahoo-ticker.json)"
 
-      - name: Commit and push
-        if: ${{ always() }}
+      - name: Prepare immutable lane candidate
+        id: candidate
+        if: ${{ always() && !cancelled() }}
         env:
-          GH_TOKEN: ${{ github.token }}
           FETCH_OUTCOME: ${{ steps.fetch_yahoo.outcome }}
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          RECOVERY_EXIT=0
-          if [[ "$FETCH_OUTCOME" != "success" ]]; then
-            RECOVERY_EXIT=2
+          mkdir -p lane-commit-transfer
+          candidate_outcome=failure
+          scripts/stage-lane-manifest.sh --workflow .github/workflows/fetch-yahoo-ticker.yml --stage always_if_exists
+          if [ "$FETCH_OUTCOME" = success ]; then
+            candidate_outcome=success
+            scripts/stage-lane-manifest.sh --workflow .github/workflows/fetch-yahoo-ticker.yml --stage success_if_exists
           fi
-          # The generated policy owns attempt, recovery-state, and success
-          # output staging.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-yahoo-ticker.yml \
-            --stage always_if_exists
-          if [[ "$FETCH_OUTCOME" == "success" ]]; then
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fetch-yahoo-ticker.yml \
-              --stage success_if_exists
-          fi
-          if git diff --staged --quiet; then
-            echo "No Yahoo ticker changes to publish"
-            exit "$RECOVERY_EXIT"
-          fi
-          git commit -m "data: refresh yahoo-ticker snapshot (TQQQ/SOXL)"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
+          node scripts/prepare-lane-commit.mjs prepare fetch-yahoo-ticker.yml lane-commit-transfer/candidate.json "$candidate_outcome"
+
+      - name: Upload lane candidate
+        if: ${{ always() && steps.candidate.outcome == 'success' && steps.candidate.outputs.changed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: yahoo-ticker-commit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: lane-commit-transfer/candidate.json
+          if-no-files-found: error
+          retention-days: 1
+
+  commit-yahoo-ticker:
+    needs: [clock-admission, fetch-yahoo-ticker]
+    if: ${{ always() && !cancelled() && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && needs.fetch-yahoo-ticker.outputs.changed == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+      actions: write
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    outputs:
+      status: ${{ steps.commit.outputs.status }}
+    steps:
+      - name: Checkout writer helpers
+        timeout-minutes: 2
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/prepare-lane-commit.mjs
+            /scripts/lib/lane-registry.mjs
+            /scripts/lib/slickcharts-composite-recovery.mjs
+            /scripts/lib/json-canonical.mjs
+            /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
+      - name: Download current-run candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: yahoo-ticker-commit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: lane-commit-transfer
+      - name: Commit and push
+        id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            timeout 60s git fetch --filter=blob:none --depth=1 origin +main:refs/remotes/origin/main
+            timeout 30s git checkout -B main origin/main
+            node scripts/prepare-lane-commit.mjs apply fetch-yahoo-ticker.yml lane-commit-transfer/candidate.json
+            if git diff --cached --quiet; then exit 0; fi
+            timeout 30s git commit -m 'data: refresh yahoo-ticker snapshot (TQQQ/SOXL)'
+            if timeout 60s git push origin HEAD:main; then
+              echo 'status=published' >> "$GITHUB_OUTPUT"
+              timeout 30s gh workflow run update-manifest.yml --ref main
+              exit 0
             fi
-            if git push; then
-              gh workflow run update-manifest.yml --ref main
-              exit "$RECOVERY_EXIT"
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
+            echo "Git push race on attempt ${attempt}; refreshing main and rechecking candidate"
+            sleep 2
           done
-          echo "git push failed after retrying concurrent main updates"
+          echo '::error::lane commit push failed after bounded retries'
           exit 1
   # No Git write happens here, so this job deliberately does not take the global
   # writer group. Its own group still serialises two publications of this family
   # against each other, because they contend for one R2 keyspace and pointer.
   publish:
-    needs: [clock-admission, fetch-yahoo-ticker]
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (always() && needs.fetch-yahoo-ticker.result != 'cancelled') }}
+    needs: [clock-admission, fetch-yahoo-ticker, commit-yahoo-ticker]
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (always() && needs.fetch-yahoo-ticker.result == 'success' && (needs.fetch-yahoo-ticker.outputs.changed == 'false' || (needs.commit-yahoo-ticker.result == 'success' && (needs.commit-yahoo-ticker.outputs.status == 'published' || needs.commit-yahoo-ticker.outputs.status == 'unchanged')))) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -188,20 +226,14 @@ jobs:
         with:
           node-version: '20'
 
-      # Both legs of the previous single-job condition are preserved: the fetch
-      # step succeeded AND its job (which includes the Git publication) did too.
-      # A failed push therefore still publishes nothing, and a skipped
-      # publication still reports "skipped" to persistence exactly as before.
+      # The job gate requires a successful acquisition and landed/unchanged
+      # canonical bytes. A failed or stale Git candidate publishes no plane data.
       - name: Publish yahoo-ticker-macro generation to the cloud data plane
         id: publish_cloud_generation
-        if: ${{ needs.fetch-yahoo-ticker.result == 'success' && needs.fetch-yahoo-ticker.outputs.fetch_outcome == 'success' }}
+        if: ${{ needs.fetch-yahoo-ticker.outputs.fetch_outcome == 'success' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-ticker-macro --tolerate-gate-block --json
-
-      # The shard is the one thing persistence cannot recompute, so it crosses
-      # the job boundary as an artifact.
-  # The second and last holder of the global Git writer lock in this workflow.
