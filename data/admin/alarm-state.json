@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-11T06:45:57.857Z",
+  "generated_at": "2026-10-11T08:26:34.459Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
     {
       "workflow": "fetch-fenok-news-tone.yml",
@@ -13,6 +13,18 @@
       "first_failing_run_url": null,
       "alarm_reasons": [
         "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 3,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38117226024,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38117226024",
+      "alarm_reasons": [
+        "failure_streak"
       ],
       "lost_schedule_slot_count": 0
     }
@@ -344,6 +356,13 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2
+    },
+    {
+      "file": "a1-external-clock",
+      "label": "A1 external clock",
+      "events": [],
+      "event": null,
+      "failure_streak_threshold": 2
     }
   ],
   "excluded_workflows": [
@@ -357,12 +376,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38118950863",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38118950863",
-    "observed_at": "2026-10-11T06:45:57.857Z",
-    "event": "workflow_run",
+    "run_id": "38124601881",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38124601881",
+    "observed_at": "2026-10-11T08:26:34.459Z",
+    "event": "workflow_dispatch",
     "workflows": [
-      "fetch-fenok-news-tone.yml"
+      "fetch-fenok-news-tone.yml",
+      "global-writer-queue-observer.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
