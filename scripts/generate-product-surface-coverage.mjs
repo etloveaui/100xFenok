@@ -12,6 +12,7 @@ import { dateOnly } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 import path from "node:path";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
+import { readEtfSourceHealth } from "./lib/fenok-data-health-freshness.mjs";
 import {
   PRODUCT_SURFACE_DATELESS_REASON,
   PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
@@ -334,6 +335,7 @@ effectiveEtfDetail.coveragePct = pct(effectiveEtfDetail.available, effectiveEtfD
 const paritySummary = sourceParity?.summary || marketAudit?.market_source_parity?.summary || {};
 const returnCoverage = marketAudit?.market_facts?.return_field_coverage || {};
 const generatedAt = process.env.PS_GENERATED_AT || new Date().toISOString();
+const etfSourceHealth = readEtfSourceHealth(DATA_ROOT, generatedAt);
 if (!Number.isFinite(new Date(generatedAt).getTime())) {
   throw new Error(`PS_GENERATED_AT must be a valid timestamp, got ${JSON.stringify(generatedAt)}`);
 }
@@ -683,7 +685,10 @@ const surfaces = [
       check("ETF 상세", effectiveEtfDetail.available > 0 ? (effectiveEtfDetail.unavailable > 0 ? "partial" : "ready") : "unavailable", `${effectiveEtfDetail.available.toLocaleString("ko-KR")} / ${effectiveEtfDetail.total.toLocaleString("ko-KR")}개`, { count: effectiveEtfDetail.available, total: effectiveEtfDetail.total, missing: effectiveEtfDetail.unavailable, coverage_pct: effectiveEtfDetail.coveragePct, authority: r2EtfCounts ? "data_supply_r2_plus_strict_unenrolled_primary" : "legacy_coverage" }),
       check("기간 수익률", number(returnCoverage.return_1y?.etf) > 0 ? "ready" : "pending", `1Y ${number(returnCoverage.return_1y?.etf).toLocaleString("ko-KR")}개`, { count: number(returnCoverage.return_1y?.etf) }),
       check("신규·전략 ETF", etfSurfaces.surfaceCount > 0 ? "ready" : "pending", `${etfSurfaces.surfaceCount}개 항목 · ${etfSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: etfSurfaces.surfaceCount, rows: etfSurfaces.rowCount }),
-      freshness("ETF 상세 전체 구성원 원천 기준일", etfCenterSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      ...(etfSourceHealth ? [check("ETF 상세 원천 신선도",
+        etfSourceHealth.status === "fresh" ? "ready" : etfSourceHealth.status === "unknown" ? "pending" : "stale",
+        `${etfSourceHealth.fresh_members} / ${etfSourceHealth.total_members}개 기준 이내`, { source_health: etfSourceHealth })]
+        : [freshness("ETF 상세 전체 구성원 원천 기준일", etfCenterSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE })]),
     ],
     "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
     { as_of: etfAsOf, ...sourceStamp(productStampEvidence.etf_center.date_bearing.source_floor_as_of, NO_AGGREGATE_SOURCE_DATE), stamp_evidence: productStampEvidence.etf_center },

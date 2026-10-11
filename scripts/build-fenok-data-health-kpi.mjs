@@ -76,6 +76,7 @@ function buildSet(lane, floor, dataRoot, nowIso) {
     status: freshness.status,
   };
   if (freshness.date_basis && freshness.date_basis !== "source") row.date_basis = freshness.date_basis;
+  if (freshness.source_health) row.source_health = freshness.source_health;
   if (Number.isInteger(freshness.fresh_members) && Number.isInteger(freshness.total_members)) {
     row.oldest_source_date = freshness.oldest_source_date;
     row.oldest_source_member = freshness.oldest_source_member;

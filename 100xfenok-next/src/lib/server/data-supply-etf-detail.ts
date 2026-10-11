@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import policyRegistry from "../../generated/data-supply-policy-registry.json";
+import { sourceFreshness } from "../../../../scripts/lib/family-health.mjs";
 import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
@@ -51,6 +52,7 @@ export interface EtfDataSupplyMetadata {
   source_as_of: string | null;
   selected_at: string | null;
   source_age_days: number | null;
+  source_freshness?: "fresh" | "stale" | "expired" | "unknown";
   reason_code: string | null;
   recovery_transition: "unavailable" | null;
   projection_digest: string;
@@ -433,6 +435,7 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
       source_as_of: sourceAsOf,
       selected_at: resolutionState === "unavailable" ? null : entry.selected_at as string,
       source_age_days: sourceAgeDays(sourceAsOf, now),
+      source_freshness: sourceFreshness(sourceAsOf, now.toISOString(), DATA_SUPPLY_ETF_DETAIL_POLICY),
       reason_code: resolutionState === "unavailable" ? null : entry.reason_code as string,
       recovery_transition: resolutionState === "unavailable" ? "unavailable" : null,
       projection_digest: digest,
