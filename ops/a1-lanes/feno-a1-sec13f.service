@@ -1,0 +1,17 @@
+[Unit]
+Description=100xFenok incremental SEC 13F collection
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=6h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+WorkingDirectory=/data/100xFenok-sec13f
+EnvironmentFile=%h/.config/fenok/external-clock.env
+ExecStart=/usr/bin/flock -n %h/.cache/fenok-sec13f.lock %h/.local/lib/fenok-sec13f/venv/bin/python %h/.local/lib/fenok-sec13f/sec13f-runner.py --repo /data/100xFenok-sec13f --converter-root %h/.local/lib/fenok-sec13f/converter --state-root %h/.local/state/fenok-sec13f --publish
+TimeoutStartSec=45min
+Restart=on-failure
+RestartSec=20min
+UMask=0077
+
