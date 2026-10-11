@@ -1,0 +1,9 @@
+[Unit]
+Description=Retain only published idle A1 scratch copies older than seven days
+
+[Service]
+Type=oneshot
+WorkingDirectory=/data/100xFenok-a1
+ExecStart=/usr/bin/flock -n %h/.cache/fenok-workcopy-retention.lock /usr/bin/python3 %h/.local/lib/fenok-workcopy-retention/workcopy-retention.py --apply
+TimeoutStartSec=20min
+UMask=0077
