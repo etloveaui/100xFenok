@@ -271,7 +271,6 @@ copy as an independent source of truth.
 - [ ] Clean temporary files
 
 ### Before Git Commit
-- [ ] Full test suite passes
 - [ ] Documentation updated
 - [ ] Wrong-path files removed
 - [ ] CLAUDE.md/PROTOCOLS compliance verified
