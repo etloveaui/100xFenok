@@ -185,6 +185,14 @@ assert.deepEqual(firing.excluded_workflows, firingHealth.excluded,
   assert.deepEqual(kpiOpen.last_firing.workflows, ["data-health-kpi"]);
   assert.equal(incidentIdentitiesChanged(null, kpiOpen), true);
 
+  const frozenKpi = buildAlarmState({ health: { ...kpiHealth,
+    data_health_kpi: { ...kpiHealth.data_health_kpi, reason: "kpi_generation_stale", stopped_sets: [] } },
+    prior: kpiOpen, env: ENV, now: NOW });
+  assert.equal(frozenKpi.status, "open");
+  assert.deepEqual(frozenKpi.open_incidents[0].alarm_reasons, ["kpi_generation_stale"]);
+  assert.equal(incidentIdentitiesChanged(kpiOpen, frozenKpi), true,
+    "frozen projection is a different incident from stale source data");
+
   const changedSets = buildAlarmState({
     health: {
       ...kpiHealth,
