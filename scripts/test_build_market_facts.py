@@ -54,6 +54,75 @@ class BuildMarketFactsTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.mod = load_build_module()
 
+    def beta_inputs(self, count=220):
+        current = date(2025, 10, 1)
+        stock, market = [], []
+        stock_price, market_price = 100.0, 100.0
+        while len(stock) < count:
+            if current.weekday() < 5:
+                r = ((len(stock) % 9) - 4) / 1000
+                market_price *= 1 + r
+                stock_price *= 1 + 2 * r + 0.0001
+                market.append({"date": current.isoformat(), "Close": market_price})
+                stock.append({"date": current.isoformat(), "Close": stock_price})
+            current += timedelta(days=1)
+        instrument = {"fetched_at": "2026-09-01T00:00:00Z", "data": {
+            "info": {"currency": "USD"}, "history_1y": stock}}
+        benchmark = self.mod.beta_history({"data": {"history_1y": market}}, None, "yf/finance/SPY.json")
+        return instrument, benchmark
+
+    def test_daily_beta_known_coefficient_and_provider_priority(self):
+        instrument, benchmark = self.beta_inputs()
+        result = self.mod.build_one("TEST", instrument, None, None, beta_benchmark=benchmark)["facts"]["beta"]
+        self.assertAlmostEqual(result["value"], 2.0, places=10)
+        self.assertEqual(result["source"], "derived.daily_1y_beta")
+        self.assertEqual(result["provenance"]["benchmark"], "SPY")
+        self.assertEqual(result["provenance"]["paired_returns"], 219)
+        self.assertEqual(result["as_of"], instrument["data"]["history_1y"][-1]["date"])
+        instrument["data"]["info"]["beta"] = 1.25
+        provider = self.mod.build_one("TEST", instrument, None, None, beta_benchmark=benchmark)["facts"]["beta"]
+        self.assertEqual(provider["value"], 1.25)
+        self.assertEqual(provider["source"], "yf")
+
+    def test_daily_beta_aligns_interval_endpoints_and_refuses_bad_inputs(self):
+        instrument, benchmark = self.beta_inputs()
+        del instrument["data"]["history_1y"][100]
+        aligned = self.mod.daily_beta_fact("TEST", instrument, None, benchmark)
+        self.assertAlmostEqual(aligned["value"], 2.0, places=10)
+        self.assertEqual(aligned["provenance"]["paired_returns"], 217)
+        for ticker, currency in [("005930.KS", "KRW"), ("TEST", "EUR")]:
+            instrument["data"]["info"]["currency"] = currency
+            self.assertIsNone(self.mod.daily_beta_fact(ticker, instrument, None, benchmark))
+        short, _ = self.beta_inputs(199)
+        _, benchmark = self.beta_inputs()
+        self.assertIsNone(self.mod.daily_beta_fact("TEST", short, None, benchmark))
+        boundary, _ = self.beta_inputs(200)
+        self.assertIsNotNone(self.mod.daily_beta_fact("TEST", boundary, None, benchmark))
+        del boundary["data"]["history_1y"][100]
+        self.assertIsNone(self.mod.daily_beta_fact("TEST", boundary, None, benchmark))
+        instrument, benchmark = self.beta_inputs()
+        instrument["data"]["history_1y"].append(instrument["data"]["history_1y"][-1])
+        self.assertIsNone(self.mod.daily_beta_fact("TEST", instrument, None, benchmark))
+        instrument, benchmark = self.beta_inputs()
+        for point in benchmark["points"]:
+            point["close"] = 100
+        self.assertIsNone(self.mod.daily_beta_fact("TEST", instrument, None, benchmark))
+        self.assertIsNone(self.mod.daily_beta_fact("TEST", instrument, None, None))
+
+    def test_daily_beta_uses_selected_adjusted_stockanalysis_history(self):
+        instrument, benchmark = self.beta_inputs()
+        selected = {"normalized": {"history_periods": {"daily_1y": [
+            {"t": row["date"], "a": row["Close"], "c": 1} for row in instrument["data"]["history_1y"]
+        ]}}}
+        result = self.mod.daily_beta_fact("TEST", None, selected, benchmark,
+                                          "computed/data-supply/etf-detail/payloads/TEST.json")
+        self.assertAlmostEqual(result["value"], 2.0, places=10)
+        self.assertEqual(result["provenance"]["instrument_history_source"], "stockanalysis.history_periods.daily_1y")
+        self.assertIn("data-supply", result["provenance"]["instrument_source_file"])
+        selected["source_provider"] = "yahoo_finance"
+        fallback = self.mod.daily_beta_fact("TEST", None, selected, benchmark)
+        self.assertEqual(fallback["provenance"]["instrument_history_source"], "yf.stockanalysis_fallback.history_periods.daily_1y")
+
     def test_history_return_uses_trading_day_offset(self) -> None:
         payload = {
             "fetched_at": "2026-06-19T00:00:00Z",

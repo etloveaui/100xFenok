@@ -17,7 +17,7 @@ Output:
 from __future__ import annotations
 
 import argparse
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
 import math
@@ -61,7 +61,7 @@ FIELD_SOURCE_POLICY = {
     "trailing_pe": ["yf", "slickcharts"],
     "forward_pe": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "slickcharts"],
     "dividend_yield": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "slickcharts"],
-    "beta": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
+    "beta": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview", "derived.daily_1y_beta"],
     "expense_ratio": ["yf", "stockanalysis.overview", "yf.stockanalysis_fallback.overview"],
     "return_1m": [
         "yf.history_1y",
@@ -124,6 +124,8 @@ INDEX_SOURCE_FILES = [
 ]
 DATA_SUPPLY_ETF_DETAIL = Path("computed/data-supply/etf-detail")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+BETA_BENCHMARK = "SPY"
+BETA_MIN_BARS = 200
 
 
 def now_iso() -> str:
@@ -659,6 +661,80 @@ def stockanalysis_history_points(sa_payload, period_key=None):
     return sorted(rows, key=lambda item: item["date"])
 
 
+def beta_history(yf_payload, sa_payload, source_path=None):
+    """Use only adjusted daily histories already admitted by the caller."""
+    if yf_payload:
+        points = yf_history_points(yf_payload)
+        payload = yf_payload
+        source = "yf.history_1y"
+    else:
+        points = stockanalysis_history_points(sa_payload, "daily_1y")
+        payload = sa_payload or {}
+        source = ("yf.stockanalysis_fallback.history_periods.daily_1y"
+                  if payload.get("source_provider", payload.get("source")) == "yahoo_finance"
+                  else "stockanalysis.history_periods.daily_1y")
+    if (len(points) < BETA_MIN_BARS
+            or len({point["date"] for point in points}) != len(points)
+            or any(not math.isfinite(point["close"]) or point["date"] > datetime.now(timezone.utc).date()
+                   for point in points)):
+        return None
+    return {"points": points, "source": source, "source_file": source_path,
+            "fetched_at": payload.get("fetched_at")}
+
+
+def daily_beta_fact(ticker, yf_payload, sa_payload, benchmark, source_path=None):
+    """One-year adjusted daily-return beta against SPY for USD listings.
+
+    Join returns by BOTH interval endpoints: dropping a date in just one series
+    must not pair its two-day return with the benchmark's one-day return.
+    """
+    currency = (((yf_payload or {}).get("data") or {}).get("info") or {}).get("currency")
+    if ticker.endswith((".KS", ".KQ")) or (currency and currency != "USD") or not benchmark:
+        return None
+    instrument = beta_history(yf_payload, sa_payload, source_path)
+    if not instrument:
+        return None
+    latest = min(instrument["points"][-1]["date"], benchmark["points"][-1]["date"])
+    start = latest - timedelta(days=365)
+
+    def returns(history):
+        points = [point for point in history["points"] if start <= point["date"] <= latest]
+        return {(left["date"], right["date"]): right["close"] / left["close"] - 1
+                for left, right in zip(points, points[1:])}
+
+    instrument_returns, benchmark_returns = returns(instrument), returns(benchmark)
+    intervals = sorted(instrument_returns.keys() & benchmark_returns.keys())
+    if len(intervals) < BETA_MIN_BARS - 1:
+        return None
+    x = [benchmark_returns[key] for key in intervals]
+    y = [instrument_returns[key] for key in intervals]
+    mean_x, mean_y = sum(x) / len(x), sum(y) / len(y)
+    variance = sum((value - mean_x) ** 2 for value in x)
+    if not math.isfinite(variance) or variance <= 0:
+        return None
+    beta = sum((a - mean_x) * (b - mean_y) for a, b in zip(x, y)) / variance
+    if not math.isfinite(beta):
+        return None
+    result = fact(beta, "derived.daily_1y_beta", as_of=intervals[-1][1].isoformat(),
+                  fetched_at=instrument["fetched_at"], confidence="derived", unit="ratio")
+    result["provenance"] = {
+        "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+        "benchmark": BETA_BENCHMARK,
+        "currency_scope": "USD listings",
+        "window_days": 365,
+        "minimum_bars": BETA_MIN_BARS,
+        "paired_returns": len(intervals),
+        "window_start": intervals[0][0].isoformat(),
+        "window_end": intervals[-1][1].isoformat(),
+        "instrument_history_source": instrument["source"],
+        "instrument_source_file": instrument["source_file"],
+        "benchmark_history_source": benchmark["source"],
+        "benchmark_source_file": benchmark["source_file"],
+        "benchmark_fetched_at": benchmark["fetched_at"],
+    }
+    return result
+
+
 def stockanalysis_history_return_fact(sa_payload, *, daily_trading_days=None, monthly_periods=None):
     rows = []
     offset = None
@@ -795,6 +871,7 @@ def build_one(
     *,
     detail_source_path=None,
     detail_authority=None,
+    beta_benchmark=None,
 ):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
@@ -828,6 +905,11 @@ def build_one(
         yf_fact(yf_payload, "totalAssets"),
         stockanalysis_overview_fact(sa_payload, "aum"),
     )
+    beta_candidates = [yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")]
+    if first_fact(*beta_candidates) is None:
+        beta_candidates.append(daily_beta_fact(ticker, yf_payload, sa_payload, beta_benchmark,
+            f"yf/finance/{ticker}.json" if yf_payload else detail_source_path
+            or f"stockanalysis/{'etfs' if asset_type == 'etf' else 'stocks'}/{ticker}.json"))
 
     facts = {
         "price": price,
@@ -839,7 +921,7 @@ def build_one(
         "trailing_pe": resolve_fact("trailing_pe", yf_fact(yf_payload, "trailingPE"), slick_fact(slick_payload, "pe_trailing")),
         "forward_pe": resolve_fact("forward_pe", yf_fact(yf_payload, "forwardPE"), stockanalysis_overview_fact(sa_payload, "forwardPE"), slick_fact(slick_payload, "pe_forward")),
         "dividend_yield": resolve_fact("dividend_yield", yf_percent_fact(yf_payload, "dividendYield"), stockanalysis_overview_fact(sa_payload, "dividendYield", unit="percent_points"), slick_fact(slick_payload, "dividend_yield", unit="percent_points")),
-        "beta": resolve_fact("beta", yf_fact(yf_payload, "beta"), stockanalysis_overview_fact(sa_payload, "beta")),
+        "beta": resolve_fact("beta", *beta_candidates),
         "expense_ratio": resolve_fact("expense_ratio", yf_percent_fact(yf_payload, "netExpenseRatio"), stockanalysis_overview_fact(sa_payload, "expenseRatio", unit="percent_points")),
         "return_1m": resolve_fact(
             "return_1m",
@@ -1115,6 +1197,12 @@ def main(argv=None) -> None:
     slick_files = {p.stem: p for p in (DATA / "slickcharts" / "stocks").glob("*.json")}
     sa_catalog_rows = build_etf_catalog_map()
     enrolled_etfs, selected_etf_details = load_data_supply_etf_detail()
+    if BETA_BENCHMARK in enrolled_etfs:
+        selected_benchmark = selected_etf_details.get(BETA_BENCHMARK) or {}
+        beta_benchmark = beta_history(None, selected_benchmark.get("payload"), selected_benchmark.get("source_path"))
+    else:
+        benchmark_path = f"yf/finance/{BETA_BENCHMARK}.json"
+        beta_benchmark = beta_history(load_json(DATA / benchmark_path), None, benchmark_path)
     all_tickers = sorted(set(yf_files) | set(sa_etf_files) | set(sa_stock_files) | set(sa_financial_files) | set(slick_files) | set(sa_catalog_rows) | enrolled_etfs)
     available_tickers = set(all_tickers)
     if target_tickers:
@@ -1171,6 +1259,7 @@ def main(argv=None) -> None:
             sa_catalog_rows.get(ticker),
             detail_source_path=detail_source_path,
             detail_authority=detail_authority,
+            beta_benchmark=beta_benchmark,
         )
         payload["generated_at"] = generated_at
         if sa_financials and payload["asset_type"] != "etf":
