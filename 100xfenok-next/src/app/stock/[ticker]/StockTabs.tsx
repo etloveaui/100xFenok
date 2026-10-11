@@ -19,6 +19,40 @@ export { formatCompactMoney, formatMoney };
 
 type YfData = Record<string, any>;
 
+/** Read only equivalent fields captured in this same Yahoo document. */
+export function yfFinanceForDisplay(value: unknown): YfData | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const data = value as YfData;
+  const info = { ...(data.info ?? {}) };
+  const targets = { ...(data.analyst_price_targets ?? {}) };
+  const holders = { ...(data.major_holders ?? {}) };
+  const finite = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+  if (!finite(info.currentPrice) && finite(info.regularMarketPrice)) info.currentPrice = info.regularMarketPrice;
+  for (const [target, source] of [["low", "targetLowPrice"], ["high", "targetHighPrice"], ["mean", "targetMeanPrice"], ["median", "targetMedianPrice"]]) {
+    if (!finite(targets[target]) && finite(info[source])) targets[target] = info[source];
+  }
+  for (const [target, source] of [["insidersPercentHeld", "heldPercentInsiders"], ["institutionsPercentHeld", "heldPercentInstitutions"]]) {
+    if (!finite(holders[target]) && finite(info[source])) holders[target] = info[source];
+  }
+  return { ...data, info, analyst_price_targets: targets, major_holders: holders };
+}
+
+/** Yahoo periods are 0m, -1m, ...; array order is not the observation clock. */
+export function latestYfRecommendation(value: unknown): YfData | null {
+  if (!Array.isArray(value)) return null;
+  let latest: YfData | null = null;
+  let latestMonth = -Infinity;
+  for (const row of value) {
+    const match = typeof row?.period === "string" ? /^(0|-\d+)m$/.exec(row.period) : null;
+    if (match && Number(match[1]) > latestMonth) {
+      latest = row;
+      latestMonth = Number(match[1]);
+    }
+  }
+  // An empty current row remains empty; never fill it with a past recommendation.
+  return latest;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -437,7 +471,7 @@ function EstimatesTab({ data, quotePrice }: { data: YfData; quotePrice?: number 
   const earnings = asArray(data.earnings_estimate);
   const revenue = asArray(data.revenue_estimate);
   const recs = asArray(data.recommendations);
-  const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
+  const lastRec = latestYfRecommendation(recs);
   const {
     low: targetLow,
     mean: targetMean,

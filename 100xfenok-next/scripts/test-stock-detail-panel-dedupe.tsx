@@ -18,6 +18,32 @@ testRequire.extensions[".css"] = (module, filename) => {
 let sharedPanel: typeof import("../src/app/screener/StockDetailPanel");
 try {
   sharedPanel = testRequire("../src/app/screener/StockDetailPanel");
+  const { yfFinanceForDisplay, latestYfRecommendation } = testRequire("../src/app/stock/[ticker]/StockTabs");
+  const captured = {
+    source_as_of: "2026-10-09", info: { regularMarketPrice: 22, targetMeanPrice: 31, targetLowPrice: 0, heldPercentInsiders: 0, heldPercentInstitutions: 0.6 },
+    analyst_price_targets: { high: 35 }, major_holders: { institutionsCount: 12 },
+  };
+  const original = JSON.stringify(captured);
+  const display = yfFinanceForDisplay(captured);
+  assert.equal(display.info.currentPrice, 22);
+  assert.deepEqual(display.analyst_price_targets, { high: 35, low: 0, mean: 31 });
+  assert.deepEqual(display.major_holders, { institutionsCount: 12, insidersPercentHeld: 0, institutionsPercentHeld: 0.6 });
+  assert.equal(display.source_as_of, captured.source_as_of);
+  assert.equal(JSON.stringify(captured), original, "captured provider values and clocks are immutable");
+  assert.deepEqual(yfFinanceForDisplay(display), display, "display mapping is idempotent");
+  const populated = yfFinanceForDisplay({ info: { currentPrice: 0, regularMarketPrice: 99, targetMeanPrice: 99 }, analyst_price_targets: { mean: 0 } });
+  assert.equal(populated.info.currentPrice, 0);
+  assert.equal(populated.analyst_price_targets.mean, 0);
+  assert.equal(yfFinanceForDisplay({ info: { regularMarketPrice: "12" } }).info.currentPrice, undefined);
+  assert.equal(yfFinanceForDisplay({}).info.currentPrice, undefined);
+  assert.equal(yfFinanceForDisplay(null), null);
+  const current = { period: "0m", buy: 1 };
+  const old = { period: "-1m", buy: 0 };
+  assert.equal(latestYfRecommendation([current, old]), current);
+  assert.equal(latestYfRecommendation([old, current]), current);
+  assert.equal(latestYfRecommendation([{ period: "-2m", buy: 4 }, old]), old, "do not fill an empty latest row from older recommendations");
+  assert.equal(latestYfRecommendation([{ buy: 4 }, { period: "+1m", buy: 8 }]), null);
+
 } finally {
   if (previousCssLoader) testRequire.extensions[".css"] = previousCssLoader;
   else delete testRequire.extensions[".css"];

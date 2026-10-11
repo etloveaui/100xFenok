@@ -31,7 +31,7 @@ import {
   edgarFilingsForTicker,
   type EdgarKoreanSummaryFilingEntry,
 } from "@/lib/edgarKoreanSummaries";
-import { renderYfTab, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney } from "./StockTabs";
+import { renderYfTab, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney, yfFinanceForDisplay, latestYfRecommendation } from "./StockTabs";
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
@@ -156,7 +156,7 @@ function loadYfFinance(ticker: string): Promise<YfFinanceResult> {
       if (!res.ok) return Promise.resolve({ data: null, error: { kind: "status", status: res.status } });
       return res.json().then(
         (d): YfFinanceResult => ({
-          data: d && typeof d === "object" && !Array.isArray(d) ? d.data ?? null : null,
+          data: d && typeof d === "object" && !Array.isArray(d) ? yfFinanceForDisplay(d.data) : null,
           error: null,
         }),
         (err: unknown): YfFinanceResult => ({
@@ -1980,7 +1980,7 @@ function EstimatesGrowthTilesCp({ detail, currency }: { detail: any; currency: s
 
 function EstimatesRecoCp({ yfData, quality }: { yfData: any; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
   const recs = Array.isArray(yfData?.recommendations) ? yfData.recommendations : [];
-  const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
+  const lastRec = latestYfRecommendation(recs);
   if (!lastRec) return null;
   const segs: Array<[string, string, string]> = [
     ["strongBuy", "적극매수", "var(--cp-positive)"],
