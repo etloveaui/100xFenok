@@ -3,6 +3,9 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -61,6 +64,34 @@ const workflows = Object.fromEntries(Object.entries(files).map(([key, file]) => 
   return [key, { file, source, jobs: parseJobs(source) }];
 }));
 
+// Execute the exact transfer shell with unchanged, changed, first-state and
+// missing-state inputs. Only a real prepared difference can enter persistence.
+{
+  const transfer = workflows.pipeline.jobs.find((j) => j.name === "check").steps
+    .find((s) => s.name === "Prepare alarm state for persistence");
+  const shell = transfer.raw.split("        run: |\n")[1].split("\n")
+    .map((line) => line.replace(/^          /, "")).join("\n");
+  for (const kind of ["unchanged", "changed", "first", "missing"]) {
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-transfer-"));
+    try {
+      fs.mkdirSync(path.join(temp, "data/admin"), { recursive: true });
+      fs.mkdirSync(path.join(temp, "pipeline-alarm-state-transfer"));
+      const state = '{"status":"clear"}\n';
+      if (kind !== "missing") fs.writeFileSync(path.join(temp, "data/admin/alarm-state.json"), state);
+      const fingerprint = kind === "unchanged" ? crypto.createHash("sha256").update(state).digest("hex")
+        : kind === "first" ? "missing" : "a".repeat(64);
+      fs.writeFileSync(path.join(temp, "pipeline-alarm-state-transfer/base.sha256"), fingerprint + "\n");
+      const output = path.join(temp, "outputs");
+      const run = () => execFileSync("bash", ["-c", shell], { cwd: temp, env: { ...process.env, GITHUB_OUTPUT: output }, stdio: "pipe" });
+      if (kind === "missing") { assert.throws(run, "missing emitted state must fail before persistence"); continue; }
+      run();
+      const changed = kind !== "unchanged";
+      assert.equal(fs.readFileSync(output, "utf8"), `changed=${changed}\n`);
+      assert.equal(fs.existsSync(path.join(temp, "pipeline-alarm-state-transfer/alarm-state.json")), changed);
+    } finally { fs.rmSync(temp, { recursive: true, force: true }); }
+  }
+}
+
 const INCIDENT_IF =
   "steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'";
 // The OPS issue body is the operator's live view of the open incident set and
@@ -105,6 +136,7 @@ const STEP_CONTRACTS = [
   },
   {
     workflow: "pipeline", job: "check", name: "Upload alarm state for persistence", bestEffort: false,
+    condition: "steps.transfer.outputs.changed == 'true'",
     contains: [
       /actions\/upload-artifact@v4/,
       /name: pipeline-alarm-state-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/,
@@ -299,6 +331,10 @@ function assertPipelineTopology(model) {
     /concurrency:\s*\n\s+group: fenok-data-writer-refs\/heads\/main\s*\n\s+cancel-in-progress: false\s*\n\s+queue: max/,
     "state persistence must be the bounded global writer job",
   );
+  assert.match(persistIf, /needs\.check\.outputs\.changed == 'true'/,
+    "unchanged alarm state must never enter the writer queue");
+  assert.match(check.raw, /changed: \$\{\{ steps\.transfer\.outputs\.changed \}\}/,
+    "detector must publish its prepared difference");
   const checkNames = check.steps.map((step) => step.name);
   const transferIndex = checkNames.indexOf("Prepare alarm state for persistence");
   for (const name of REPORTING_STEPS) {
@@ -413,6 +449,10 @@ expectJobMutation({ workflow: "pipeline", job: "persist-alarm-state",
   patch: { raw: workflows.pipeline.jobs.find((job) => job.name === "persist-alarm-state").raw.replace("needs: [clock-admission, check]", "needs: [clock-admission, other]") },
   pattern: /state persistence must depend on successful detection\/reporting/,
   message: "failed reporting must skip alarm-state persistence" });
+expectJobMutation({ workflow: "pipeline", job: "persist-alarm-state",
+  patch: { raw: workflows.pipeline.jobs.find((job) => job.name === "persist-alarm-state").raw.replace(" && needs.check.outputs.changed == 'true'", "") },
+  pattern: /unchanged alarm state must never enter/,
+  message: "no-op alarm runs must skip the shared writer queue" });
 expectJobMutation({ workflow: "pipeline", job: "persist-alarm-state",
   patch: { raw: workflows.pipeline.jobs.find((job) => job.name === "persist-alarm-state").raw.replace("group: fenok-data-writer-refs\/heads\/main", "group: persist-alarm-state") },
   pattern: /bounded global writer job/,

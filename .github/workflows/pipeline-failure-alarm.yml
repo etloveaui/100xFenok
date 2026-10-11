@@ -49,6 +49,8 @@ jobs:
         run: node scripts/check-external-clock-slot.mjs pipeline-failure-alarm.yml
 
   check:
+    outputs:
+      changed: ${{ steps.transfer.outputs.changed }}
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
@@ -185,13 +187,23 @@ jobs:
       # artifact carries both the newly emitted public-safe state and the exact
       # canonical state fingerprint that detection started from.
       - name: Prepare alarm state for persistence
+        id: transfer
         run: |
           set -euo pipefail
           test -f pipeline-alarm-state-transfer/base.sha256
           test -f data/admin/alarm-state.json
+          base_fingerprint="$(cat pipeline-alarm-state-transfer/base.sha256)"
+          prepared_fingerprint="$(sha256sum data/admin/alarm-state.json | awk '{print $1}')"
+          if [ "$base_fingerprint" = "$prepared_fingerprint" ]; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'alarm-state unchanged; skip the writer queue'
+            exit 0
+          fi
           cp data/admin/alarm-state.json pipeline-alarm-state-transfer/alarm-state.json
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
 
       - name: Upload alarm state for persistence
+        if: steps.transfer.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: pipeline-alarm-state-${{ github.run_id }}-${{ github.run_attempt }}
@@ -203,9 +215,9 @@ jobs:
     # must block persistence. A successful report is already durable in the OPS
     # issue even if this bounded writer job later waits or fails.
     needs: [clock-admission, check]
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (needs.check.result == 'success') }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (needs.check.result == 'success' && needs.check.outputs.changed == 'true') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 9
     permissions:
       contents: write
     concurrency:
@@ -214,10 +226,21 @@ jobs:
       queue: max
     steps:
       - name: Checkout
+        timeout-minutes: 2
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /data/admin/alarm-state.json
+            /scripts/ops/carry-alarm-resolution.mjs
+            /scripts/stage-lane-manifest.sh
+            /scripts/lib/lane-registry.mjs
+            /scripts/lib/slickcharts-composite-recovery.mjs
+            /scripts/lib/json-canonical.mjs
+            /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
 
       - name: Download alarm state
         uses: actions/download-artifact@v4
@@ -248,8 +271,8 @@ jobs:
 
           # Refresh after acquiring the global writer lock. A stale detector
           # artifact must never overwrite a newer alarm transition on main.
-          git fetch --depth=1 origin main
-          git checkout -B main origin/main
+          timeout 60s git fetch --depth=1 origin main
+          timeout 30s git checkout -B main origin/main
           if [ -f data/admin/alarm-state.json ]; then
             current_fingerprint="$(sha256sum data/admin/alarm-state.json | awk '{print $1}')"
           else
@@ -274,9 +297,9 @@ jobs:
               git config user.name "github-actions[bot]"
               git config user.email "github-actions[bot]@users.noreply.github.com"
               git add data/admin/alarm-state.json
-              git commit -m "ops: carry alarm resolution timestamp [skip ci]"
+              timeout 30s git commit -m "ops: carry alarm resolution timestamp [skip ci]"
               for attempt in 1 2 3; do
-                if git push origin HEAD:main; then break; fi
+                if timeout 60s git push origin HEAD:main; then break; fi
                 if [ "$attempt" = 3 ]; then
                   echo "::error::alarm-state resolution carry could not be pushed; last_resolved_at may be lost" >&2
                   exit 1
@@ -301,9 +324,9 @@ jobs:
             echo "alarm-state unchanged; nothing to commit"
             exit 0
           fi
-          git commit -m "ops: refresh alarm-state.json [skip ci]"
+          timeout 30s git commit -m "ops: refresh alarm-state.json [skip ci]"
           for attempt in 1 2 3; do
-            if git push origin HEAD:main; then
+            if timeout 60s git push origin HEAD:main; then
               exit 0
             fi
             sleep $((attempt * 3))
