@@ -35,7 +35,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -67,7 +67,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout detector inputs
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           filter: blob:none
@@ -93,8 +93,9 @@ jobs:
           fi
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: 22
 
       - name: Check pipeline job health
@@ -280,7 +281,7 @@ jobs:
       - name: Checkout
         if: steps.freshness.outputs.skip != 'true'
         timeout-minutes: 2
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 1

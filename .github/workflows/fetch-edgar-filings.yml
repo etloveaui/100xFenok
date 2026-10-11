@@ -71,7 +71,7 @@ jobs:
       fetch_outcome: ${{ steps.fetch_edgar.outcome }}
       verify_outcome: ${{ steps.verify_edgar.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -89,8 +89,9 @@ jobs:
           git checkout -B main origin/main
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: 22
 
       - name: Verify EDGAR producer and recovery contracts
@@ -223,7 +224,7 @@ jobs:
       cancel-in-progress: false
       queue: max
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
           fetch-depth: 1
@@ -247,8 +248,9 @@ jobs:
             || { echo "::error::EDGAR cloud checkout is not the confirmed source commit" >&2; exit 1; }
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: 22
 
       - name: Publish edgar-korean-summaries generation to the cloud data plane

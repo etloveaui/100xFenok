@@ -155,7 +155,7 @@ jobs:
       fetch_outcome: ${{ steps.fetch_batch.outcome }}
       quarter_closes_outcome: ${{ steps.quarter_closes.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Start from latest main
         run: |
@@ -170,13 +170,14 @@ jobs:
           echo "plan_only=$YF_PLAN_ONLY" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Verify lane-registry commit-shard contract
@@ -539,18 +540,19 @@ jobs:
       persisted: ${{ steps.persist_yahoo_state.outputs.persisted }}
       artifact_digest: ${{ needs.acquire-yf-finance.outputs.artifact_digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Download immutable Yahoo candidate
@@ -782,7 +784,7 @@ jobs:
       cancel-in-progress: false
       queue: max
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
           fetch-depth: 1
@@ -798,8 +800,9 @@ jobs:
             || { echo "::error::Yahoo cloud checkout is not the pushed source commit" >&2; exit 1; }
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Publish Yahoo finance shadow generation

@@ -62,7 +62,7 @@ jobs:
         run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-symbols-${{ matrix.batch }}.jsonl" >> "$GITHUB_ENV"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Start from latest main
         run: |
@@ -70,13 +70,14 @@ jobs:
           git checkout -B main origin/main
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Install dependencies
@@ -123,7 +124,7 @@ jobs:
         run: echo "CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Start from latest main
         run: |
@@ -131,13 +132,14 @@ jobs:
           git checkout -B main origin/main
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Configure composite recovery paths
@@ -288,7 +290,7 @@ jobs:
         run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-symbols-single.jsonl" >> "$GITHUB_ENV"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Start from latest main
         run: |
@@ -296,13 +298,14 @@ jobs:
           git checkout -B main origin/main
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Install dependencies

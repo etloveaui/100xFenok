@@ -59,7 +59,8 @@ jobs:
             data/macro
       - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6
         with:
-          node-version: '20'
+          package-manager-cache: false
+          node-version: '22'
       - name: Test OECD CLI producer
         run: node scripts/test-fetch-oecd-cli.mjs
       - name: Fetch OECD CLI shadow

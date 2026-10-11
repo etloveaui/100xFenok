@@ -54,7 +54,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -90,9 +90,10 @@ jobs:
           git checkout -B main origin/main
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          package-manager-cache: false
+          node-version: '22'
 
       - name: Test FRED banking producer contracts
         run: node scripts/test-fetch-fred-banking.mjs

@@ -34,7 +34,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -64,7 +64,7 @@ jobs:
       queue: max
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -81,9 +81,10 @@ jobs:
           timeout 30s git checkout -B main origin/main
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          package-manager-cache: false
+          node-version: '22'
 
       - name: Create data directory
         run: mkdir -p data data/macro
@@ -180,7 +181,7 @@ jobs:
       - name: Checkout writer helpers
         if: steps.freshness.outputs.skip != 'true'
         timeout-minutes: 2
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 1
@@ -238,7 +239,7 @@ jobs:
     steps:
       - name: Checkout committed sources
         timeout-minutes: 2
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           filter: blob:none
@@ -250,9 +251,10 @@ jobs:
             data/admin/defillama_stablecoins
             data/macro
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          package-manager-cache: false
+          node-version: '22'
       - name: Publish defillama-stablecoins generation to the cloud data plane
         id: publish_cloud_generation
         if: ${{ needs.fetch-defillama.outputs.fetch_outcome == 'success' }}

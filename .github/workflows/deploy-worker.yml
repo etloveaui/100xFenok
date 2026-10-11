@@ -79,7 +79,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -104,7 +104,7 @@ jobs:
       skip: ${{ steps.catchup.outputs.skip == 'true' && 'true' || steps.gate.outputs.skip }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: blob:none
@@ -184,7 +184,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
           filter: blob:none
@@ -198,8 +198,9 @@ jobs:
             /scripts/lib/
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: 22
           cache: npm
           cache-dependency-path: 100xfenok-next/package-lock.json
@@ -242,7 +243,7 @@ jobs:
       # the blob history, which is what makes the pack 5.18 GiB and the checkout
       # ~5 minutes. Blobs for the checked-out tree are still fetched on demand.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: blob:none
@@ -255,8 +256,9 @@ jobs:
             /scripts/lib/
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: 22
           cache: npm
           cache-dependency-path: 100xfenok-next/package-lock.json

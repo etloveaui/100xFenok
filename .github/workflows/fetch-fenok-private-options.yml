@@ -42,7 +42,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -64,7 +64,7 @@ jobs:
       SCHEDULED_TICKERS: DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -81,7 +81,7 @@ jobs:
           git checkout -B main origin/main
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
