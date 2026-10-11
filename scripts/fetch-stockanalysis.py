@@ -238,6 +238,7 @@ NATURAL_GENERAL_TIER2_TARGET_DAYS = 7
 NATURAL_GENERAL_TIER3_TARGET_DAYS = 30
 NATURAL_GENERAL_RUNS_PER_WEEK = 6
 NATURAL_GENERAL_PENDING_RESERVE = 10
+NATURAL_GENERAL_ORPHAN_RESERVE = 10
 NATURAL_GENERAL_MIN_SPARE_RATIO = 0.20
 # One bounded catch-up cohort, derived from existing source/attempt clocks.
 # Attempts after this activation count as reached even if the provider fails;
@@ -5715,9 +5716,10 @@ def select_natural_general_incremental_candidates(
                 "selection_reason": (f"tier_{2 if row['ticker'] in tier2 else 3}_"
                                      f"target_{tier_days(row)}d_"
                                      f"{'first_pass' if first_pass(row) else 'source_deadline'}")}
-    # Keep retries moving even while the missing/stale backlog exceeds the
-    # daily budget. The remaining slots still drain those older source gaps.
-    pending_minimum = min(NATURAL_GENERAL_PENDING_RESERVE, len(buckets["pending_retry"]), limit)
+    # Give every orphan a dated probe even while source debt fills the budget.
+    # Oldest last_probe_at first rotates the reserve across all missing names.
+    orphan_minimum = min(NATURAL_GENERAL_ORPHAN_RESERVE, len(buckets["orphan_probe"]), limit)
+    pending_minimum = min(NATURAL_GENERAL_PENDING_RESERVE, len(buckets["pending_retry"]), limit - orphan_minimum)
     for bucket, rows in buckets.items():
         if bucket == "fresh":
             pending_tail = buckets["pending_retry"][selected_counts["pending_retry"]:]
@@ -5731,7 +5733,11 @@ def select_natural_general_incremental_candidates(
             selected_counts["pending_retry"] += retries
             selected_counts["fresh"] = len(chosen) - retries
             continue
-        ceiling = limit - pending_minimum if bucket in {"new_listings", "missing", "oldest_stale"} else limit
+        ceiling = limit
+        if bucket in {"new_listings", "missing", "oldest_stale"}:
+            ceiling -= pending_minimum + orphan_minimum
+        elif bucket == "pending_retry":
+            ceiling -= orphan_minimum
         available = max(0, ceiling - len(selected))
         # Retry debt has its reserved slots; spare capacity then follows the
         # nearest tier deadline instead of draining every pending name first.
@@ -5748,6 +5754,7 @@ def select_natural_general_incremental_candidates(
             "scheduled_total_limit": NATURAL_GENERAL_INCREMENTAL_LIMIT,
             "remaining_selector_limit": limit,
             "pending_retry_reserved": pending_minimum,
+            "orphan_probe_reserved": orphan_minimum,
             "priority_order": list(buckets),
         },
         "eligible_counts": {**{name: len(rows) for name, rows in buckets.items()}, "total": len(candidates)},

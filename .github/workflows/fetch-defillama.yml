@@ -134,6 +134,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      actions: read
     concurrency:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
@@ -141,7 +142,43 @@ jobs:
     outputs:
       status: ${{ steps.commit.outputs.status }}
     steps:
+      - name: Skip superseded prepared writer
+        id: freshness
+        timeout-minutes: 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.setOutput('skip', 'false');
+            const repo = context.repo;
+            const api = github.rest.actions;
+            const request = { timeout: 10000 };
+            try {
+              const { data: current } = await api.getWorkflowRun({ ...repo, run_id: context.runId, request });
+              const { data: currentJobs } = await api.listJobsForWorkflowRun({ ...repo, run_id: context.runId, per_page: 100, request });
+              const preparedAt = currentJobs.jobs.find(job => job.name === 'fetch-defillama')?.completed_at;
+              if (!preparedAt) return;
+              const { data } = await api.listWorkflowRuns({ ...repo, workflow_id: current.workflow_id,
+                branch: current.head_branch, per_page: 100, request });
+              for (const run of data.workflow_runs) {
+                if (run.run_number <= current.run_number || run.conclusion === 'cancelled') continue;
+                const { data: newer } = await api.listJobsForWorkflowRun({ ...repo, run_id: run.id, per_page: 100, request });
+                const prepared = newer.jobs.find(job => job.name === 'fetch-defillama');
+                const writer = newer.jobs.find(job => job.name === 'commit-defillama');
+                const ready = writer && (['queued', 'waiting', 'pending', 'in_progress'].includes(writer.status)
+                  || writer.conclusion === 'success');
+                if (prepared?.conclusion === 'success' && prepared.completed_at > preparedAt && ready) {
+                  core.setOutput('skip', 'true');
+                  core.notice(`Prepared input from run ${run.id} supersedes this writer; no checkout needed.`);
+                  return;
+                }
+              }
+            } catch (error) {
+              // Supersession is an optimization. Existing candidate/source
+              // checks still protect a writer when the API is unavailable.
+              core.warning(`Could not check newer prepared input (${error.status ?? 'network'}); retaining this writer.`);
+            }
       - name: Checkout writer helpers
+        if: steps.freshness.outputs.skip != 'true'
         timeout-minutes: 2
         uses: actions/checkout@v4
         with:
@@ -156,11 +193,13 @@ jobs:
             /scripts/lib/json-canonical.mjs
             /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
       - name: Download current-run candidate
+        if: steps.freshness.outputs.skip != 'true'
         uses: actions/download-artifact@v4
         with:
           name: defillama-commit-${{ github.run_id }}-${{ github.run_attempt }}
           path: lane-commit-transfer
       - name: Commit and push
+        if: steps.freshness.outputs.skip != 'true'
         id: commit
         shell: bash
         run: |

@@ -68,7 +68,7 @@ class OrphanLifecycleTests(unittest.TestCase):
         self.assertEqual(returned["source"], "lifecycle_live")
         self.assertNotEqual(returned["selection_bucket"], "orphan_probe")
 
-    def test_probe_budget_never_displaces_new_missing_overdue_or_reserved_retries(self):
+    def test_probe_and_retry_reserves_progress_when_source_debt_fills_budget(self):
         def row(ticker, reason, age=0, failures=0):
             return {"ticker": ticker, "reason": reason, "age_hours": age, "prior_failures": failures,
                     "priority": 1, "reason_priority": 1, "last_attempt_utc": "2026-10-10T00:00:00Z"}
@@ -81,8 +81,10 @@ class OrphanLifecycleTests(unittest.TestCase):
         self.assertEqual(policy["selected_counts"]["orphan_probe"], 60)
         self.assertEqual(policy["selected_counts"]["pending_retry"], 10)
         selected, policy = self.fetcher.select_natural_general_incremental_candidates(debts + retries + probes, contexts, now_dt=datetime(2026, 10, 11, tzinfo=timezone.utc), limit=340)
-        self.assertEqual(policy["selected_counts"]["orphan_probe"], 0)
-        self.assertTrue(set(r["ticker"] for r in debts + retries).issubset(r["ticker"] for r in selected))
+        self.assertEqual(len(selected), 340)
+        self.assertEqual(policy["selected_counts"]["orphan_probe"], 10)
+        self.assertEqual(policy["selected_counts"]["pending_retry"], 10)
+        self.assertEqual(policy["selected_counts"]["new_listings"], 320)
 
     def test_three_distinct_scheduled_days_keep_real_bytes_and_support_live_return(self):
         before = (self.out / "etfs/LOST.json").read_bytes()

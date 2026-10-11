@@ -65,8 +65,21 @@ jobs:
       issues: write
       actions: read
     steps:
-      - name: Checkout
+      - name: Checkout detector inputs
         uses: actions/checkout@v4
+        with:
+          ref: main
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/
+            /scripts/ops/check-pipeline-job-health.mjs
+            /scripts/ops/check-a1-lane-health.mjs
+            /scripts/ops/emit-alarm-state.mjs
+            /scripts/lib/
+            /ops/a1-lanes/
+            /data/admin/alarm-state.json
+            /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
 
       - name: Record alarm-state base fingerprint
         run: |
@@ -152,19 +165,20 @@ jobs:
             gh issue create --title "$title" --body-file pipeline-job-health-issue.md
           fi
 
-      # Recovery used to be recorded and never announced: every issue step above is
-      # gated on the failing path, so the OPS issue collected 136 alert comments
-      # since 2026-07-18 and was never told an incident ended. A reader could not
-      # separate a live outage from a finished one. This runs on the SUCCEEDING
-      # path, driven only by the emitter's open -> clear transition. Notification
-      # only: it never opens an issue (with nothing open there is nothing to clear)
-      # and never writes to the repo.
+      # The OPS issue is the independent incident record. A firing and recovery
+      # can both happen before main receives either state, so a stale canonical
+      # clear state must not suppress closing an issue that is actually open.
       - name: Post all-clear on the OPS issue
-        if: steps.alarm_state.outputs.incident_resolved == 'true'
+        if: steps.pipeline.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          state="$(node -p "JSON.parse(require('fs').readFileSync('data/admin/alarm-state.json', 'utf8')).status")"
+          if [ "$state" != clear ]; then
+            echo "detector state is $state; no all-clear"
+            exit 0
+          fi
           title="100xFenok pipeline job failure alarm"
           existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
           if [ -z "$existing" ]; then
@@ -174,9 +188,8 @@ jobs:
           gh issue comment "$existing" --body "$(printf '%s\n' \
             '[all-clear] The pipeline alarm has cleared.' \
             '' \
-            'Alarm state is now `clear`. The resolution timestamp and the incident that' \
-            'preceded it are in `data/admin/alarm-state.json` (`last_resolved_at`,' \
-            '`last_firing`).' \
+            'The detector observed `clear`; the Git state snapshot may still be' \
+            'waiting in the writer queue. This issue records the recovery now.' \
             '' \
             "Observed by: $RUN_URL")"
           # Close on all-clear so each incident owns one bounded issue. Leaving
@@ -222,12 +235,49 @@ jobs:
     timeout-minutes: 9
     permissions:
       contents: write
+      actions: read
     concurrency:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
       queue: max
     steps:
+      - name: Skip superseded prepared writer
+        id: freshness
+        timeout-minutes: 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.setOutput('skip', 'false');
+            const repo = context.repo;
+            const api = github.rest.actions;
+            const request = { timeout: 10000 };
+            try {
+              const { data: current } = await api.getWorkflowRun({ ...repo, run_id: context.runId, request });
+              const { data: currentJobs } = await api.listJobsForWorkflowRun({ ...repo, run_id: context.runId, per_page: 100, request });
+              const preparedAt = currentJobs.jobs.find(job => job.name === 'check')?.completed_at;
+              if (!preparedAt) return;
+              const { data } = await api.listWorkflowRuns({ ...repo, workflow_id: current.workflow_id,
+                branch: current.head_branch, per_page: 100, request });
+              for (const run of data.workflow_runs) {
+                if (run.run_number <= current.run_number || run.conclusion === 'cancelled') continue;
+                const { data: newer } = await api.listJobsForWorkflowRun({ ...repo, run_id: run.id, per_page: 100, request });
+                const prepared = newer.jobs.find(job => job.name === 'check');
+                const writer = newer.jobs.find(job => job.name === 'persist-alarm-state');
+                const ready = writer && (['queued', 'waiting', 'pending', 'in_progress'].includes(writer.status)
+                  || writer.conclusion === 'success');
+                if (prepared?.conclusion === 'success' && prepared.completed_at > preparedAt && ready) {
+                  core.setOutput('skip', 'true');
+                  core.notice(`Prepared input from run ${run.id} supersedes this writer; no checkout needed.`);
+                  return;
+                }
+              }
+            } catch (error) {
+              // Supersession is an optimization. Existing candidate/source
+              // checks still protect a writer when the API is unavailable.
+              core.warning(`Could not check newer prepared input (${error.status ?? 'network'}); retaining this writer.`);
+            }
       - name: Checkout
+        if: steps.freshness.outputs.skip != 'true'
         timeout-minutes: 2
         uses: actions/checkout@v4
         with:
@@ -245,12 +295,14 @@ jobs:
             /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
 
       - name: Download alarm state
+        if: steps.freshness.outputs.skip != 'true'
         uses: actions/download-artifact@v4
         with:
           name: pipeline-alarm-state-${{ github.run_id }}-${{ github.run_attempt }}
           path: pipeline-alarm-state
 
       - name: Commit alarm state
+        if: steps.freshness.outputs.skip != 'true'
         id: persist
         continue-on-error: true
         run: |
