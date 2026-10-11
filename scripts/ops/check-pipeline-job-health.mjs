@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
 import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
+import { STATE_TITLE as RETENTION_STATE_TITLE, classifyRetentionSchedule } from "./retention-schedule.mjs";
 import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 const GITHUB_API = "https://api.github.com";
@@ -975,6 +976,10 @@ export function buildIssueBody(alarms) {
     lines.push(`## ${alarm.label} (\`${alarm.file}\`)`);
     const reasons = Array.isArray(alarm.alarm_reasons) ? alarm.alarm_reasons : [];
     lines.push(`- Alarm reasons: ${reasons.join(", ") || "unknown"}`);
+    if (reasons.some((reason) => reason.startsWith("retention_sweep_"))) {
+      lines.push(`- Last verified sweep: ${alarm.last_verified_sweep_at ?? "unreadable"}`);
+      if (alarm.message) lines.push(`- ${alarm.message}`);
+    }
     if (alarm.recovery_pending_next_scheduled_run) {
       lines.push("- Recovery pending next scheduled run: the manual success has not yet proved automatic recovery.");
       if (alarm.manual_recovery_run_url) lines.push(`- Manual recovery run URL: ${alarm.manual_recovery_run_url}`);
@@ -1280,7 +1285,9 @@ export async function main() {
     }
   }
   const familyHealth = await fetchEtfFamilyHealth();
-  const classifiedWorkflows = [...workflows, aggregateExternalClockHealth(clockChecks), familyHealth];
+  const retentionHealth = await fetchRetentionSweepHealth({token, owner, repo});
+  const classifiedWorkflows = [...workflows.filter(row => row.file !== "retention-sweep.yml"),
+    retentionHealth, aggregateExternalClockHealth(clockChecks), familyHealth];
   const workflowAlarms = classifiedWorkflows.filter((w) => w.status === "alarm");
   const kpiAlarm = dataHealthKpi.status === "alarm"
     ? {
@@ -1329,6 +1336,25 @@ export async function main() {
   );
 
   process.exit(alarms.length > 0 || blindness.blind ? ALERT_EXIT : 0);
+}
+
+export async function fetchRetentionSweepHealth({token, owner, repo, fetchFn = fetch, now = Date.now()} = {}) {
+  try {
+    const matches = [];
+    for (let page = 1; ; page += 1) {
+      const response = await fetchFn(`${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?state=open&per_page=100&page=${page}`,
+        {headers:authHeaders(token), signal:AbortSignal.timeout(20_000)});
+      if (!response.ok) throw new Error(`retention state HTTP ${response.status}`);
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error("invalid retention issue inventory");
+      matches.push(...rows.filter(row => !row.pull_request && row.title === RETENTION_STATE_TITLE));
+      if (rows.length < 100) break;
+    }
+    if (matches.length !== 1 || !matches[0].body?.startsWith("[retention-schedule-state]\n")) {
+      return classifyRetentionSchedule(null, {now});
+    }
+    return classifyRetentionSchedule(JSON.parse(matches[0].body.slice("[retention-schedule-state]\n".length)), {now});
+  } catch { return classifyRetentionSchedule(null, {now}); }
 }
 
 export async function fetchEtfFamilyHealth({ env = process.env, bucket = null, now = Date.now() } = {}) {

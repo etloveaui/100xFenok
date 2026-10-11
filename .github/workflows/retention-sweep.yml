@@ -31,7 +31,8 @@ on:
         required: false
         type: boolean
         default: false
-  # Hosted safety suite passed; KST Sunday 01:00..05:30, completion by 06:00.
+  # Ten nominal KST Sunday 01:00..05:30 slots. Delayed starts remain eligible
+  # until 09:00; the guarded publisher pause is still at most 20 minutes.
   schedule:
     - cron: '0,30 16-20 * * 6'
 
