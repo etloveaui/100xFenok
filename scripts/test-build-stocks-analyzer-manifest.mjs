@@ -169,6 +169,7 @@ try {
   const companyRecords = rawSymbols.map((key, i) => {
     const values = Array(34).fill(null);
     values[1] = key; values[2] = key; values[3] = "NYSE";
+    values[8] = 1000 + i; values[11] = 3.24 + i; values[12] = 1.5 + i;
     values[9] = 0.1 + i / 100; values[14] = 0.02 + i / 100;
     return { key, values };
   });
@@ -221,6 +222,25 @@ try {
     "structured EPS selects latest dated observation and preserves valid large values");
   assert.equal(validated.data.find((row) => row.symbol === "BRK.B").epsForward, 12,
     "separate forward EPS remains available");
+  // A deliberate index rejection is authoritative; ordinary missing values
+  // retain the existing company-master fallback.
+  Object.assign(stocks["BRK.B"], {
+    pe: null, pb: null, mc: null, dy: null,
+    data_quality: { affected_fields: ["per", "pbr", "marketCap"] },
+  });
+  Object.assign(stocks["BRK.A"], { pe: null, mc: null });
+  writeFixture("data/global-scouter/core/stocks_index.json", { source_date, stocks });
+  run = runBuilder();
+  assert.equal(run.status, 0, run.stderr);
+  const withheld = JSON.parse(fs.readFileSync(outputPath, "utf8")).data;
+  const suppressed = withheld.find((row) => row.symbol === "BRK.B");
+  const missing = withheld.find((row) => row.symbol === "BRK.A");
+  assert.equal(suppressed.per, null, "withheld PER must not be restored from the raw master");
+  assert.equal(suppressed.pbr, null, "withheld PBR remains suppressed");
+  assert.equal(suppressed.marketCap, null, "withheld market cap must not bypass the same annotation");
+  assert.equal(suppressed.dividendYield, undefined, "a null index yield has no raw fallback");
+  assert.equal(missing.per, 3.24, "un-annotated missing PER retains the raw-master fallback");
+  assert.equal(missing.marketCap, 1000, "un-annotated missing market cap retains its fallback");
   const lastGood = fs.readFileSync(outputPath, "utf8");
   for (const [relative, records] of [[companyPath, companyRecords], [consensusPath, consensusRecords]]) {
     writeFixture(relative, { source_date, records: [...records, { ...records[0], key: "BRK.A" }] });

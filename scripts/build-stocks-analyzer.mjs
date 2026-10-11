@@ -263,12 +263,10 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
 
   if (yfForwardRec) yfFallbackStats.matchedRows += 1;
 
-  // The converter deliberately nulls market-cap-over-statement ratios on rows
-  // where the workbook put market cap and the financial statements in different
-  // units (data_quality.affected_fields). Falling back to the company-master
-  // copy would silently restore the very number that was suppressed - measured:
-  // SKHY reached the screener at PBR 31.5 after the converter had nulled it,
-  // because `idx.pb ?? cmRec.pbr` treated the deliberate null as "missing".
+  // The converter deliberately nulls fields whose price, units, or statement
+  // bases disagree (data_quality.affected_fields). Falling back to the raw
+  // company master would restore suppressed values, including SKHY's PBR and
+  // CTVA's PER after its corporate action.
   // A suppressed field is a decision, not a gap, so it must not be back-filled.
   const suppressedFields = new Set(
     Array.isArray(idx?.data_quality?.affected_fields) ? idx.data_quality.affected_fields : [],
@@ -284,8 +282,8 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     industry: cmRec.exchange || "",
     country: idx.c || "",
     price: toFiniteNumber(idx.p),
-    marketCap: toFiniteNumber(idx.mc) ?? cmRec.marketCap,
-    per: toFiniteNumber(idx.pe) ?? cmRec.per,
+    marketCap: preferIndex("marketCap", idx.mc, cmRec.marketCap),
+    per: preferIndex("per", idx.pe, cmRec.per),
     pbr: preferIndex("pbr", idx.pb, cmRec.pbr),
     dividendYield: toFiniteNumber(idx.dy),
     return12m: toFiniteNumber(idx.r12),
