@@ -1,10 +1,22 @@
 name: Worker Request Budget Alarm
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 worker-request-budget-alarm.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
     - cron: '7 * * * *'
     - cron: '17 2,14 * * *'
   workflow_dispatch:
+    inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -106,7 +118,7 @@ jobs:
         run: node scripts/ops/sync-budget-issue.mjs worker-request-budget-result.json
 
   data-supply-analytics:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 2,14 * * *'
+    if: (github.event_name == 'workflow_dispatch' && inputs.external_clock == '') || github.event.schedule == '17 2,14 * * *'
     runs-on: ubuntu-latest
     environment: production
     steps:

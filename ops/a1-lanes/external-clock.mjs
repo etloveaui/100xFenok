@@ -12,6 +12,7 @@ export const EXTERNAL_CLOCK_CRONS = Object.freeze({
   "pins-autosync.yml": "7,37 * * * *",
   "pipeline-failure-alarm.yml": "23 * * * *",
   "retention-restore.yml": "4,19,34,49 * * * *",
+  "worker-request-budget-alarm.yml": "7 * * * *",
 });
 export const EXTERNAL_CLOCK_MARKER = "external-clock/a1/v1";
 

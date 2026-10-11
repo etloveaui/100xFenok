@@ -371,9 +371,13 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     assert.ok(yaml.includes(`external-clock/a1/v1 ${file} {0}`));
     assert.ok(yaml.includes("external_clock_slot:"));
     assert.ok(yaml.includes("concurrency:") && yaml.includes("cancel-in-progress: false"));
-    assert.ok(!yaml.includes("event_name") && !yaml.includes("event.schedule"), `${file} must be event-independent`);
+    if (file === "worker-request-budget-alarm.yml") {
+      assert.match(yaml, /check:\n    if: github.event_name == 'workflow_dispatch' \|\| github.event.schedule == '7 \* \* \* \*'/);
+      assert.match(yaml, /data-supply-analytics:\n    if: \(github.event_name == 'workflow_dispatch' && inputs.external_clock == ''\) \|\| github.event.schedule == '17 2,14 \* \* \*'/);
+    } else {
+      assert.ok(!yaml.includes("event_name") && !yaml.includes("event.schedule"), `${file} must be event-independent`);
+    }
   }
-  assert.ok(!EXTERNAL_CLOCK_CRONS["worker-request-budget-alarm.yml"], "event-branching workflow stays excluded");
   const producer = { ...detector("fetch-yahoo-ticker.yml", "5 * * * *"), scheduled_producer: true };
   const prior = run(100, "2026-08-20T23:05:00Z");
   const slot = "2026-08-21T01:05:00.000Z";
@@ -392,6 +396,17 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
   const observer = detector("global-writer-queue-observer.yml", "11 * * * *");
   assert.equal(evaluateWorkflow(observer, [marked(observer.file, "2026-08-21T01:11:00.000Z"), prior],
     { now: NOW }).missed_schedule_slot_count, 0);
+  const budget = { ...detector("worker-request-budget-alarm.yml", "7 * * * *"),
+    crons: ["7 * * * *", "17 2,14 * * *"] };
+  const budgetRun = marked(budget.file, "2026-08-21T01:07:00.000Z");
+  assert.equal(evaluateWorkflow(budget, [budgetRun, prior], { now: NOW }).missed_schedule_slot_count, 0,
+    "marked budget dispatch satisfies the hourly slot");
+  assert.equal(externalClockSlot({ ...budget, crons: ["17 2,14 * * *"] }, budgetRun), null,
+    "hourly budget dispatch cannot satisfy the telemetry schedule");
+  assert.equal(externalClockSlot(budget, marked(budget.file, "2026-08-21T02:17:00.000Z")), null,
+    "a telemetry minute is not an admitted external slot");
+  assert.deepEqual(dueDispatches(new Date("2026-08-21T01:07:00Z")).map(({ file }) => file),
+    ["pins-autosync.yml", budget.file]);
   const restore = detector("retention-restore.yml", RESTORE_CRON);
   const restoreRun = marked(restore.file, "2026-08-21T01:19:00.000Z");
   assert.equal(evaluateWorkflow(restore, [restoreRun, prior], { now: NOW }).missed_schedule_slot_count, 0);

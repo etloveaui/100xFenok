@@ -12,16 +12,19 @@ GitHub schedules remain enabled as fallback. There is no catch-up burst.
 | pins-autosync.yml | 07, 37 | global Git writer group; unchanged pins produce no commit |
 | pipeline-failure-alarm.yml | 23 | pipeline-failure-alarm + global Git writer persistence |
 | retention-restore.yml | 04, 19, 34, 49 | retention-restore; journal restore is a no-op when nothing is pending |
+| worker-request-budget-alarm.yml | 07 | worker-request-budget-alarm; marked dispatch runs hourly check only |
 
-All six declare `workflow_dispatch` and execute the same jobs for dispatch and
-schedule. Existing concurrency groups serialize duplicate GitHub/A1 runs;
+All seven declare `workflow_dispatch`. The first six execute the same jobs for
+dispatch and schedule. Existing concurrency groups serialize duplicate GitHub/A1 runs;
 additional runs can still consume runner/API budget. The clock checks workflow
 metadata before dispatch and leaves disabled workflows disabled, preserving the
 retention pause set. Same-slot service restarts use a local dispatch receipt.
 
-`worker-request-budget-alarm.yml` is excluded: dispatch executes both jobs,
-whereas the hourly and twice-daily schedules select different jobs. Its missing
-schedule alarm remains an unresolved GitHub-clock dependency.
+For `worker-request-budget-alarm.yml`, the marked hourly dispatch executes only
+`check`. An unmarked human dispatch still executes both jobs. The separate
+`data-supply-analytics` job keeps its GitHub-only `17 2,14 * * *` schedule;
+an hourly external marker cannot satisfy that telemetry slot. Minute 07 already
+exists in the shared timer calendar.
 
 Dispatch inputs `external_clock=a1-v1` and `external_clock_slot=<UTC ISO minute>`
 produce `external-clock/a1/v1 <workflow> <slot>` in the Actions run title.
