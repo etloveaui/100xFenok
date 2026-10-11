@@ -1251,7 +1251,7 @@ const config = {
     lane({
       id: "gdelt_news_tone",
       label: "GDELT news tone",
-      members: [registryMember("gdelt_news_tone", ["43 14 * * *"], [
+      members: [registryMember("gdelt_news_tone", ["43 6,14,22 * * *"], [
         artifact("gdelt_news_tone", "data/computed/fenok_news_tone_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
           sourceSelector: maxArrayFieldSource("/rows", "as_of", "rfc3339"),

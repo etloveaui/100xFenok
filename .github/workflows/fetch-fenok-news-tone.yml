@@ -2,9 +2,9 @@ name: Fetch Fenok GDELT News Tone Proxy
 
 on:
   schedule:
-    # Daily 14:43 UTC (23:43 KST) — off-peak, offset from the ApeWisdom lane and
-    # away from the top-of-hour and US-close cluster on the single writer queue.
-    - cron: '43 14 * * *'
+    # Spread the same daily request budget over three recovery opportunities.
+    # A completed basket skips the remaining slots; no immediate retry burst.
+    - cron: '43 6,14,22 * * *'
   workflow_dispatch:
     inputs:
       controlled_failure:
@@ -63,7 +63,7 @@ jobs:
           INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
         # Bounded reference universe keeps the single-writer queue polite; the
         # full universe with per-ticker GDELT throttling would jam the queue.
-        run: node scripts/fetch-fenok-news-tone-proxy.mjs --reference-only --retries 2 --retry-backoff-ms 6500
+        run: node scripts/fetch-fenok-news-tone-proxy.mjs --reference-only --retries 2 --retry-backoff-ms 6500 --spread-daily-retries
 
       - name: Commit and push
         if: ${{ always() }}
@@ -113,7 +113,7 @@ jobs:
       # never fatal to the lane.
       - name: Publish GDELT news tone generation to the cloud data plane
         id: publish_cloud_generation
-        if: ${{ steps.fetch_news_tone.outcome == 'success' }}
+        if: ${{ steps.fetch_news_tone.outcome == 'success' && steps.fetch_news_tone.outputs.promoted == 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1

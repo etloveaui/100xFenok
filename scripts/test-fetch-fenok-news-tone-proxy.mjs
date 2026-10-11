@@ -15,6 +15,7 @@ import {
   computeTone,
   cueCounts,
   decodeLegacyTocGzip,
+  fetchLegacyTocRecords,
   GDELT_HISTORY_PERSISTENCE_POLICY,
   loadArticles,
   main,
@@ -234,6 +235,78 @@ async function runLkgCase(root, snapshot, {
     observeAttemptFn: async () => probe(),
     buildFn: async () => snapshot,
   });
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "gdelt-spread-daily-"));
+  await runLkgCase(root, toneSnapshot({ latestSourceAsOf: "2026-07-23T12:00:00.000Z" }));
+  const fresh = toneSnapshot({ latestSourceAsOf: "2026-07-25T22:00:00.000Z" });
+  let fallbackCalls = 0;
+  let probeCalls = 0;
+  const visit = (hour, complete = false) => runNewsTone({ repoRoot: root,
+    args: { noWrite: false, noFetch: false, referenceOnly: true, spreadDailyRetries: true, retries: 2, maxRecords: 25 },
+    eventName: "schedule", observedAt: `2026-07-25T${hour}:43:00.000Z`, runId: `spread-${hour}`,
+    observeAttemptFn: async (args) => { probeCalls++; assert.equal(args.retries, 0); return rateLimitedProbe(); },
+    fallbackFn: async ({ args }) => {
+      fallbackCalls++; assert.equal(args.legacyTocMaxRequests, 166);
+      return { snapshot: complete ? fresh : buildSnapshotDocument({
+        rows: fresh.rows.filter((row) => row.ticker !== "NVDA"), generatedAt: "2026-07-25T14:43:00.000Z" }) };
+    },
+  });
+  assert.equal((await visit("06")).ok, false);
+  assert.equal(fallbackCalls, 0, "first throttle still requires an evidenced later retry");
+  const partial = await visit("14");
+  assert.equal(partial.ok, false);
+  assert.deepEqual(partial.fallback_evidence.missing_tickers, ["NVDA"]);
+  assert.equal((await visit("22", true)).ok, true, "a later same-day attempt completes the exact basket");
+  const skip = await visit("23");
+  assert.equal(skip.reason, "complete_basket_already_observed_today");
+  assert.equal(probeCalls, 3);
+  assert.equal(fallbackCalls, 2);
+  const state = JSON.parse(fs.readFileSync(path.join(root, "data/admin/gdelt_news_tone/index.json")));
+  assert.equal(state.daily_recovery.attempts, 3);
+  assert.deepEqual(state.retry_set, []);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "gdelt-spread-budget-"));
+  let calls = 0;
+  const visit = (day, hour) => runNewsTone({ repoRoot: root,
+    args: { noWrite: false, noFetch: false, spreadDailyRetries: true, retries: 2 },
+    eventName: "schedule", observedAt: `2026-07-${day}T${hour}:43:00.000Z`,
+    observeAttemptFn: async () => { calls++; return rateLimitedProbe(); },
+    fallbackFn: async () => ({ snapshot: buildSnapshotDocument({ rows: [], generatedAt: `2026-07-${day}T${hour}:43:00.000Z` }) }),
+  });
+  for (const hour of ["06", "14", "22"]) assert.equal((await visit("25", hour)).ok, false);
+  assert.equal((await visit("25", "23")).reason, "daily_retry_budget_exhausted");
+  assert.equal(calls, 3, "reruns cannot expand the daily request budget");
+  await visit("26", "06");
+  assert.equal(calls, 4, "the next UTC day gets its own bounded attempts");
+  const workflow = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
+  assert(workflow.includes("43 6,14,22 * * *"));
+  assert(workflow.includes("--spread-daily-retries"));
+}
+
+{
+  let requests = 0;
+  await fetchLegacyTocRecords({ observedAt: "2026-07-25T14:43:00.000Z", maxRequests: 166,
+    rawGetBufferFn: async () => { requests++; return { statusCode: 404 }; } });
+  assert.equal(requests, 166, "a partial fallback must stop at its daily-slot allocation");
+  const output = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "gdelt-promoted-output-")), "output");
+  const original = process.env.GITHUB_OUTPUT;
+  try {
+    process.env.GITHUB_OUTPUT = output;
+    for (const [ok, noWrite, expected] of [[false, false, false], [true, false, true], [true, true, false]]) {
+      fs.writeFileSync(output, "");
+      await main({ argv: noWrite ? ["--no-write"] : [], log: () => {}, error: () => {},
+        runNewsToneFn: async () => ({ ok, reason: "rate_limited", exitCode: 0, retrySet: ["news_tone_proxy"],
+          snapshot: toneSnapshot({ latestSourceAsOf: "2026-07-25T12:00:00.000Z" }) }) });
+      assert.equal(fs.readFileSync(output, "utf8"), `promoted=${expected}\n`);
+    }
+  } finally {
+    if (original === undefined) delete process.env.GITHUB_OUTPUT;
+    else process.env.GITHUB_OUTPUT = original;
+  }
 }
 
 {

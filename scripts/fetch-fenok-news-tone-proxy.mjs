@@ -17,6 +17,7 @@ import {
   LaneLkgStore,
 } from "./lib/data-supply-lkg-store.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { writeJsonAtomic } from "./lib/atomic-file.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -93,6 +94,7 @@ function parseArgs(argv) {
     noWrite: false,
     noFetch: false,
     referenceOnly: false,
+    spreadDailyRetries: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -104,6 +106,7 @@ function parseArgs(argv) {
     else if (arg === "--retries") args.retries = Number(next()) || 0;
     else if (arg === "--retry-backoff-ms") args.retryBackoffMs = Number(next()) || args.retryBackoffMs;
     else if (arg === "--reference-only") args.referenceOnly = true;
+    else if (arg === "--spread-daily-retries") args.spreadDailyRetries = true;
     else if (arg === "--no-write") args.noWrite = true;
     else if (arg === "--no-fetch") args.noFetch = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -467,9 +470,11 @@ async function fetchLegacyTocRecords({
   maxRecords = 25,
   lookbackHours = LEGACY_TOC_LOOKBACK_HOURS,
   concurrency = LEGACY_TOC_FETCH_CONCURRENCY,
+  maxRequests = MAX_LEGACY_TOC_REQUESTS,
   rawGetBufferFn = rawGetBuffer,
 }) {
-  const urls = legacyTocCandidateUrls(observedAt, lookbackHours).slice(0, MAX_LEGACY_TOC_REQUESTS);
+  const urls = legacyTocCandidateUrls(observedAt, lookbackHours)
+    .slice(0, Math.min(MAX_LEGACY_TOC_REQUESTS, maxRequests));
   const records = [];
   let totalDecompressedBytes = 0;
   const batchSize = Math.max(1, Number(concurrency) || LEGACY_TOC_FETCH_CONCURRENCY);
@@ -512,6 +517,7 @@ async function buildWebLegacyFallback({
     observedAt,
     expectedTickers,
     maxRecords: args.maxRecords,
+    maxRequests: args.legacyTocMaxRequests ?? MAX_LEGACY_TOC_REQUESTS,
     rawGetBufferFn,
   });
   const snapshot = buildLegacyTocSnapshot({
@@ -996,7 +1002,44 @@ function runContext({ runId, runAttempt, eventName, observedAt }) {
   };
 }
 
-export async function runNewsTone({
+export async function runNewsTone(options = {}) {
+  const args = options.args ?? parseArgs(process.argv.slice(2));
+  const observedAt = options.observedAt ?? isoNow();
+  const eventName = options.eventName ?? process.env.GITHUB_EVENT_NAME ?? "local";
+  const spread = args.spreadDailyRetries === true && eventName === "schedule"
+    && args.noWrite !== true && args.noFetch !== true;
+  if (!spread) return runNewsToneAttempt({ ...options, args, observedAt, eventName });
+  if (!validRfc3339Utc(observedAt)) throw new Error("invalid GDELT scheduled observation timestamp");
+
+  const store = new LaneLkgStore({ repoRoot: options.repoRoot ?? repoRoot, laneId: LANE_ID });
+  const state = store.stateSnapshot();
+  const day = observedAt.slice(0, 10);
+  const previous = state.daily_recovery?.date === day ? state.daily_recovery : { date: day, attempts: 0 };
+  if (!Number.isInteger(previous.attempts) || previous.attempts < 0 || previous.attempts > 3) {
+    throw new Error("invalid GDELT daily recovery budget");
+  }
+  if (previous.complete || previous.attempts >= 3) {
+    return { ok: false, skipped: true, exitCode: 0, retrySet: state.retry_set,
+      reason: previous.complete ? "complete_basket_already_observed_today" : "daily_retry_budget_exhausted" };
+  }
+  // Three spaced attempts replace the original probe + two immediate retries.
+  // DOC: at most 3 * (1 probe + 8 members) = 27 requests, unchanged from
+  // 3 probe requests + 8 * 3 member requests. TOC: 3 * 166 <= old 500/day.
+  // Claim before I/O so a failed attempt also spends its bounded allocation.
+  state.daily_recovery = { ...previous, attempts: previous.attempts + 1,
+    last_attempt_at: observedAt, complete: false };
+  writeJsonAtomic(store.statePath, state);
+  const outcome = await runNewsToneAttempt({ ...options, observedAt, eventName,
+    args: { ...args, retries: 0, legacyTocMaxRequests: 166 },
+    priorScheduledRateLimit: previous.last_reason === "rate_limited" ? previous.last_attempt_at : null });
+  const updated = store.stateSnapshot();
+  updated.daily_recovery = { ...state.daily_recovery, complete: outcome.ok === true,
+    last_reason: outcome.reason, fallback: outcome.fallback_evidence ?? null };
+  writeJsonAtomic(store.statePath, updated);
+  return outcome;
+}
+
+async function runNewsToneAttempt({
   repoRoot: repoRootPath = repoRoot,
   args = parseArgs(process.argv.slice(2)),
   observedAt = isoNow(),
@@ -1009,6 +1052,7 @@ export async function runNewsTone({
   fallbackFn = buildWebLegacyFallback,
   buildFn = build,
   sleepFn = sleep,
+  priorScheduledRateLimit = null,
 } = {}) {
   const write = args.noWrite !== true;
   const run = runContext({ runId, runAttempt, eventName, observedAt });
@@ -1023,6 +1067,11 @@ export async function runNewsTone({
     retryBackoffMs: args.retryBackoffMs,
   });
   let result = withEndpointAssertions(observed.result);
+  if (result.reason === "rate_limited" && priorScheduledRateLimit !== null) {
+    const waited = Date.parse(observedAt) - Date.parse(priorScheduledRateLimit);
+    if (Number.isFinite(waited) && waited >= 6500) result = withRetryEvidence(result, 1, waited);
+  }
+  let fallbackEvidence = null;
 
   // `reason` is the stable vocabulary the LKG store and the detection floor
   // consume, so it must not absorb free text. The identity of whatever actually
@@ -1048,6 +1097,7 @@ export async function runNewsTone({
         retrySet: [],
         retained: false,
         result,
+        fallback_evidence: fallbackEvidence,
       };
     }
     const failure = store.recordFailure({
@@ -1069,6 +1119,7 @@ export async function runNewsTone({
       retrySet: failure.retrySet,
       retained,
       result,
+      fallback_evidence: fallbackEvidence,
     };
   };
 
@@ -1086,6 +1137,10 @@ export async function runNewsTone({
         observedAt,
       });
       const fallbackSnapshot = fallbackBuilt?.snapshot ?? fallbackBuilt;
+      fallbackEvidence = { status: validToneSnapshotAt(fallbackSnapshot, observedAt) ? "complete" : "partial",
+        missing_tickers: DEFAULT_REFERENCE_TICKERS.filter((ticker) =>
+          !fallbackSnapshot?.rows?.some((row) => row.ticker === ticker && validRfc3339Utc(row.as_of))),
+        source_as_of: fallbackSnapshot?.source_as_of ?? null };
       if (validToneSnapshotAt(fallbackSnapshot, observedAt)) {
         // The shard remains the actual DOC response. TOC-derived supply has
         // separate provenance and cannot claim the DOC articles assertion passed.
@@ -1105,7 +1160,8 @@ export async function runNewsTone({
         };
         usingFallback = true;
       }
-    } catch {
+    } catch (error) {
+      fallbackEvidence = { status: "failed", error: failureDetailOf(error) };
       // The original DOC failure remains authoritative when the bounded
       // provider-owned fallback cannot produce a complete reference basket.
     }
@@ -1196,9 +1252,13 @@ export async function main({
 } = {}) {
   const args = parseArgs(argv);
   const result = await runNewsToneFn({ args });
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `promoted=${result.ok === true && args.noWrite !== true}\n`);
+  }
   if (!result.ok) {
     const detail = result.failure_detail ? `; error: ${result.failure_detail}` : "";
-    error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}${detail}`);
+    const fallback = result.fallback_evidence ? `; fallback: ${JSON.stringify(result.fallback_evidence)}` : "";
+    error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}${detail}${fallback}`);
     return Number.isInteger(result.exitCode) ? result.exitCode : 1;
   }
   const snapshot = result.snapshot;
@@ -1241,6 +1301,7 @@ export {
   cueCounts,
   decodeLegacyTocGzip,
   fetchJsonWithRetry,
+  fetchLegacyTocRecords,
   GDELT_HISTORY_PERSISTENCE_POLICY,
   MAX_GDELT_HISTORY_SOURCE_DATES,
   latestArticleSeenAt,
