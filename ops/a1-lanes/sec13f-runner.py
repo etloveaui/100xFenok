@@ -20,12 +20,12 @@ BUILDERS = (
     "build-guru-holders-index.mjs",
 )
 INPUT_ROOTS = (
-    "scripts", "100xfenok-next/src/lib", "data/sec-13f",
+    "scripts", "100xfenok-next/src/lib", "100xfenok-next/scripts/cloud-data-plane", "data/sec-13f",
     "data/global-scouter/core", "data/yf/finance", "data/yf/quarter_closes.json",
     "data/edgar/company_tickers.json", STATUS_PATH,
 )
 SPARSE_ROOTS = (
-    "scripts", "ops/a1-lanes", "100xfenok-next/src/lib",
+    "scripts", "ops/a1-lanes", "100xfenok-next/src/lib", "100xfenok-next/scripts/cloud-data-plane",
     "data/sec-13f", "data/global-scouter/core", "data/yf", "data/edgar",
 )
 
@@ -220,12 +220,20 @@ def main():
                      "source_as_of": source_as_of, "source_quarter": quarter,
                      "reason": error or ("no_new_filings" if outcome == "retained" else "new_filings")},
     }
-    write_json(args.state_root / "last-run.json", state)
     published = None
     if args.publish:
         write_json(candidate / STATUS_PATH, state)
         paths = [STATUS_PATH] if error or outcome == "retained" else ["data/sec-13f", STATUS_PATH]
-        published = publish(candidate, base, paths)
+        try:
+            published = publish(candidate, base, paths)
+        except Exception as exc:
+            state["last_run"]["outcome"] = "failed"
+            state["last_run"]["reason"] = str(exc)
+            state["last_success_at"] = prior.get("last_success_at")
+            state["consecutive_failures"] = prior.get("consecutive_failures", 0) + 1
+            write_json(args.state_root / "last-run.json", state)
+            raise
+    write_json(args.state_root / "last-run.json", state)
     print(json.dumps({"outcome": outcome, "source_as_of": source_as_of,
                       "published": published, "candidate": str(candidate), "error": error}))
     # A clean candidate is removable only when its revision is already on main.
