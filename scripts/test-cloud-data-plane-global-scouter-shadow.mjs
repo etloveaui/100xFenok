@@ -163,7 +163,6 @@ assert.ok(FAMILY.plan.class_a >= MEASURED_ASSETS * 2, "class-A plan must be >=2x
 // expression that defines it, which proves nothing. The real invariant is the
 // plan headroom immediately below.
 assert.ok(FAMILY.plan.class_b >= MEASURED_CLASS_B_READS * 2, "class-B plan must be >=2x measured reads");
-assert.ok(FAMILY.plan.bytes >= MEASURED_BYTES * 2, "byte plan must be >=2x measured bytes");
 
 const dryRunLines = [];
 const dryRunStderr = [];
@@ -177,6 +176,7 @@ assert.equal(dryRunLines.length, 1);
 assert.equal(dryRunLines[0].result, "dry_run");
 assert.equal(dryRunLines[0].assets, MEASURED_ASSETS);
 assert.equal(dryRunLines[0].total_bytes, MEASURED_BYTES);
+assert.equal(dryRunLines[0].planned_bytes, MEASURED_BYTES * 2);
 assert.equal(dryRunLines[0].enrolled.length, MEASURED_ASSETS);
 assert.equal(dryRunLines[0].enrolled[0].path, built.manifest.assets[0].path);
 assert.equal(dryRunLines[0].enrolled.at(-1).path, built.manifest.assets.at(-1).path);
