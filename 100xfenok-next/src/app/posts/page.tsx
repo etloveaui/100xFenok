@@ -212,6 +212,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
             {archivePosts.map((post) => (
               <Link
                 key={post.href}
+                prefetch={false}
                 href={post.href}
                 data-posts-card
                 className="posts-card group block p-5 sm:p-8"

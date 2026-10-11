@@ -207,6 +207,7 @@ export function ConnectedView({
           {visibleConnected.map((item) => item.href ? (
             <TransitionLink
               key={item.label}
+              prefetch={false}
               href={item.href}
               className={`inline-flex min-h-10 sm:min-h-8 items-center rounded-full border px-2.5 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${item.tone}`}
             >

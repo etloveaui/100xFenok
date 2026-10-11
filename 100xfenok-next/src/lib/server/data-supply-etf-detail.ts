@@ -315,6 +315,50 @@ async function parseIndex(
   return { kind: "ok", entries, generatedAt: value.generated_at as string } as const;
 }
 
+type EnrollmentGuard = NonNullable<ReturnType<typeof parseGuard>>;
+type ParsedIndex = Awaited<ReturnType<typeof parseIndex>>;
+// One generation per reader/isolate. Sharing the pending read also prevents
+// simultaneous requests for different tickers from repeating full validation.
+const validatedIndexCache = new WeakMap<EtfDetailResolverDependencies["readIndex"], {
+  guard: EnrollmentGuard;
+  pending: Promise<ParsedIndex | null>;
+}>();
+
+async function readValidatedIndex(
+  guard: EnrollmentGuard,
+  dependencies: EtfDetailResolverDependencies,
+): Promise<ParsedIndex | null> {
+  const reader = dependencies.readIndex;
+  const cached = validatedIndexCache.get(reader);
+  if (cached?.guard.indexSha === guard.indexSha) {
+    // The digest identifies immutable bytes, but every request's enrollment
+    // must still bind to the same transaction, manifest and membership.
+    if (cached.guard.transactionId !== guard.transactionId
+      || cached.guard.manifestSha !== guard.manifestSha
+      || cached.guard.membershipSha !== guard.membershipSha
+      || cached.guard.tickers.size !== guard.tickers.size) return { kind: "crossbind" };
+    return cached.pending;
+  }
+  const entry = {
+    guard,
+    pending: (async () => {
+      const document = await reader();
+      return document ? parseIndex(document, guard, dependencies.now()) : null;
+    })(),
+  };
+  validatedIndexCache.set(reader, entry);
+  try {
+    const parsed = await entry.pending;
+    if (parsed?.kind !== "ok" && validatedIndexCache.get(reader) === entry) {
+      validatedIndexCache.delete(reader);
+    }
+    return parsed;
+  } catch (error) {
+    if (validatedIndexCache.get(reader) === entry) validatedIndexCache.delete(reader);
+    throw error;
+  }
+}
+
 function expectedRole(state: ResolutionState): ProviderRole {
   if (state.endsWith("primary")) return "primary";
   if (state.endsWith("fallback")) return "fallback";
@@ -497,13 +541,12 @@ export async function resolveDataSupplyEtfDetail(
         : "mismatch",
     };
   };
-  const indexDocument = await dependencies.readIndex();
-  if (!indexDocument) {
+  const parsedIndex = await readValidatedIndex(guard, dependencies);
+  if (!parsedIndex) {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
     return resolveShard();
   }
 
-  const parsedIndex = await parseIndex(indexDocument, guard, dependencies.now());
   if (parsedIndex.kind === "crossbind") {
     return { kind: "error", code: "DATA_SUPPLY_GUARD_UNAVAILABLE", projectionDigest: guard.indexSha };
   }

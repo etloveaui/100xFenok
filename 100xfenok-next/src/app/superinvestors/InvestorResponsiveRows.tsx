@@ -241,6 +241,7 @@ export function ResponsiveTradeRankingPanel({
                   </td>
                   <td data-label="종목">
                     <TransitionLink
+                      prefetch={false}
                       href={ROUTES.stock(row.ticker, returnTo)}
                       onClick={onBeforeNavigate}
                       data-superinvestor-trades-action
@@ -272,6 +273,7 @@ export function ResponsiveTradeRankingPanel({
                   <td data-label={topLabel}>
                     {row.top_investor?.id ? (
                       <TransitionLink
+                        prefetch={false}
                         href={ROUTES.superinvestorsGuru(row.top_investor.id, returnTo)}
                         onClick={onBeforeNavigate}
                         data-superinvestor-trades-action

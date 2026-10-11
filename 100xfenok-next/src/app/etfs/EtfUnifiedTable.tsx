@@ -178,7 +178,7 @@ function EtfMobileList({
         return (
           <article key={row.ticker ?? row.name ?? "unknown"} className="etf-mobile-card">
             <div className="etf-mobile-card__head">
-              <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="etf-mobile-title">
+              <TransitionLink prefetch={false} href={ROUTES.etf(row.ticker ?? "")} className="etf-mobile-title">
                 <strong>{row.ticker}</strong>
                 <span>{row.name && row.name !== row.ticker ? row.name : "—"}</span>
               </TransitionLink>
@@ -357,7 +357,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
       header: renderSortHeader("ticker"),
       align: "left",
       render: (row) => (
-        <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="etf-table-ticker">
+        <TransitionLink prefetch={false} href={ROUTES.etf(row.ticker ?? "")} className="etf-table-ticker">
           <strong>{row.ticker}</strong>
           <span>{row.name && row.name !== row.ticker ? row.name : "—"}</span>
         </TransitionLink>

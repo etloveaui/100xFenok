@@ -409,6 +409,7 @@ function GuruHolderBadge({
   if (holders === null) return null;
   return (
     <TransitionLink
+      prefetch={false}
       href={ROUTES.superinvestorsByTicker(stock.ticker, returnTo)}
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
@@ -1238,6 +1239,7 @@ function DesktopStockCard({
           선택
         </label>
         <TransitionLink
+          prefetch={false}
           href={ROUTES.stock(stock.ticker, returnTo)}
           onClick={onBeforeNavigate}
           className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-3 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"

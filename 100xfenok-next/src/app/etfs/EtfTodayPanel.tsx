@@ -18,7 +18,7 @@ import {
 function TodayMoverLink({ ticker, valueLabel, valueClassName }: { ticker?: string; valueLabel: string; valueClassName?: string }) {
   if (!ticker) return null;
   return (
-    <TransitionLink href={ROUTES.etf(ticker)} className="etf-today-row">
+    <TransitionLink prefetch={false} href={ROUTES.etf(ticker)} className="etf-today-row">
       <span className="etf-ticker">{ticker}</span>
       <span className={`tabular-nums etf-today-value ${valueClassName ?? ""}`}>{valueLabel}</span>
     </TransitionLink>

@@ -1367,6 +1367,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                 <tr key={h.investor} className="border-b border-slate-100 last:border-b-0">
                   <td className="px-2 py-1.5">
                     <TransitionLink
+                      prefetch={false}
                       href={ROUTES.superinvestorsGuru(h.investor)}
                       data-smart-money-investor-profile-link
                       aria-label={`${h.investor} 투자자 포트폴리오 보기`}

@@ -2,9 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- M4 launchd agent: 100x data watch (scripts/datawatch/watch.py), at load and every 30 minutes. Install: copy to
      ~/Library/LaunchAgents/ and launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.fenok.100x-data-watch.plist
-     The briefing job worktree is sparse and does not check out scripts/datawatch, so each run first copies watch.py
+     The briefing job worktree is sparse and does not check out scripts/datawatch, so a run first copies watch.py
      from the local origin/main object (no network: the hourly autopull and the morning job fetch that ref) into
-     ~/.local/share/100x-data-watch/ and keeps the last good copy when that read fails. -->
+     ~/.local/share/100x-data-watch/. It copies only when that blob differs from the one copied last (its id is kept
+     in origin.blob), so a file installed by hand stays until main changes, and a failed read keeps the last copy. -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
@@ -13,7 +14,7 @@
     <array>
         <string>/bin/zsh</string>
         <string>-c</string>
-        <string>d=/Users/fenomenokim/.local/share/100x-data-watch; mkdir -p $d; GIT_NO_LAZY_FETCH=1 git -C /Users/fenomenokim/.local/share/100x-briefing/repo show origin/main:scripts/datawatch/watch.py &gt; $d/watch.py.new 2&gt;/dev/null &amp;&amp; [[ -s $d/watch.py.new ]] &amp;&amp; mv -f $d/watch.py.new $d/watch.py; exec /Users/fenomenokim/.local/share/100x-briefing/venv/bin/python $d/watch.py</string>
+        <string>d=/Users/fenomenokim/.local/share/100x-data-watch; r=/Users/fenomenokim/.local/share/100x-briefing/repo; mkdir -p $d; b=$(git -C $r rev-parse -q --verify origin/main:scripts/datawatch/watch.py 2&gt;/dev/null); if [[ -n $b &amp;&amp; $b != "$(cat $d/origin.blob 2&gt;/dev/null)" ]] &amp;&amp; GIT_NO_LAZY_FETCH=1 git -C $r cat-file blob $b &gt; $d/watch.py.new 2&gt;/dev/null &amp;&amp; [[ -s $d/watch.py.new ]]; then mv -f $d/watch.py.new $d/watch.py &amp;&amp; print -r -- $b &gt; $d/origin.blob; fi; exec /Users/fenomenokim/.local/share/100x-briefing/venv/bin/python $d/watch.py</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>

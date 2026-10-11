@@ -338,6 +338,7 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
           >
             <div className="flex min-w-0 items-start justify-between gap-2">
               <TransitionLink
+                prefetch={false}
                 href={stockHref}
                 data-superinvestor-accumulation-link
                 className="inline-flex min-h-11 items-center py-1 font-black text-brand-interactive touch-manipulation hover:underline"

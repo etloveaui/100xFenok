@@ -1174,6 +1174,7 @@ function ConnectionActionLink({
   }[tone];
   return (
     <TransitionLink
+      prefetch={false}
       href={href}
       data-portfolio-touch-action="connection"
       className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border px-3 text-[10px] font-black transition hover:border-brand-interactive hover:text-brand-interactive ${toneClass}`}
@@ -1362,6 +1363,7 @@ function PortfolioConnectionPanel({
                     {etfLinks.slice(0, 4).map((link) => (
                       <TransitionLink
                         key={link.ticker}
+                        prefetch={false}
                         href={link.route || `/etfs/${encodeURIComponent(link.ticker)}`}
                         data-portfolio-touch-action="etf-chip"
                         className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-cyan-200 bg-white px-2.5 text-[10px] font-black text-cyan-700 transition hover:border-brand-interactive hover:text-brand-interactive"

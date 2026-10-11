@@ -273,6 +273,7 @@ function SectorFlowPanel({
             return (
               <TransitionLink
                 key={row.key}
+                prefetch={false}
                 href={screenerSectorHref(row.key)}
                 className="sec-flow-row"
                 data-sectors-flow-row

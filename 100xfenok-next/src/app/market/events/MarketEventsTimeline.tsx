@@ -515,6 +515,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                           return event.href ? (
                             <TransitionLink
                               key={event.key}
+                              prefetch={false}
                               href={event.href}
                               className={`absolute transition hover:opacity-80 ${FOCUS_RING}`}
                               style={{ left, top: 8 + slot * 30 }}

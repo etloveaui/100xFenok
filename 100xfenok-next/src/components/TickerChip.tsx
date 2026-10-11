@@ -47,7 +47,7 @@ export default function TickerChip({
   }
 
   return (
-    <TransitionLink href={href ?? ROUTES.stock(normalized)} className={cx(LINK_CLASSES[variant], className)} onClick={onClick}>
+    <TransitionLink prefetch={false} href={href ?? ROUTES.stock(normalized)} className={cx(LINK_CLASSES[variant], className)} onClick={onClick}>
       {display}
     </TransitionLink>
   );

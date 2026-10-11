@@ -656,7 +656,7 @@ export default function ChangesClient() {
           // the accent always; neutral rows get it on focus via accentClass.
           const className = `grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-t border-slate-100 px-4 py-2 text-[13px] transition-colors duration-150 first:border-t-0 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] md:gap-2 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none ${accentClass(row.accent)}`;
           return row.href ? (
-            <TransitionLink key={row.id} href={row.href} className={className}>
+            <TransitionLink key={row.id} prefetch={false} href={row.href} className={className}>
               {body}
             </TransitionLink>
           ) : (

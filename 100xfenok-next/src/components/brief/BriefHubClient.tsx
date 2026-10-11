@@ -69,6 +69,7 @@ function ArchiveCalendar({ editions, latestDate }: { editions: BriefIndexEdition
       cells.push(
         <TransitionLink
           key={key}
+          prefetch={false}
           href={ROUTES.briefMorning(key)}
           className={`d e${today}`}
           title={edition.headline}

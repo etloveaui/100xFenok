@@ -902,6 +902,7 @@ export default function HomeCanvasPlusClient() {
                 return (
                   <TransitionLink
                     key={item.id}
+                    prefetch={false}
                     href={ROUTES.stock(item.ticker)}
                     className="grid grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-t border-[var(--c-line)] px-4 text-[13px] transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none h-9"
                   >
@@ -925,6 +926,7 @@ export default function HomeCanvasPlusClient() {
                 return (
                   <TransitionLink
                     key={item.id}
+                    prefetch={false}
                     href={ROUTES.stock(item.ticker)}
                     className="flex min-h-11 items-center justify-between gap-3 border-t border-[var(--c-line)] px-[14px] transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none"
                   >
@@ -961,6 +963,7 @@ export default function HomeCanvasPlusClient() {
               {projection.attention.map((item) => (
                 <TransitionLink
                   key={item.id}
+                  prefetch={false}
                   href={ROUTES.stock(item.ticker)}
                   className="flex min-h-10 items-center justify-between gap-3 border-t border-[var(--c-line)] px-4 transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none max-md:min-h-11 max-md:px-[14px]"
                 >

@@ -558,7 +558,7 @@ export default function NewEtfsList({
               const displayName = row.n || row.s;
               const metaText = `상장일 ${fmtDate(row.inceptionDate)} · 가격 ${fmtPrice(row.price)} · ${row.issuer} · ${row.typeTags.join(" / ")} · ${radarStatusLabel(row.radarStatus)} · ${classificationStatusLabel(row.classificationStatus)} · ${coreCandidateLabel(row.coreCandidateAllowed)} · ${detailStatusHint(row.detailStatus)}`;
               return (
-                <TransitionLink key={row.s} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row" data-etf-new-row="true">
+                <TransitionLink key={row.s} prefetch={false} href={`/etfs/${encodeURIComponent(row.s)}`} className="mv-row" data-etf-new-row="true">
                   <span className="co">
                     <div className="n">{row.s}</div>
                     <div className="tk" title={displayName}>

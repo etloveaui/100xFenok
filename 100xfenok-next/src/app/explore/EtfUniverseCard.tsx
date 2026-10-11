@@ -653,7 +653,7 @@ export default function EtfUniverseCard({
             const typeHint = formatTypeHint(row, { includeTicker: false });
             const detailText = name ? `${name} · ${typeHint}` : typeHint;
             return (
-              <TransitionLink key={ticker} href={`/etfs/${encodeURIComponent(ticker)}`} className="mv-row" data-etf-universe-row={ticker}>
+              <TransitionLink key={ticker} prefetch={false} href={`/etfs/${encodeURIComponent(ticker)}`} className="mv-row" data-etf-universe-row={ticker}>
                 <span className="co">
                   <div className="n">{ticker}</div>
                   <div className="tk" title={detailText}>

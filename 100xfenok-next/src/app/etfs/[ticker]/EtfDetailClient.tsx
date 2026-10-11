@@ -761,7 +761,7 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
     <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
+          <TransitionLink prefetch={false} href={`/etfs/${encodeURIComponent(ticker)}`} className="text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
             {ticker}
           </TransitionLink>
           <p className="mt-1 min-w-0 truncate text-[12px] font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
@@ -778,7 +778,7 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
           <span key={label} className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-1">{label}</span>
         ))}
       </div>
-      <TransitionLink href={compareHref} className="mt-3 inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive">
+      <TransitionLink prefetch={false} href={compareHref} className="mt-3 inline-flex min-h-8 items-center rounded-full border border-[var(--c-line)] bg-white px-3 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)] transition hover:border-brand-interactive">
         겹침 비교
       </TransitionLink>
     </div>

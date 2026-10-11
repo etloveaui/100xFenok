@@ -175,6 +175,7 @@ function ActionButtons({
         비교
       </button>
       <TransitionLink
+        prefetch={false}
         href={ROUTES.portfolioTicker(stock.ticker)}
         title="관심 종목에 추가"
         className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[12px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
@@ -182,6 +183,7 @@ function ActionButtons({
         관심
       </TransitionLink>
       <TransitionLink
+        prefetch={false}
         href={ROUTES.stock(stock.ticker, returnTo)}
         onClick={onBeforeNavigate}
         title="종목 상세로 열기"

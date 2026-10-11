@@ -3,10 +3,12 @@
 python watch.py [--dry-run] [--state-dir DIR] [--tag TEXT] [--now ISO]
 
 It tells the owner when 100x data collection breaks or a watcher stops: one Korean line per state CHANGE through AA's
-ops-alert route (briefing.alert.ops_send, Gateway class ops_alert). Four GitHub reads per run on etloveaui/100xFenok:
+ops-alert route (briefing.alert.ops_send, Gateway class ops_alert). Four reads per run on etloveaui/100xFenok, at
+most 6 GitHub API calls:
 
   issues  open issues whose title ends with "alarm" (every alarm workflow titles its issue so; none sets a label)
-  alarm   completion time of the newest successful pipeline-failure-alarm.yml run
+  alarm   completion time of the newest successful `check` job of pipeline-failure-alarm.yml (the job that judges
+          and writes the issue; the persist job after it waits in the shared writer queue and says nothing here)
   clock   creation time of the newest workflow_dispatch run titled "external-clock/a1/v1 ..."
   ledger  generated_at of data/admin/fenok-data-health-kpi.json on main
 
@@ -38,7 +40,7 @@ API = "https://api.github.com/repos/etloveaui/100xFenok"
 STATE_DIR = HOME / ".local/state/100x-data-watch"
 SECRETS = HOME / ".secrets/all-keys.env"  # the file run_m4.sh reads; only GITHUB_TOKEN is taken and it is never printed
 # name: (Korean noun, subject particle, bound in minutes, what is missing). Sources of the bounds:
-#   alarm   2 x its cadence (cron '23 * * * *' plus the A1 clock slot :23); the age is counted from completion.
+#   alarm   2 x its cadence (cron '23 * * * *' plus the A1 clock slot :23); the age is that of the `check` job.
 #   clock   3 x the longest gap between declared clock slots, 15 minutes (:49 -> :04, ops/a1-lanes/external-clock.mjs;
 #           measured maximum 15.0 minutes over 80 marked runs on 2026-10-11).
 #   ledger  6 hours: the KPI file's commits had a median gap of 0.73 h, and 5 of 399 gaps above 6 h (2026-09-18..10-11).
@@ -53,8 +55,10 @@ REASONS = {"failure_streak": "연속 실패", "missed_schedule_window": "실행 
            "a1_clock_stale": "A1 시계 멈춤", "data_stopped_two_generations": "데이터 정지",
            "health_record_stale": "건강 기록 멈춤"}
 DELIVERED = ("success", "dedup_skipped", "already_delivered")
+MAX_CALLS = 6  # GitHub API calls per run
 TOKEN: str | None = None
 RATE = ""
+CALLS = 0
 
 
 def ts(s: str) -> dt.datetime:
@@ -81,8 +85,9 @@ def load_token() -> str | None:
 
 def gh(path: str, accept: str = "application/vnd.github+json"):
     """One GitHub GET. A rejected token is dropped for the rest of the run: the repository is public."""
-    global TOKEN, RATE
+    global TOKEN, RATE, CALLS
     while True:
+        CALLS += 1
         headers = {"Accept": accept, "User-Agent": "100x-data-watch", "X-GitHub-Api-Version": "2022-11-28"}
         if TOKEN:
             headers["Authorization"] = f"Bearer {TOKEN}"
@@ -116,8 +121,16 @@ def read_issues() -> dict:
 
 
 def read_alarm() -> dt.datetime:
-    runs = gh("/actions/workflows/pipeline-failure-alarm.yml/runs?status=success&per_page=5")["workflow_runs"]
-    return max(ts(r["updated_at"]) for r in runs)
+    runs = gh("/actions/workflows/pipeline-failure-alarm.yml/runs?per_page=5")["workflow_runs"]
+    probed = 0
+    for r in runs:  # newest first; the call budget allows two probes (one after a rejected token)
+        if CALLS >= MAX_CALLS:
+            break
+        probed += 1
+        for job in gh(f"/actions/runs/{r['id']}/jobs")["jobs"]:
+            if job["name"] == "check" and job.get("conclusion") == "success":
+                return ts(job["completed_at"])
+    raise RuntimeError(f"no successful check job in the {probed} newest alarm runs")
 
 
 def read_clock() -> dt.datetime:
@@ -131,7 +144,7 @@ def read_ledger() -> dt.datetime:
     return ts(gh("/contents/data/admin/fenok-data-health-kpi.json?ref=main", "application/vnd.github.raw+json")["generated_at"])
 
 
-READERS = {"issues": read_issues, "alarm": read_alarm, "clock": read_clock, "ledger": read_ledger}
+READERS = {"issues": read_issues, "clock": read_clock, "ledger": read_ledger, "alarm": read_alarm}  # alarm last: it probes
 
 
 def idents(incidents: dict) -> set:
@@ -172,7 +185,7 @@ def run(a: argparse.Namespace) -> int:
             stamp = c.setdefault("unread_since", iso(now))
             mins = int((now - ts(stamp)).total_seconds() // 60)
             level = "unread" if mins > UNREAD_MIN else c["level"]
-            line = f"100x 감시 불가: {noun} 읽기 {dur(mins)}째 실패 ({e(errors[name])})"
+            line = f"100x 감시 불가: {noun} 확인 {dur(mins)}째 실패 ({e(errors[name])})"
         else:
             c.pop("unread_since", None)
             age = int((now - values[name]).total_seconds() // 60) if bound else None
@@ -236,7 +249,7 @@ def run(a: argparse.Namespace) -> int:
     shown = values.get("issues", new["issues"])
     write_json(sdir / "status.json", {
         "time": iso(now), "open_incidents": [{"issue": int(n), **v} for n, v in sorted(shown.items())], "liveness": live,
-        "errors": errors, "github": {"auth": auth, "rate": RATE}, "sent": sent, "delivery_error": failure,
+        "errors": errors, "github": {"auth": auth, "rate": RATE, "calls": CALLS}, "sent": sent, "delivery_error": failure,
         "baseline": baseline, "dry_run": a.dry_run})
     ages = " ".join(f"{n}={live[n].get('age_min', '?')}m/{live[n]['level']}" for n in ("alarm", "clock", "ledger"))
     msg = (f"{iso(now)} issues={len(shown)} {ages} errors={sorted(errors) or '-'} auth={auth} "

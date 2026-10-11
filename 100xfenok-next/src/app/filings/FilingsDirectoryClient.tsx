@@ -11,7 +11,7 @@ type TickerRow = { ticker: string };
 const columns: readonly CpDataTableColumn<TickerRow>[] = [
   { key: "ticker", header: "종목", render: (row) => <strong>{row.ticker}</strong> },
   { key: "summary", header: "공시", render: (row) => (
-    <TransitionLink className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={ROUTES.stockFilings(row.ticker)}>
+    <TransitionLink prefetch={false} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={ROUTES.stockFilings(row.ticker)}>
       {row.ticker} 공시 요약 보기
     </TransitionLink>
   ) },

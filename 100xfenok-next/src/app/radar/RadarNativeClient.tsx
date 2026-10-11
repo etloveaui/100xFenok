@@ -171,6 +171,7 @@ function CardShell({
         </span>
       </div>
       <Link
+        prefetch={false}
         href={detailHref(detail)}
         data-radar-card-link={id}
         className="mt-2 flex min-h-11 flex-1 flex-col rounded-lg"
