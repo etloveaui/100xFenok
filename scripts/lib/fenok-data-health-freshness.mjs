@@ -412,19 +412,19 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
     return { members, totalMembers: outputs.length };
   }
   if (lane.id === "edgar_filings") {
-    // The floor artifact carries the newest filing date, which is the provider's
-    // content, not the collection. The lane is weekly, so the weekly collection
-    // clock is the honest basis for the verdict.
+    // A quiet company need not file each week. Judge the actual per-ticker
+    // submissions read, never the regenerated index or newest filing date.
     const document = readOptionalJson(dataRoot, "edgar-korean-summaries/index.json");
-    if (!document) return null;
-    const collected = datedOrCollected(
-      document,
-      [],
-      ["updated", "generatedAt"],
-      lane.id,
-      "edgar-korean-summaries/index.json",
-    );
-    return { members: [collected], totalMembers: 1 };
+    const tickers = Array.isArray(document?.tickers) ? [...new Set(document.tickers)] : [];
+    const members = tickers.map(ticker => {
+      if (typeof ticker !== "string" || !/^[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(ticker)) {
+        return memberDate(null, "collected", ticker);
+      }
+      const relative = `edgar-korean-summaries/by-ticker/${ticker}.json`;
+      const manifest = readOptionalJson(dataRoot, relative);
+      return memberDate(manifest?.updated, "collected", ticker, relative);
+    });
+    return { members, totalMembers: members.length };
   }
   if (lane.id === "sentiment") {
     const document = readOptionalJson(dataRoot, "admin/sentiment/index.json");
