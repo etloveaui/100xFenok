@@ -704,7 +704,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         spec.loader.exec_module(summary_module)
         summary_module.OUT_DIR = self.fetcher.OUT_DIR
         summary_module.STATE_INDEX = store.root / "index.json"
-        self.assertEqual(summary_module.aggregate_shard_summaries(results_dir, 2), 1)
+        self.assertEqual(summary_module.aggregate_shard_summaries(results_dir, 2), 0)
         index = json.loads(summary_module.STATE_INDEX.read_text())
         self.assertEqual(index["current_results"]["attempted"], 3)
         self.assertEqual(index["current_results"]["successes"], 2)
@@ -715,6 +715,24 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(index["selection"]["selected_symbols"], tickers)
         self.assertIn("OFFLANE", index["catalogue_symbols"])
         self.assertIn("OFFLANE", {symbol for group in index["stale_groups"] for symbol in group["symbols"]})
+        self.assertEqual((canonical.read_bytes(), store._lkg_path("FAIL").read_bytes()), before)
+        # The scheduled ETF path is one invocation rather than the stock loop.
+        # It must apply the same verdict while preserving the refused bytes.
+        original_argv, original_stdout = sys.argv, sys.stdout
+        output = io.StringIO()
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--record-batch-state", "--natural-run",
+                        "--event-name", "schedule", "--tickers", "FAIL", "--sleep", "0", "--retries", "0"]
+            sys.stdout = output
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+        self.assertEqual(raised.exception.code, 0)
+        self.assertIn("[verdict] degraded", output.getvalue())
+        single = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text())
+        self.assertEqual(single["failed"], 1)
+        self.assertEqual(single["failure_assessment"]["exit_code"], 1)
         self.assertEqual((canonical.read_bytes(), store._lkg_path("FAIL").read_bytes()), before)
 
     def test_current_failure_is_prioritized_into_bounded_kpi_lkg_details(self) -> None:
@@ -784,7 +802,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                                             "skipped": 0, "fetch_attempts": 1, "errors": [failure]},
                         "selection": {"selected_symbols": ["FAIL"]},
                     })
-                self.assertEqual(summary_module.aggregate_shard_summaries(directory, 3), 2)
+                self.assertEqual(summary_module.aggregate_shard_summaries(directory, 3), 1)
                 index = json.loads(summary_module.STATE_INDEX.read_text())
                 self.assertEqual(index["batch_results"]["attempted_shards"], 1)
                 self.assertEqual(index["batch_results"]["completed_shards"], 0 if missing else 1)
@@ -795,6 +813,71 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                     self.assertEqual(index["current_results"]["errors"], [failure])
                 else:
                     self.assertIn("evidence_error", index["batch_results"]["shards"][0])
+
+    def test_run_refusal_budget_requires_complete_shards_retention_and_named_retry_evidence(self) -> None:
+        spec = importlib.util.spec_from_file_location("yf_summary_budget", ROOT / "scripts/rebuild-yf-finance-summary.py")
+        summary_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(summary_module)
+        summary_module.OUT_DIR = self.fetcher.OUT_DIR
+        summary_module.STATE_INDEX = self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json"
+        for label, refused_count, missing_shard, missing_name, expected in (
+            ("two-retained", 2, False, False, 0),
+            ("seven-retained", 7, False, False, 1),
+            ("unattempted", 2, True, False, 1),
+            ("unnamed", 2, False, True, 1),
+        ):
+            with self.subTest(label=label):
+                directory = self.root / label
+                directory.mkdir()
+                tickers = [f"REF{index}" for index in range(refused_count)]
+                errors = [{"ticker": ticker, "error": "provider quote timestamp regresses"} for ticker in tickers]
+                write_json(summary_module.STATE_INDEX, {
+                    "schema_version": "yahoo-batch-quote-history-index/v1", "retry_symbols": tickers,
+                })
+                for index, attempted in enumerate((241, 241, 241, 240, 240)):
+                    if missing_shard and index == 4:
+                        continue
+                    shard_errors = errors if index == 0 else []
+                    failed = len(shard_errors)
+                    status = int(failed > 0)
+                    (directory / f"{index}.exit").write_text(str(status))
+                    named_errors = shard_errors[:-1] if missing_name and index == 0 else shard_errors
+                    write_json(directory / f"{index}.json", {
+                        "schema_version": "yf-finance/v2", "exit_code": status,
+                        "count": attempted, "ok": attempted-failed, "failed": failed,
+                        "skipped": 0, "total_seconds": 1, "errors": shard_errors,
+                        "current_results": {"attempted": attempted, "successes": attempted-failed,
+                                            "failed": failed, "skipped": 0, "fetch_attempts": attempted,
+                                            "errors": named_errors},
+                        "failure_assessment": {"exit_code": status, "reasons": [],
+                            "tickers": tickers if failed else [],
+                            "retained_lkg_tickers": tickers if failed else [], "deferred_without_lkg_tickers": []},
+                    })
+                original_stdout, output = sys.stdout, io.StringIO()
+                try:
+                    sys.stdout = output
+                    actual = summary_module.aggregate_shard_summaries(directory, 5)
+                finally:
+                    sys.stdout = original_stdout
+                self.assertEqual(actual, expected)
+                result = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text())
+                self.assertEqual(result["run_verdict"]["refusal_budget"], 4 if missing_shard else 6)
+                if expected == 0:
+                    self.assertIn("[verdict] degraded refused=2/1203 budget=6", output.getvalue())
+                    self.assertEqual(result["current_results"]["failed"], 2)
+                    self.assertEqual(result["current_results"]["errors"], errors)
+                else:
+                    self.assertIn("[verdict] failed", output.getvalue())
+        valid = dict(current_results={"attempted": 20, "failed": 1, "errors": [{"ticker": "NEW"}]},
+                     errors=[{"ticker": "NEW"}], retry_symbols=["NEW"],
+                     assessments=[{"exit_code": 0, "tickers": ["NEW"], "deferred_without_lkg_tickers": ["NEW"]}])
+        self.assertEqual(self.state.yahoo_run_verdict(**valid)["exit_code"], 0)
+        self.assertEqual(self.state.yahoo_run_verdict(**valid)["refusal_budget"], 3)
+        self.assertEqual(self.state.yahoo_run_verdict(**{**valid, "retry_symbols": []})["exit_code"], 1)
+        self.assertEqual(self.state.yahoo_run_verdict(**{**valid, "assessments": []})["exit_code"], 1)
+        workflow = YF_WORKFLOW_PATH.read_text()
+        self.assertIn('BATCH_EXIT="$AGGREGATE_EXIT"', workflow)
+        self.assertNotIn('if [ "$AGGREGATE_EXIT" -gt "$BATCH_EXIT" ]', workflow)
 
     def test_stockanalysis_etfs_parse_records_tables_and_aum_priority(self) -> None:
         write_json(
@@ -1953,7 +2036,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             self.fetcher.write_finance_payload = original_writer
             sys.argv = original_argv
 
-        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(raised.exception.code, 1)
+        summary = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text())
+        self.assertEqual(summary["failure_assessment"]["exit_code"], 2)
+        self.assertEqual(summary["run_verdict"]["verdict"], "failed")
         self.assertEqual(canonical.read_bytes(), before, "post-write integrity failure restores the prior canonical bytes")
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")
@@ -2011,7 +2097,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             self.fetcher.write_finance_payload = original_writer
             sys.argv = original_argv
 
-        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(raised.exception.code, 1)
+        summary = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text())
+        self.assertEqual(summary["failure_assessment"]["exit_code"], 2)
+        self.assertEqual(summary["run_verdict"]["verdict"], "failed")
         self.assertEqual(canonical.read_bytes(), before)
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")
@@ -2069,7 +2158,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             sys.argv = original_argv
 
         self.assertTrue(injected["done"])
-        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(raised.exception.code, 1)
+        summary = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text())
+        self.assertEqual(summary["failure_assessment"]["exit_code"], 2)
+        self.assertEqual(summary["run_verdict"]["verdict"], "failed")
         self.assertEqual(canonical.read_bytes(), before)
         state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
         self.assertEqual(state["resolution_state"], "lkg_primary")

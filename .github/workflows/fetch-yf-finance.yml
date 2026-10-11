@@ -395,7 +395,8 @@ jobs:
               else
                 AGGREGATE_EXIT=$?
               fi
-              if [ "$AGGREGATE_EXIT" -gt "$BATCH_EXIT" ]; then BATCH_EXIT="$AGGREGATE_EXIT"; fi
+              # Complete invocation evidence owns the final refusal budget.
+              BATCH_EXIT="$AGGREGATE_EXIT"
             fi
             exit "$BATCH_EXIT"
           else

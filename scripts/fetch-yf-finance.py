@@ -72,7 +72,7 @@ from data_supply_stock_detail import (
     validate_stock_detail_candidate,
     yahoo_provider_symbol,
 )
-from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore
+from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore, yahoo_run_verdict
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -2931,6 +2931,18 @@ def main():
     assessment = yahoo_failure_exit_assessment(errors, state_store, finalized_index)
     summary["exit_code"] = assessment["exit_code"]
     summary["failure_assessment"] = assessment
+    # Multi-shard invocations keep raw shard exits until the aggregate decides.
+    # The scheduled ETF invocation has one shard and uses the same final rule.
+    if args.natural_run and not args.all_shards_run and isinstance(finalized_index, dict):
+        verdict = yahoo_run_verdict(
+            current_results=finalized_index["current_results"], errors=errors,
+            retry_symbols=finalized_index.get("retry_symbols") or [], assessments=[assessment],
+            shard_exit_codes=[assessment["exit_code"]],
+        )
+        summary["run_verdict"] = verdict
+        summary["exit_code"] = verdict["exit_code"]
+        print(f"[verdict] {verdict['verdict']} refused={verdict['refused']}/{verdict['attempted']} "
+              f"budget={verdict['refusal_budget']}; reasons={'; '.join(verdict['reasons']) or 'none'}")
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")
     print(f"\n[summary] ok={len(ok)} failed={len(errors)} total={total_s}s")
     if errors:
@@ -2948,7 +2960,8 @@ def main():
             )
         else:
             print(f"[corrupt] Yahoo batch integrity failure: {'; '.join(assessment['reasons'])}")
-        sys.exit(assessment["exit_code"])
+    if errors or summary["exit_code"]:
+        sys.exit(summary["exit_code"])
 
 
 if __name__ == "__main__":

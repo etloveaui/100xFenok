@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 import runpy
+from yahoo_batch_state import yahoo_run_verdict
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "yf" / "finance"
@@ -119,6 +120,15 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
     state_index = json.loads(STATE_INDEX.read_text(encoding="utf-8"))
     if state_index.get("schema_version") != "yahoo-batch-quote-history-index/v1":
         raise ValueError("cannot aggregate an invalid Yahoo state index")
+    verdict = yahoo_run_verdict(
+        current_results=current, errors=errors, retry_symbols=state_index.get("retry_symbols") or [],
+        assessments=[shard.get("failure_assessment") for shard in shards],
+        expected_shards=expected_shards, attempted_shards=len(shards),
+        completed_shards=batch["completed_shards"], shard_exit_codes=[exit_code], reported_failed=totals["failed"],
+    )
+    exit_code = verdict["exit_code"]
+    batch["exit_code"] = summary["exit_code"] = exit_code
+    summary["run_verdict"] = state_index["run_verdict"] = verdict
     state_index["current_results"] = current
     state_index["batch_results"] = batch
     state_index["selection"] = {
@@ -134,6 +144,8 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
         f"ok={totals['ok']} failed={totals['failed']} exit={exit_code}; "
         f"unattempted={','.join(unattempted) or 'none'}"
     )
+    print(f"[verdict] {verdict['verdict']} refused={verdict['refused']}/{verdict['attempted']} "
+          f"budget={verdict['refusal_budget']}; reasons={'; '.join(verdict['reasons']) or 'none'}")
     return exit_code
 
 
@@ -158,7 +170,7 @@ def main() -> None:
             status = aggregate_shard_summaries(args.shard_results_dir, args.expected_shards)
         except (OSError, ValueError, TypeError) as exc:
             print(f"[corrupt] Yahoo shard aggregation failed: {exc}", file=sys.stderr)
-            status = 2
+            status = 1
         sys.exit(status)
     namespace = runpy.run_path(str(FETCHER))
     tickers = namespace["load_universe"]()

@@ -17,6 +17,48 @@ ACTIVE_UNIVERSE_SCHEMA_VERSION = "yahoo-batch-active-universe/v1"
 CORE_ETF_INDEX_FILENAME = "index-core-etf.json"
 DEFAULT_INDEX_FILENAME = "index.json"
 TERMINAL_RESOLUTION_STATE = "terminal_provider_unsupported"
+# Maximum refused share and minimum allowance for a completed, evidenced run.
+# Lead set 2026-10-11: 0.5%, floor 3; (0.0, 0) restores fail-on-any-refusal.
+YAHOO_RUN_REFUSAL_BUDGET = (0.005, 3)
+
+
+def yahoo_run_verdict(*, current_results, errors, retry_symbols, assessments,
+                      expected_shards=1, attempted_shards=1, completed_shards=1,
+                      shard_exit_codes=(), reported_failed=None):
+    """Assess the invocation without changing any per-member refusal or source date."""
+    attempted = current_results.get("attempted", 0)
+    failed = current_results.get("failed", 0)
+    budget = max(YAHOO_RUN_REFUSAL_BUDGET[1], int(attempted * YAHOO_RUN_REFUSAL_BUDGET[0]))
+    reasons = []
+    if attempted_shards != expected_shards or completed_shards != expected_shards:
+        reasons.append("scheduled shards were unattempted or incomplete")
+    if any(code >= 2 for code in shard_exit_codes):
+        reasons.append("a shard reported a systemic failure")
+    if (reported_failed is not None and reported_failed != failed) or (failed == 0 and 1 in shard_exit_codes):
+        reasons.append("process and summary refusal counts disagree")
+    refused = {row.get("ticker") for row in errors if isinstance(row, dict) and row.get("ticker")}
+    named = {row.get("ticker") for row in current_results.get("errors", [])
+             if isinstance(row, dict) and row.get("ticker")}
+    if failed != len(refused) or failed != len(errors) or named != refused or failed > attempted:
+        reasons.append("refused members are missing or inconsistent in KPI evidence")
+    retained, deferred, assessed = set(), set(), set()
+    for assessment in assessments:
+        if not isinstance(assessment, dict):
+            continue
+        retained.update(assessment.get("retained_lkg_tickers") or [])
+        deferred.update(assessment.get("deferred_without_lkg_tickers") or [])
+        assessed.update(assessment.get("tickers") or [])
+        if assessment.get("reasons") or assessment.get("exit_code", 0) >= 2:
+            reasons.append("per-member preservation or failure evidence is invalid")
+    if failed and (not refused.issubset(retained | deferred) or assessed != refused):
+        reasons.append("a refused member has neither verified retained data nor named deferral")
+    if not refused.issubset(set(retry_symbols)):
+        reasons.append("a refused member is absent from the retry set")
+    if failed > budget:
+        reasons.append("refusals exceed the run budget")
+    return {"verdict": "failed" if reasons else "degraded" if failed else "complete",
+            "exit_code": 1 if reasons else 0, "attempted": attempted, "refused": failed,
+            "refusal_budget": budget, "reasons": reasons}
 
 
 def _json_bytes(payload: dict) -> bytes:
