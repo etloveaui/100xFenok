@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { isRealCalendarDate } from "../../scripts/lib/market-calendar.mjs";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { expectedEntityKeyPolicy, isValidEntityKey, makeEntityKey } from "../../scripts/lib/entity-key-policy.mjs";
@@ -209,11 +210,32 @@ function producerStamp(payload, value, label, errors, warnings) {
   return value.trim();
 }
 
+const edgarFeedDir = path.join(path.dirname(EDGAR_INDEX_PATH), "by-ticker");
+const edgarFeedFiles = fs.existsSync(edgarFeedDir) ? fs.readdirSync(edgarFeedDir).filter((file) => file.endsWith(".json")) : [];
+const edgarTickerEvidence = new Map();
+function edgarTickerSource(ticker, errors) {
+  if (edgarTickerEvidence.has(ticker)) return edgarTickerEvidence.get(ticker);
+  const matches = edgarFeedFiles.filter((file) => path.basename(file, ".json").toUpperCase() === ticker);
+  if (matches.length > 1) errors.push(`${ticker}: ambiguous EDGAR ticker feed`);
+  const state = matches.length === 1 ? readJsonState(path.join(edgarFeedDir, matches[0])) : {exists:false,payload:null,error:null};
+  if (state.error) errors.push(`${ticker}: EDGAR ticker feed is malformed`);
+  const filings = Array.isArray(state.payload?.filings) ? state.payload.filings : [];
+  const validDates = filings.map((row) => row?.filingDate).filter(isRealCalendarDate).sort();
+  const asOf = validDates.at(-1) ?? null;
+  if (asOf && asOf > new Date().toISOString().slice(0, 10)) errors.push(`${ticker}: EDGAR filingDate is future-dated`);
+  const evidence = {asOf, hasFilings:filings.length > 0,
+    reason: asOf ? null : !state.payload ? "EDGAR ticker feed is missing" : !filings.length ? "EDGAR ticker feed has no filings" : "EDGAR filings have no valid filingDate"};
+  edgarTickerEvidence.set(ticker, evidence);
+  return evidence;
+}
+
 function buildProducerEvidence(errors, warnings) {
   const stocksAnalyzer = readOptionalProducer("stocks_analyzer", STOCKS_ANALYZER_PATH, errors, warnings);
   const stockActionIndex = readOptionalProducer("stock_action_index", STOCK_ACTION_INDEX_PATH, errors, warnings);
   const marketFactsIndex = readOptionalProducer("market_facts", MARKET_FACTS_INDEX_PATH, errors, warnings);
-  readOptionalProducer("edgar_summaries", EDGAR_INDEX_PATH, errors, warnings);
+  const edgarIndex = readOptionalProducer("edgar_summaries", EDGAR_INDEX_PATH, errors, warnings);
+  const edgarFeeds = (Array.isArray(edgarIndex?.tickers) ? edgarIndex.tickers : []).map((ticker) => edgarTickerSource(String(ticker).toUpperCase(), errors)).filter((row) => row.hasFilings);
+  const edgarFloor = edgarFeeds.length && edgarFeeds.every((row) => row.asOf) ? edgarFeeds.map((row) => row.asOf).sort()[0] : null;
   const sec13fSummary = readOptionalProducer("sec_13f_summary", SEC13F_SUMMARY_PATH, errors, warnings);
   readOptionalProducer("sec_13f_by_ticker", SEC13F_BY_TICKER_PATH, errors, warnings);
   const guruHolders = readOptionalProducer("guru_holders", GURU_HOLDERS_PATH, errors, warnings);
@@ -280,7 +302,7 @@ function buildProducerEvidence(errors, warnings) {
       sourceDiagnosticsMigrationPartial: marketFactsSourceDiagnosticPresence.some(Boolean)
         && !marketFactsSourceDiagnosticPresence.every(Boolean),
     }],
-    ["edgar_summaries", { expected: null, intentionalNull: true, requiredReason: NO_AGGREGATE_SOURCE_DATE }],
+    ["edgar_summaries", { expected: edgarFloor, intentionalNull: false, verifiable: Boolean(edgarIndex), requiredReason: "producer has not emitted a complete source-date floor" }],
     ["sec_13f", {
       expected: summaryQuarter ?? guruQuarter,
       intentionalNull: false,
@@ -563,7 +585,10 @@ if (graph) {
     const stockMarketFactsEvidence = marketFactsTickerSource(stock.ticker, errors);
     assert(stock?.source_links?.market_facts === stockMarketFactsEvidence.exists, `${stock?.id}: market_facts source linkage must match producer file`, errors);
     assert(stock?.as_of?.market_facts === (stockMarketFactsEvidence.exists ? stockMarketFactsEvidence.sourceAsOf : null), `${stock?.id}: market_facts as_of must match ticker producer evidence`, errors);
-    assert(stock?.as_of?.filings === (stock?.source_links?.edgar_summary ? graph.source_as_of?.edgar_summaries : null), `${stock?.id}: filings as_of must match source linkage`, errors);
+    const filingEvidence = stock?.source_links?.edgar_summary ? edgarTickerSource(stock.ticker, errors) : {asOf:null,reason:"No EDGAR ticker feed is enrolled"};
+    assert(stock?.as_of?.filings === filingEvidence.asOf, `${stock?.id}: filings as_of must match ticker filingDate evidence`, errors);
+    assert(stock?.as_of_reason?.filings === filingEvidence.reason, `${stock?.id}: filings date/reason must match ticker evidence`, errors);
+    if (stockIndex) assert(isDeepStrictEqual(stockIndexRows[stock.ticker]?.as_of_reason, stock?.as_of_reason), `${stock?.id}: stock index date reasons must match graph`, errors);
     assert(stock?.as_of?.sec_13f === (stock?.source_links?.sec_13f ? graph.source_as_of?.sec_13f : null), `${stock?.id}: sec_13f as_of must match source linkage`, errors);
     if (stockIndex) assert(isDeepStrictEqual(stockIndexRows[stock.ticker]?.as_of, stock?.as_of), `${stock?.id}: stock index as_of must match graph node`, errors);
     assert(Array.isArray(stock?.relations), `${stock?.id}: relations are required`, errors);
@@ -593,7 +618,9 @@ if (graph) {
   }
 
   for (const filing of nodeGroups.filings) {
-    assert(filing?.as_of === graph.source_as_of?.edgar_summaries, `${filing?.id}: filing as_of must match EDGAR aggregate source`, errors);
+    const evidence = edgarTickerSource(filing.ticker, errors);
+    assert(filing?.as_of === evidence.asOf, `${filing?.id}: filing as_of must match ticker filingDate evidence`, errors);
+    assert(filing?.as_of_reason === evidence.reason, `${filing?.id}: filing date/reason must match ticker evidence`, errors);
   }
   for (const row of nodeGroups.sec13f) {
     assert(row?.as_of === graph.source_as_of?.sec_13f, `${row?.id}: 13F as_of must match source`, errors);

@@ -29,6 +29,7 @@ export type StockConnectionEntry = {
     filings?: string | null;
     sec_13f?: string | null;
   } | null;
+  as_of_reason?: { filings?: string | null } | null;
   relations?: Array<{
     type?: string | null;
     target?: string | null;

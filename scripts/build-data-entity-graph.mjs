@@ -7,6 +7,7 @@
  */
 
 import fs from "node:fs";
+import { isRealCalendarDate } from "./lib/market-calendar.mjs";
 import path from "node:path";
 import { ENTITY_KEY_POLICY, makeEntityKey, normalizeEntitySymbol } from "./lib/entity-key-policy.mjs";
 
@@ -111,6 +112,25 @@ const analyzerRows = Array.isArray(stocksAnalyzer.data) ? stocksAnalyzer.data : 
 const actionRows = Array.isArray(stockActionIndex.rows) ? stockActionIndex.rows : [];
 const etfRows = Array.isArray(etfUniverse.records) ? etfUniverse.records : [];
 const edgarTickers = new Set((Array.isArray(edgarIndex.tickers) ? edgarIndex.tickers : []).map(normalizeTicker));
+const edgarFeedDir = path.join(DATA_ROOT, "edgar-korean-summaries/by-ticker");
+const edgarFeedFiles = new Map();
+for (const file of fs.existsSync(edgarFeedDir) ? fs.readdirSync(edgarFeedDir).filter((file) => file.endsWith(".json")) : []) {
+  const symbol = normalizeTicker(path.basename(file, ".json"));
+  if (edgarFeedFiles.has(symbol)) throw new Error(`ambiguous EDGAR ticker feed: ${symbol}`);
+  edgarFeedFiles.set(symbol, file);
+}
+const edgarSourceByTicker = new Map([...edgarTickers].map((ticker) => {
+  const file = edgarFeedFiles.get(ticker);
+  const feed = file ? readJson(`edgar-korean-summaries/by-ticker/${file}`, null) : null;
+  const filings = Array.isArray(feed?.filings) ? feed.filings : [];
+  const dates = filings.map((row) => row?.filingDate).filter(isRealCalendarDate).sort();
+  const asOf = dates.at(-1) ?? null;
+  return [ticker, {asOf, hasFilings: filings.length > 0,
+    reason: asOf ? null : !feed ? "EDGAR ticker feed is missing" : !filings.length ? "EDGAR ticker feed has no filings" : "EDGAR filings have no valid filingDate"}];
+}));
+const edgarDatedFeeds = [...edgarSourceByTicker.values()].filter((row) => row.hasFilings);
+const edgarSourceFloor = edgarDatedFeeds.length && edgarDatedFeeds.every((row) => row.asOf)
+  ? edgarDatedFeeds.map((row) => row.asOf).sort()[0] : null;
 const sec13fTickers = new Set(Object.keys(sec13fByTicker).map(normalizeTicker));
 const actionByTicker = new Map(actionRows.map((row) => [normalizeTicker(row.symbol), row]));
 const analyzerByTicker = new Map(analyzerRows.map((row) => [normalizeTicker(row.symbol), row]));
@@ -166,7 +186,7 @@ const sourceAsOf = {
   stocks_analyzer: firstDate(stocksAnalyzer.source_date),
   stock_action_index: firstDate(stockActionIndex.source_date),
   market_facts: firstDate(marketFactsIndex.core_surface_source_as_of),
-  edgar_summaries: null,
+  edgar_summaries: edgarSourceFloor,
   sec_13f: firstDate(sec13fSummary.metadata?.quarters_covered?.[0], guruHoldersIndex.metadata?.quarter),
   etf_universe: null,
 };
@@ -174,7 +194,7 @@ const sourceAsOfReason = Object.fromEntries(Object.entries({
   stocks_analyzer: SOURCE_FLOOR_UNAVAILABLE,
   stock_action_index: SOURCE_FLOOR_UNAVAILABLE,
   market_facts: SOURCE_FLOOR_UNAVAILABLE,
-  edgar_summaries: NO_AGGREGATE_SOURCE_DATE,
+  edgar_summaries: SOURCE_FLOOR_UNAVAILABLE,
   sec_13f: SOURCE_FLOOR_UNAVAILABLE,
   etf_universe: NO_AGGREGATE_SOURCE_DATE,
 }).map(([source, reason]) => [source, sourceAsOf[source] ? null : reason]));
@@ -215,7 +235,8 @@ function touchFiling(ticker) {
       ticker: symbol,
       route: `/stock/${symbol}?tab=filings`,
       source: "edgar-korean-summaries",
-      as_of: sourceAsOf.edgar_summaries,
+      as_of: edgarSourceByTicker.get(symbol)?.asOf ?? null,
+      as_of_reason: edgarSourceByTicker.get(symbol)?.reason ?? null,
     });
   }
   return id;
@@ -254,9 +275,10 @@ const stockEntities = analyzerRows.map((row) => {
       profile: sourceAsOf.stocks_analyzer,
       action_index: sourceAsOf.stock_action_index,
       market_facts: marketFactsSource,
-      filings: hasEdgar ? sourceAsOf.edgar_summaries : null,
+      filings: edgarSourceByTicker.get(ticker)?.asOf ?? null,
       sec_13f: has13f ? sourceAsOf.sec_13f : null,
     },
+    as_of_reason: {filings: edgarSourceByTicker.get(ticker)?.reason ?? (hasEdgar ? null : "No EDGAR ticker feed is enrolled")},
     source_links: {
       stocks_analyzer: true,
       stock_action_index: Boolean(action),
@@ -547,6 +569,7 @@ const stockIndexEntries = Object.fromEntries(stockEntities.map((entity) => {
     connection_count: connectionCount,
     service_count: relatedEtfs.length,
     as_of: entity.as_of,
+    as_of_reason: entity.as_of_reason,
     relations: entity.relations.map((relation) => ({
       type: relation.type,
       target: relation.target,
