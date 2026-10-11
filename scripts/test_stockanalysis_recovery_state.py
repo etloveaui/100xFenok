@@ -470,9 +470,17 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertEqual(index["counts"]["lkg"], 3)
         self.assertEqual(index["counts"]["retry"], 3)
         self.assertEqual(index["current_results"]["failed"], 3)
+        self.assertEqual(index["current_results"]["observed_at"], self.run_context("chaos-1")["observed_at"])
+        self.assertEqual(index["current_results"]["by_kind"]["stock"]["failed"], 1)
+        self.assertNotIn("etf", index["current_results"]["by_kind"])
         self.assertEqual(index["degraded_tickers"], ["AAPL"])
         self.assertEqual(index["degraded_surfaces"], ["actions_recent"])
         self.assertEqual(self.store.assess_current_attempt(index)["status"], "degraded")
+
+    def test_index_only_rebuild_does_not_claim_collection_attempt(self) -> None:
+        index = self.store.rebuild_index(self.run_context("index-only"))
+        self.assertIsNone(index["current_results"]["observed_at"])
+        self.assertEqual(index["current_results"]["by_kind"], {})
 
     def test_provider_row_dates_supply_strict_advancement_markers(self) -> None:
         stock = stock_payload("AAPL", "2026-07-14T20:00:00Z")

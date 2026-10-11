@@ -12,6 +12,7 @@ import argparse
 import json
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import runpy
@@ -41,6 +42,7 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
     totals = {key: 0 for key in ("count", "ok", "failed", "skipped", "total_seconds")}
     current = {key: 0 for key in ("attempted", "successes", "failed", "skipped", "fetch_attempts")}
     current["errors"] = []
+    attempt_times = []
     errors, shards, unattempted, evidence_errors, selected, terminal_symbols = [], [], [], [], [], []
     exit_code = 0
     for index in range(expected_shards):
@@ -76,6 +78,13 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
                 if key != "errors":
                     current[key] += result[key]
             current["errors"].extend(result["errors"])
+            if result["attempted"] > result["skipped"] and isinstance(result.get("observed_at"), str):
+                try:
+                    stamp = datetime.fromisoformat(result["observed_at"].replace("Z", "+00:00"))
+                    if stamp.tzinfo is not None:
+                        attempt_times.append(stamp.astimezone(timezone.utc))
+                except (TypeError, ValueError):
+                    pass
             terminal_symbols.extend(result.get("terminal_symbols") or [])
             errors.extend(summary.get("errors") or [])
             selection = summary.get("selection") or {}
@@ -97,6 +106,7 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
         current["failed"] += 1
     if evidence_errors:
         exit_code = max(exit_code, 2)
+    current["observed_at"] = max(attempt_times).isoformat().replace("+00:00", "Z") if attempt_times else None
     batch = {
         "expected_shards": expected_shards,
         "attempted_shards": len(shards),
