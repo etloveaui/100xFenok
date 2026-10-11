@@ -5,6 +5,7 @@ import path from "node:path";
 import { atomicWrite, writeJsonAtomic } from "./atomic-file.mjs";
 
 export const LKG_STATE_SCHEMA = "data-supply-lkg-state/v1";
+const SOURCE_CLOCK_SKEW_MS = 120_000;
 const IDENTIFIER_RE = /^[a-z][a-z0-9_-]{0,95}$/;
 const SYSTEMIC_REASONS = new Set([
   "auth_error",
@@ -76,7 +77,7 @@ function validateCandidate(candidate, run = null) {
   if (candidate.deriveSourceAsOf(document) !== candidate.sourceAsOf) {
     throw new Error(`candidate sourceAsOf is not payload-bound for ${candidate.key}`);
   }
-  if (run !== null && Date.parse(candidate.sourceAsOf) > Date.parse(run.observedAt)) {
+  if (run !== null && Date.parse(candidate.sourceAsOf) > Date.parse(run.observedAt) + SOURCE_CLOCK_SKEW_MS) {
     throw new Error(`candidate sourceAsOf is in the future for ${candidate.key}`);
   }
   return { document };
