@@ -569,11 +569,7 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
 }
 
 {
-  // A lost scheduled slot is RESOLVED by any strictly newer successful run,
-  // including workflow_dispatch. The 2026-08-01 eviction storm left monthly
-  // lanes (OECD, slickcharts-monthly) paging hourly toward their NEXT natural
-  // slot on September 1 even after repeated dispatch successes refreshed the
-  // same data — recovery evidence the alarm never fetched.
+  // Manual success records progress; the next automatic cycle closes the slot.
   const result = evaluateWorkflow(
     { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
     [
@@ -582,11 +578,21 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
       { ...S(30690000000), event: "schedule" },
     ],
   );
-  assert.equal(result.status, "ok", "a newer successful run resolves the lost slot");
-  assert.equal(result.lost_schedule_slot_count, 0);
-  assert.equal(result.resolved_lost_schedule_slot_count, 1);
-  assert.deepEqual(result.lost_schedule_slot_run_urls, []);
-  assert.deepEqual(result.alarm_reasons, []);
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.equal(result.resolved_lost_schedule_slot_count, 0);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30700000001"]);
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
+  assert.equal(result.recovery_pending_next_scheduled_run, true);
+  assert.match(buildIssueBody([result]), /Recovery pending next scheduled run/);
+  const recovered = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [{ ...S(30700000011), event: "schedule" }, { ...S(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true }],
+  );
+  assert.equal(recovered.status, "ok");
+  assert.equal(recovered.resolved_lost_schedule_slot_count, 1);
+  assert.equal(recovered.recovery_pending_next_scheduled_run, false);
 }
 
 {
@@ -614,21 +620,19 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
 }
 
 {
-  // A failure streak is recovered by a strictly newer successful run of any
-  // event. slickcharts-monthly live case: schedule failed 07-01, its 08-01
-  // slot was evicted, three dispatch successes then proved the producer end
-  // to end — yet the streak could only break on the NEXT monthly slot.
+  // Slow-cadence incidents remain open after a manual success.
   const result = evaluateWorkflow(
-    { file: "slickcharts-monthly.yml", label: "Monthly", events: ["schedule"] },
+    { file: "slickcharts-monthly.yml", label: "Monthly", events: ["schedule"], failure_streak_threshold: 1 },
     [
       { ...S(30700000010), event: "workflow_dispatch" },
       { ...F(30700000001), event: "schedule" },
       { ...S(30690000000), event: "schedule" },
     ],
   );
-  assert.equal(result.status, "ok", "a newer success of any event recovers the streak");
-  assert.equal(result.failure_streak_recovered, true);
-  assert.deepEqual(result.alarm_reasons, []);
+  assert.equal(result.status, "alarm");
+  assert.equal(result.failure_streak_recovered, false);
+  assert.equal(result.recovery_pending_next_scheduled_run, true);
+  assert.deepEqual(result.alarm_reasons, ["failure_streak"]);
 }
 
 {
@@ -644,11 +648,11 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.equal(result.status, "alarm");
   assert.ok(result.alarm_reasons.includes("failure_streak"));
   assert.equal(result.failure_streak_recovered, false);
+  assert.equal(result.recovery_pending_next_scheduled_run, false);
 }
 
 {
-  // Mixed ages: only slots older than the newest success resolve; a slot
-  // newer than every success keeps paging.
+  // A manual success predating the newest lost slot cannot mark recovery.
   const result = evaluateWorkflow(
     { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
     [
@@ -658,9 +662,10 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
     ],
   );
   assert.equal(result.status, "alarm");
-  assert.equal(result.lost_schedule_slot_count, 1);
-  assert.equal(result.resolved_lost_schedule_slot_count, 1);
-  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30700000020"]);
+  assert.equal(result.lost_schedule_slot_count, 2);
+  assert.equal(result.resolved_lost_schedule_slot_count, 0);
+  assert.equal(result.recovery_pending_next_scheduled_run, false);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30700000020", "https://gh/run/30700000001"]);
 }
 
 // --- The classifier must actually be wired to run data ----------------------
