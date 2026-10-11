@@ -40,6 +40,7 @@ import { DATA_STATE_LABELS, makeDataState, type LoaderError } from "@/lib/data-s
 import { ROUTES } from "@/lib/routes";
 import { readPriceTargets } from "@/lib/stock/price-target";
 import { normalizeForEntityKey } from "@/lib/ticker";
+import { derivedBetaLabel } from "@/lib/derived-beta";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
 import StockConnectionsRail from "./StockConnectionsRail";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -3963,7 +3964,7 @@ function EtfDataPanel({
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
     { label: "보수율", value: expenseRatio !== null ? fmtEtfPct(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
     { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
-    { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "민감도" },
+    { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: (beta !== null ? derivedBetaLabel(marketFacts?.facts?.beta) : null) ?? "민감도" },
     { label: "설정일", value: rawText(overview.inception), note: "Inception" },
     { label: "표시 종목", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: formatDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtEtfPct(totalWeight) : "—", note: "표시 항목 기준" },

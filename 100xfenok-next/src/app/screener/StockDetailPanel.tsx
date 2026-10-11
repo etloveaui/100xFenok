@@ -35,6 +35,7 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
+import { derivedBetaLabel } from "@/lib/derived-beta";
 import { Panel, PanelHeader, Row, Bar, EdgeMark, EvidenceRail } from "@/components/ui";
 
 export type MaybeNumber = number | null | undefined;
@@ -1466,6 +1467,7 @@ function EtfBreakdownStrip({
 function MarketFactCard({ label, field, fact, currency }: { label: string; field: string; fact?: MarketFact; currency?: string }) {
   if (!fact) return null;
   const candidateCount = fact.candidate_count ?? fact.candidates?.length ?? 1;
+  const basisLabel = (field === "beta" ? derivedBetaLabel(fact) : null) ?? sourceLabel(fact.source);
   return (
     <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2.5">
       <div className="flex min-w-0 items-start justify-between gap-2">
@@ -1477,8 +1479,8 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
       <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">
         {formatMarketFact(field, fact, currency)}
       </p>
-      <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-[var(--c-ink-3)]" title={sourceLabel(fact.source)}>
-        {sourceLabel(fact.source)}
+      <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-[var(--c-ink-3)]" title={basisLabel}>
+        {basisLabel}
       </p>
     </div>
   );

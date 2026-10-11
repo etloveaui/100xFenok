@@ -25,6 +25,7 @@ import {
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { ROUTES } from "@/lib/routes";
 import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
+import { derivedBetaLabel } from "@/lib/derived-beta";
 import {
   getEtfDataSupplyPresentation,
   parseEtfApiResponse,
@@ -1441,7 +1442,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "상장일", value: inceptionDate, note: "상장 시작일" },
     { label: "발행 주식 수", value: sharesOutstanding, note: "현재 원장 기준" },
-    { label: "베타", value: beta !== null ? formatDecimal(beta, { digits: 2 }) : rawText(overview.beta), note: "시장 민감도" },
+    { label: "베타", value: beta !== null ? formatDecimal(beta, { digits: 2 }) : rawText(overview.beta), note: (beta !== null ? derivedBetaLabel(marketFacts?.facts?.beta) : null) ?? "시장 민감도" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
     { label: "PER", value: trailingPe !== null ? formatDecimal(trailingPe, { digits: 1 }) : rawText(overview.peRatio), note: "최근 실적 기준" },
     { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatCurrency(quote.h52, currency as Currency) : "—", note: "최근 52주 고점" },
