@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
+import { briefingPublishedAt } from "./lib/fenok-data-health-freshness.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -602,7 +603,7 @@ export function readLaneAttempt(lane, context = {}) {
     const rows = editions.map(edition => {
       if (typeof edition.path !== "string" || edition.path.startsWith("/") || edition.path.split("/").includes("..")) return null;
       const document = readJson(path.join(normalized.repoRoot, "data/briefing", edition.path));
-      const epoch = Date.parse(document?.published_kst);
+      const epoch = Date.parse(document?.edition_date === edition.edition_date ? briefingPublishedAt(document) : null);
       return Number.isFinite(epoch) ? { observed_at: new Date(epoch).toISOString(), outcome: "success" } : null;
     }).filter(Boolean);
     return normalizeAttempt(latestAttempt(rows));

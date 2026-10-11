@@ -84,6 +84,14 @@ function validCalendarDate(value) {
     && parsed.getUTCDate() === day;
 }
 
+export function briefingPublishedAt(document) {
+  if (!validCalendarDate(document?.edition_date)) return null;
+  const clock = document?.published_kst;
+  const value = typeof clock === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(clock)
+    ? `${document.edition_date}T${clock}:00+09:00` : clock;
+  return dateOnly(value) ? new Date(value).toISOString() : null;
+}
+
 function dateValue(value) {
   if (typeof value === "number" && Number.isFinite(value)) {
     const milliseconds = Math.abs(value) >= 1e12 ? value : value * 1000;
@@ -250,7 +258,7 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
       const edition = (index?.editions ?? []).find(row => row.product === product.id
         && row.edition_date === index?.latest?.[product.id]);
       const document = edition?.path ? readOptionalJson(dataRoot, `briefing/${edition.path}`) : null;
-      return memberDate(document?.edition_date === edition?.edition_date ? document?.published_kst : null,
+      return memberDate(document?.edition_date === edition?.edition_date ? briefingPublishedAt(document) : null,
         "source", product.id);
     });
     return { members, totalMembers: members.length };
