@@ -462,6 +462,8 @@ function oldestSourceDate(values) {
 }
 
 function buildSourceState(lane, context, kpiLane) {
+  const external = lane.external_status ? readJson(path.join(context.repoRoot, lane.external_status)) : null;
+  const externalSourceDate = safeIso(external?.last_run?.source_as_of);
   const mapping = LANE_SOURCE_MAP[lane.id] || { source_id: null, no_source_reason: "source SLA is not declared" };
   const sourceSla = mapping.source_id
     ? (context.kpi?.source_sla || []).find((row) => row?.source_id === mapping.source_id) || null
@@ -476,7 +478,7 @@ function buildSourceState(lane, context, kpiLane) {
     ? null
     : mapping.source_artifact
       ? artifactSourceDate
-      : kpiLane?.date_basis === "collected" ? null : safeIso(kpiLane?.newest_source_date || kpiLane?.as_of) || null;
+      : kpiLane?.date_basis === "collected" ? null : safeIso(kpiLane?.newest_source_date || kpiLane?.as_of) || externalSourceDate;
   const evidenceStatus = artifactSourceDate || sourceDate
     ? "observed"
     : mapping.no_source_evidence_status || "unavailable";
@@ -484,7 +486,7 @@ function buildSourceState(lane, context, kpiLane) {
     source_date: sourceDate,
     source_date_reason: artifactSourceDate
       ? mapping.source_date_reason
-      : sourceDate ? "data_health_source_date" : mapping.no_source_reason,
+      : sourceDate ? externalSourceDate === sourceDate ? "external_collector_source_date" : "data_health_source_date" : mapping.no_source_reason,
     evidence_status: SOURCE_EVIDENCE.has(evidenceStatus) ? evidenceStatus : "unavailable",
     sla: sourceSla ? {
       unit: sourceSla.unit,
