@@ -63,12 +63,24 @@ const LEGACY_TOC_ALIASES = Object.freeze({
 });
 const LEGACY_TOC_SOURCE_FAMILY = "GDELT Web Legacy NGrams TOC";
 const LEGACY_TOC_ROOT = "https://storage.googleapis.com/data.gdeltproject.org/gdeltv5/weblegacy/ngrams";
-const LEGACY_TOC_LOOKBACK_HOURS = 24;
+// The lookback and its two work bounds come from one measurement of this
+// dataset from the A1 host (2026-10-03T04:31Z..2026-10-11T12:31Z, 200 h):
+// 1,529 files behind 4,000 candidate URLs, 1,006 MB decompressed (5.0 MB/h).
+// The longest gap between two English headlines naming one reference company
+// was at least 46.7 h (PayPal, across the 10-03/04 weekend), 30.3 h for
+// UnitedHealth and 22.5 h for DoorDash and Coinbase. The former 24 h lookback
+// under a 64 MB total bound reached back only about 12-20 h, so the basket was
+// incomplete on 5 of the 8 hosted runs that reached this source between
+// 2026-09-27 and 2026-10-10. 72 h is the widest window whose oldest row still
+// passes the 3-calendar-day floor in lib/gdelt-selected-source.mjs, which is
+// also this lane's freshness bound in lib/data-supply-detection-config.mjs.
+const LEGACY_TOC_LOOKBACK_HOURS = 72;
 const LEGACY_TOC_FETCH_CONCURRENCY = 20;
 const MAX_LEGACY_TOC_BYTES = 2 * 1024 * 1024;
 const MAX_LEGACY_TOC_DECOMPRESSED_BYTES = 2 * 1024 * 1024;
-const MAX_LEGACY_TOC_TOTAL_DECOMPRESSED_BYTES = 64 * 1024 * 1024;
-const MAX_LEGACY_TOC_REQUESTS = 500;
+// 72 h x 5.0 MB/h = 362 MB measured; 72 h x 20 candidate URLs/h = 1,440.
+const MAX_LEGACY_TOC_TOTAL_DECOMPRESSED_BYTES = 512 * 1024 * 1024;
+const MAX_LEGACY_TOC_REQUESTS = 1500;
 
 const POSITIVE_CUES = [
   "beat", "beats", "upgrade", "upgraded", "raises", "raised", "record", "strong",
@@ -178,14 +190,22 @@ function fetchJson(url, { timeoutMs = 30000 } = {}) {
         data += chunk;
       });
       res.on("end", () => {
+        // A throttled member request must stay recognisable as throttling
+        // after it becomes an Error; the caller reads these two fields.
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 160)}`));
+          reject(Object.assign(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 160)}`), {
+            statusCode: res.statusCode,
+            rateLimited: res.statusCode === 429,
+          }));
           return;
         }
         try {
           resolve(JSON.parse(data));
         } catch (err) {
-          reject(new Error(`JSON parse failed: ${err.message}`));
+          reject(Object.assign(new Error(`JSON parse failed: ${err.message}`), {
+            statusCode: res.statusCode,
+            rateLimited: isGdeltThrottleAdvisory({ statusCode: res.statusCode, body: data }),
+          }));
         }
       });
     });
@@ -200,16 +220,21 @@ function sleep(ms) {
 
 async function fetchJsonWithRetry(url, { retries, retryBackoffMs }) {
   let lastErr = null;
+  let retryCount = 0;
+  let retryWaitMs = 0;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await fetchJson(url);
     } catch (err) {
       lastErr = err;
       if (attempt >= retries) break;
-      await sleep(retryBackoffMs * (attempt + 1));
+      const waitMs = retryBackoffMs * (attempt + 1);
+      retryCount += 1;
+      retryWaitMs += waitMs;
+      await sleep(waitMs);
     }
   }
-  throw lastErr;
+  throw Object.assign(lastErr, { retryCount, retryWaitMs });
 }
 
 // Raw HTTP GET preserving the status code for honest attempt classification.
@@ -485,7 +510,13 @@ async function fetchLegacyTocRecords({
         const response = await rawGetBufferFn(url);
         if (response.statusCode !== 200) return [];
         const text = decodeLegacyTocGzip(response.body);
-        return { byteLength: Buffer.byteLength(text), records: parseLegacyTocJsonl(text) };
+        // Keep only the rows that name a reference company: one file carries
+        // about 1,800 rows and a 72 h scan reads about 550 files.
+        return {
+          byteLength: Buffer.byteLength(text),
+          records: parseLegacyTocJsonl(text)
+            .filter((record) => matchLegacyTocTickers(record, { expectedTickers }).length > 0),
+        };
       } catch {
         return [];
       }
@@ -671,9 +702,19 @@ async function build(args, {
   const tickers = loadTickerUniverse(args, fenokIndex);
   const rows = [];
   const errors = [];
+  // A member the provider throttled through its retries leaves the basket
+  // partial, and a partial basket is never promoted. The remaining members are
+  // therefore not requested: hosted runs that kept going spent 373-489 s and up
+  // to 21 more requests on a basket that could no longer complete.
+  let rateLimitedTicker = null;
   for (const ticker of tickers) {
     const row = fenokIndex.get(ticker) ?? {};
     const company = row.company ?? ticker;
+    if (rateLimitedTicker !== null) {
+      errors.push({ ticker, error: `not requested after ${rateLimitedTicker} was rate limited` });
+      rows.push(computeTone({ ticker, company, payload: { fetched_at: null, articles: [] } }));
+      continue;
+    }
     try {
       const loaded = await loadArticles({
         ticker,
@@ -689,12 +730,26 @@ async function build(args, {
       rows.push(computeTone({ ticker, company, payload: loaded.payload }));
       if (!loaded.cache_hit && !args.noFetch && args.sleepMs > 0) await sleep(args.sleepMs);
     } catch (err) {
-      errors.push({ ticker, error: err.message });
+      const rateLimited = err?.rateLimited === true;
+      errors.push(rateLimited
+        ? {
+          ticker,
+          error: err.message,
+          rate_limited: true,
+          http_status: err.statusCode ?? null,
+          retry_count: err.retryCount ?? 0,
+          retry_wait_ms: err.retryWaitMs ?? 0,
+        }
+        : { ticker, error: err.message });
       rows.push(computeTone({
         ticker,
         company,
         payload: { fetched_at: null, articles: [] },
       }));
+      if (rateLimited) {
+        rateLimitedTicker = ticker;
+        continue;
+      }
       if (!args.noFetch && args.sleepMs > 0) await sleep(args.sleepMs);
     }
   }
@@ -1005,6 +1060,27 @@ function runContext({ runId, runAttempt, eventName, observedAt }) {
 export async function runNewsTone(options = {}) {
   const args = options.args ?? parseArgs(process.argv.slice(2));
   const observedAt = options.observedAt ?? isoNow();
+  const outcome = await runNewsToneWithinDailyBudget({ ...options, args, observedAt });
+  if (args.noWrite === true) return outcome;
+  // Every writing run leaves its outcome in the lane state it already owns. A
+  // run that published nothing new then reads as "retained" with its reason,
+  // and cannot be mistaken for a run that never happened.
+  const store = new LaneLkgStore({ repoRoot: options.repoRoot ?? repoRoot, laneId: LANE_ID });
+  const state = store.stateSnapshot();
+  const current = state.items?.[LKG_ARTIFACT_KEY]?.current ?? null;
+  state.last_run = {
+    observed_at: observedAt,
+    outcome: outcome.ok === true ? "published" : (current ? "retained" : "unavailable"),
+    reason: outcome.reason,
+    source_as_of: current?.source_as_of ?? null,
+    fallback: outcome.fallback_evidence ?? null,
+  };
+  writeJsonAtomic(store.statePath, state);
+  return outcome;
+}
+
+async function runNewsToneWithinDailyBudget(options) {
+  const { args, observedAt } = options;
   const eventName = options.eventName ?? process.env.GITHUB_EVENT_NAME ?? "local";
   const spread = args.spreadDailyRetries === true && eventName === "schedule"
     && args.noWrite !== true && args.noFetch !== true;
@@ -1125,11 +1201,15 @@ async function runNewsToneAttempt({
 
   let built = null;
   let usingFallback = false;
-  const primaryRetryCount = Number(result.attempt.retry_count ?? 0);
-  if (["rate_limited", "schema_drift", "http_error", "transport_error"].includes(result.reason)
-    && (result.reason !== "rate_limited" || primaryRetryCount >= 1)
-    && controlledFailure !== true
-    && args.noFetch === false) {
+  // The provider's own advisory sends throttled clients to this dataset. It is
+  // consulted for the DOC failure held in `result` at the time of the call:
+  // the reachability probe below, or a member request later.
+  const recoverFromLegacyToc = async () => {
+    const primaryRetryCount = Number(result.attempt.retry_count ?? 0);
+    if (!["rate_limited", "schema_drift", "http_error", "transport_error"].includes(result.reason)
+      || (result.reason === "rate_limited" && primaryRetryCount < 1)
+      || controlledFailure === true
+      || args.noFetch !== false) return;
     try {
       const fallbackBuilt = await fallbackFn({
         repoRoot: repoRootPath,
@@ -1165,7 +1245,8 @@ async function runNewsToneAttempt({
       // The original DOC failure remains authoritative when the bounded
       // provider-owned fallback cannot produce a complete reference basket.
     }
-  }
+  };
+  await recoverFromLegacyToc();
 
   if (result.status !== "ready" && !usingFallback) {
     return retainFailure(result.reason);
@@ -1191,6 +1272,29 @@ async function runNewsToneAttempt({
     } catch (err) {
       result = withSnapshotReadinessAssertion(result, null, "unexpected_error");
       return retainFailure("unexpected_error", err);
+    }
+    // The probe answered and the provider then throttled a member request
+    // (HTTP 429, or its HTTP 200 plain-text advisory). The response shape did
+    // not change, so this is the same refusal as a throttled probe and takes
+    // the same recovery under the same reason. Until 2026-10-11 it was
+    // reported as schema_drift and never reached the recovery: 8 of 17 hosted
+    // runs between 2026-09-27 and 2026-10-10 ended that way.
+    const memberSnapshot = built?.snapshot ?? built;
+    const memberErrors = Array.isArray(memberSnapshot?.coverage?.errors) ? memberSnapshot.coverage.errors : [];
+    const throttledMember = validToneSnapshot(memberSnapshot)
+      ? null
+      : memberErrors.find((entry) => entry?.rate_limited === true) ?? null;
+    if (throttledMember !== null) {
+      result = withRetryEvidence(
+        attemptResult("rate_limited", returnedTuple(throttledMember.http_status === 429
+          ? { httpStatus: 429, rateLimited: true }
+          : { httpStatus: throttledMember.http_status ?? 200, rateLimited: true, decode: "error", payload: "non_empty" })),
+        Number(throttledMember.retry_count ?? 0),
+        Number(throttledMember.retry_wait_ms ?? 0),
+      );
+      built = null;
+      await recoverFromLegacyToc();
+      if (!usingFallback) return retainFailure(result.reason);
     }
   }
   const snapshot = built?.snapshot ?? built;
@@ -1223,6 +1327,7 @@ async function runNewsToneAttempt({
       retrySet: store.stateSnapshot().retry_set,
       result,
       snapshot,
+      fallback_evidence: fallbackEvidence,
     };
   }
 
@@ -1241,6 +1346,7 @@ async function runNewsToneAttempt({
     snapshot,
     history,
     result,
+    fallback_evidence: fallbackEvidence,
   };
 }
 
