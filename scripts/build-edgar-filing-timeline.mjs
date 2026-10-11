@@ -2,8 +2,9 @@
 /**
  * SEC EDGAR filing timeline builder.
  *
- * Phase 1 is deliberately small-batch: generate original-only filing rows for
- * a limited stock universe, while preserving any existing Korean summary rows.
+ * Generates original-only filing rows while preserving any existing Korean
+ * summary rows. A universe poll refreshes every already-published ticker
+ * manifest on every run; --limit only bounds how many universe rows may join.
  *
  * Output:
  *   data/edgar/company_tickers.json
@@ -146,9 +147,9 @@ function printHelp() {
 
 Options:
   --tickers AAPL,NVDA       explicit ticker list
-  --limit 50               max universe tickers for phase-1 default
+  --limit 50               max universe rows that may join; published tickers always refresh
   --full-universe          ignore --limit and scan the full stock universe
-  --filings-per-ticker 12  max newly discovered pending filings per ticker
+  --filings-per-ticker 12  latest filings per ticker; a stored timeline is caught up past this
   --forms 10-K,10-Q,8-K,20-F,40-F,6-K    SEC forms to include
   --sleep 0.6              seconds between SEC requests
   --plan-only              skip data artifacts but still publish attempt telemetry
@@ -650,7 +651,7 @@ async function fetchSubmissions(cik, request) {
   );
 }
 
-function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, forms, limit }) {
+function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, forms, limit, knownThrough = null }) {
   const recent = submissions?.filings?.recent ?? {};
   const rows = [];
   const formValues = Array.isArray(recent.form) ? recent.form : [];
@@ -665,6 +666,9 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
     const archiveAccession = accession.replace(/-/g, "");
     const archiveCik = cikNoLeadingZeros(cik);
     if (!archiveCik || !/^\d+$/.test(archiveAccession)) continue;
+    // Past the per-ticker limit, keep only filings the stored timeline has not
+    // reached yet, so a ticker that missed several polls is caught up whole.
+    if (rows.length >= limit && !(knownThrough && filingDate >= knownThrough)) break;
     const sourceUrl = `https://www.sec.gov/Archives/edgar/data/${archiveCik}/${archiveAccession}/${primaryDocument}`;
     const row = {
       ticker,
@@ -687,7 +691,6 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
       row.sectionsRequested = [...FOREIGN_FORM_SECTION_REQUESTS[form]];
     }
     rows.push(row);
-    if (rows.length >= limit) break;
   }
   return rows;
 }
@@ -1014,17 +1017,30 @@ function manifestMirrorEntries(paths, ticker, manifest) {
   ];
 }
 
+// The index dates the lane by its members: `updated` is the oldest ticker
+// acquisition date, never the day a run happened to execute, so a ticker that
+// stops refreshing ages the whole lane.
 function buildIndex({ manifests, updated, generatedAt }) {
   const tickers = [...manifests.keys()].sort();
   const byTicker = {};
   for (const ticker of tickers) {
     byTicker[ticker] = `/data/edgar-korean-summaries/by-ticker/${ticker.toLowerCase()}.json`;
   }
+  const memberDates = tickers
+    .map((ticker) => String(manifests.get(ticker)?.updated ?? ""))
+    .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(date)))
+    .sort();
+  const weekAgo = Date.parse(updated) - 7 * 86_400_000;
   return {
     schemaVersion: 1,
     artifactType: "edgar_korean_summary_index",
-    updated,
+    updated: memberDates[0] ?? updated,
     generatedAt,
+    memberFreshness: {
+      total: tickers.length,
+      oldestUpdated: memberDates[0] ?? null,
+      updatedWithin7Days: memberDates.filter((date) => Date.parse(date) > weekAgo).length,
+    },
     tickers,
     byTicker,
   };
@@ -1162,7 +1178,15 @@ export async function runEdgarFilingTimeline({
 
     if (!args.planOnly) writeJson(paths.edgarCachePath, company.cache);
 
-    for (const ticker of universe) {
+    // A universe poll also refreshes every already-published ticker, so one
+    // weekly run covers the whole published set whatever the universe file or
+    // the limit yields. An explicit --tickers run stays exactly that list.
+    const refreshSet = args.tickers.length > 0
+      ? universe
+      : uniqueTickers([...universe, ...existingManifests.keys()]);
+    console.log(`edgar_filing_timeline: refresh_set=${refreshSet.length} published=${existingManifests.size}`);
+
+    for (const ticker of refreshSet) {
       const cikRow = tickerAliases(ticker).map((alias) => cikMap.get(alias)).find(Boolean);
       if (!cikRow) {
         stats.unresolved += 1;
@@ -1190,6 +1214,7 @@ export async function runEdgarFilingTimeline({
         const submissions = endpointResult.document;
         stats.fetched += 1;
         const companyName = submissions?.name || cikRow.title || ticker;
+        const existingManifest = nextManifests.get(ticker);
         const discoveredRows = filingRowsFromSubmissions({
           ticker,
           companyName,
@@ -1197,9 +1222,9 @@ export async function runEdgarFilingTimeline({
           submissions,
           forms: args.forms,
           limit: args.filingsPerTicker,
+          knownThrough: maxFilingDateAcrossManifests([existingManifest]),
         });
         stats.filings += discoveredRows.length;
-        const existingManifest = nextManifests.get(ticker);
         const readyBefore = (existingManifest?.filings ?? []).filter(isReadySummaryRow).length;
         const manifest = mergeFilings({
           ticker,
