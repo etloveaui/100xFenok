@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Measure real Cloudflare R2 usage against the free allowance and fail closed
-// before anything can be billed.
-//
-// The owner's constraint is absolute: this account must never incur an R2
-// charge. Cloudflare offers no hard spend stop for R2, so the only real
-// protection is a measurement that runs before we write at scale and refuses
-// to go on when the projection approaches the free ceiling.
+// Measure Cloudflare R2 against the owner's 2026-10-11 storage-only budget.
+// Before this decision, storage warned at 7 GB and failed at 9 GB (70/90%
+// of the 10 GB free allowance). Storage now warns at 40 GB and fails at 70 GB;
+// Standard storage at 70 GB-month costs $0.90 above the 10 GB allowance.
+// Class A/B thresholds remain 70/90% of their free operation allowances.
+// Unknown measurements still block publication. The service does not provide
+// a hard billing cap, so this measured pre-write guard remains required.
 //
 // Every measurement fetch carries a bounded deadline (default 60s; override
 // with R2_MEASURE_FETCH_TIMEOUT_MS). A timed-out measurement throws and fails
@@ -15,8 +15,8 @@
 // Usage:
 //   CLOUDFLARE_API_TOKEN=... node scripts/check-r2-free-tier-usage.mjs [--json]
 //
-// Exit codes: 0 = ok, 1 = warn threshold crossed, 2 = fail threshold crossed
-// or the measurement itself could not be trusted.
+// Exit codes: 0 = ok, 1 = warn threshold crossed, 2 = fail threshold crossed,
+// 3 = the measurement itself could not be trusted.
 
 const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID ?? "aeeb5ea3affe55a2219d08ea02dad9e1";
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
@@ -51,9 +51,15 @@ const FREE = {
   class_b_operations: 10_000_000,
 };
 
-// Fractions of the free allowance at which we warn and at which we refuse.
+// Operation fractions are unchanged; storage has its explicit owner budget.
 const WARN_AT = 0.7;
 const FAIL_AT = 0.9;
+export const STORAGE_WARN_GB = 40;
+export const STORAGE_FAIL_GB = 70;
+const STORAGE_USD_PER_GB_MONTH = 0.015;
+export function storageCostUsd(gbMonth) {
+  return Number((Math.ceil(Math.max(0, gbMonth - FREE.storage_gb_month)) * STORAGE_USD_PER_GB_MONTH).toFixed(3));
+}
 
 // Cloudflare's published operation classes. Anything not listed here is counted
 // as Class A on purpose: an unknown action must never make the projection look
@@ -286,7 +292,7 @@ function tallyOperations(rows, fromDate) {
   return { classA, classB, unknown: [...unknown].map(([action, requests]) => ({ action, requests })) };
 }
 
-function summarise(account, bounds, inventory) {
+export function summarise(account, bounds, inventory) {
   const storageDays = account.r2StorageAdaptiveGroups ?? [];
   const peakSince = (from) => storageDays.reduce(
     (acc, row) => (row?.dimensions?.date && row.dimensions.date < from)
@@ -343,6 +349,9 @@ function summarise(account, bounds, inventory) {
       analytics_peak_bytes: Math.max(cyclePeak.bytes, trailingPeak.bytes),
       pending_multipart_uploads: pendingUploads,
       projected_gb_month: projectedGbMonth,
+      projected_storage_cost_usd: storageCostUsd(projectedGbMonth),
+      warn_gb_month: STORAGE_WARN_GB,
+      fail_gb_month: STORAGE_FAIL_GB,
       free_gb_month: FREE.storage_gb_month,
       used_fraction: projectedGbMonth / FREE.storage_gb_month,
     },
@@ -364,18 +373,18 @@ function summarise(account, bounds, inventory) {
   };
 }
 
-function verdictFor(summary, plan, blind) {
+export function verdictFor(summary, plan, blind) {
   // A planned run is scored as if it had already happened. This is the only
   // part of the guard that closes the analytics-lag window: the publish path
   // knows its own operation count before it writes, and that number does not
   // depend on a dataset that reports late.
   const axes = [
-    ["storage", (summary.storage.peak_bytes + plan.bytes) / 1e9 / FREE.storage_gb_month],
-    ["class_a", (summary.class_a.projected_month + plan.class_a) / FREE.class_a_operations],
-    ["class_b", (summary.class_b.projected_month + plan.class_b) / FREE.class_b_operations],
+    ["storage", (summary.storage.peak_bytes + plan.bytes) / 1e9 / FREE.storage_gb_month, STORAGE_WARN_GB / FREE.storage_gb_month, STORAGE_FAIL_GB / FREE.storage_gb_month],
+    ["class_a", (summary.class_a.projected_month + plan.class_a) / FREE.class_a_operations, WARN_AT, FAIL_AT],
+    ["class_b", (summary.class_b.projected_month + plan.class_b) / FREE.class_b_operations, WARN_AT, FAIL_AT],
   ];
-  const breaches = axes.filter(([, f]) => f >= FAIL_AT).map(([name]) => name);
-  const warnings = axes.filter(([, f]) => f >= WARN_AT && f < FAIL_AT).map(([name]) => name);
+  const breaches = axes.filter(([, f, , fail]) => f >= fail).map(([name]) => name);
+  const warnings = axes.filter(([, f, warn, fail]) => f >= warn && f < fail).map(([name]) => name);
   const with_plan = Object.fromEntries(axes);
   if (blind) return { verdict: "fail", breaches: ["measurement_blind"], warnings, with_plan };
   if (breaches.length) return { verdict: "fail", breaches, warnings, with_plan };
@@ -424,7 +433,10 @@ async function main() {
   const report = {
     schema_version: "r2-free-tier-usage/v2",
     verdict, breaches, warnings,
-    thresholds: { warn_at: WARN_AT, fail_at: FAIL_AT },
+    thresholds: { warn_at: WARN_AT, fail_at: FAIL_AT,
+      operation_fractions: { warn_at: WARN_AT, fail_at: FAIL_AT },
+      storage_gb_month: { warn_at: STORAGE_WARN_GB, fail_at: STORAGE_FAIL_GB },
+      decision_date: "2026-10-11", storage_budget_usd: 1 },
     planned_operations: plan,
     used_fraction_including_plan: with_plan,
     bucket_count: buckets.buckets,
@@ -446,15 +458,16 @@ async function main() {
     }
     if (plan.class_a || plan.class_b || plan.bytes) {
       console.log(`  planned run: +${plan.class_a} class A, +${plan.class_b} class B, +${plan.bytes} bytes`);
-      console.log(`  including plan: storage ${pct(with_plan.storage)}, class A ${pct(with_plan.class_a)}, class B ${pct(with_plan.class_b)}`);
+      console.log(`  including plan: storage ${(with_plan.storage * FREE.storage_gb_month).toFixed(4)} GB-month, class A ${pct(with_plan.class_a)}, class B ${pct(with_plan.class_b)}`);
     }
+    console.log(`  storage policy: warn ${STORAGE_WARN_GB} GB-month / fail ${STORAGE_FAIL_GB} GB-month; projected storage cost $${summary.storage.projected_storage_cost_usd.toFixed(3)} (before plan)`);
     if (summary.storage.pending_multipart_uploads > 0) {
       console.log(`  WARN: ${summary.storage.pending_multipart_uploads} pending multipart upload(s) hold bytes this projection may not cover`);
     }
     console.log(`  measured   ${summary.storage.measured_from_listing.objects} objects / ${summary.storage.measured_from_listing.bytes} bytes from the listing across ${buckets.buckets} bucket(s); analytics peak ${summary.storage.analytics_peak_bytes} bytes`);
     if (blind) console.log(`  BLIND: object listing truncated — cannot certify bytes that were not counted`);
-    else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above ${pct(FAIL_AT)} of the free allowance`);
-    else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above ${pct(WARN_AT)} of the free allowance`);
+    else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above its axis fail threshold (storage ${STORAGE_FAIL_GB} GB-month; operations ${pct(FAIL_AT)} free)`);
+    else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above its axis warning threshold (storage ${STORAGE_WARN_GB} GB-month; operations ${pct(WARN_AT)} free)`);
   }
   process.exit(verdict === "fail" ? 2 : verdict === "warn" ? 1 : 0);
 }
