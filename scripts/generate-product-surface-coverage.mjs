@@ -80,6 +80,7 @@ function pct(done, total) {
 
 function statusLabel(status) {
   return {
+    not_covered: "준비도 미연결",
     ready: "준비됨",
     partial: "부분 준비",
     stale: "오래됨",
@@ -718,6 +719,39 @@ const surfaces = [
   ),
 ];
 
+// Discover the product inventory from its existing route catalog. A missing
+// readiness contract is visible without declaring the route broken or ready.
+const routeCatalogPath = path.join(ROOT, "100xfenok-next", "src", "lib", "routes.ts");
+let routeCatalog = "";
+try { routeCatalog = fs.readFileSync(routeCatalogPath, "utf8"); } catch { /* visible below */ }
+const routeConstants = routeCatalog.match(/export const ROUTES\s*=\s*\{([\s\S]*?)^\}\s*as const/m)?.[1] || "";
+const literalRoutes = new Map([...routeConstants.matchAll(/^\s*(\w+):\s*["'](\/[^"']*)["']/gm)]
+  .map((match) => [match[1], match[2]]));
+const routePatterns = routeCatalog.match(/export const APP_ROUTE_PATTERNS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] || "";
+const staticRoutes = routeCatalog.match(/export const STATIC_PRODUCT_ROUTE_PATHS\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] || "";
+const registeredRoutes = [...new Set([
+  ...[...routePatterns.matchAll(/["'](\/[^"']*)["']/g)].map((match) => match[1]),
+  ...[...staticRoutes.matchAll(/ROUTES\.(\w+)/g)].map((match) => literalRoutes.get(match[1])).filter(Boolean),
+])].sort();
+const measuredRoutes = new Set(surfaces.map((item) => item.route));
+const uncoveredRoutes = registeredRoutes.filter((route) => !measuredRoutes.has(route));
+for (const route of uncoveredRoutes) {
+  surfaces.push({
+    id: `route:${route}`, route, label: route, owner: "Product route catalog",
+    status: "not_covered", status_label: statusLabel("not_covered"), coverage_score: null,
+    summary: "등록된 화면이며 데이터 준비도 판단은 아직 연결되지 않았습니다.",
+    checks: [], ...sourceStamp(null, "route readiness is not instrumented"),
+  });
+}
+if (registeredRoutes.length === 0) {
+  surfaces.push({
+    id: "route_inventory", route: null, label: "화면 목록", status: "not_covered",
+    status_label: statusLabel("not_covered"), coverage_score: null,
+    summary: "등록된 화면 목록을 읽지 못해 준비도 연결 범위를 확인할 수 없습니다.",
+    checks: [], ...sourceStamp(null, "route inventory unavailable"),
+  });
+}
+
 const summary = surfaces.reduce((acc, item) => {
   acc[item.status] = (acc[item.status] || 0) + 1;
   return acc;
@@ -732,6 +766,13 @@ const payload = {
   source_stamp_version: PRODUCT_SURFACE_STAMP_VERSION,
   generated_at: generatedAt,
   source: "local DataPack coverage files",
+  route_inventory: {
+    status: registeredRoutes.length ? "observed" : "unavailable",
+    scope: "APP_ROUTE_PATTERNS and STATIC_PRODUCT_ROUTE_PATHS; includes preserved compatibility and legal routes without assigning them a data-health verdict",
+    registered: registeredRoutes.length,
+    measured: registeredRoutes.filter((route) => measuredRoutes.has(route)).length,
+    not_covered: uncoveredRoutes.length,
+  },
   raw_policy: {
     public_mirror_allowed: true,
     raw_rows_included: false,
@@ -779,6 +820,7 @@ const payload = {
     pending: summary.pending || 0,
     unavailable: summary.unavailable || 0,
     error: summary.error || 0,
+    not_covered: summary.not_covered || 0,
   },
   counts,
   surfaces,

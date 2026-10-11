@@ -32,6 +32,7 @@ type CoverageSurface = {
   coverage_score?: number;
   as_of?: string;
   checks?: CoverageCheck[];
+  summary?: string;
 };
 
 type ProductSurfaceCoverage = {
@@ -283,6 +284,7 @@ export default async function AdminDataLabPage() {
               ["부분", totals.partial],
               ["대기", totals.pending],
               ["오래됨", totals.stale],
+              ["준비도 미연결", totals.not_covered],
               ["오류", (totals.unavailable || 0) + (totals.error || 0)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
@@ -321,6 +323,9 @@ export default async function AdminDataLabPage() {
                     </span>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
+                    {surface.status === "not_covered" ? (
+                      <p className="font-semibold text-slate-500">{surface.summary}</p>
+                    ) : null}
                     <div className="flex flex-wrap gap-2">
                       {freshnessChecks(surface).map((check) => (
                         <span
