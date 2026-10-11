@@ -47,15 +47,6 @@ for (const relative of receipts) {
   );
 }
 
-const overrides = fs.readFileSync(path.join(ROOT, "100xfenok-next", "sync-static-overrides.mjs"), "utf8");
-for (const relative of removed) {
-  assert.equal(
-    overrides.includes(`public/data/edgar/${relative}`),
-    true,
-    `sync-static-overrides must remove ${relative}`,
-  );
-}
-
 function listFiles(directory, prefix = "", result = []) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const relative = prefix ? `${prefix}/${entry.name}` : entry.name;

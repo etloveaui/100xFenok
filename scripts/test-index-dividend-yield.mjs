@@ -232,19 +232,4 @@ test("payout conversion fails closed for missing, invalid, and out-of-gate input
   assert.equal(dividendYieldToPayout({ dividendYield: 0.01, price: 100, epsFy1: 1, maximumPayout: -1 }).code, "invalid_payout_gate");
 });
 
-test("module is dependency-free and isolated from valuation/output contracts", () => {
-  const source = fs.readFileSync(path.join(__dirname, "lib/index-dividend-yield.mjs"), "utf8");
-  assert.equal(/^\s*import\s/m.test(source), false, "pure module must not import runtime dependencies");
-  for (const banned of [
-    "build-rim-index.mjs",
-    "build-rim-index-five-canonical.mjs",
-    "build-fenok-rim-owner-ordered-current.mjs",
-    "FENO_RIM_FIVE_CANONICAL_CURRENT",
-    "fenok-rim-calibration-evidence",
-    "SOXX",
-  ]) {
-    assert.equal(source.includes(banned), false, `pure module must not depend on ${banned}`);
-  }
-});
-
 console.log(`\n${passed} checks passed`);

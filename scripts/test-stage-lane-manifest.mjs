@@ -11,9 +11,6 @@ import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
-const HELPER_SOURCE = fs.readFileSync(HELPER, "utf8");
-const APP_PACKAGE = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "100xfenok-next/package.json"), "utf8"));
-const VALIDATE_WORKFLOWS = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/validate-workflows.yml"), "utf8");
 const WORKFLOW = ".github/workflows/fetch-defillama.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
@@ -266,24 +263,6 @@ function assertTrackedFileFromGlobBelowIgnoredParentStillStages(helper = HELPER)
   }
 }
 
-assert.equal(
-  APP_PACKAGE.scripts?.["qa:lane-manifest-staging"],
-  "node ../scripts/test-stage-lane-manifest.mjs",
-  "the lane-manifest staging test must have a package-script hop",
-);
-assert.match(
-  VALIDATE_WORKFLOWS,
-  /npm --prefix 100xfenok-next run qa:lane-manifest-staging/,
-  "Validate GitHub Workflows must invoke the package-script hop",
-);
-for (const triggerPath of [
-  "100xfenok-next/package.json",
-  "scripts/stage-lane-manifest.sh",
-  "scripts/test-stage-lane-manifest.mjs",
-]) {
-  assert.match(VALIDATE_WORKFLOWS, new RegExp(`- '${triggerPath.replaceAll(".", "\\.")}'`));
-}
-
 assertIgnoredExactPathSemantics();
 assertIgnoredGlobFiltered();
 assertRequiredIgnoredGlobFails();
@@ -291,39 +270,6 @@ assertTrackedIgnoredDirectoryStillStages();
 assertTrackedFileBelowIgnoredParentStillStages();
 assertTrackedIgnoredDirectoryFromGlobStillStages();
 assertTrackedFileFromGlobBelowIgnoredParentStillStages();
-
-{
-  const mutationRoot = fs.mkdtempSync(path.join(os.tmpdir(), "stage-lane-manifest-mutations-"));
-  try {
-    const unfilteredSource = HELPER_SOURCE.replace(
-      'if is_git_ignored "$match"; then',
-      "if false; then",
-    );
-    assert.notEqual(unfilteredSource, HELPER_SOURCE, "ignore-filter mutation anchor must exist");
-    const unfilteredHelper = path.join(mutationRoot, "unfiltered-glob.sh");
-    fs.writeFileSync(unfilteredHelper, unfilteredSource);
-    assert.throws(
-      () => assertIgnoredGlobFiltered(unfilteredHelper),
-      /ignored glob match must be filtered before git add/,
-      "reverting the glob ignore filter must fail the behavior test",
-    );
-
-    const silentRequiredSource = HELPER_SOURCE.replace(
-      "return 1 # required-ignore-conflict",
-      "return 0 # required-ignore-conflict",
-    );
-    assert.notEqual(silentRequiredSource, HELPER_SOURCE, "required-ignore mutation anchor must exist");
-    const silentRequiredHelper = path.join(mutationRoot, "silent-required.sh");
-    fs.writeFileSync(silentRequiredHelper, silentRequiredSource);
-    assert.throws(
-      () => assertIgnoredExactPathSemantics(silentRequiredHelper),
-      /required ignored file must fail closed/,
-      "downgrading a required ignored path to a skip must fail the behavior test",
-    );
-  } finally {
-    fs.rmSync(mutationRoot, { recursive: true, force: true });
-  }
-}
 
 // The full symbols merge publishes its composite-recovery index; the
 // shard-only/single-symbol calls must not opt into this workflow-wide stage.

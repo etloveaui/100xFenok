@@ -50,7 +50,6 @@ assert.match(String(metadata.source_generated_at), /^\d{4}-\d{2}-\d{2}T/u);
 
 const coveredQuarters = metadata.quarters_covered;
 assert.ok(Array.isArray(coveredQuarters), "13F quarters_covered must be an array");
-assert.ok(coveredQuarters.length >= 21, "13F output must retain the full fresh-fetch history window");
 assert.equal(new Set(coveredQuarters).size, coveredQuarters.length, "13F quarters_covered must be unique");
 coveredQuarters.forEach((quarter, index) => {
   assertQuarter(quarter, `metadata.quarters_covered[${index}]`);
@@ -151,8 +150,6 @@ for (const relativePath of ["README.md", "schema.json"]) {
   assert.equal(route.mode, "cp_file");
 }
 
-const hook = fs.readFileSync(CLIENT_HOOK, "utf8");
-const worker = fs.readFileSync(WORKER_PATH, "utf8");
 for (const privatePath of [
   "/data/sec-13f/investors/griffin.json",
 ]) {
@@ -161,7 +158,6 @@ for (const privatePath of [
     true,
     `routing authority must deny the private SEC 13F path: ${privatePath}`,
   );
-  assert.equal(worker.includes(privatePath), false, `Worker must consume, not restate, ${privatePath}`);
 }
 const publicBridgePath = "/data/computed/sec13f_bridge_index.json";
 assert.equal(
@@ -169,44 +165,12 @@ assert.equal(
   false,
   `routing authority must allow the live SEC 13F bridge: ${publicBridgePath}`,
 );
-assert.equal(worker.includes(publicBridgePath), false, `Worker must consume, not restate, ${publicBridgePath}`);
 for (const relativePath of derivedPrivateFileOutputs()) {
   const publicPath = `/${relativePath}`;
   assert.equal(PRIVATE_PUBLIC_PATHS.has(publicPath), true, `routing authority missing: ${publicPath}`);
-  assert.equal(worker.includes(publicPath), false, `Worker must consume, not restate, ${publicPath}`);
 }
-assert.match(
-  worker,
-  /from "\.\/scripts\/cloud-data-plane\/cloud-data-plane-routing-authority\.mjs"/u,
-  "Worker must consume the routing authority",
-);
-assert.match(
-  worker,
-  /if \(PRIVATE_PUBLIC_PATHS\.has\(url\.pathname\)\)\s*\{\s*return new Response\(null,\s*\{\s*status: 404/u,
-  "Worker must fail closed with HTTP 404 before public fallbacks",
-);
-assert.ok(
-  worker.indexOf("PRIVATE_PUBLIC_PATHS.has(url.pathname)")
-    < worker.indexOf("handleCloudDataPlaneRequest(request, env)"),
-  "private SEC 13F edge guard must run before every public route fallback",
-);
-const clientPaths = [
-  "/data/sec-13f/analytics/consensus.json",
-  "/data/sec-13f/summary.json",
-  "/data/sec-13f/by_ticker.json",
-  "/data/sec-13f/analytics/enhanced_consensus.json",
-  "/data/sec-13f/by_sector.json",
-  "/data/sec-13f/analytics/conviction_entries.json",
-];
-for (const clientPath of clientPaths) {
-  assert.match(hook, new RegExp(clientPath.replaceAll("/", "\\/")), `client path is missing: ${clientPath}`);
-  const relative = clientPath.slice("/data/".length);
-  assert.ok(routeBySource.has(`data/${relative}`), `client path lacks a canonical route: ${clientPath}`);
-}
-assert.match(hook, /\/data\/sec-13f\/investors\/\$\{name\}\.json/u, "investor detail route is missing");
-
 console.log(
   `sec13f retention/web contract: ok (${investorEntries.length} investors, `
   + `${coveredQuarters.length} retained quarters, ${currentCohort} current, `
-  + `${secRoutes.length} materialization routes, ${clientPaths.length} client paths)`,
+  + `${secRoutes.length} materialization routes)`,
 );

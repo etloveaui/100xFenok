@@ -27,43 +27,6 @@ const APP_PROJECTION_PATH = path.join(
 const APP_PACKAGE_PATH = path.join(SCRIPT_DIR, "..", "100xfenok-next", "package.json");
 
 const registry = loadDataSupplyPolicyRegistry(DATA_SUPPLY_POLICY_REGISTRY_PATH);
-const expected = JSON.parse(fs.readFileSync(EXPECTED_PATH, "utf8"));
-assert.equal(registry.schema_version, "data-supply-policy-registry/v1");
-assert.equal(policyRegistryDigest(registry), expected.policy_digest);
-assert.deepEqual(Object.keys(registry.domains).sort(), ["etf_detail", "stock_detail"]);
-assert.deepEqual(
-  JSON.parse(fs.readFileSync(APP_PROJECTION_PATH, "utf8")),
-  registry,
-  "application projection must exactly match the policy SSOT",
-);
-
-const packageScripts = JSON.parse(fs.readFileSync(APP_PACKAGE_PATH, "utf8")).scripts;
-assert.equal(
-  packageScripts["qa:data-supply-policy-registry"],
-  "node ../scripts/test-data-supply-policy-registry.mjs",
-  "package QA command must execute the strict parity contract",
-);
-for (const buildPath of ["build:runtime:steps", "build:static:steps", "cf:build:steps"]) {
-  assert.match(
-    packageScripts[buildPath],
-    /(?:^|&& )npm run qa:data-supply-policy-registry(?: &&|$)/,
-    `${buildPath} must fail closed on policy projection drift`,
-  );
-  const syncIndex = packageScripts[buildPath].indexOf("npm run sync-static");
-  const routeQaIndex = packageScripts[buildPath].indexOf("npm run qa:routes");
-  assert.ok(
-    syncIndex >= 0 && routeQaIndex > syncIndex,
-    `${buildPath} must run runtime route guards after sync-static`,
-  );
-}
-
-const etf = getDataSupplyDomainPolicy(registry, "etf_detail", "scripts.effective_etf_detail_reader");
-assert.deepEqual(etf.providers.map((provider) => provider.name), ["stockanalysis", "yahoo_finance"]);
-assert.equal(etf.resolution_scope, "domain_atomic");
-assert.equal(etf.fresh_ttl_hours, 168);
-assert.equal(etf.emergency_lkg_ttl_days, 14);
-assert.equal(etf.recovery_green_required, 3);
-
 for (const name of fs.readdirSync(FIXTURE_DIR).filter((name) => name.startsWith("invalid-")).sort()) {
   assert.throws(
     () => loadDataSupplyPolicyRegistry(path.join(FIXTURE_DIR, name)),

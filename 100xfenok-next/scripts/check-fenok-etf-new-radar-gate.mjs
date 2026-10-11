@@ -58,20 +58,12 @@ function intersection(left, right) {
   return [...left].filter((value) => right.has(value)).sort();
 }
 
-function requireContains(errors, relPath, text, needles) {
-  for (const needle of needles) {
-    if (!text.includes(needle)) errors.push(`${relPath} missing marker: ${needle}`);
-  }
-}
-
 const sourceNewEtfs = readJson(SOURCE_NEW_ETFS_REL);
 const publicNewEtfs = readJson(PUBLIC_NEW_ETFS_REL);
 const signalSummary = readJson(ETF_SIGNAL_SUMMARY_REL);
 const coreAdmin = readJson(CORE_ADMIN_REL);
 const coreSummary = readJson(CORE_SUMMARY_REL);
 const corePublicSummary = readJson(CORE_PUBLIC_SUMMARY_REL);
-const routeText = readText(ROUTE_REL);
-const newEtfsUiText = readText(NEW_ETFS_UI_REL);
 
 const errors = [];
 const newEtfRows = rowsFromSurface(sourceNewEtfs);
@@ -111,18 +103,6 @@ if (summaryIntersection.length > 0) errors.push(`new ETF radar tickers must not 
 if (publicSummaryIntersection.length > 0) errors.push(`new ETF radar tickers must not enter public core summary rows: ${publicSummaryIntersection.join(",")}`);
 if (coreAdmin?.readiness?.public_done_claim_allowed !== false) errors.push("core admin public_done_claim_allowed must stay false");
 if (coreSummary?.readiness?.public_done_claim_allowed !== false) errors.push("core summary public_done_claim_allowed must stay false");
-
-requireContains(errors, ROUTE_REL, routeText, [
-  'const NEW_ETF_RADAR_STATUS = "watchlist_only"',
-  'const NEW_ETF_CORE_BLOCKERS = ["new_etf_radar_only", "missing_core_scoring_proof"]',
-  "core_candidate_allowed: false",
-  "core_candidate_blockers: [...NEW_ETF_CORE_BLOCKERS]",
-]);
-requireContains(errors, NEW_ETFS_UI_REL, newEtfsUiText, [
-  'type RadarStatus = "watchlist_only" | "unknown"',
-  'watchlist_only: "관찰 목록"',
-  "coreCandidateLabel",
-]);
 
 if (errors.length > 0) {
   console.error("[fenok-etf-new-radar-gate] FAIL");

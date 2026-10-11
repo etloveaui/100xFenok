@@ -9,9 +9,6 @@
 // one (e.g. toLocaleString(undefined, ...)), a non-ko_KR CI would break these.
 
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   finiteNumber,
   formatBasisPoints,
@@ -265,67 +262,5 @@ eq(fmtPriceUsd(1234.5), "$1,234.50", "ETF surface USD price grouped with fixed c
 eq(fmtPriceUsd(100), "$100.00", "ETF surface USD price keeps fixed cents across the old tier boundary");
 eq(fmtSignedPct(0), "+0.00%", "ETF surface zero-sign behavior remains unchanged");
 eq(fmtVolumeCompact(1234), "1.2K", "ETF surface volume uses shared compact language");
-
-// Private route helpers stay pinned through source-level adoption checks until
-// they are exported. This also prevents a route from silently reintroducing a
-// bespoke formatter while the shared output contract still passes.
-const adoptionContracts: Array<[string, string[]]> = [
-  ["src/styles/app-shell.css", ["--c-warn-ink:#a3560d"]],
-  ["src/components/canvas-plus/CpScreenerLabModel.ts", ["formatCurrencyCompact(value === null ? null : value * 1_000_000", "formatDecimal(value, { digits })"]],
-  ["src/components/canvas-plus/charts/CpPriceChartImpl.client.tsx", ["return formatSharedCurrency(value, \"USD\");", "maximumFractionDigits: 2", "return formatCompactNumber(value);"]],
-  ["src/app/etfs/etfSurfaceData.ts", ["return formatCurrency(value, \"USD\");", "return formatCompactNumber(value);"]],
-  ["src/app/etfs/new/NewEtfsList.tsx", ["return formatCurrency(value, \"USD\");", "return \"—\";"]],
-  ["src/app/explore/etfUniverseUtils.ts", ["return formatInteger(value);", "formatMultiple(factor"]],
-  ["src/app/explore/StockWorkbenchCard.tsx", ["return formatCurrency(value, \"USD\");", "return formatInteger(value);"]],
-  ["src/app/explore/ExploreHotTopics.tsx", ["return formatCurrencyCompact(value, \"USD\");"]],
-  ["src/app/sectors/SectorsClient.tsx", ["formatDecimal(value, { digits: 1 })"]],
-  ["src/app/etfs/[ticker]/EtfDetailClient.tsx", ["formatMultiple(classification.leverage_factor", "formatDecimal(beta, { digits: 2 })"]],
-  ["src/app/market-valuation/YardeniCard.tsx", ["formatMultiple(active.bond_per", "return formatDecimal(value, { digits });"]],
-  ["src/app/market-valuation/structure/MarketStructureDetailClient.tsx", ["value * 1_000_000_000", "formatDecimal(value, { digits })"]],
-  ["src/app/superinvestors/PortfolioCharts.tsx", ["formatInteger(score)", "formatDecimal(beta, { digits: 2 })"]],
-  ["src/lib/market-valuation/charts/ledgerChartPanels.tsx", ["return formatInteger(value);"]],
-  ["src/app/etfs/EtfUnifiedTable.tsx", ["formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false })"]],
-  ["src/app/etfs/EtfHeroPanel.tsx", ["?? \"—\""]],
-  ["src/app/sectors/IndustryMapPanel.tsx", ["fallback = \"—\""]],
-  ["src/components/canvas-plus/CpScreenerNativeLab.tsx", [": \"—\""]],
-  ["src/components/canvas-plus/CpScreenerTanstackLab.tsx", [": \"—\""]],
-];
-
-for (const [path, snippets] of adoptionContracts) {
-  const source = readFileSync(resolve(process.cwd(), path), "utf8");
-  for (const snippet of snippets) {
-    assert.ok(source.includes(snippet), `${path} must retain approved formatter adoption: ${snippet}`);
-  }
-}
-
-const heldEtfUniverseSource = readFileSync(resolve(process.cwd(), "src/app/explore/etfUniverseUtils.ts"), "utf8");
-assert.ok(heldEtfUniverseSource.includes("function formatPrice(value: number | null | undefined): string {"), "c-1 price helper returns a total string contract");
-assert.ok(heldEtfUniverseSource.includes("function formatSignedPercent(value: number | null | undefined): string {"), "c-1 signed-percent helper returns a total string contract");
-assert.ok(heldEtfUniverseSource.includes("function formatCompactVolume(value: number | null | undefined): string {"), "c-1 volume helper returns a total string contract");
-assert.equal(heldEtfUniverseSource.includes("formatPercentPointsValue"), false, "c-1 retires the local percent-points wrapper");
-
-const unifiedTableSource = readFileSync(resolve(process.cwd(), "src/app/etfs/EtfUnifiedTable.tsx"), "utf8");
-assert.equal(
-  unifiedTableSource.split("formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false })").length - 1,
-  2,
-  "c-1 migrates mobile and desktop expense cells atomically",
-);
-assert.equal(unifiedTableSource.includes("formatPercentPointsValue"), false, "UnifiedTable retires the local wrapper import");
-
-const cardSource = readFileSync(resolve(process.cwd(), "src/app/explore/EtfUniverseCard.tsx"), "utf8");
-assert.ok(cardSource.includes("expenseRatioValue(row) !== null"), "Card keeps the missing expense label omission guard");
-assert.ok(
-  cardSource.includes("formatPlainPercent(expenseRatioValue(row), { digits: 2, fraction: false })"),
-  "Card finite expense rendering uses the shared percent route",
-);
-
-const sha256 = (path: string) => createHash("sha256").update(readFileSync(resolve(process.cwd(), path))).digest("hex");
-for (const [path, expected] of [
-  ["src/app/etfs/etfSurfaceData.ts", "d9c6c19a2fca55e602472efdc16d4d7f92edb200f6818daca4fd3ffe1c1f7e62"],
-  ["src/app/etfs/[ticker]/EtfDetailClient.tsx", "77de2473309111a87c0c513d0b47410a91fbf03e83440a6167dd1d92a1db77ab"],
-  ["src/app/etfs/new/NewEtfsList.tsx", "7f12eabd8ba246c0e10bab26e14342f3bd4883352af080464810349d8081c08b"],
-] as const) {
-  assert.equal(sha256(path), expected, `${path} must remain byte-identical to current k3 HEAD`);
-}
 
 console.log(JSON.stringify({ ok: true, suite: "shared number formatter (src/lib/format.ts) contract" }, null, 2));

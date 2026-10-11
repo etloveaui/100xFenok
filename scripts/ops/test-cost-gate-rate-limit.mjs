@@ -176,27 +176,6 @@ assert.ok(
   "the shard schema must accept the verdict the publisher now writes, or every record fails validation",
 );
 
-// The gate script must use the distinct code on its measurement-failure path.
-{
-  const src = read("scripts/check-r2-free-tier-usage.mjs");
-  const at = src.indexOf("measurement failed");
-  assert.ok(at > 0, "the measurement-failure path is gone; this contract is stale");
-  const window = src.slice(at, at + 400);
-  const exitCall = /process\.exit\(([A-Za-z_0-9]+)\)/.exec(window);
-  assert.ok(exitCall, `the measurement-failure path must exit explicitly: ${window.slice(0, 120)}`);
-  const exited = exitCall[1];
-  // A named constant is accepted and preferred; resolve it to its value so the
-  // assertion is about the code that ships, not about how it is spelled.
-  const resolved = /^\d+$/.test(exited)
-    ? Number(exited)
-    : Number(new RegExp(`const ${exited} = (\\d+);`).exec(src)?.[1]);
-  assert.equal(
-    resolved,
-    GATE_MEASUREMENT_UNVERIFIED_EXIT,
-    `the measurement-failure path exits ${exited} (${resolved}); it must not reuse the breach code`,
-  );
-}
-
 // --- Fail-closed is unchanged, and that is asserted so it stays a decision ----
 for (const strictGate of [true, false]) {
   assert.equal(

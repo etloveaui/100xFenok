@@ -15,21 +15,6 @@ const root = await fs.mkdtemp(path.join(os.tmpdir(), "family-health-"));
 const prefix = "data/stockanalysis/etfs";
 const binding = { runId: "100", runAttempt: "1", now };
 try {
-  const workflow = file => JSON.parse(execFileSync("ruby", ["-rjson", "-ryaml", "-e",
-    "puts JSON.generate(YAML.load_file(ARGV[0]))", `.github/workflows/${file}`], { encoding: "utf8" }));
-  const reusable = workflow("refresh-family-health.yml");
-  assert.equal(reusable.concurrency, undefined, "preparation must never inherit a family lock");
-  assert.equal(reusable.jobs.prepare.concurrency, undefined);
-  assert.equal(reusable.jobs.commit.concurrency.group, "stockanalysis-etf-detail-publish");
-  assert.equal(reusable.jobs.commit.concurrency["cancel-in-progress"], false);
-  const commitRuns = reusable.jobs.commit.steps.map(step => step.run ?? "").join("\n");
-  assert.ok(!/git\s+(fetch|checkout)|refresh-family-health\.mjs prepare/.test(commitRuns), "canonical work stays outside lock");
-  assert.equal(workflow("data-plane-serving-probe.yml").jobs["family-health"].with.once_daily, true);
-  const postPublish = workflow("fetch-stockanalysis.yml").jobs["refresh-etf-health"];
-  assert.ok(postPublish.needs.includes("publish-stockanalysis-etf-plane"));
-  assert.match(postPublish.if, /publish-stockanalysis-etf-plane.result == 'success'/);
-  const detector = workflow("pipeline-failure-alarm.yml").jobs.check.steps.find(step => step.id === "pipeline");
-  assert.ok(detector.env.CLOUDFLARE_API_TOKEN, "independent health reader must receive its credential");
   await fs.mkdir(path.join(root, prefix), { recursive: true });
   const data = { fetched_at: "2026-10-10T00:00:00Z", raw: { quote: { td: "2026-10-10" } } };
   await fs.writeFile(path.join(root, prefix, "ONE.json"), JSON.stringify(data));

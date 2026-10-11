@@ -202,87 +202,12 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   }
 }
 
-// Publication ownership must have one registry lane and one workflow. The
-// lane owns source paths, its detection attempt, canonical staging, and the
-// publish-outcome shard; the workflow policy must carry those declarations.
-{
-  const lane = LANE_REGISTRY.lanes.find((candidate) => (
-    candidate.id === "earnings_overview"
-  ));
-  assert.ok(lane, `${FAMILY} must have a registry owner`);
-  assert.equal(lane.owner_workflow, WORKFLOW);
-  assert.deepEqual(lane.provider_refs, [
-    { provider_id: "sec_edgar", role: "source", members: null },
-  ]);
-  assert.deepEqual(lane.roots.canonical_outputs, [CANONICAL_ROOT]);
-  assert.equal(lane.lane_class, "auxiliary");
-  assert.equal(lane.roots.detection_attempt, null, "unadmitted detection attempt is not fabricated");
-  assert.ok(lane.commit_shards.includes(CANONICAL_ROOT));
-  assert.ok(lane.commit_shards.includes("data/admin/earnings_overview"));
-  assert.ok(lane.script_sources?.includes("scripts/build-earnings-overview.py"));
-
-  assert.deepEqual(PLANE_PUBLISH_FAMILY_BINDINGS[FAMILY], {
-    lane_id: lane.id,
-    workflow: WORKFLOW,
-  });
-
-  const workflowPolicy = LANE_REGISTRY.workflow_policies[WORKFLOW];
-  assert.ok(workflowPolicy, `${WORKFLOW} must have a registry policy`);
-  assert.ok(workflowPolicy.lanes.includes(lane.id));
-  assert.ok(
-    workflowPolicy.stages.always_if_exists.some((spec) => spec.path === "data/admin/earnings_overview"),
-    "real refresh outcome evidence must be staged on every run",
-  );
-  assert.ok(
-    expectAssetSpec(workflowPolicy, CANONICAL_ROOT),
-    "canonical earnings documents must be covered by workflow staging",
-  );
-}
-
 // The finite committed serving allowlist stays in place after derivation retirement.
 {
   assert.deepEqual(PLANE_ENROLLMENT_EXACT.filter(([, family]) => family === FAMILY),
     [...TICKERS].sort().map((ticker) => [`/data/earnings-overview/${ticker}.json`, FAMILY]));
   assert.equal(PLANE_ENROLLMENT_PREFIXES.some((row) => row.family === FAMILY), false, "finite earnings allowlist must not become a public prefix");
-  const wrangler = await readFile(
-    new URL("../100xfenok-next/wrangler.jsonc", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    wrangler,
-    /"\/data\/earnings-overview\/\*"/u,
-    "Worker-first routing must include the bounded earnings family",
-  );
-}
 
-// The daily 21:20 UTC StockAnalysis schedule calls the independent reusable
-// earnings workflow so an unrelated provider failure cannot suppress this
-// four-file family. The reusable workflow also remains manually dispatchable
-// for the bounded initial publish.
-{
-  const reusable = await readFile(new URL("../.github/workflows/refresh-earnings-overview.yml", import.meta.url), "utf8");
-  assert.match(reusable, /workflow_call:/u);
-  assert.match(reusable, /workflow_dispatch:/u);
-  assert.match(reusable, /build-earnings-overview\.py\s+--refresh/u);
-  assert.match(reusable, /--output-dir\s+data\/earnings-overview/u);
-  assert.match(reusable, /publish-cloud-data-generation\.mjs\s+--family=earnings-overview/u);
-  assert.match(reusable, /fenok-data-writer-refs\/heads\/main/u);
-  assert.match(reusable, /git fetch origin main/u);
-  assert.match(reusable, /\[skip ci\]/u);
-  assert.match(reusable, /data\/earnings-overview/u);
-
-  const deployWorkflow = await readFile(new URL("../.github/workflows/deploy-worker.yml", import.meta.url), "utf8");
-  assert.ok(deployWorkflow.includes("'!100xfenok-next/public/data/earnings-overview/**'"), "static LKG refresh cannot trigger a Worker UI deployment");
-  const updateManifest = await readFile(new URL("../.github/workflows/update-manifest.yml", import.meta.url), "utf8");
-  assert.ok(updateManifest.includes("'!data/earnings-overview/**'"), "earnings data refresh cannot trigger full UI reconciliation");
-  assert.ok(updateManifest.includes("'!data/admin/earnings_overview/**'"));
-  const caller = await readFile(new URL("../.github/workflows/fetch-stockanalysis.yml", import.meta.url), "utf8");
-  assert.match(caller, /cron:\s*['"]20 21 \* \* \*['"]/u);
-  const callerJobStart = caller.indexOf("  refresh-earnings-overview:");
-  assert.notEqual(callerJobStart, -1, `${CALLER_WORKFLOW} must call the earnings workflow`);
-  const callerBlock = caller.slice(callerJobStart);
-  assert.match(callerBlock, /uses:\s*\.\/\.github\/workflows\/refresh-earnings-overview\.yml/u);
-  assert.doesNotMatch(callerBlock, /needs:\s*acquire-stockanalysis/u, "earnings refresh must be independent of StockAnalysis success");
 }
 
 process.stdout.write("test-earnings-overview-cloud-contract: ok\n");

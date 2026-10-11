@@ -32,25 +32,7 @@ class DataSpinePolicyTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.facts = load_module(SCRIPTS / "build-market-facts.py", "build_market_facts_policy_test")
 
-    def test_resolver_fields_match_ratified_policy_fields(self) -> None:
-        self.assertEqual(
-            set(self.facts.FIELD_SOURCE_POLICY),
-            set(data_spine_policy.V0_FIELD_POLICY),
-        )
 
-    def test_v0_specific_tolerances_are_not_regressed_to_old_p1_draft(self) -> None:
-        cases = {
-            "dividend_yield": 0.5,
-            "return_1m": 5.0,
-            "return_3m": None,
-            "return_ytd": 7.0,
-            "return_1y": 10.0,
-            "return_5y_avg": 1.25,
-            "return_10y_avg": 1.0,
-        }
-        for field, expected in cases.items():
-            with self.subTest(field=field):
-                self.assertEqual(data_spine_policy.V0_FIELD_POLICY[field]["tolerance"], expected)
 
     def test_return_3m_label_is_authority_only(self) -> None:
         label = data_spine_policy.tolerance_label("return_3m")

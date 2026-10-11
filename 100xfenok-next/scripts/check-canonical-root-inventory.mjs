@@ -1180,7 +1180,6 @@ function classifyOldUrlConsumer(file, pattern_ids) {
     || file === "100xfenok-next/public/robots.txt"
     || file === "100xfenok-next/src/app/robots.ts"
     || file === "100xfenok-next/src/lib/site-url.ts"
-    || file === "100xfenok-next/scripts/check-seo-surface.mjs"
     || file === "100xfenok-next/scripts/smoke-stockanalysis-routes.mjs"
   )) {
     return {

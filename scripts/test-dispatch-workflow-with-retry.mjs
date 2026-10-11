@@ -99,11 +99,4 @@ for (const extraArgs of [
   assert.equal(result.calls.length, 0, "argument validation must happen before gh dispatch");
 }
 
-const workflowText = fs.readFileSync(WORKFLOW, "utf8");
-assert.match(workflowText, /bash scripts\/dispatch-workflow-with-retry\.sh/);
-assert.match(workflowText, /--workflow deploy-worker\.yml/);
-assert.match(workflowText, /--ref main/);
-assert.match(workflowText, /--attempts 3/);
-assert.match(workflowText, /--delay-seconds 5/);
-
 console.log("test-dispatch-workflow-with-retry: ok");

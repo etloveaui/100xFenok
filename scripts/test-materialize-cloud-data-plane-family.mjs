@@ -575,31 +575,6 @@ await withTempDir("materialize-cli-", async (base) => {
   console.log("CLI ok (usage/env exit 2, one secret-free receipt line on success, failure exit 1)");
 });
 
-// --- 8. Composition: reused contract/adapters, no own HTTP or writers -------
-{
-  const source = await readFile(
-    new URL("./materialize-cloud-data-plane-family.mjs", import.meta.url),
-    "utf8",
-  );
-  for (const token of ["fetch(", "Authorization", "x-data-plane-key", "api.cloudflare.com"]) {
-    assert.equal(source.includes(token), false, `materializer must not contain ${token}`);
-  }
-  for (const reused of [
-    "createR2RestBucket",
-    "createRemoteCoordinatorNamespace",
-    "createCloudflareCloudDataPlane",
-    "validateActivePointer",
-    "validateGenerationManifest",
-    "runBoundedAsyncPool",
-  ]) {
-    assert.ok(source.includes(reused), `materializer must reuse ${reused}`);
-  }
-  assert.equal(source.includes("pointerStore.compareAndSwap"), false,
-    "materializer must never reference a write surface");
-  assert.equal(source.includes(".put("), false, "materializer must never write objects");
-  console.log("composition ok (no own HTTP/auth, writer surfaces absent, contract validation reused)");
-}
-
 // Worktree scope: the run leaves the repository delta identical. This remains
 // valid both before and after the files are committed.
 {

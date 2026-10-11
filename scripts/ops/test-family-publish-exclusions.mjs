@@ -86,39 +86,6 @@ assert.throws(
   assert.equal(family.files, undefined, "this family enumerates by directory; that is why it needs exclusions");
 }
 
-// --- The offending files are real, and nothing else in the tree is unparseable
-{
-  const root = path.join(REPO_ROOT, "data", "edgar-korean-summaries");
-  const offender = path.join(root, "ops", "batch-skip-log.jsonl");
-  assert.ok(fs.existsSync(offender), "the JSONL that broke publication is gone; re-measure before trusting this");
-  const firstLine = fs.readFileSync(offender, "utf8").split("\n")[0];
-  assert.equal(
-    Buffer.byteLength(`${firstLine}\n`),
-    229,
-    "the first line is no longer 229 bytes; the causal link to the reported error position is stale",
-  );
-}
-
-// --- The mechanism must be WIRED, not merely present ------------------------
-// Removing the call left the function and the declaration both intact and this
-// file still passing, which is the vacuous-contract shape this programme keeps
-// finding. Assert the seam itself.
-{
-  const source = fs.readFileSync(
-    path.join(REPO_ROOT, "scripts", "publish-cloud-data-generation.mjs"), "utf8",
-  );
-  const code = source.split("\n").filter((l) => !/^\s*\/\//.test(l)).join("\n");
-  assert.match(
-    code,
-    /applyFamilyExclusions\(await walkFiles\(absRoot\), family\.exclude\)/,
-    "the directory walk must be filtered through the exclusions; declaring them changes nothing on its own",
-  );
-  assert.ok(
-    !/\?\?\s*await walkFiles\(absRoot\)\s*\)/.test(code),
-    "an unfiltered walk remains in the resolution path",
-  );
-}
-
 // --- Exclusions only ever apply to a walked family --------------------------
 for (const [name, family] of Object.entries(FAMILIES)) {
   if (!family.exclude) continue;

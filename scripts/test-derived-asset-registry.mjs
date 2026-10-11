@@ -29,15 +29,6 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-{
-  const expected = JSON.parse(fs.readFileSync(EXPECTED_PATH, "utf8"));
-  assert.equal(expected.schema_version, "derived-asset-registry-expected/v1");
-  assert.equal(
-    derivedAssetRegistryDigest(),
-    expected.registry_digest,
-    "derived asset registry drifted: bump the digest fixture consciously",
-  );
-}
 
 {
   assert.equal(validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY), true);

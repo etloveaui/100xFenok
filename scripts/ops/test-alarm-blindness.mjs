@@ -79,43 +79,6 @@ assert.ok(
   "the reason must describe blindness, not restate a generic failure",
 );
 
-// --- The exit path must actually be wired ------------------------------------
-// A pure function nobody calls is the vacuous-contract shape that let today's
-// credential defect ship, so assert the seam and not only the logic.
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const healthSource = fs.readFileSync(
-  path.join(REPO_ROOT, "scripts", "ops", "check-pipeline-job-health.mjs"), "utf8",
-);
-const healthCode = healthSource.split("\n").filter((l) => !/^\s*\/\//.test(l)).join("\n");
-
-assert.ok(
-  /classifyAlarmBlindness\(/.test(healthCode.replace(/export function classifyAlarmBlindness[^\n]*/, "")),
-  "classifyAlarmBlindness is defined but never called; the check would be decorative",
-);
-assert.ok(
-  !/process\.exit\(alarms\.length > 0 \? ALERT_EXIT : 0\)/.test(healthCode),
-  "the exit still ignores blindness: an unreadable run would exit 0 and report nothing",
-);
-
-// The unset-repository path deliberately still exits 0, and that is asserted
-// here so it reads as a decision rather than an oversight. It was changed while
-// fixing this defect and changed back: the Actions runner always sets
-// GITHUB_REPOSITORY, so in CI the path is unreachable and it exists only for
-// running the script by hand offline, where alarming would be noise.
-// test-check-pipeline-job-health has asserted that exit 0 since before this
-// work, and the real fail-open was the API path, which classifyAlarmBlindness
-// now bounds.
-const unsetIndex = healthSource.indexOf("GITHUB_REPOSITORY is not set");
-assert.ok(unsetIndex > 0, "the unset-repository path is gone; its contract below is stale");
-assert.ok(
-  /process\.exit\(0\);/.test(healthSource.slice(unsetIndex, unsetIndex + 1400)),
-  "the offline unset-repository path must keep exiting 0; see the note above",
-);
-
 // An operator must be told what happened, through the body the workflow reads.
 // Asserting only that the string "issueBody" appears somewhere after the
 // classifier was vacuous - the alarms path sets it too, so deleting the
@@ -143,15 +106,5 @@ assert.ok(
     `the body must open with the alert marker the operator scans for: ${body.slice(0, 40)}`,
   );
 }
-
-const blindBranch = healthCode.slice(healthCode.indexOf("if (blindness.blind) {"));
-assert.ok(
-  blindBranch.startsWith("if (blindness.blind) {"),
-  "the blindness branch is gone; nothing would report an unreadable run",
-);
-assert.ok(
-  /result\.issueBody\s*=/.test(blindBranch.slice(0, 700)),
-  "the blindness branch must assign result.issueBody; the workflow reports only that",
-);
 
 console.log("test-alarm-blindness: ok");

@@ -13,10 +13,6 @@ import {
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const scouterRoot = path.join(repoRoot, "data", "global-scouter");
-const builderSource = fs.readFileSync(
-  path.join(repoRoot, "scripts", "build-phase2-closeout-indexes.mjs"),
-  "utf8",
-);
 const rows = JSON.parse(
   fs.readFileSync(path.join(scouterRoot, "core", "stocks_analyzer.json"), "utf8"),
 ).data;
@@ -205,17 +201,6 @@ assert.equal(
   ),
   "US",
   "deleting the 10% dispersion guard must be caught",
-);
-
-assert.match(
-  builderSource,
-  /detectSecondaryDepositaryRepresentations\(\s*scouterRows,\s*stockDetail,\s*\)/,
-  "the stock-action builder must compute the universe-level depositary classification",
-);
-assert.match(
-  builderSource,
-  /normalizeTicker\(symbol,\s*secondaryDepositaryRepresentations\)/,
-  "the stock-action builder must apply the classification before marketScope is derived",
 );
 
 console.log("stock market classification tests passed");

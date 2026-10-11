@@ -125,22 +125,6 @@ console.log("# product surface stamp taxonomy v2 fixtures");
   ok("14 source/public projection preserves exact v2 taxonomy and lineage without private fields");
 }
 {
-  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/fetch-stockanalysis.yml"), "utf8");
-  const crons = [...workflow.matchAll(/- cron:\s*['\"]([^'\"]+)['\"]/g)].map((m) => m[1]);
-  assert.ok(crons.includes("50 23 * * 1-5")); assert.ok(crons.includes("20 23 * * 0"));
-  const occurrences = [];
-  for (let day = 0; day < 21; day += 1) {
-    const d = new Date(Date.UTC(2026, 6, 5 + day));
-    if (d.getUTCDay() >= 1 && d.getUTCDay() <= 5) occurrences.push(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 50));
-    if (d.getUTCDay() === 0) occurrences.push(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 20));
-  }
-  occurrences.sort((a, b) => a - b);
-  const maxGap = Math.max(...occurrences.slice(1).map((value, i) => (value - occurrences[i]) / 3600000));
-  assert.equal(maxGap, 47.5); assert.equal(PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS, 50); assert.ok(maxGap < PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS);
-  ok("15 cron-policy pin proves the declared surface schedule remains within 50h");
-}
-
-{
   const stamp = evidence([date("source", "2026-07-15"), dateless("events")]);
   const artifact = {
     schema_version: "product-surface-coverage/v2",

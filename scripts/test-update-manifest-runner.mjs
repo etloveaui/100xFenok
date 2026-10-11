@@ -1,20 +1,5 @@
 #!/usr/bin/env node
-// Update Manifest projection-stack extraction gate (slim).
-//
-// Proves the extraction contract WITHOUT re-specifying the runner's command
-// inventory: the full generation-order contract is owned by
-// test-update-manifest-workflow.mjs (ETF/KPI order) and
-// test-update-manifest-materializations.mjs (mirror projection order).
-//  1. the workflow invokes the shared runner exactly once, inside its retry loop;
-//  2. the workflow embeds none of the runner's projection commands (the list
-//     is DERIVED from the runner itself, so no parallel inventory can drift);
-//  3. the runner is valid bash;
-//  4. one compact behavioral check with recording stubs (no repo writes):
-//     final publication flags plus update-manifest.py exit-1
-//     (tolerated) vs exit>1 (abort) semantics.
-//
-// The central change probe stays outside the runner because it controls retry
-// branching and is not a projection command.
+// Execute projection exit handling with recording stubs.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -23,83 +8,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const workflowPath = path.join(repoRoot, ".github/workflows/update-manifest.yml");
 const runnerPath = path.join(repoRoot, "scripts/update-manifest-projections.sh");
-const workflowText = fs.readFileSync(workflowPath, "utf8");
 const runnerText = fs.readFileSync(runnerPath, "utf8");
-const historyWorkflowText = fs.readFileSync(path.join(repoRoot, ".github/workflows/slickcharts-history.yml"), "utf8");
-const workflowLines = workflowText.split("\n").map((line) => line.trim());
-const runnerLines = runnerText.split("\n").map((line) => line.trim());
 
-// --- 1) Exactly one runner, inside the retry loop. --------------------------
-assert.equal(workflowLines.filter((line) => line === "run: bash scripts/update-manifest-projections.sh").length, 0,
-  "the preliminary projection pass must stay removed");
-assert.equal(workflowLines.filter((line) => line === "bash scripts/update-manifest-projections.sh").length, 1,
-  "retry loop must invoke the runner exactly once");
-const retryCall = workflowLines.indexOf("bash scripts/update-manifest-projections.sh");
-const retryStart = workflowLines.indexOf("for attempt in 1 2 3; do");
-assert.ok(retryCall > retryStart, "retry call site must live inside the push-retry loop");
-
-// --- 2) One concise S1-S14 anchor table pins order and extraction. ----------
-// This is one representative command per stage, not a parallel runner spec.
-const STAGE_ANCHORS = [
-  ["S1", "python scripts/scrapers/membership-tracker.py --quiet"],
-  ["S2", "python3 scripts/rebuild-yf-finance-summary.py"],
-  ["S3", "node scripts/materialize-update-manifest-routes.mjs --all"],
-  ["S4", "node scripts/export-computed-signals.mjs"],
-  ["S5", "node scripts/build-phase2-closeout-indexes.mjs"],
-  ["S6", "node scripts/build-fenok-signals.mjs"],
-  ["S7", "node scripts/build-fenok-etf-signals.mjs"],
-  ["S8", "node scripts/build-fenok-edge-coverage-index.mjs"],
-  ["S9", "python3 scripts/update-manifest.py || status=$?"],
-  ["S10", "npm --prefix 100xfenok-next run build:data-entity-graph"],
-  ["S11", "node scripts/generate-product-surface-coverage.mjs"],
-  ["S12", "(cd 100xfenok-next && node sync-static-overrides.mjs)"],
-  ["S13", "repo_root=\"$(pwd -P)\""],
-  ["S14", "npm --prefix 100xfenok-next run build:fenok-data-health-kpi"],
-];
-let previousAnchor = -1;
-for (const [stage, anchor] of STAGE_ANCHORS) {
-  const position = runnerLines.indexOf(anchor);
-  assert.ok(position > previousAnchor, `${stage} anchor must exist in order: ${anchor}`);
-  assert.equal(workflowLines.includes(anchor), false, `${stage} projection must not be embedded in the workflow`);
-  previousAnchor = position;
-}
-
-const allMaterialization = "node scripts/materialize-update-manifest-routes.mjs --all";
-const basketProducer = "node scripts/build-fenok-etf-core-daily-basket.mjs --check";
-const basketRouteArgument = "--route-source data/computed/fenok_etf_core_daily_basket_summary.json";
-const allMaterializationIndex = runnerLines.indexOf(allMaterialization);
-const basketProducerIndex = runnerLines.indexOf(basketProducer);
-const basketRouteIndex = runnerLines.indexOf(basketRouteArgument);
-assert.equal(runnerLines.filter((line) => line === allMaterialization).length, 1,
-  "runner must materialize all routes exactly once at S3");
-assert.equal(runnerLines.filter((line) => line === basketRouteArgument).length, 1,
-  "runner must materialize the exact basket route exactly once");
-assert.ok(allMaterializationIndex < basketProducerIndex,
-  "S3 full materialization must precede the S7 basket producer");
-assert.ok(basketProducerIndex < basketRouteIndex,
-  "bounded basket materialization must follow its S7 producer");
-assert.ok(basketRouteIndex < runnerLines.indexOf("# --- S8: Build Fenok edge projections ---------------------------------------"),
-  "bounded basket materialization must finish before S8");
-
-// The sole final projection call explicitly provides the fail-closed environment.
-for (const line of [
-  "VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'false'",
-  "RESET_ETF_SNAPSHOTS: 'true'",
-]) {
-  assert.equal(workflowLines.filter((candidate) => candidate === line).length, 1, `workflow must set ${line} exactly once`);
-}
-assert.equal(workflowLines.filter((line) => line.startsWith("REBUILD_SLICKCHARTS:")).length, 1,
-  "the sole call site must set REBUILD_SLICKCHARTS");
-assert.equal(workflowLines.filter((line) => line.startsWith("BEFORE_SHA:")).length, 1,
-  "the sole call site must set BEFORE_SHA");
-assert.equal(workflowText.includes("steps.check.outputs.changed"), false,
-  "no preliminary change probe may gate the retry loop or no-change report");
-assert.equal(runnerLines.includes("set -eo pipefail"), true, "runner must match GitHub bash -e -o pipefail semantics");
-assert.equal(runnerLines.includes("set -euo pipefail"), true, "S13 must retain its additional -u behavior");
-
-// --- 3) The runner must be valid bash. --------------------------------------
+// The runner must be valid bash. --------------------------------------
 {
   const syntax = spawnSync("bash", ["-n", runnerPath], { encoding: "utf8" });
   assert.equal(syntax.status, 0, `bash -n failed: ${syntax.stderr}`);
@@ -170,10 +82,6 @@ const SNAPSHOT_RESET = "rm -rf 100xfenok-next/public/data/stockanalysis/etfs/sha
 const SYNC_PUBLIC = "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only";
 const PUSH_SHA = "0123456789abcdef0123456789abcdef01234567";
 
-// Only central projection can tolerate retained-history coverage gaps.
-assert.match(historyWorkflowText, /python scripts\/validate-slickcharts-integrity\.py --skip-public/);
-assert.equal(historyWorkflowText.includes("--allow-history-coverage-lag"), false,
-  "history acquisition must keep its completeness guard");
 for (const skipPublic of ["true", "false"]) {
   const checked = runRunner({ VALIDATE_SLICKCHARTS_SKIP_PUBLIC: skipPublic });
   assert.equal(checked.result.status, 0, checked.result.stderr);

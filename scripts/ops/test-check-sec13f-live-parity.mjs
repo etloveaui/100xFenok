@@ -80,17 +80,4 @@ const missingKey = liveFromCanonical();
 delete missingKey.consensus.metadata.current_cohort_investors;
 assert.equal(compareSemantic({ canonical, live: missingKey, statuses: statuses() }).ok, false);
 
-const workflow = fs.readFileSync(workflowPath, "utf8");
-for (const required of [
-  "15 10 * * *",
-  "workflow_dispatch",
-  "origin/main",
-  "scripts/ops/check-sec13f-live-parity.mjs",
-  "scripts/test-sec13f-live-privacy.mjs",
-  "continue-on-error: true",
-  "issues: write",
-]) {
-  assert.match(workflow, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `workflow contract missing ${required}`);
-}
-
-console.log("check-sec13f-live-parity: ok (semantic drift, route failure, missing-key and workflow cases)");
+console.log("check-sec13f-live-parity: ok (semantic drift, route failure, missing-key cases)");

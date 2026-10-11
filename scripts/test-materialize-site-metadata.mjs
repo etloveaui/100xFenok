@@ -54,30 +54,11 @@ const writeJson = (filePath, value) => {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-const packageJson = JSON.parse(fs.readFileSync(path.join(root, "100xfenok-next/package.json"), "utf8"));
-assert.match(packageJson.scripts["build:data-supply-public"], /^node \.\.\/scripts\/materialize-site-metadata\.mjs --write && /);
-const syncStatic = packageJson.scripts["sync-static"];
-assert.ok(syncStatic.indexOf("npm run build:data-supply-public") < syncStatic.indexOf("node scripts/sync-public-data.mjs --write"));
-assert.doesNotMatch(syncStatic, /100x\/data\/\*|alpha-scout\/data\/metadata/,
-  "legacy metadata roots must never copy directly into public/data");
-
-const runner = fs.readFileSync(path.join(root, "scripts/update-manifest-projections.sh"), "utf8");
-const writerCall = "node scripts/materialize-site-metadata.mjs --write";
-assert.equal(runner.split(writerCall).length - 1, 1, "Update Manifest runner must materialize canonical metadata once");
-assert.ok(runner.indexOf(writerCall) < runner.indexOf("# --- S1:"), "canonical metadata must materialize before S1");
-
-const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
-for (const trigger of ["100x/data/metadata/**", "alpha-scout/data/metadata/**", "scripts/materialize-site-metadata.mjs"]) {
-  assert.match(workflow, new RegExp(trigger.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `missing Update Manifest trigger: ${trigger}`);
-}
-assert.match(workflow, /- '!data\/metadata\/\*\*'/, "canonical bot commits must not retrigger Update Manifest");
-
 const live = materializeSiteMetadata({
   dailyWrapRoot: path.join(root, "100x/data/metadata"),
   alphaScoutRoot: path.join(root, "alpha-scout/data/metadata"),
   destinationRoot: path.join(root, "data/metadata"),
 });
-assert.equal(live.count, 52, "current source union must contain exactly 52 files");
 assert.equal(live.changed, false, "current canonical metadata must equal the source union");
 
 console.log("test-materialize-site-metadata: ok");

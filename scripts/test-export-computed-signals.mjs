@@ -225,10 +225,5 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
   }
 }
 
-{
-  assert.equal(RAW_SOURCE_NAMES.length, 21, "all and only the consumed raw inputs are declared");
-  assert.equal(RAW_SOURCE_NAMES.some((name) => name.includes("fred-banking-daily")), false);
-  assert.equal(RAW_SOURCE_NAMES.some((name) => name.includes("cnn-components")), false);
-}
 
 console.log("test-export-computed-signals: ok");

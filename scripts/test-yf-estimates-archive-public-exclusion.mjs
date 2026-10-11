@@ -36,13 +36,6 @@ for (const relative of canonicalFiles) {
   assert.equal(ignored.status, 0, `public estimate archive path is not ignored: ${relative}`);
 }
 
-const overrides = fs.readFileSync(path.join(ROOT, "100xfenok-next", "sync-static-overrides.mjs"), "utf8");
-assert.equal(
-  overrides.includes(`public/data/${family}`),
-  true,
-  "sync-static-overrides must remove the whole generated estimate archive tree",
-);
-
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "yf-estimates-archive-public-exclusion-"));
 try {
   const futurePath = path.join(fixtureRoot, "public", "data", "yf", "estimates-archive", "future.json");

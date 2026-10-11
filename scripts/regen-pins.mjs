@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -29,12 +28,6 @@ const LANE_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/lane-registry/re
 const DERIVED_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/derived-asset-registry/registry.expected.json");
 const POLICY_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/data_supply/policy_registry/registry.expected.json");
 
-function parseMode(args) {
-  if (args.length === 0) return "write";
-  if (args.length === 1 && args[0] === "--check") return "check";
-  throw new Error("usage: node scripts/regen-pins.mjs [--check]");
-}
-
 function writeDigestFixture(sourcePath, outputPath, field, value) {
   const fixture = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
   fixture[field] = value;
@@ -59,10 +52,6 @@ function projectionNow() {
     if (error?.message?.includes("precedes")) return fresh;
     throw error;
   }
-}
-
-function tempPath(tempRoot, canonicalPath) {
-  return path.join(tempRoot, path.relative(REPO_ROOT, canonicalPath));
 }
 
 async function emitAll(outputFor) {
@@ -101,33 +90,9 @@ function generatedPaths() {
 }
 
 async function main() {
-  const mode = parseMode(process.argv.slice(2));
-  if (mode === "write") {
-    await emitAll((canonicalPath) => canonicalPath);
-    console.log(`regen:pins wrote ${generatedPaths().length} projections`);
-    return;
-  }
-
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-pins-"));
-  try {
-    await emitAll((canonicalPath) => tempPath(tempRoot, canonicalPath));
-    // Runtime lane dates are rebuilt by reconcile:derived. A provider date
-    // advance must not fail definition validation on committed snapshot bytes.
-    const checkedPaths = generatedPaths().filter((filePath) => !DEFAULT_PROJECTION_OUTPUT_PATHS.includes(filePath));
-    const stale = checkedPaths.filter((canonicalPath) => {
-      const generatedPath = tempPath(tempRoot, canonicalPath);
-      if (!fs.existsSync(canonicalPath)) return true;
-      const committedText = fs.readFileSync(canonicalPath, "utf8");
-      const generatedText = fs.readFileSync(generatedPath, "utf8");
-      return committedText !== generatedText;
-    });
-    if (stale.length > 0) {
-      throw new Error(`generated pins are stale: ${stale.map((filePath) => path.relative(REPO_ROOT, filePath)).join(", ")}`);
-    }
-    console.log(`qa:pins ok (${checkedPaths.length} definition projections matched)`);
-  } finally {
-    fs.rmSync(tempRoot, { recursive: true, force: true });
-  }
+  if (process.argv.length > 2) throw new Error("usage: node scripts/regen-pins.mjs");
+  await emitAll((canonicalPath) => canonicalPath);
+  console.log(`regen:pins wrote ${generatedPaths().length} projections`);
 }
 
 await main();

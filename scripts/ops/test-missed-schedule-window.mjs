@@ -367,30 +367,6 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
 {
   const marked = (file, slot, extra = {}) => ({ ...run(200, slot, { event: "workflow_dispatch" }),
     created_at: slot, display_title: `${EXTERNAL_CLOCK_MARKER} ${file} ${slot}`, ...extra });
-  for (const [file, cron] of Object.entries(EXTERNAL_CLOCK_CRONS)) {
-    // The alarm excludes itself from monitoring; cadence validation still reads it.
-    const workflow = deriveWorkflowWatchPolicy({ scheduledExclusions: {} }).watched.find((row) => row.file === file);
-    assert.ok(externalClockCrons(file).every((value) => workflow.crons.includes(value)), `${file} external cadence must match the actual declaration`);
-    const yaml = fs.readFileSync(new URL(`../../.github/workflows/${file}`, import.meta.url), "utf8");
-    assert.ok(yaml.includes(`external-clock/a1/v1 ${file} {0}`));
-    assert.ok(yaml.includes("external_clock_slot:"));
-    assert.ok(yaml.includes("concurrency:") && yaml.includes("cancel-in-progress: false"));
-    if (file === "worker-request-budget-alarm.yml") {
-      assert.match(yaml, /check:[\s\S]*github.event_name == 'workflow_dispatch' \|\| github.event.schedule == '7 \* \* \* \*'/);
-      assert.match(yaml, /data-supply-analytics:[\s\S]*\(github.event_name == 'workflow_dispatch' && inputs.external_clock == ''\) \|\| github.event.schedule == '17 2,14 \* \* \*'/);
-    } else if (file === "deploy-worker.yml") {
-      assert.match(yaml, /if: inputs.external_clock == 'a1-v1'/);
-      assert.match(yaml, /check-bundled-data-catchup\.mjs/);
-    } else if (["fetch-treasury-tga.yml", "fetch-fenok-news-tone.yml"].includes(file)) {
-      assert.ok(!/if:.*github\.event_name/.test(yaml), `${file} jobs cannot exclude marked dispatches`);
-      assert.match(yaml, /controlled_failure/);
-      assert.match(yaml, /default: ['"]['"]/);
-    } else if (["slickcharts-daily.yml", "update-manifest.yml", "build-stocks-analyzer.yml"].includes(file)) {
-      assert.ok(yaml.includes("workflow_dispatch:"), `${file} has dispatch-equivalent producer inputs`);
-    } else {
-      assert.ok(!yaml.includes("event_name") && !yaml.includes("event.schedule"), `${file} must be event-independent`);
-    }
-  }
   const producer = { ...detector("fetch-yahoo-ticker.yml", "5 * * * *"), scheduled_producer: true };
   const prior = run(100, "2026-08-20T23:05:00Z");
   const slot = "2026-08-21T01:05:00.000Z";

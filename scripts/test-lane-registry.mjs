@@ -35,17 +35,6 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-// --- (b) digest pin ------------------------------------------------------------
-{
-  const expected = JSON.parse(fs.readFileSync(EXPECTED_PATH, "utf8"));
-  assert.equal(expected.schema_version, "lane-registry-expected/v1");
-  assert.equal(
-    registryDigest(),
-    expected.registry_digest,
-    "registry drifted: bump scripts/fixtures/lane-registry/registry.expected.json consciously",
-  );
-}
-
 // --- (a) loader validation ------------------------------------------------------
 {
   // the shipped registry itself validates

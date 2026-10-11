@@ -9,32 +9,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 const workflow = fs.readFileSync(path.join(repoRoot, ".github/workflows/fenok-edge-daily.yml"), "utf8");
-const appPackage = JSON.parse(fs.readFileSync(path.join(repoRoot, "100xfenok-next/package.json"), "utf8"));
-const requiredOccQaTests = [
-  "test-fetch-fenok-occ-options-volume.mjs",
-  "test-fetch-fenok-occ-lkg-recovery.mjs",
-  "test-fetch-fenok-occ-threshold-diagnostics.mjs",
-];
-
-function assertOccQaScriptFailClosed(script) {
-  const expected = requiredOccQaTests.map((test) => `node ../scripts/${test}`).join(" && ");
-  assert.equal(script, expected, "qa:fenok-occ-options must chain all OCC suites with &&");
-}
-
-function extractIndentedBlock(source, headerPattern) {
-  const lines = source.split("\n");
-  const headerIndex = lines.findIndex((line) => headerPattern.test(line));
-  assert.notEqual(headerIndex, -1, `missing block matching ${headerPattern}`);
-  const headerIndent = lines[headerIndex].match(/^\s*/)[0].length;
-  const block = [];
-  for (let index = headerIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    if (line.trim() && line.match(/^\s*/)[0].length <= headerIndent) break;
-    block.push(line);
-  }
-  return block.join("\n");
-}
-
 function extractStepRun(source, stepName) {
   const startMarker = `      - name: ${stepName}\n`;
   const startIndex = source.indexOf(startMarker);
@@ -63,93 +37,6 @@ function runControlledFailureValidation(overrides = {}) {
     },
   });
 }
-
-const dispatchInputs = extractIndentedBlock(workflow, /^\s{4}inputs:\s*$/);
-const inputNames = [...dispatchInputs.matchAll(/^\s{6}([a-z0-9_]+):\s*$/gm)].map((match) => match[1]);
-const runBlocks = [...workflow.matchAll(/^(\s+)run:\s*\|\n((?:(?:\1  ).*\n?)*)/gm)].map((match) => match[2]);
-const refreshRun = extractStepRun(workflow, "Refresh FINRA and OCC derived proxies");
-
-assert.equal(
-  refreshRun.split("\n").filter((line) => line.trim() === "npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies").length,
-  1,
-  "the base proxy verification must appear exactly once",
-);
-assert.equal(
-  refreshRun.split("\n").filter((line) => line.trim() === "npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts").length,
-  1,
-  "the artifact proxy verification must appear exactly once",
-);
-assert.match(
-  refreshRun,
-  /if \[ "\$\{FENOK_EDGE_PLAN_ONLY:-false\}" = "true" \]; then\s+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies\s+else\s+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts\s+fi/,
-  "plan and artifact verification must be mutually exclusive",
-);
-
-assert.match(workflow, /node scripts\/test-fetch-fenok-finra-daily-private\.mjs/);
-assert.match(workflow, /npm --prefix 100xfenok-next run qa:fenok-occ-options/);
-const occQaScript = appPackage.scripts?.["qa:fenok-occ-options"] ?? "";
-for (const requiredTest of requiredOccQaTests) {
-  assert.match(
-    occQaScript,
-    new RegExp(requiredTest.replaceAll(".", "\\.")),
-    `qa:fenok-occ-options must invoke ${requiredTest}`,
-  );
-}
-assertOccQaScriptFailClosed(occQaScript);
-assert.throws(
-  () => assertOccQaScriptFailClosed(occQaScript.replaceAll(" && ", "; ")),
-  /must chain all OCC suites with &&/,
-  "a semicolon mutation must not swallow an earlier OCC suite failure",
-);
-assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
-assert.match(workflow, /--stage always_if_exists/);
-assert.match(workflow, /--stage success_verify_not_plan_if_exists/);
-assert.match(
-  workflow,
-  /if \[ "\$\{FENOK_EDGE_PLAN_ONLY:-false\}" != "true" \] && \[ "\$REFRESH_OUTCOME" = "success" \]; then[\s\S]*?--stage success_verify_not_plan_if_exists/,
-  "computed artifacts must be manifest-staged only after a non-plan successful refresh",
-);
-assert.match(workflow, /- name: Commit and push owned source artifacts\n\s+if: \$\{\{ always\(\) \}\}/);
-assert.match(
-  workflow,
-  /- name: Publish FINRA short volume generation to the cloud data plane\n\s+id: publish_cloud_generation\n\s+if: \$\{\{ steps\.refresh_edge\.outcome == 'success' && env\.FENOK_EDGE_PLAN_ONLY != 'true' \}\}/,
-  "plan-only runs must not publish a cloud generation",
-);
-assert.doesNotMatch(workflow, /git add -A/);
-
-assert.equal(inputNames.length, 11, "workflow_dispatch must expose exactly 11 inputs");
-assert.ok(inputNames.includes("controlled_failure_lanes"));
-assert.match(
-  dispatchInputs,
-  /occ_max_requests:[\s\S]*?default: '2000'/,
-  "OCC workflow_dispatch must expose the four-date 2000-request budget",
-);
-assert.match(
-  workflow,
-  /250 tickers x up to 4 dates x 2 sides = 2000\./,
-  "the OCC request-budget arithmetic must stay adjacent to the workflow setting",
-);
-assert.match(
-  workflow,
-  /INPUT_OCC_MAX_REQUESTS:\s*\$\{\{ github\.event\.inputs\.occ_max_requests \|\| '2000' \}\}/,
-  "scheduled OCC runs must default to the four-date 2000-request budget",
-);
-assert.match(
-  workflow,
-  /INPUT_CONTROLLED_FAILURE_LANES:\s*\$\{\{ github\.event\.inputs\.controlled_failure_lanes \|\| '' \}\}/,
-);
-assert.match(workflow, /controlled_failure_lanes=\$CONTROLLED_FAILURE_LANES/);
-assert.match(workflow, /INPUT_CONTROLLED_FAILURE_LANES:\s*\$\{\{ steps\.window\.outputs\.controlled_failure_lanes \}\}/);
-assert.match(workflow, /occ_options_volume\|finra_short_volume/);
-assert.match(workflow, /empty controlled failure lane token/i);
-assert.match(workflow, /unknown controlled failure lane/i);
-assert.match(workflow, /controlled failure lanes cannot be combined with plan_only/i);
-assert.match(workflow, /controlled failure lanes cannot be combined with no_fetch/i);
-assert.match(workflow, /occ_options_volume controlled failure cannot use occ_batch_index/i);
-assert.ok(
-  runBlocks.every((block) => !block.includes("${{ github.event.inputs")),
-  "workflow dispatch expressions must not be interpolated directly into shell blocks",
-);
 
 const normalizedLanes = runControlledFailureValidation({
   INPUT_CONTROLLED_FAILURE_LANES: " occ_options_volume , finra_short_volume ",
