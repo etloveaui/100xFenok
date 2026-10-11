@@ -578,8 +578,29 @@ function loadUniverse(args, paths) {
     .filter((row) => row?.country === "US")
     .map((row) => normalizeTicker(row.symbol))
     .filter(Boolean);
+  // The published tickers were drawn from this universe. A universe smaller
+  // than the published set means the input is missing from the checkout or
+  // truncated; stop instead of silently polling the NVDA anchor alone.
+  const published = publishedTickerCount(paths);
+  if (tickers.length < published) {
+    throw new Error(
+      `EDGAR universe input ${path.relative(ROOT, paths.analyzerPath)} yields ${tickers.length} US tickers but ${published} tickers are already published: the file is missing from this checkout or truncated`,
+    );
+  }
   const limited = args.fullUniverse ? tickers : tickers.slice(0, args.limit);
   return uniqueTickers(["NVDA", ...limited]);
+}
+
+function publishedTickerCount(paths) {
+  const files = new Set();
+  for (const root of [paths.summaryRoot, paths.publicSummaryRoot]) {
+    const dir = path.join(root, "by-ticker");
+    if (!fs.existsSync(dir)) continue;
+    for (const file of fs.readdirSync(dir)) {
+      if (file.endsWith(".json")) files.add(file);
+    }
+  }
+  return files.size;
 }
 
 function uniqueTickers(values) {
