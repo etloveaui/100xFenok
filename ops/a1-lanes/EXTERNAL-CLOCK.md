@@ -6,6 +6,7 @@ GitHub schedules remain enabled as fallback. There is no catch-up burst.
 
 | Workflow | UTC cadence | Existing duplicate serialization |
 |---|---|---|
+| deploy-worker.yml | 49 each hour | unchanged bundle no-op; yields to pending/running code deploy |
 | fetch-defillama.yml | 12 | global Git writer group |
 | fetch-yahoo-ticker.yml | 05 | global Git writer + yahoo-ticker-macro-publish |
 | global-writer-queue-observer.yml | 11 | global-writer-queue-observer |
@@ -17,8 +18,14 @@ GitHub schedules remain enabled as fallback. There is no catch-up burst.
 | data-plane-serving-probe.yml | 00:41, 06:41, 12:41, 18:41 | data-plane-serving-probe |
 | fetch-fenok-news-tone.yml | 06:43, 14:43, 22:43 | global Git writer group |
 
-The first seven rows specify minutes each hour. All ten declare `workflow_dispatch`.
-All except the budget workflow execute the same jobs for dispatch and schedule.
+The deploy catch-up and the following seven rows specify minutes each hour. All eleven declare `workflow_dispatch`.
+All except the budget and deploy workflows execute the same jobs for dispatch and schedule.
+X7b (2026-10-11): marked Deploy compares the live provenance revision against its
+pinned main revision using full Git trees, and proceeds only for changed bundle
+inputs. It yields to pending/running code deploys. The existing GitHub 03:30 UTC
+daily fallback and SlickCharts recovery completion retain their original path.
+The alarm derives this A1-only hourly cadence from EXTERNAL_CLOCK_CRONS; no new
+GitHub hourly schedule is added. Minute 49 already exists in the timer.
 Existing concurrency groups serialize duplicate GitHub/A1 runs;
 additional runs can still consume runner/API budget. The clock checks workflow
 metadata before dispatch and leaves disabled workflows disabled, preserving the

@@ -6,6 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const EXTERNAL_CLOCK_CRONS = Object.freeze({
+  "deploy-worker.yml": "49 * * * *",
   "fetch-defillama.yml": "12 * * * *",
   "fetch-yahoo-ticker.yml": "5 * * * *",
   "global-writer-queue-observer.yml": "11 * * * *",
@@ -21,7 +22,8 @@ export const EXTERNAL_CLOCK_MARKER = "external-clock/a1/v1";
 // Admission dates bound the never-ran case without inventing pre-install slots.
 export const EXTERNAL_CLOCK_ADMITTED_AT = Object.freeze(Object.fromEntries(
   Object.keys(EXTERNAL_CLOCK_CRONS).map((file) => [file,
-    file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z"
+    file === "deploy-worker.yml" ? "2026-10-11T08:40:00.000Z"
+      : file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z"
       : ["fetch-treasury-tga.yml", "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file)
         ? "2026-10-11T07:18:00.000Z" : "2026-10-11T03:34:00.000Z"]),
 ));

@@ -14,6 +14,8 @@ const buildCheckout = buildDeployJob.slice(checkoutStart, setupNodeStart);
 assert.match(buildCheckout, /fetch-depth:\s*0/,
   "the source-lineage fence compares live and candidate ancestry and therefore requires full history");
 
+assert.match(buildCheckout, /\/scripts\/lib\//, "typechecked app tests import the root compatibility modules");
+
 const buildStart = buildDeployJob.indexOf("      - name: Build (OpenNext Cloudflare)\n");
 const bundleBudgetStart = buildDeployJob.indexOf("      - name: Verify Worker bundle budget\n");
 assert.ok(bundleBudgetStart > buildStart,
@@ -21,7 +23,7 @@ assert.ok(bundleBudgetStart > buildStart,
 
 const quality = fs.readFileSync(new URL("../.github/workflows/app-quality.yml", import.meta.url), "utf8");
 const recoveryJob = workflow.split("  recovery-gate:\n")[1].split("  build-deploy:\n")[0];
-assert.match(recoveryJob, /sparse-checkout: \/scripts\/check-recovery-deploy-gate\.mjs/);
+assert.match(recoveryJob, /sparse-checkout: \|[\s\S]*\/scripts\/check-recovery-deploy-gate\.mjs/);
 assert.ok(buildDeployJob.indexOf("npm run typecheck") < buildDeployJob.indexOf("git sparse-checkout set"),
   "type errors must stop before the large data checkout and materialization");
 assert.match(quality, /push:\n    branches: \[main\]/);

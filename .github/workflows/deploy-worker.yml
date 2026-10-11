@@ -2,9 +2,10 @@
 #
 # Triggers:
 #   - push to main affecting source/UI/legacy paths -> immediate deploy
-#     (all data-only changes coalesce into the daily catch-up; live enrolled
+#     (all data-only changes coalesce into the hourly catch-up; live enrolled
 #     families still publish independently through the data plane)
-#   - daily schedule -> picks up bot-authored data refreshes into the bundle
+#   - marked A1 hourly catch-up -> changed bundled data only; code priority
+#   - daily schedule -> fallback catch-up for bot-authored data refreshes
 #   - workflow_dispatch -> manual deploy
 #
 # Cancellation and storage safety (BACKLOG #361, incident 2026-07-16: cancelled run
@@ -25,6 +26,7 @@
 #     is checked immediately before upload; live build and KPI bytes are
 #     checked after upload.
 name: Deploy Worker (Cloudflare)
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 deploy-worker.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   push:
@@ -43,6 +45,16 @@ on:
     - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic hourly catch-up marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       remediate_unprovenanced_live:
         description: 'One-time owner authorization to replace a live bundle with no provenance stamp'
         required: false
@@ -64,16 +76,41 @@ jobs:
       contents: read
       actions: read
     outputs:
-      skip: ${{ steps.gate.outputs.skip }}
+      skip: ${{ steps.catchup.outputs.skip == 'true' && 'true' || steps.gate.outputs.skip }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          filter: blob:none
           sparse-checkout-cone-mode: false
-          sparse-checkout: /scripts/check-recovery-deploy-gate.mjs
+          sparse-checkout: |
+            /scripts/check-recovery-deploy-gate.mjs
+            /scripts/check-bundled-data-catchup.mjs
+            /scripts/lib/deploy-provenance.mjs
+            /scripts/lib/live-request-headers.mjs
+
+      - name: Admit marked hourly catch-up only for changed bundle inputs
+        id: catchup
+        if: inputs.external_clock == 'a1-v1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          decision="$(node scripts/check-bundled-data-catchup.mjs)"
+          case "$decision" in
+            skip-code-deploy|skip-unchanged)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::Hourly data catch-up: $decision"
+              ;;
+            proceed) echo "skip=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Unknown catch-up admission: $decision"; exit 1 ;;
+          esac
 
       - name: Recovery deploy gate (skip data-serving deploys while SlickCharts recovery is in flight)
         id: gate
+        if: steps.catchup.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -145,6 +182,7 @@ jobs:
             /100xfenok-next/
             !/100xfenok-next/public/data/
             /data/catalog/macro-series.json
+            /scripts/lib/
 
       - name: Setup Node
         uses: actions/setup-node@v4

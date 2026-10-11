@@ -72,7 +72,7 @@ for (const file of MISSED_WINDOW_WORKFLOWS) {
   assert.match(file, /^[a-z0-9-]+\.yml$/, `${file} is not a workflow file name`);
 }
 assert.ok(
-  !MISSED_WINDOW_WORKFLOWS.has("update-manifest.yml") && !MISSED_WINDOW_WORKFLOWS.has("deploy-worker.yml"),
+  !MISSED_WINDOW_WORKFLOWS.has("update-manifest.yml") && MISSED_WINDOW_WORKFLOWS.has("deploy-worker.yml"),
   "workflows that follow their producers must stay out of scope",
 );
 assert.ok(MISSED_WINDOW_WORKFLOWS.has("retention-restore.yml"), "the restore watchdog owns a schedule to monitor");
@@ -378,6 +378,9 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     if (file === "worker-request-budget-alarm.yml") {
       assert.match(yaml, /check:\n    if: github.event_name == 'workflow_dispatch' \|\| github.event.schedule == '7 \* \* \* \*'/);
       assert.match(yaml, /data-supply-analytics:\n    if: \(github.event_name == 'workflow_dispatch' && inputs.external_clock == ''\) \|\| github.event.schedule == '17 2,14 \* \* \*'/);
+    } else if (file === "deploy-worker.yml") {
+      assert.match(yaml, /if: inputs.external_clock == 'a1-v1'/);
+      assert.match(yaml, /check-bundled-data-catchup\.mjs/);
     } else if (["fetch-treasury-tga.yml", "fetch-fenok-news-tone.yml"].includes(file)) {
       assert.ok(!/if:.*github\.event_name/.test(yaml), `${file} jobs cannot exclude marked dispatches`);
       assert.match(yaml, /controlled_failure/);
@@ -520,3 +523,19 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
 }
 
 console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors plus registry producers, x${MISSED_WINDOW_MULTIPLIER} tolerance; A1 clock fire/recovery)`);
+
+// X7b: hourly marked no-op/yield runs still prove clock creation. Neither a
+// daily GitHub fallback nor human dispatch can conceal absent hourly markers.
+{
+  const workflow = deriveWorkflowWatchPolicy().watched.find((row) => row.file === "deploy-worker.yml");
+  const slot = "2026-10-12T06:49:00.000Z";
+  const marked = { ...run(700, slot, { event: "workflow_dispatch" }), created_at: slot,
+    display_title: `${EXTERNAL_CLOCK_MARKER} ${workflow.file} ${slot}` };
+  assert.equal(externalClockSlot(workflow, marked), Date.parse(slot));
+  assert.equal(evaluateWorkflow(workflow, [marked], { now: Date.parse("2026-10-12T06:50:00Z") }).missed_schedule_slot_count, 0);
+  const fallback = run(701, "2026-10-12T09:40:00Z");
+  assert.equal(evaluateExternalClock(workflow, [fallback, marked], { now: Date.parse("2026-10-12T09:50:00Z") }).missed_clock_slot_count, 3);
+  assert.equal(evaluateExternalClock(workflow, [fallback, marked], { now: Date.parse("2026-10-12T09:50:00Z") }).status, "alarm");
+  assert.equal(evaluateWorkflow(workflow, [marked], { now: Date.parse("2026-10-12T08:50:00Z") }).alarming, true);
+  assert.equal(dueDispatches(new Date(slot)).filter((row) => row.file === workflow.file).length, 1);
+}

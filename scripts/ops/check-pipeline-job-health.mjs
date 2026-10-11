@@ -162,8 +162,12 @@ function workflowMetadata(file, source) {
   const scheduled = triggers.includes("schedule");
   // Carried so a watched workflow can be measured against its own declared
   // schedule; a slot that never became a run leaves no other evidence.
-  const crons = [...source.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*$/gm)].map((match) => match[1]);
+  const githubCrons = [...source.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*$/gm)].map((match) => match[1]);
 
+  // X7b's external hourly deploy catch-up is intentionally not a second
+  // GitHub hourly schedule. The clock declaration is its cadence authority;
+  // GitHub's daily fallback remains separately visible.
+  const crons = [...new Set([...githubCrons, ...(file === "deploy-worker.yml" && EXTERNAL_CLOCK_CRONS[file] ? [EXTERNAL_CLOCK_CRONS[file]] : [])])];
   return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled, triggers, crons };
 }
 
@@ -586,6 +590,7 @@ export function isQueueEvictedRun(jobs) {
 // derived from registry ownership by deriveWorkflowWatchPolicy; publishers and
 // owner-run/manual-only lanes do not acquire an invented clock.
 export const MISSED_WINDOW_WORKFLOWS = new Set([
+  "deploy-worker.yml", // X7b hourly catch-up now owns an explicit clock.
   "data-plane-serving-probe.yml",
   "check-sec13f-live-parity.yml",
   "global-writer-queue-observer.yml",
