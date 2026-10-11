@@ -118,7 +118,9 @@ export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze({
   // Both are monthly producers whose source axis was already relaxed while this
   // axis was left at the 7-day default, which no monthly cadence can satisfy.
   "slickcharts-history": 40,
-  "fdic-tier1": 40,
+  // Quarterly advancement-only publication: 91-day cycle + 19-day release slack.
+  // A1 lane health separately checks the collector at 96h cadence + 12h grace.
+  "fdic-tier1": 110,
 });
 
 export function resolveSourceAgeDays({ path, family }) {
