@@ -782,10 +782,6 @@ export const FAMILIES = {
     // Global Scouter's source clock is the export's provider date, not the
     // converter acquisition timestamp.
     source_as_of: { file: "core/metadata.json", key: "source_date" },
-    // Source-change driven, not scheduled, so age carries no signal: an export
-    // nobody revised is current, not stale. Freshness asks whether a change is
-    // sitting unpublished; the weekday-sized age ceiling is not applied.
-    freshness: { mode: "source_change" },
     // The weekly scope moves with the owner export, so tests measure it rather
     // than pinning one week's byte/count fixture. These declarations retain
     // at least 2x headroom for the current candidate and its all-changed read

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-// Live privacy smoke: the intentionally private investor payload must not be
-// reachable from the public Worker. This is separate from the local
+// Live serving-scope smoke: investor payloads excluded from the app mirror must
+// return 404 from the Worker. These tracked files remain public on GitHub; this
+// check establishes serving scope, not confidentiality. It is separate from the local
 // materialization contract because a stale deployed bundle can survive a
 // correct checkout.
 
@@ -24,7 +25,7 @@ const baseUrl = parseBaseUrl(process.argv.slice(2));
 const privatePaths = [
   ["griffin investor", "/data/sec-13f/investors/griffin.json"],
   ...derivedPrivateFileOutputs().map((relativePath) => [
-    `private derived ${relativePath}`,
+    `serving-excluded derived ${relativePath}`,
     `/${relativePath}`,
   ]),
 ].filter((entry, index, entries) => entries.findIndex((candidate) => candidate[1] === entry[1]) === index);
@@ -50,7 +51,7 @@ for (const [label, privatePath] of privatePaths) {
   assert.equal(
     response.status,
     404,
-    `private ${label} route must return 404, got ${response.status}`,
+    `serving-excluded ${label} route must return 404, got ${response.status}`,
   );
-  console.log(`sec13f live privacy: ok (${label} HTTP ${response.status})`);
+  console.log(`sec13f live serving scope: ok (${label} HTTP ${response.status})`);
 }

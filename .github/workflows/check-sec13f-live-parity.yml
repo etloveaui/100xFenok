@@ -57,7 +57,7 @@ jobs:
           SEC13F_PARITY_REPORT_PATH: ${{ runner.temp }}/sec13f-semantic-parity.md
         run: node scripts/ops/check-sec13f-live-parity.mjs
 
-      - name: Run separate private-route smoke
+      - name: Run separate serving-scope smoke
         id: privacy
         continue-on-error: true
         env:
@@ -77,7 +77,7 @@ jobs:
           if [ -f "$RUNNER_TEMP/sec13f-privacy.log" ]; then
             {
               echo
-              echo 'SEC 13F private-route smoke'
+              echo 'SEC 13F serving-scope smoke (tracked data remains public on GitHub)'
               cat "$RUNNER_TEMP/sec13f-privacy.log"
             } >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -90,7 +90,7 @@ jobs:
         run: |
           title="100xFenok SEC 13F live semantic parity alarm"
           {
-            printf '%s\n\n' '[alert] SEC 13F live semantic parity or private-route smoke failed.'
+            printf '%s\n\n' '[alert] SEC 13F live semantic parity or serving-scope smoke failed.'
             if [ -f "$RUNNER_TEMP/sec13f-semantic-parity.md" ]; then cat "$RUNNER_TEMP/sec13f-semantic-parity.md"; fi
             if [ -f "$RUNNER_TEMP/sec13f-privacy.log" ]; then cat "$RUNNER_TEMP/sec13f-privacy.log"; fi
             printf '\nObserved by: %s\n' "$RUN_URL"
