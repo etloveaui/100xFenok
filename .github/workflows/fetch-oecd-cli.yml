@@ -42,8 +42,11 @@ jobs:
       #
       # The cone must cover everything this lane reads or stages. If it does
       # not, the failure is loud rather than silent: git refuses `git add` on a
-      # path outside the cone, and stage-lane-manifest.sh exits non-zero when a
-      # required path is absent.
+      # path outside the cone, stage-lane-manifest.sh exits non-zero when a
+      # required path is absent, and fetch-oecd-cli.mjs exits non-zero when
+      # the parity canonical data/macro/activity-surveys.json is absent. That
+      # file was outside the cone until 2026-10-11, so every parity report
+      # since the lane went sparse compared 0 values.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           filter: blob:none
@@ -53,6 +56,7 @@ jobs:
             100xfenok-next/src/lib
             .github/workflows
             data/admin/oecd_cli
+            data/macro
       - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6
         with:
           node-version: '20'

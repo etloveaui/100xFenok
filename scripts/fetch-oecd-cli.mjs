@@ -16,6 +16,7 @@ import {
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 const LANE_ID = "oecd_cli";
+const PARITY_CANONICAL_RELATIVE_PATH = "data/macro/activity-surveys.json";
 export const OECD_MAX_MONTHS_PER_SERIES = 240;
 export const OECD_PERSISTENCE_POLICY = Object.freeze({
   schema_version: "oecd-cli-bounded-persistence/v1",
@@ -292,7 +293,7 @@ export async function runOecdCliShadow({
   repoRoot = REPO_ROOT,
   shadowPath = path.join(REPO_ROOT, "data/admin/oecd_cli/shadow/oecd-cli.json"),
   parityReportPath = path.join(REPO_ROOT, "data/admin/oecd_cli/parity-report.json"),
-  canonicalPath = path.join(REPO_ROOT, "data/macro/activity-surveys.json"),
+  canonicalPath = path.join(REPO_ROOT, PARITY_CANONICAL_RELATIVE_PATH),
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-oecd-cli`,
@@ -442,14 +443,49 @@ export async function runOecdCliShadow({
   }
 }
 
+// The parity half of this lane compares the fetched latest values with the
+// owner-workbook canonical. parityReport() tolerates an unreadable canonical,
+// so a workflow checkout that omitted the file wrote `canonical_status:
+// unavailable` with 0 values compared on every run, and the run stayed green.
+// The entry point therefore refuses to start without a comparable canonical:
+// nothing is fetched or written, and the run ends red naming the file.
+function requireParityCanonical(repoRoot = REPO_ROOT) {
+  const canonicalPath = path.join(repoRoot, PARITY_CANONICAL_RELATIVE_PATH);
+  let canonical;
+  try {
+    canonical = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
+  } catch (error) {
+    const state = error?.code === "ENOENT" ? "missing from this checkout" : `unreadable (${boundedDiagnosticDetail(error)})`;
+    throw new Error(`required input ${PARITY_CANONICAL_RELATIVE_PATH} is ${state}`, { cause: error });
+  }
+  const latestValues = canonical?.datasets?.oecd_cli?.coverage?.latest_values;
+  if (!latestValues || typeof latestValues !== "object" || !Object.values(latestValues).some(Number.isFinite)) {
+    throw new Error(`required input ${PARITY_CANONICAL_RELATIVE_PATH} carries no datasets.oecd_cli.coverage.latest_values to compare`);
+  }
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runOecdCliShadow().then((result) => {
-    console.log(JSON.stringify({
-      ok: result.ok,
-      exit_code: result.exitCode,
-      failure_detail: result.failure_detail ?? null,
-    }));
-    process.exitCode = result.exitCode;
-  })
-    .catch((error) => { console.error(error); process.exitCode = 2; });
+  let requiredInputError = null;
+  try { requireParityCanonical(); } catch (error) { requiredInputError = error; }
+  if (requiredInputError) {
+    console.error(`::error::OECD CLI parity cannot run: ${requiredInputError.message}`);
+    process.exitCode = 2;
+  } else {
+    runOecdCliShadow().then((result) => {
+      console.log(JSON.stringify({
+        ok: result.ok,
+        exit_code: result.exitCode,
+        failure_detail: result.failure_detail ?? null,
+        parity: result.parity
+          ? {
+            canonical_status: result.parity.canonical_status,
+            compared_latest_values: result.parity.compared_latest_values,
+            differing_latest_values: result.parity.revisions.length,
+          }
+          : null,
+      }));
+      process.exitCode = result.exitCode;
+    })
+      .catch((error) => { console.error(error); process.exitCode = 2; });
+  }
 }
