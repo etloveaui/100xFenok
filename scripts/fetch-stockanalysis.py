@@ -2452,7 +2452,7 @@ def normalize_holdings(rows):
             "symbol": symbol,
             "name": name,
             "weight_pct": parse_percent(row.get("as") if row.get("as") is not None else row.get("weight")),
-            "shares": parse_int(row.get("sh") or row.get("shares")),
+            "shares": parse_int(row.get("sh") if row.get("sh") is not None else row.get("shares")),
             "raw": row,
         }
         out.append({key: value for key, value in item.items() if value is not None})

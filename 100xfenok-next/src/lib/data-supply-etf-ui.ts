@@ -52,13 +52,26 @@ function isTimestamp(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
-// Retained Yahoo selections predate the weighted-row/lowercase-history
-// contract. Adapt their own captured values for display; never fetch a newer
+// Retained selections predate fixes for dropped zero shares and Yahoo's
+// weighted-row/lowercase-history contract. Adapt captured values; never fetch a newer
 // value, mutate the immutable object, or change its source/resolution clocks.
-function yahooDetailForDisplay(record: Record<string, unknown>): Record<string, unknown> {
-  if (record.schema_version !== "yf-etf-detail/v1") return record;
+function etfDetailForDisplay(record: Record<string, unknown>): Record<string, unknown> {
   const normalized = asRecord(record.normalized);
   if (!normalized) return record;
+  if (record.schema_version === "stockanalysis/v1") {
+    if (!Array.isArray(normalized.holdings)) return record;
+    let changed = false;
+    const holdings = normalized.holdings.map((value) => {
+      const row = asRecord(value);
+      if (row && row.shares == null && asRecord(row.raw)?.sh === 0) {
+        changed = true;
+        return { ...row, shares: 0 };
+      }
+      return value;
+    });
+    return changed ? { ...record, normalized: { ...normalized, holdings } } : record;
+  }
+  if (record.schema_version !== "yf-etf-detail/v1") return record;
   const yahoo = asRecord(asRecord(record.raw)?.yf);
   const info = asRecord(yahoo?.info) ?? {};
   const fundOverview = asRecord(asRecord(yahoo?.funds_data)?.fund_overview);
@@ -222,7 +235,7 @@ export async function parseEtfApiResponse<T>(
     || !record.ticker.trim()
     || record.ticker !== expectedTicker
   ) return { kind: "failed", data: null, dataSupply: null };
-  return { kind: "ok", data: yahooDetailForDisplay(record) as T, dataSupply };
+  return { kind: "ok", data: etfDetailForDisplay(record) as T, dataSupply };
 }
 
 export function isLegacyEtfDetailCompatibilityActive(

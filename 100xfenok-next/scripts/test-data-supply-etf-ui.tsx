@@ -130,6 +130,20 @@ const valid = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
 }), "SPY");
 assert.equal(valid.kind, "ok");
 
+const capturedZero = { schema_version: "stockanalysis/v1", asset_type: "etf", ticker: "AIQD",
+  source_as_of: "2026-09-30T20:00:00Z", normalized: { holdings: [
+    { symbol: "PLTR", raw: { s: "$PLTR", sh: 0 } },
+    { name: "Not supplied", raw: { sh: "n/a" } },
+  ] } };
+const zeroResponse = await parseEtfApiResponse<any>(Response.json(capturedZero), "AIQD");
+assert.equal(zeroResponse.kind, "ok");
+if (zeroResponse.kind === "ok") {
+  assert.equal(zeroResponse.data.normalized.holdings[0].shares, 0);
+  assert.equal(zeroResponse.data.normalized.holdings[1].shares, undefined);
+  assert.equal(zeroResponse.data.source_as_of, capturedZero.source_as_of);
+  assert.deepEqual(zeroResponse.data.normalized.holdings[0].raw, capturedZero.normalized.holdings[0].raw);
+}
+
 const retainedYahoo = {
   schema_version: "yf-etf-detail/v1", asset_type: "etf", ticker: "ACHX",
   source_as_of: "2026-07-08T22:43:26Z", fetched_at: "2026-07-09T00:00:00Z",

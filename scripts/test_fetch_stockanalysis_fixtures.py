@@ -5964,6 +5964,12 @@ module.main()
         self.assertEqual(yahoo_pending["observation_event_id"], observations[1]["event_id"])
 
     def test_yahoo_etf_payload_normalizes_source_tags_quote_and_fund_profile(self) -> None:
+        zero_shares = self.fetcher.normalize_holdings([
+            {"no": 1, "n": "Captured cash", "as": "0%", "sh": 0},
+            {"no": 2, "n": "Shares unavailable", "as": "10%", "sh": "n/a"},
+        ])
+        self.assertEqual(zero_shares[0]["shares"], 0)
+        self.assertNotIn("shares", zero_shares[1])
         payload = self.fetcher.yahoo_etf_payload(
             "BSJY",
             {
