@@ -745,6 +745,15 @@ assert.deepEqual(classifyDaily1yGap(oldYahooFallback, justOver48h, boundaryPendi
 
 const payload = buildEtfDaily1yReadiness({ rootDir: fixtureRoot, now: currentNow });
 const plan = payload.fetchable_plan;
+// Rechecking a persisted report beyond the 48h retry boundary must use its
+// classification clock. Only a new history-gap scan may reclassify the rows.
+const delayedCheck = buildEtfDaily1yReadiness({ rootDir: fixtureRoot, now: new Date("2026-07-12T00:00:00.001Z") });
+assert.equal(delayedCheck.ok, payload.ok);
+assert.deepEqual(delayedCheck.daily_1y_readiness, payload.daily_1y_readiness);
+assert.deepEqual(delayedCheck.fetchable_plan.counts, plan.counts);
+assert.equal(delayedCheck.classification_as_of, fixtureGeneratedAt);
+console.log("48h delayed validation: classification and counts remain stable");
+
 const readiness = payload.daily_1y_readiness;
 const breakdownTotal = Object.values(readiness.fetchable_breakdown?.counts || readiness.fetchable_breakdown || {})
   .reduce((sum, value) => sum + Number(value || 0), 0);
