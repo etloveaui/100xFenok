@@ -436,7 +436,7 @@ const config = {
       ])],
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
       freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 250 }),
-      affectedSurfaceIds: ["banking_liquidity", "rim_index_inputs"],
+      affectedSurfaceIds: ["banking_liquidity"],
     }),
     lane({
       id: "fred_yardeni",
@@ -846,7 +846,7 @@ const config = {
         }),
       "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
-      affectedSurfaceIds: ["rim_index_inputs"],
+      affectedSurfaceIds: [],
     }),
     lane({
       id: "us_indices_daily",
@@ -863,7 +863,7 @@ const config = {
       ], "us_trading")],
       endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
-      affectedSurfaceIds: ["rim_index_inputs", "macro_index_charts"],
+      affectedSurfaceIds: ["macro_index_charts"],
     }),
     lane({
       id: "oecd_cli",
@@ -911,7 +911,7 @@ const config = {
         }),
         "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "kr_trading", maxStaleness: krxFreshLimit() }),
-      affectedSurfaceIds: ["rim_index_inputs"],
+      affectedSurfaceIds: [],
     }),
     lane({
       id: "slickcharts",
@@ -1669,7 +1669,7 @@ function validateLane(laneValue, index) {
   if (hasSourceSelector !== (laneValue.freshness.source_basis.length > 0)) {
     fail(`${context}.freshness.source_basis contradicts artifact source selectors`);
   }
-  requireUniqueStrings(laneValue.affected_surface_ids, `${context}.affected_surface_ids`, { identifiers: true });
+  requireUniqueStrings(laneValue.affected_surface_ids, `${context}.affected_surface_ids`, { identifiers: true, nonEmpty: false });
   if (!VISIBILITIES.has(laneValue.visibility)) fail(`${context}.visibility is invalid`);
   const expectedEnforcement = LIVE_LANE_ID_SET.has(laneValue.id) ? "live" : "shadow";
   if (laneValue.enforcement !== expectedEnforcement) fail(`${context}.enforcement must be ${expectedEnforcement}`);

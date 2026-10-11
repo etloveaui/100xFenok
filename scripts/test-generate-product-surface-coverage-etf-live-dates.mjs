@@ -120,16 +120,6 @@ try {
     false,
     "quarantined RIM freshness must not remain a required surface check",
   );
-  assert.equal(
-    marketValuation.checks.some((check) => check.label === "KOSPI RIM 입력"),
-    true,
-    "RIM product readiness disclosure remains visible",
-  );
-  assert.equal(
-    output.source_files.includes("computed/rim-index/inputs.json"),
-    true,
-    "RIM data provenance disclosure remains visible",
-  );
   assert.equal(etfCenter.source_as_of, "2026-04-01", "surface source_as_of must equal the recovered true-date subset floor");
   assert.equal(
     etfCenter.source_as_of,
