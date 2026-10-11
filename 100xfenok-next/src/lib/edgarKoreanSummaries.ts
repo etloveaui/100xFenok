@@ -11,6 +11,13 @@ interface EdgarKoreanSummaryIndex {
   updated: string;
   tickers: string[];
   byTicker?: Record<string, string>;
+  summaryByTicker?: Record<string, EdgarTickerSummaryCoverage>;
+}
+
+export interface EdgarTickerSummaryCoverage {
+  latestSummaryFilingDate: string | null;
+  summaryCount: number;
+  pendingCount: number;
 }
 
 export interface EdgarKoreanSummaryFilingEntry {
@@ -162,10 +169,13 @@ export function loadEdgarKoreanSummaryCoverage(): Promise<EdgarKoreanSummaryCove
   });
 }
 
-export function loadEdgarKoreanSummaryTickers(): Promise<{ tickers: string[]; updated: string } | null> {
+export function loadEdgarKoreanSummaryTickers(): Promise<{
+  tickers: string[]; updated: string; summaryByTicker: Record<string, EdgarTickerSummaryCoverage>;
+} | null> {
   return loadEdgarKoreanSummaryIndex().then((index) => index ? {
     tickers: [...new Set(index.tickers.filter(Boolean))].sort(),
     updated: index.updated,
+    summaryByTicker: index.summaryByTicker ?? {},
   } : null);
 }
 
