@@ -72,7 +72,7 @@ from data_supply_stock_detail import (
     validate_stock_detail_candidate,
     yahoo_provider_symbol,
 )
-from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore, yahoo_run_verdict
+from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore, yahoo_run_verdict, valid_illiquid_history
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -543,6 +543,23 @@ def _payload_source_fields(payload):
     }
 
 
+def label_illiquid_history(payload, existing):
+    """Use a genuinely advancing ETF history while disclosing its old quote."""
+    if not isinstance(existing, dict):
+        return payload
+    previous = _payload_source_fields(existing).get("history_as_of")
+    if valid_illiquid_history(existing) and payload.get("history_as_of", "") >= (previous or ""):
+        previous = existing["provenance"]["previous_history_as_of"]
+    provenance = {"quote_clock": "stale_illiquid", "freshness_basis": "history_as_of",
+                  "quote_as_of": payload.get("quote_as_of"), "history_as_of": payload.get("history_as_of"),
+                  "previous_history_as_of": previous}
+    candidate = {**payload, "provenance": provenance}
+    if valid_illiquid_history(candidate):
+        candidate["source_as_of"] = candidate["history_as_of"]
+        return candidate
+    return payload
+
+
 def validate_source_progression(existing_payload, candidate_payload):
     existing = _payload_source_fields(existing_payload)
     candidate = _payload_source_fields(candidate_payload)
@@ -585,6 +602,8 @@ def validate_source_progression(existing_payload, candidate_payload):
         before = _parse_utc(existing.get(key))
         after = _parse_utc(candidate.get(key))
         if before and after and after < before:
+            if key == "quote_as_of" and valid_illiquid_history(candidate_payload):
+                continue
             raise ValueError(
                 f"source timestamp regression for {candidate_payload.get('ticker')}: "
                 f"{key} {candidate.get(key)} < {existing.get(key)}"
@@ -2462,6 +2481,7 @@ def main():
         state_store.retained_stockanalysis_etf_sources(
             terminal_tickers | retired_yahoo_symbols(lifecycle_as_of),
             STOCKANALYSIS_ETF_UNIVERSE,
+            include_terminal=True,
         )
         if core_retained_lane else {}
     )
@@ -2501,6 +2521,9 @@ def main():
     for retired in set(raw_universe_sources) & retired_yahoo_symbols(lifecycle_as_of):
         universe_sources[retired] = raw_universe_sources[retired]
     active_universe = set(universe_sources)
+    primary_terminal_tickers = set(terminal_tickers)
+    if state_store:
+        terminal_tickers |= state_store.terminal_tickers(active_universe)
     if args.tickers:
         tickers = explicit_tickers
         for ticker in tickers:
@@ -2510,6 +2533,14 @@ def main():
         tickers = list(selection_sources)
     else:
         tickers = sort_universe(selection_sources, stockanalysis_etfs=args.stockanalysis_etfs)
+
+    terminal_probes = (
+        state_store.terminal_probe_tickers(set(tickers), lifecycle_as_of, primary_terminal_tickers,
+                                          args.retry_limit)
+        if state_store and args.natural_run and not args.tickers and args.retry_limit else []
+    )
+    if not args.tickers:
+        tickers = [ticker for ticker in tickers if ticker not in terminal_tickers or ticker in terminal_probes]
 
     candidate_count = len(tickers)
     if args.untracked_only and state_store is None:
@@ -2561,6 +2592,8 @@ def main():
         if state_store and args.natural_run
         else []
     )
+    if terminal_probes:
+        retry_queue = [*terminal_probes, *retry_queue[:max(0, args.retry_limit - len(terminal_probes))]]
     if args.all_shards_plan_dir is not None and not args.plan_only:
         retry_queue = freeze_all_shards_retry_queue(retry_queue, args.all_shards_plan_dir, args.shard)
     # Cache reuse must still recognize retry-pending core tickers that fall
@@ -2707,7 +2740,7 @@ def main():
             print(f"[{idx}/{len(tickers)}] {ticker} SKIP fresh local payload", flush=True)
             results.append({"ticker": ticker, "latency_ms": 0, "error": None, "skipped": True})
             if state_store:
-                state_payload = {**existing, **_provider_source_fields(existing.get("data"))}
+                state_payload = {**existing, **_payload_source_fields(existing)}
                 state_store.record_skip(ticker, state_payload, run_context, universe_sources.get(ticker, []))
                 inflight["ticker"] = None
             continue
@@ -2744,6 +2777,8 @@ def main():
             }
         evidence = bounded_failure_evidence(evidence)
         run_context["observed_at"] = _observed_now()
+        if state_store:
+            state_store.observe_provider_attempt(ticker, run_context, data, error, evidence)
         if error is None:
             fresh_data = data
             if args.merge_existing and existing:
@@ -2766,6 +2801,8 @@ def main():
                     fetched_at=fetched_at,
                     data=data,
                 )
+                provider_payload = label_illiquid_history(provider_payload, existing)
+                payload = label_illiquid_history(payload, existing)
                 if state_store:
                     state_store.evaluate_recovery_candidate(
                         ticker, payload, provider_payload, canonical_payload=existing,
@@ -2881,11 +2918,21 @@ def main():
                     failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                 )
             print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {failure_detail}", flush=True)
+        terminal = bool(state_store and state_store.finalize_provider_terminal(ticker, run_context, error))
+        if terminal:
+            print(f"[{idx}/{len(tickers)}] {ticker} TERMINAL provider unsupported; retained source unchanged", flush=True)
+            scheduled = run_context.get("scheduled_universe")
+            if scheduled:
+                scheduled["symbols"] = [symbol for symbol in scheduled["symbols"] if symbol != ticker]
+        elif ticker in terminal_probes and error is None and run_context.get("scheduled_universe"):
+            run_context["scheduled_universe"]["symbols"] = sorted(
+                set(run_context["scheduled_universe"]["symbols"]) | {ticker})
         result = {
             "ticker": ticker,
             "latency_ms": latency_ms,
-            "error": bounded_diagnostic_detail(error) if error is not None else None,
+            "error": bounded_diagnostic_detail(error) if error is not None and not terminal else None,
             "skipped": False,
+            "terminal": terminal,
         }
         if error is not None:
             result["failures"] = evidence.get("failures") or []
@@ -2907,6 +2954,7 @@ def main():
         "count": len(tickers),
         "ok": len(ok),
         "failed": len(errors),
+        "terminal_symbols": [row["ticker"] for row in results if row.get("terminal")],
         "skipped": len([r for r in results if r.get("skipped")]),
         "total_seconds": total_s,
         "avg_latency_ms": round(sum(r["latency_ms"] for r in ok) / len(ok)) if ok else 0,

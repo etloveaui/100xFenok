@@ -3572,6 +3572,126 @@ assert callable(namespace["load_universe"])
                 self.assertNotEqual(ignored.returncode, 0, f"{candidate} must remain persistable")
 
 
+    def test_automatic_terminal_and_bounded_weekly_return_through_scheduled_main(self):
+        ticker = "AUTOTERM"
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["test_stock"]}
+        original = self._daily_payload(ticker)
+        path = self.fetcher.OUT_DIR / f"{ticker}.json"
+        write_json(path, original)
+        original_bytes = path.read_bytes()
+        error = "HTTP Error 404: Quote not found; empty payload"
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            None, 1, error, {"attempts_used": 1, "failures": [{"error": error}]})
+        def run(at):
+            self.fetcher._observed_now = lambda: at
+            previous_argv, previous_stdout = sys.argv, sys.stdout
+            try:
+                sys.argv = ["fetch-yf-finance.py", "--stocks-only", "--record-batch-state", "--natural-run",
+                            "--event-name", "schedule", "--retry-limit", "40", "--regular-limit", "1100",
+                            "--limit", "1140", "--sleep", "0", "--retries", "0"]
+                sys.stdout = io.StringIO()
+                try:
+                    self.fetcher.main()
+                except SystemExit as exit_:
+                    self.assertEqual(exit_.code, 0, sys.stdout.getvalue())
+            finally:
+                sys.argv, sys.stdout = previous_argv, previous_stdout
+            return json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / f"{ticker}.json").read_text())
+        for day in (3, 4, 5):
+            state = run(f"2026-08-{day:02d}T23:30:00Z")
+            self.assertEqual(path.read_bytes(), original_bytes)
+            self.assertEqual(state["resolution_state"], "terminal_provider_unsupported" if day == 5 else "lkg_primary")
+        self.assertEqual(len(state["terminal"]["attempts"]), 3)
+        self.assertEqual({row["http_status"] for row in state["terminal"]["attempts"]}, {404})
+        self.assertEqual(state["terminal"]["last_history_as_of"], "2026-07-14")
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        probe_run = {**self._run("broken-probe"), "observed_at": "2026-08-06T23:30:00Z"}
+        store.observe_provider_attempt(ticker, probe_run, None, "HTTP Error 503", {})
+        store.record_failure(ticker, "state publication failed", probe_run, ["test_stock"], {}, failure_kind="unexpected")
+        self.assertFalse(store.finalize_provider_terminal(ticker, probe_run, "state publication failed"))
+        self.assertEqual(json.loads(store._state_path(ticker).read_text())["resolution_state"], "terminal_provider_unsupported")
+        # Restore the previous probe timestamp only in this fixture, so the
+        # seven-day cadence assertions below keep their original reference.
+        state = json.loads(store._state_path(ticker).read_text())
+        state["provider_lifecycle"]["last_attempt_at"] = "2026-08-05T23:30:00Z"
+        write_json(store._state_path(ticker), state)
+        index = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text())
+        self.assertEqual(index["current_results"]["terminal_symbols"], [ticker])
+        self.assertEqual(index["scheduled_universe"]["symbols"], [])
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        self.assertEqual(store.terminal_probe_tickers({ticker}, "2026-08-11T23:30:00Z", set(), 40), [])
+        self.assertEqual(store.terminal_probe_tickers({ticker}, "2026-08-13T23:30:00Z", set(), 40), [ticker])
+        self.assertEqual(store.terminal_probe_tickers({ticker}, "2026-08-13T23:30:00Z", {ticker}, 40), [])
+        recovered_data = json.loads(json.dumps(original["data"]))
+        recovered_data["info"]["regularMarketTime"] = int(datetime(2026, 8, 12, 20, tzinfo=timezone.utc).timestamp())
+        recovered_data["history_1y"].append({"date": "2026-08-12", "Close": 11})
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (recovered_data, 1, None, {"attempts_used": 1, "failures": []})
+        state = run("2026-08-13T23:30:00Z")
+        self.assertEqual(state["resolution_state"], "fresh_primary")
+        self.assertNotIn("terminal", state)
+        self.assertEqual(state["current"]["history_as_of"], "2026-08-12")
+        index = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text())
+        self.assertIn(ticker, index["scheduled_universe"]["symbols"])
+
+    def test_automatic_terminal_requires_consecutive_scheduled_old_history_evidence(self):
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        ticker = "STALLED"
+        payload = self._daily_payload(ticker)
+        write_json(self.fetcher.OUT_DIR / f"{ticker}.json", payload)
+        store.bootstrap_existing({ticker}, {ticker: ["test"]}, self._run("bootstrap"))
+        def observe(day, error=None, event="schedule"):
+            run = {**self._run("attempt"), "observed_at": f"2026-08-{day:02d}T21:00:00Z", "event_name": event}
+            store.observe_provider_attempt(ticker, run, payload["data"] if error is None else None,
+                                           error, {"failures": [{"error": error}] if error else []})
+            return store.finalize_provider_terminal(ticker, run, error)
+        self.assertFalse(observe(3))
+        self.assertFalse(observe(3), "same-day rerun is not a second scheduled visit")
+        self.assertFalse(observe(4, event="workflow_dispatch"))
+        self.assertFalse(observe(4, "HTTP Error 429: Too many requests"))
+        self.assertFalse(observe(5))
+        self.assertFalse(observe(6))
+        self.assertTrue(observe(7))
+        # No provider history date cannot establish the ten-business-day condition.
+        for day in (3, 4, 5):
+            run = {**self._run("empty"), "observed_at": f"2026-08-{day:02d}T21:00:00Z"}
+            store.observe_provider_attempt("UNKNOWN", run, None, "empty payload", {})
+            self.assertFalse(store.finalize_provider_terminal("UNKNOWN", run, "empty payload"))
+        for index in range(9):
+            name = f"PROBE{index}"
+            write_json(store._state_path(name), {"ticker": name, "resolution_state": "terminal_provider_unsupported",
+                       "terminal": {"method": "automatic_provider_lifecycle", "classified_at": "2026-07-01T00:00:00Z"}})
+        self.assertEqual(len(store.terminal_probe_tickers({f"PROBE{i}" for i in range(9)},
+                         "2026-08-13T00:00:00Z", set(), 40)), 4)
+
+    def test_current_advancing_etf_history_discloses_stale_quote_without_rewriting_it(self):
+        ticker = "ILLIQ"
+        old = self._daily_payload(ticker)
+        old["data"]["info"]["quoteType"] = "ETF"
+        data = json.loads(json.dumps(old["data"]))
+        data["info"]["regularMarketTime"] = int(datetime(2026, 7, 1, 20, tzinfo=timezone.utc).timestamp())
+        data["history_1y"].append({"date": "2026-10-09", "Close": 12})
+        raw = self.fetcher.decorate_finance_payload(ticker, "daily", "2026-10-11T00:00:00Z", data)
+        candidate = self.fetcher.label_illiquid_history(raw, old)
+        self.assertEqual(candidate["quote_as_of"], "2026-07-01T20:00:00Z")
+        self.assertEqual(candidate["source_as_of"], "2026-10-09")
+        self.assertEqual(candidate["provenance"]["quote_clock"], "stale_illiquid")
+        self.assertEqual(candidate["data"], raw["data"])
+        self.fetcher.validate_source_progression(old, candidate)
+        self.assertTrue(self.state._valid_canonical_payload(candidate, ticker))
+        store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        write_json(self.fetcher.OUT_DIR / f"{ticker}.json", old)
+        store.bootstrap_existing({ticker}, {ticker: ["etf"]}, self._run("bootstrap"))
+        self.assertTrue(store.evaluate_recovery_candidate(ticker, candidate, candidate, canonical_payload=old)["eligible"])
+        self.assertFalse(self.state._valid_canonical_payload({**candidate, "source_as_of": "2026-10-10"}, ticker))
+        stale_data = json.loads(json.dumps(data)); stale_data["history_1y"][-1]["date"] = "2026-08-01"
+        stale = self.fetcher.decorate_finance_payload(ticker, "daily", "2026-10-11T00:00:00Z", stale_data)
+        self.assertNotIn("provenance", self.fetcher.label_illiquid_history(stale, old))
+        with self.assertRaisesRegex(ValueError, "timestamp regression"):
+            self.fetcher.validate_source_progression(old, stale)
+        equity_data = json.loads(json.dumps(data)); equity_data["info"]["quoteType"] = "EQUITY"
+        equity = self.fetcher.decorate_finance_payload(ticker, "daily", "2026-10-11T00:00:00Z", equity_data)
+        self.assertNotIn("provenance", self.fetcher.label_illiquid_history(equity, old))
+
     def test_settled_redemption_leaves_legacy_out_of_fetch_plan(self) -> None:
         self.fetcher.load_universe_sources = lambda **_kwargs: {
             "IWDL": ["stockanalysis_etf"],

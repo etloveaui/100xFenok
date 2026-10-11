@@ -41,7 +41,7 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
     totals = {key: 0 for key in ("count", "ok", "failed", "skipped", "total_seconds")}
     current = {key: 0 for key in ("attempted", "successes", "failed", "skipped", "fetch_attempts")}
     current["errors"] = []
-    errors, shards, unattempted, evidence_errors, selected = [], [], [], [], []
+    errors, shards, unattempted, evidence_errors, selected, terminal_symbols = [], [], [], [], [], []
     exit_code = 0
     for index in range(expected_shards):
         shard = f"{index}/{expected_shards}"
@@ -76,6 +76,7 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
                 if key != "errors":
                     current[key] += result[key]
             current["errors"].extend(result["errors"])
+            terminal_symbols.extend(result.get("terminal_symbols") or [])
             errors.extend(summary.get("errors") or [])
             selection = summary.get("selection") or {}
             selected.extend(selection.get("selected_symbols") or [])
@@ -111,6 +112,7 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
         "source": "all-shards-aggregate",
         **totals,
         "errors": errors,
+        "terminal_symbols": sorted(set(terminal_symbols)),
         "current_results": current,
         "batch_results": batch,
         "exit_code": exit_code,
@@ -118,6 +120,7 @@ def aggregate_shard_summaries(results_dir: Path, expected_shards: int) -> int:
     # The final shard already rebuilt catalogue/LKG state. Replace only its
     # per-process result with the complete invocation's actual attempts.
     state_index = json.loads(STATE_INDEX.read_text(encoding="utf-8"))
+    current["terminal_symbols"] = sorted(set(terminal_symbols))
     if state_index.get("schema_version") != "yahoo-batch-quote-history-index/v1":
         raise ValueError("cannot aggregate an invalid Yahoo state index")
     verdict = yahoo_run_verdict(

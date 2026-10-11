@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from functools import lru_cache
 import hashlib
 import json
 import re
+import subprocess
 from pathlib import Path
 
 
@@ -20,6 +22,39 @@ TERMINAL_RESOLUTION_STATE = "terminal_provider_unsupported"
 # Maximum refused share and minimum allowance for a completed, evidenced run.
 # Lead set 2026-10-11: 0.5%, floor 3; (0.0, 0) restores fail-on-any-refusal.
 YAHOO_RUN_REFUSAL_BUDGET = (0.005, 3)
+AUTO_TERMINAL_ATTEMPTS = 3
+AUTO_TERMINAL_HISTORY_BUSINESS_DAYS = 10
+TERMINAL_PROBE_DAYS = 7
+TERMINAL_PROBES_PER_RUN = 4
+
+
+@lru_cache(maxsize=512)
+def _calendar_age(source: str, observed_hour: str, market_ticker: str) -> dict:
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e",
+         "import {yahooBusinessDayAge} from './scripts/lib/market-calendar.mjs';"
+         "import {YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS as limit} from './scripts/lib/kpi-contract-constants.mjs';"
+         "console.log(JSON.stringify({age:yahooBusinessDayAge(...JSON.parse(process.argv[1])),limit}));",
+         json.dumps([source, observed_hour, market_ticker])],
+        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, check=True,
+    )
+    return json.loads(result.stdout)
+
+
+def source_business_day_policy(ticker: str, source: str | None, observed_at: str) -> dict:
+    if _iso_ms(source) is None or _iso_ms(observed_at) is None:
+        return {"age": None, "limit": None}
+    # Reuse the existing US/KRX/conservative-foreign calendar, with one cached
+    # calculation per source and observation hour rather than per member.
+    market = "005930.KS" if re.search(r"\.(KS|KQ)$", ticker) else (
+        "AAPL" if "." not in ticker or re.fullmatch(r"[A-Z]+\.[A-Z]", ticker) else "UNKNOWN.DE")
+    observed = datetime.fromtimestamp(_iso_ms(observed_at) / 1000, timezone.utc)
+    hour = observed.replace(minute=0, second=0, microsecond=0).isoformat()
+    return _calendar_age(source, hour, market)
+
+
+def source_business_day_age(ticker: str, source: str | None, observed_at: str) -> int | None:
+    return source_business_day_policy(ticker, source, observed_at)["age"]
 
 
 def yahoo_run_verdict(*, current_results, errors, retry_symbols, assessments,
@@ -160,7 +195,7 @@ def _contains_provider_value(candidate, provider) -> bool:
     return candidate == provider
 
 
-def _derived_payload_source_fields(payload: dict) -> dict:
+def _raw_payload_source_fields(payload: dict) -> dict:
     data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
     info = data.get("info") if isinstance(data.get("info"), dict) else {}
     quote = _epoch_iso(info.get("regularMarketTime"))
@@ -175,6 +210,33 @@ def _derived_payload_source_fields(payload: dict) -> dict:
         history_as_of if history_as_of and (not quote or history_as_of <= quote[:10]) else quote
     )
     return {"quote_as_of": quote, "history_as_of": history_as_of, "source_as_of": source_as_of}
+
+
+def valid_illiquid_history(payload: dict) -> bool:
+    provenance = payload.get("provenance") or {}
+    if not isinstance(provenance, dict) or provenance.get("quote_clock") != "stale_illiquid":
+        return False
+    source = _raw_payload_source_fields(payload)
+    prior = provenance.get("previous_history_as_of")
+    history = source["history_as_of"]
+    quote = source["quote_as_of"]
+    info = (payload.get("data") or {}).get("info") or {}
+    if (info.get("quoteType") != "ETF" or not history or not quote or not prior
+            or _iso_ms(prior) is None or history <= prior
+            or provenance.get("freshness_basis") != "history_as_of"
+            or provenance.get("quote_as_of") != quote or provenance.get("history_as_of") != history):
+        return False
+    policy = source_business_day_policy(payload.get("ticker", ""), history, payload.get("fetched_at"))
+    quote_age = source_business_day_age(payload.get("ticker", ""), quote, payload.get("fetched_at"))
+    return (isinstance(policy["age"], int) and policy["age"] <= policy["limit"]
+            and isinstance(quote_age, int) and quote_age > policy["limit"])
+
+
+def _derived_payload_source_fields(payload: dict) -> dict:
+    source = _raw_payload_source_fields(payload)
+    if valid_illiquid_history(payload):
+        source["source_as_of"] = source["history_as_of"]
+    return source
 
 
 def _payload_source_fields(payload: dict) -> dict:
@@ -435,6 +497,7 @@ class YahooBatchStateStore:
         self,
         excluded_tickers: set[str] | None = None,
         etf_universe_path: Path | None = None,
+        *, include_terminal: bool = False,
     ) -> dict[str, list[str]]:
         """Join current typed ETFs to the Yahoo catalogue for schedule membership.
 
@@ -489,10 +552,101 @@ class YahooBatchStateStore:
                 and state.get("schema_version") == "yahoo-batch-quote-history-state/v1"
                 and state.get("ticker") == ticker
                 and state.get("resolution_state") == TERMINAL_RESOLUTION_STATE
+                and not include_terminal
             ):
                 continue
             sources[ticker] = ["stockanalysis_etf"]
         return {ticker: sources[ticker] for ticker in sorted(sources)}
+
+    def terminal_tickers(self, active_universe: set[str]) -> set[str]:
+        return {ticker for ticker in active_universe
+                if self._load_state(ticker).get("resolution_state") == TERMINAL_RESOLUTION_STATE}
+
+    def terminal_probe_tickers(self, active_universe: set[str], observed_at: str,
+                               excluded: set[str], limit: int) -> list[str]:
+        now = _iso_ms(observed_at)
+        due = []
+        for ticker in self.terminal_tickers(active_universe) - excluded:
+            state = self._load_state(ticker)
+            # Primary-reference retirements/identity changes remain authoritative.
+            if (state.get("terminal") or {}).get("method") != "automatic_provider_lifecycle":
+                continue
+            lifecycle = state.get("provider_lifecycle") or {}
+            last = lifecycle.get("last_attempt_at") or (state.get("terminal") or {}).get("classified_at")
+            last_ms = _iso_ms(last)
+            if last_ms is None or now - last_ms >= TERMINAL_PROBE_DAYS * 86400000:
+                due.append((last_ms or 0, ticker))
+        return [ticker for _, ticker in sorted(due)[:min(limit, TERMINAL_PROBES_PER_RUN)]]
+
+    def observe_provider_attempt(self, ticker: str, run: dict, provider_data: dict | None,
+                                 error: str | None, evidence: dict) -> None:
+        if not run.get("natural") or run.get("event_name") != "schedule":
+            return
+        state = self._load_state(ticker)
+        lifecycle = state.get("provider_lifecycle") or {}
+        observed = run["observed_at"]
+        source = _raw_payload_source_fields({"data": provider_data or {}})
+        history = source["history_as_of"]
+        prior_dates = [value for value in (lifecycle.get("last_history_as_of"),
+                      (state.get("current") or {}).get("history_as_of"),
+                      (state.get("lkg") or {}).get("history_as_of")) if _iso_ms(value) is not None]
+        previous = max(prior_dates) if prior_dates else None
+        advanced = bool(history and (not previous or history > previous))
+        details = " ".join([str(error or ""), *[str(row.get("error") or "")
+                           for row in evidence.get("failures") or []]])
+        statuses = sorted({int(value) for value in re.findall(r"HTTP(?:\s+Error)?[\s:]+([45]\d\d)\b", details, re.I)})
+        empty = bool(re.search(r"quote not found|empty payload", details, re.I))
+        transport_error = bool(re.search(r"rate.?limit|too many requests|timed? ?out|timeout", details, re.I)
+                               or any(value == 429 or value >= 500 or value in {401, 403} for value in statuses))
+        stalled = bool(history and previous and history <= previous)
+        qualifying = (empty or stalled) and not transport_error
+        attempts = list(lifecycle.get("stalled_attempts") or []) if qualifying and not advanced else []
+        if qualifying and not advanced:
+            # Retries/reruns on the same UTC day are one scheduled observation.
+            attempts = [row for row in attempts if row.get("observed_at", "")[:10] != observed[:10]]
+            attempts.append({"observed_at": observed, "history_as_of": history,
+                             "http_status": statuses[-1] if statuses else None,
+                             "reason": "empty_payload" if empty else "history_not_advanced"})
+        lifecycle.update({"last_attempt_at": observed, "last_history_as_of": history if advanced else previous,
+                          "stalled_attempts": attempts[-AUTO_TERMINAL_ATTEMPTS:],
+                          "provider_advanced": advanced,
+                          "was_terminal": state.get("resolution_state") == TERMINAL_RESOLUTION_STATE})
+        state["provider_lifecycle"] = lifecycle
+        _write_json(self._state_path(ticker), state)
+
+    def finalize_provider_terminal(self, ticker: str, run: dict, error: str | None) -> bool:
+        if not run.get("natural") or run.get("event_name") != "schedule":
+            return False
+        state = self._load_state(ticker)
+        lifecycle = state.get("provider_lifecycle") or {}
+        failure = state.get("latest_failure") or {}
+        if failure.get("data_loss"):
+            return False
+        history = lifecycle.get("last_history_as_of")
+        age = source_business_day_age(ticker, history, run["observed_at"])
+        prior_terminal = lifecycle.get("was_terminal") is True
+        if prior_terminal and error is None and lifecycle.get("provider_advanced"):
+            return False
+        eligible_error = error is None or bool(re.search(
+            r"quote not found|empty payload|source (?:timestamp regression|date regresses)|provider source timestamp regresses",
+            error, re.I))
+        terminal = (prior_terminal and eligible_error) or (eligible_error and isinstance(age, int)
+            and age > AUTO_TERMINAL_HISTORY_BUSINESS_DAYS
+            and len(lifecycle.get("stalled_attempts") or []) >= AUTO_TERMINAL_ATTEMPTS)
+        if not terminal:
+            return False
+        prior = state.get("terminal") or {}
+        state.update({"resolution_state": TERMINAL_RESOLUTION_STATE, "retry": False,
+                      "terminal": {"method": "automatic_provider_lifecycle",
+                                   "classified_at": prior.get("classified_at") or run["observed_at"],
+                                   "last_history_as_of": history, "history_business_days": age,
+                                   "attempts": lifecycle.get("stalled_attempts") or [],
+                                   "last_probe_error": _bounded_error(error) if error else None}})
+        state["last_result"] = {**(state.get("last_result") or {}), "outcome": "terminal",
+                                "observed_at": run["observed_at"]}
+        self._record_result(state, state["last_result"])
+        _write_json(self._state_path(ticker), state)
+        return True
 
     def prospective_source_stale_tickers(
         self,
@@ -668,6 +822,8 @@ class YahooBatchStateStore:
             for key, before in _payload_source_fields(canonical_payload).items():
                 after = _iso_ms(provider_source.get(key))
                 if key in {"quote_as_of", "history_as_of"} and _iso_ms(before) is not None and after is not None and _iso_ms(before) > after:
+                    if key == "quote_as_of" and valid_illiquid_history(provider_payload):
+                        continue
                     raise ValueError(f"Yahoo provider source timestamp regresses for {ticker}: {key}")
         state = self._load_state(ticker)
         prior = state.get("lkg") if state.get("retry") is True else state.get("current")
@@ -709,10 +865,17 @@ class YahooBatchStateStore:
         state = self._load_state(ticker)
         prior = state.get("lkg") if state.get("retry") is True else state.get("current")
         source = _payload_source_fields(payload)
+        if state.get("resolution_state") == TERMINAL_RESOLUTION_STATE:
+            previous = (state.get("provider_lifecycle") or {}).get("last_history_as_of") or (prior or {}).get("history_as_of")
+            lifecycle = state.get("provider_lifecycle") or {}
+            if not lifecycle.get("provider_advanced") and previous and (source.get("history_as_of") or "") <= previous:
+                return False
         for key in ("quote_as_of", "history_as_of"):
             before = _iso_ms((prior or {}).get(key))
             after = _iso_ms(source.get(key))
             if before is not None and (after is None or after < before):
+                if key == "quote_as_of" and valid_illiquid_history(payload):
+                    continue
                 return False
         return True
 
@@ -766,6 +929,9 @@ class YahooBatchStateStore:
         })
 
         if has_history:
+            if state.get("terminal"):
+                state.setdefault("provider_lifecycle", {})["returned_at"] = attempt["observed_at"]
+            state.pop("terminal", None)
             state.pop("pending", None)
             state.pop("latest_failure", None)
             state["failure_count"] = 0
@@ -800,6 +966,7 @@ class YahooBatchStateStore:
         failure_kind: str = "unexpected",
     ) -> dict:
         state = self._load_state(ticker)
+        was_terminal = state.get("resolution_state") == TERMINAL_RESOLUTION_STATE
         previously_advertised_data = (
             state.get("resolution_state") in {"fresh_primary", "lkg_primary", "pending_history"}
             or isinstance(state.get("current"), dict)
@@ -861,6 +1028,11 @@ class YahooBatchStateStore:
             "failure_count": int(state.get("failure_count") or 0) + 1,
             "updated_at": attempt["observed_at"],
         })
+        if was_terminal:
+            # Failed probes never restore schedule membership. Unexpected failures
+            # still reach the normal failed-run assessment; only valid data returns.
+            state["resolution_state"] = TERMINAL_RESOLUTION_STATE
+            state["retry"] = False
         if lkg:
             state["lkg"] = lkg
             state["current"] = dict(lkg)
@@ -1037,7 +1209,7 @@ class YahooBatchStateStore:
             last_attempt = state.get("last_result")
             # A failed last attempt is a retry-pending failure only while the symbol
             # remains retry-capable. Terminal (provider-unsupported) classification is
-            # an absorbing state: its pre-terminal failed last attempt must not inflate
+            # excluded until a bounded probe recovers: its failed last attempt must not inflate
             # counts.failed beyond the strict equation failed <= lkg + pending_history
             # + unavailable. latest_attempt/last_attempt evidence stays untouched.
             if (
@@ -1113,6 +1285,7 @@ class YahooBatchStateStore:
                 "successes": succeeded,
                 "failed": failed,
                 "skipped": skipped,
+                "terminal_symbols": [row["ticker"] for row in current_results if row.get("outcome") == "terminal"],
                 "fetch_attempts": sum(int(row.get("attempts_used") or 0) for row in current_results) + (1 if batch_failure else 0),
                 "errors": [
                     {"ticker": row["ticker"], "error": row.get("error"), "failures": row.get("failures") or []}
