@@ -121,7 +121,9 @@ export function buildKpiDocuments(nowIso = resolveNow(), {
   const previous = readOptionalJson(path.join(dataRoot, KPI_REL_PATH));
   const priorSets = new Map((Array.isArray(previous?.sets) ? previous.sets : []).map(row => [row.set, row]));
   const sets = LANE_REGISTRY.lanes
-    .filter((lane) => lane.lane_class === "detection_floor" && !HEALTH_SET_EXCLUSIONS.has(lane.id))
+    .filter((lane) => (lane.lane_class === "detection_floor"
+      || (lane.lane_class === "auxiliary" && lane.privacy_class === "public_mirror"))
+      && !HEALTH_SET_EXCLUSIONS.has(lane.id))
     .map((lane) => buildSet(lane, rows.get(lane.id), dataRoot, nowIso, priorSets.get(lane.id)));
   const rootDoc = { schema_version: SCHEMA_VERSION, generated_at: nowIso, sets };
   // Paths are public-safe before projection, so both mirrors carry one contract.

@@ -156,7 +156,7 @@ const providers = [
   { id: "gdelt", label: "GDELT", class: "external_data" },
   { id: "mona_life_ssot", label: "Mona Life SSOT", class: "owner_managed_data" },
   { id: "global_scouter", label: "Global Scouter", class: "owner_managed_data" },
-  { id: "fenok_briefing", label: "100x Briefing desk", class: "owner_managed_data" },
+  { id: "fenok_briefing", label: "100x Briefing scheduled desk", class: "owner_managed_data" },
   { id: "fenok_ticker_api", label: "Fenok ticker API", class: "platform_proxy" },
   { id: "fenok_cnn_proxy", label: "Fenok CNN proxy", class: "platform_proxy" },
   { id: "local_mac_bridge", label: "Local Mac bridge", class: "platform_runtime" },
@@ -447,9 +447,9 @@ const lanes = [
       },
     },
     // The workflow attempts a daily refresh, while each document's truthful
-    // source clock remains its newest reported quarter. Keep this shadow until
-    // the dedicated detection-config member is admitted by the detection-floor
-    // owner; the cloud family itself is independently bounded and publishable.
+    // source clock remains its newest reported quarter. This auxiliary lane is
+    // observed by the public-family KPI and board without joining the financial
+    // acquisition floor; daily attempts and quarterly source age stay separate.
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/earnings_overview",
@@ -462,7 +462,7 @@ const lanes = [
     ],
     recovery_store: null,
     declared_exception:
-      "bounded four-document producer retains each last valid document in the canonical set; no separate admin LKG index exists yet, so the admin refresh summary is the durable control-plane evidence; detection-floor enrollment remains shadow",
+      "bounded producer retains last valid canonical documents; refresh-summary supplies attempts and the public-family KPI judges reported-quarter dates",
     script_sources: [
       "scripts/build-earnings-overview.py",
       "scripts/publish-cloud-data-generation.mjs",
@@ -990,7 +990,7 @@ const lanes = [
   }),
   record({
     id: "briefing",
-    label: "100x Briefing editions (owner-run editorial export)",
+    label: "100x Briefing editions (M4 scheduled editorial export)",
     owner_workflow: null,
     provider_members: null,
     provider_refs: [{ provider_id: "fenok_briefing", role: "source", members: null }],
@@ -1008,7 +1008,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/briefing"],
     commit_shards: [],
     recovery_store: null,
-    declared_exception: "owner-run editorial export has no GitHub attempt shard; cadence is evidenced by the index's latest edition date",
+    declared_exception: "M4 scheduled export has no GitHub attempt shard; the latest edition's published_kst and index supply the public-family KPI and board",
     // The push-triggered caller publishes the committed editions to the cloud
     // data plane without owning acquisition or any Git write.
     caller_workflows: {
