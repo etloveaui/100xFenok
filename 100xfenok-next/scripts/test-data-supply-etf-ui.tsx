@@ -86,6 +86,24 @@ const typed = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
 ), "ADIU");
 assert.equal(typed.kind, "unavailable");
 
+for (const status of ["closed", "renamed"] as const) {
+  const lifecycle = { status, effective_date: "2026-08-21", successor_ticker: status === "renamed" ? "MEGX" : null,
+    reason: "issuer notice", primary_reference: "www.sec.gov/Archives/notice.htm", last_source_as_of: "2026-08-20T19:11:29Z" };
+  const result = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
+    error: status === "renamed" ? "DATA_SUPPLY_SECURITY_RENAMED" : "DATA_SUPPLY_SECURITY_CLOSED",
+    ticker: "MGKX", data_supply: { ...noTime, security_lifecycle: lifecycle },
+  }, { status: 410 }), "MGKX");
+  assert.equal(result.kind, "unavailable");
+  const presentation = getEtfDataSupplyPresentation(result.dataSupply);
+  assert.equal(presentation.label, status === "renamed" ? "티커 변경" : "거래 종료");
+  assert.equal(presentation.sourceDate, lifecycle.last_source_as_of);
+  assert.equal(presentation.ageDays, null);
+}
+const wrongTerminal = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
+  error: "DATA_SUPPLY_SECURITY_CLOSED", ticker: "OTHER", data_supply: noTime,
+}, { status: 410 }), "MGKX");
+assert.equal(wrongTerminal.kind, "failed");
+
 const shardUnavailable = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
   { error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE", ticker: "SPY" },
   { status: 503, headers: { "Cache-Control": "no-store" } },

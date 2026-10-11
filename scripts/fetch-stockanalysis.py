@@ -50,6 +50,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
+from yahoo_batch_state import current_yahoo_universe_sources, verified_yahoo_terminal_evidence
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from data_supply_resolver import _ETF_DETAIL_POLICY, _provider_object_path
 from stockanalysis_recovery_state import (
@@ -230,7 +231,7 @@ DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
-NATURAL_GENERAL_INCREMENTAL_LIMIT = 100
+NATURAL_GENERAL_INCREMENTAL_LIMIT = 200
 NATURAL_GENERAL_MIN_AUM = 50_000_000
 NATURAL_GENERAL_MIN_DOLLAR_VOLUME = 1_000_000
 UNIVERSE_RECOVERY_MAX_PAGES = 100
@@ -5713,9 +5714,13 @@ def incremental_etf_backfill_candidates(
     if recovery_tickers:
         source_records.append(("pending_recovery", [{"ticker": ticker} for ticker in recovery_tickers]))
     sources = [
-        (source_name, [row_ticker(row) for row in records])
+        (source_name, list(current_yahoo_universe_sources(
+            {row_ticker(row): [source_name] for row in records if row_ticker(row)}, now_dt.isoformat())))
         for source_name, records in source_records
     ]
+    lifecycle = verified_yahoo_terminal_evidence(now_dt.isoformat())["tickers"]
+    terminal_rows = [{"ticker": ticker, "lifecycle": lifecycle[ticker][0]}
+                     for ticker in sorted(enrolled & set(lifecycle))]
     candidates = []
     cooldown_rows = []
     inception_limited_rows = []
@@ -5890,6 +5895,7 @@ def incremental_etf_backfill_candidates(
         "cooldown": cooldown_rows,
         "inception_limited": inception_limited_rows,
         "terminal_limited": terminal_limited_rows,
+        "terminal_securities": terminal_rows,
         **({"priority_selector": priority_selector} if priority_selector is not None else {}),
     }
 
@@ -7822,6 +7828,8 @@ def _main() -> None:
     )
     if (yahoo_retry_etfs or retry_etfs) and not bounded_natural_general:
         etfs = unique_symbols(yahoo_retry_etfs + retry_etfs + etfs)
+    if args.natural_run:
+        etfs = list(current_yahoo_universe_sources({ticker: [] for ticker in etfs}, now_iso()))
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:
         incremental_summary = incremental_etf_backfill_candidates(

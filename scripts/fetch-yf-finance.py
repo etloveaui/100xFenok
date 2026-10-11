@@ -106,145 +106,17 @@ LEVERAGED_AND_FOCUS_ETFS = {
 }
 NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 
-# Verified same-security ticker changes. Select the current security as a new
-# canonical ticker; never splice its prices into the retired symbol's history.
-# Issuer notices: SEC 2026-08-17 (EQR), BNY 2026-05-11, EchoStar 2026-06-22,
-# Marsh 2026-01-14, Corgi SEC 497(e) 2026-08-19, Invesco SEC 497k 2023-06-06.
-YAHOO_SAME_SECURITY_SUCCESSORS = {
-    "EQR": "VMRK", "BK": "BNY", "SATS": "ECHO", "MMC": "MRSH",
-    "MGKX": "MEGX", "VBX": "USSX", "VOOX": "USLX",
-    "XVO": "USMX", "XVUG": "USGX", "EWCO": "RSPC", "IHYF": "GTOQ",
-    "PSKY": "SKYD",
-}
-YAHOO_SAME_SECURITY_EFFECTIVE = {
-    "EQR": "2026-08-18", "BK": "2026-05-21", "SATS": "2026-06-24",
-    "MMC": "2026-01-14", "MGKX": "2026-08-21", "VBX": "2026-08-21",
-    "VOOX": "2026-08-21", "XVO": "2026-08-21", "XVUG": "2026-08-21",
-    "EWCO": "2023-06-07",
-    # Conservative routing cutoff: this dated SEC prospectus confirms the
-    # completed rename. This is not a claim about the first GTOQ trading day.
-    "IHYF": "2026-02-27",
-    "PSKY": "2026-10-06",
-}
-# Public securities ended; merger consideration is not a ticker alias.
-# AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
-YAHOO_ENDED_SECURITIES = {
-    **{symbol: "WEBs SEC liquidation supplement; trading halted after 2026-08-26"
-       for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
-    "USML": "UBS redemption settled 2026-08-19",
-    "QRVO": "Skyworks merger closed 2026-10-05; cash and 0.960 SWKS shares per QRVO share",
-    "WBD": "Skydance cash acquisition closed 2026-10-06; WBD shares ceased trading",
-    "CUSD": "SEC liquidation supplement; trading ceased after 2026-06-26",
-    "BLD": "SEC closing 8-K; trading suspended before 2026-07-01 open",
-    "DAY": "Thoma Bravo cash acquisition closed 2026-02-04; shares ceased trading",
-    "HOLX": "SEC closing 8-K; taken private 2026-04-07",
-    "AVB": "SEC closing 8-K 2026-08-17; 2.793 VMRK shares per AVB share",
-    "EA": "SEC closing 8-K 2026-08-04; public shares cancelled",
-    "CTRA": "SEC closing 8-K 2026-05-07; 0.70 DVN shares per CTRA share",
-    "IWDL": "UBS redemption settled 2026-08-19",
-    "IWFL": "UBS redemption settled 2026-08-19",
-    "IWML": "UBS redemption settled 2026-08-19",
-    "MTUL": "UBS redemption settled 2026-08-19",
-    "QULL": "UBS redemption settled 2026-08-19",
-    "SCDL": "UBS redemption settled 2026-08-19",
-    "DEFI": "Hashdex closure; last trading day 2026-08-17",
-    "012510.KS": "KRX final share exchange notice; delisted 2026-07-15",
-    "230360.KQ": "KRX final cash share exchange notice; delisted 2026-06-30",
-}
-YAHOO_SECURITY_END_DATES = {
-    **{symbol: "2026-08-27" for symbol in
-       ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
-    "USML": "2026-08-19", "QRVO": "2026-10-05", "WBD": "2026-10-06",
-    "CUSD": "2026-06-27", "BLD": "2026-07-01", "DAY": "2026-02-04", "HOLX": "2026-04-07",
-    "AVB": "2026-08-17", "EA": "2026-08-05", "CTRA": "2026-05-07",
-    "IWDL": "2026-08-19", "IWFL": "2026-08-19", "IWML": "2026-08-19",
-    "MTUL": "2026-08-19", "QULL": "2026-08-19", "SCDL": "2026-08-19",
-    "DEFI": "2026-08-18",
-    "012510.KS": "2026-07-15", "230360.KQ": "2026-06-30",
-}
-YAHOO_LIFECYCLE_SOURCES = {
-    **{symbol: "https://www.sec.gov/Archives/edgar/data/1580843/000121390026090266/ea0302118-01_497.htm"
-       for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
-    "USML": "https://etracs.ubs.com/news/show-article/id/724",
-    "QRVO": "https://www.qorvo.com/about/news-events/news-releases/2026/skyworks-completes-combination-with-qorvo",
-    "WBD": "https://www.sec.gov/Archives/edgar/data/2041610/000110465926113913/tm2626659d7_ex99-1.htm",
-    "PSKY": "https://www.sec.gov/Archives/edgar/data/2041610/000110465926113913/tm2626659d7_ex99-1.htm",
-    "CUSD": "https://www.sec.gov/Archives/edgar/data/1141819/000089418926019839/cusd497eliquidation.htm",
-    "BLD": "https://www.sec.gov/Archives/edgar/data/1633931/000110465926079876/tm2618991d10_8k.htm",
-    "DAY": "https://www.thomabravo.com/press-releases/thoma-bravo-completes-acquisition-of-dayforce",
-    "HOLX": "https://www.sec.gov/Archives/edgar/data/859737/000119312526144632/d135035d8k.htm",
-    "EQR": "https://www.sec.gov/Archives/edgar/data/915912/000110465926097833/tm2623381d1_8k.htm",
-    "BK": "https://www.bny.com/corporate/global/en/about-us/newsroom/press-release/bny-announces-planned-change-of-stock-ticker-symbol-to-bny-130465.html",
-    "SATS": "https://ir.echostar.com/news-releases/news-release-details/echostar-changing-stocker-ticker-sats-echo-marking-companys-next",
-    "MMC": "https://www.sec.gov/Archives/edgar/data/62709/000006270926000022/mrsh-20251231.htm",
-    "MGKX": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
-    "VBX": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
-    "VOOX": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
-    "XVO": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
-    "XVUG": "https://www.sec.gov/Archives/edgar/data/2078265/000207826526000347/497e_ticker_changes.htm",
-    "EWCO": "https://www.sec.gov/Archives/edgar/data/1209466/000119312523147120/d428859d497k.htm",
-    "IHYF": "https://www.sec.gov/Archives/edgar/data/1418144/000119312526079070/d106358d497k.htm",
-    "AVB": "https://www.sec.gov/Archives/edgar/data/915912/000110465926097833/tm2623381d1_8k.htm",
-    "EA": "https://www.sec.gov/Archives/edgar/data/712515/000114036126031157/ef20079099_8k.htm",
-    "CTRA": "https://www.sec.gov/Archives/edgar/data/858470/000110465926057278/tm2613882d1_8k.htm",
-    "IWDL": "https://etracs.ubs.com/news/show-article/id/727",
-    "IWFL": "https://etracs.ubs.com/news/show-article/id/727",
-    "IWML": "https://etracs.ubs.com/news/show-article/id/727",
-    "MTUL": "https://etracs.ubs.com/news/show-article/id/727",
-    "QULL": "https://etracs.ubs.com/news/show-article/id/727",
-    "SCDL": "https://etracs.ubs.com/news/show-article/id/727",
-    "DEFI": "https://www.sec.gov/Archives/edgar/data/1985840/000121390026084293/ea030017001ex99-1.htm",
-    "012510.KS": "https://kind.krx.co.kr/external/2026/07/08/000166/20260708000253/68051.htm",
-    "230360.KQ": "https://kind.krx.co.kr/external/2026/06/25/000847/20260625002043/70769.htm",
-}
-YAHOO_RETIRED_SYMBOLS = frozenset(YAHOO_SAME_SECURITY_SUCCESSORS) | frozenset(YAHOO_ENDED_SECURITIES)
-
-
-def retired_yahoo_symbols(as_of):
-    day = str(as_of)[:10]
-    return {
-        ticker for ticker, effective in {
-            **YAHOO_SAME_SECURITY_EFFECTIVE, **YAHOO_SECURITY_END_DATES,
-        }.items() if day >= effective
-    }
-
-
-def current_yahoo_universe_sources(sources, as_of):
-    """Route scheduled selection to live identifiers while retaining provenance."""
-    current = {}
-    retired = retired_yahoo_symbols(as_of)
-    for ticker, discovered_from in sources.items():
-        if ticker in YAHOO_ENDED_SECURITIES and ticker in retired:
-            continue
-        selected = YAHOO_SAME_SECURITY_SUCCESSORS.get(ticker, ticker) if ticker in retired else ticker
-        labels = current.setdefault(selected, set())
-        labels.update(discovered_from)
-        if selected != ticker:
-            labels.add(f"same_security_successor:{ticker}")
-    return {ticker: sorted(labels) for ticker, labels in current.items()}
-
-
-def verified_yahoo_terminal_evidence(as_of):
-    """Lifecycle policy carried by this revision, not a synthetic run artifact."""
-    evidence = {
-        ticker: [{"symbol": ticker, "terminal": True, "alias_target": None,
-                  "reason": reason, "source": "verified_public_lifecycle",
-                  "source_url": YAHOO_LIFECYCLE_SOURCES[ticker],
-                  "effective_date": YAHOO_SECURITY_END_DATES[ticker]}]
-        for ticker, reason in YAHOO_ENDED_SECURITIES.items()
-    }
-    evidence.update({
-        ticker: [{"symbol": ticker, "terminal": True, "alias_target": successor,
-                  "reason": "same public security now trades under successor ticker",
-                  "source": "verified_public_lifecycle",
-                  "source_url": YAHOO_LIFECYCLE_SOURCES[ticker],
-                  "effective_date": YAHOO_SAME_SECURITY_EFFECTIVE[ticker]}]
-        for ticker, successor in YAHOO_SAME_SECURITY_SUCCESSORS.items()
-    })
-    retired = retired_yahoo_symbols(as_of)
-    return {"artifact_path": None, "artifact_sha256": None,
-            "artifact_generated_at": None,
-            "tickers": {ticker: rows for ticker, rows in evidence.items() if ticker in retired}}
+from yahoo_batch_state import (
+    YAHOO_SAME_SECURITY_SUCCESSORS,
+    YAHOO_SAME_SECURITY_EFFECTIVE,
+    YAHOO_ENDED_SECURITIES,
+    YAHOO_SECURITY_END_DATES,
+    YAHOO_LIFECYCLE_SOURCES,
+    YAHOO_RETIRED_SYMBOLS,
+    retired_yahoo_symbols,
+    current_yahoo_universe_sources,
+    verified_yahoo_terminal_evidence,
+)
 
 # The index trackers whose distribution yield is the payout operand of the RIM
 # residual-value engine. They are part of the scheduled ETF lane's bounded

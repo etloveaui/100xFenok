@@ -33,7 +33,17 @@ export interface DataSupplyDomainPolicy {
   policy_digest: string;
 }
 
+export interface EtfSecurityLifecycle {
+  status: "closed" | "renamed";
+  effective_date: string;
+  successor_ticker: string | null;
+  reason: string;
+  primary_reference: string;
+  last_source_as_of: string | null;
+}
+
 export interface EtfDataSupplyMetadata {
+  security_lifecycle?: EtfSecurityLifecycle;
   enrollment_state: "enrolled";
   resolution_state: ResolutionState;
   provider_role: ProviderRole;
@@ -357,6 +367,17 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
     || !entry.reason_code
   ) return null;
 
+  const lifecycle = asRecord(entry.security_lifecycle);
+  if (entry.security_lifecycle !== undefined && (
+    !lifecycle || !["closed", "renamed"].includes(String(lifecycle.status))
+    || typeof lifecycle.effective_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(lifecycle.effective_date)
+    || !isIsoTimestamp(lifecycle.effective_date) || Date.parse(lifecycle.effective_date) > now.getTime()
+    || typeof lifecycle.reason !== "string" || !lifecycle.reason
+    || typeof lifecycle.primary_reference !== "string" || !lifecycle.primary_reference
+    || (lifecycle.last_source_as_of !== null && !isIsoTimestamp(lifecycle.last_source_as_of))
+    || (lifecycle.status === "closed" ? lifecycle.successor_ticker !== null
+      : typeof lifecycle.successor_ticker !== "string" || !/^[A-Z0-9][A-Z0-9.-]*$/.test(lifecycle.successor_ticker))
+  )) return null;
   const sourceAsOf = resolutionState === "unavailable" ? null : entry.source_as_of as string;
   return {
     entry,
@@ -371,6 +392,7 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
       reason_code: resolutionState === "unavailable" ? null : entry.reason_code as string,
       recovery_transition: resolutionState === "unavailable" ? "unavailable" : null,
       projection_digest: digest,
+      ...(lifecycle ? { security_lifecycle: lifecycle as unknown as EtfSecurityLifecycle } : {}),
     } satisfies EtfDataSupplyMetadata,
   };
 }

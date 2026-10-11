@@ -1,6 +1,14 @@
 export type EtfResolutionState = "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
 
 export interface EtfDataSupply {
+  security_lifecycle?: {
+    status: "closed" | "renamed";
+    effective_date: string;
+    successor_ticker: string | null;
+    reason: string;
+    primary_reference: string;
+    last_source_as_of: string | null;
+  };
   enrollment_state: "enrolled";
   resolution_state: EtfResolutionState;
   provider_role: "primary" | "fallback" | null;
@@ -74,10 +82,32 @@ export function parseEtfDataSupply(value: unknown): EtfDataSupply | null {
       : typeof record.reason_code !== "string" || !record.reason_code || record.recovery_transition !== null)
     || !isSha256(record.projection_digest)
   ) return null;
+  if (record.security_lifecycle !== undefined) {
+    const lifecycle = asRecord(record.security_lifecycle);
+    if (!lifecycle || !["closed", "renamed"].includes(String(lifecycle.status))
+      || !isTimestamp(lifecycle.effective_date)
+      || typeof lifecycle.reason !== "string" || !lifecycle.reason
+      || typeof lifecycle.primary_reference !== "string" || !lifecycle.primary_reference
+      || (lifecycle.last_source_as_of !== null && !isTimestamp(lifecycle.last_source_as_of))
+      || (lifecycle.status === "closed" ? lifecycle.successor_ticker !== null
+        : typeof lifecycle.successor_ticker !== "string" || !/^[A-Z0-9][A-Z0-9.-]*$/.test(lifecycle.successor_ticker))) return null;
+  }
   return record as unknown as EtfDataSupply;
 }
 
 export function getEtfDataSupplyPresentation(dataSupply: EtfDataSupply | null): EtfDataSupplyPresentation {
+  if (dataSupply?.security_lifecycle) {
+    const lifecycle = dataSupply.security_lifecycle;
+    return {
+      label: lifecycle.status === "renamed" ? "티커 변경" : "거래 종료",
+      description: lifecycle.status === "renamed"
+        ? `현재 티커는 ${lifecycle.successor_ticker}입니다.`
+        : "공식 공시에 따라 거래가 종료된 종목입니다.",
+      sourceDate: lifecycle.last_source_as_of,
+      ageDays: null,
+      degraded: true,
+    };
+  }
   if (!dataSupply || dataSupply.resolution_state === "fresh_primary") {
     return { label: null, description: null, sourceDate: dataSupply?.source_as_of ?? null, ageDays: dataSupply?.source_age_days ?? null, degraded: false };
   }
@@ -124,6 +154,11 @@ export async function parseEtfApiResponse<T>(
     return { kind: "shard_infrastructure_unavailable", data: null, dataSupply: null };
   }
   if (response.status === 503 && record?.error === "DATA_SUPPLY_UNAVAILABLE" && dataSupply?.resolution_state === "unavailable") {
+    return { kind: "unavailable", data: null, dataSupply };
+  }
+  if (response.status === 410 && record?.ticker === expectedTicker && dataSupply?.security_lifecycle
+    && record.error === (dataSupply.security_lifecycle.status === "renamed"
+      ? "DATA_SUPPLY_SECURITY_RENAMED" : "DATA_SUPPLY_SECURITY_CLOSED")) {
     return { kind: "unavailable", data: null, dataSupply };
   }
   if (!response.ok) {

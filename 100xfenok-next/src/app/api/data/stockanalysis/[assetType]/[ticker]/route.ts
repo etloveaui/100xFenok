@@ -27,6 +27,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = false;
 
 export async function buildEtfResponse(resolution: EtfDetailResolution, ticker: string) {
+  if ((resolution.kind === "selected" || resolution.kind === "unavailable")
+      && resolution.dataSupply.security_lifecycle) {
+    return NextResponse.json({
+      error: resolution.dataSupply.security_lifecycle.status === "renamed"
+        ? "DATA_SUPPLY_SECURITY_RENAMED" : "DATA_SUPPLY_SECURITY_CLOSED",
+      ticker,
+      data_supply: resolution.dataSupply,
+      ...(resolution.kind === "selected" ? { retained_payload: resolution.payload } : {}),
+    }, { status: 410, headers: STOCKANALYSIS_CACHE_HEADERS });
+  }
   if (resolution.kind === "selected") {
     return NextResponse.json(
       mergeEtfDataSupply(resolution.payload, resolution.dataSupply),

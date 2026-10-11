@@ -20,6 +20,8 @@ function document(value: JsonRecord, raw = JSON.stringify(value)): PublicJsonDoc
 
 async function fixture(options: {
   ticker?: string;
+  lifecycle?: JsonRecord;
+  now?: string;
   enrolledTicker?: string;
   state?: "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
   fallbackDepth?: number;
@@ -81,7 +83,7 @@ async function fixture(options: {
   const payloadDoc = payload ? document(payload) : null;
   if (payloadDoc && !unavailable) entry.payload_sha256 = await sha256Text(payloadDoc.raw);
   const entries = {
-    [enrolledTicker]: { ...entry, ticker: enrolledTicker, payload_path: unavailable ? null : `payloads/${enrolledTicker}.json` },
+    [enrolledTicker]: { ...entry, ...(options.lifecycle ? { security_lifecycle: options.lifecycle } : {}), ticker: enrolledTicker, payload_path: unavailable ? null : `payloads/${enrolledTicker}.json` },
     ...options.additionalEntries,
   };
   const enrolledTickers = Object.keys(entries).sort();
@@ -116,7 +118,7 @@ async function fixture(options: {
   };
 
   return resolveDataSupplyEtfDetail(ticker, {
-    now: () => new Date("2026-07-12T00:00:00Z"),
+    now: () => new Date(options.now ?? "2026-07-12T00:00:00Z"),
     readEnrollment: async () => options.guardMissing ? null : document(guard),
     readIndex: async () => options.indexMissing ? null : document(index),
     readProjectionPayload: async () => payloadDoc,
@@ -297,6 +299,28 @@ if (unavailable.kind === "unavailable") {
 }
 
 const { buildEtfResponse, getEtfResponse } = await import("../src/app/api/data/stockanalysis/[assetType]/[ticker]/route");
+const lifecycle = {
+  status: "closed", effective_date: "2026-08-18", successor_ticker: null,
+  reason: "issuer closed the fund", primary_reference: "www.sec.gov/Archives/notice.htm",
+  last_source_as_of: "2026-07-02T01:57:29Z",
+};
+const closed = await fixture({ ticker: "DEFI", state: "unavailable", payload: null, lifecycle,
+  now: "2026-10-11T00:00:00Z" });
+assert.equal(closed.kind, "unavailable");
+const closedResponse = await buildEtfResponse(closed, "DEFI");
+assert.equal(closedResponse.status, 410);
+const closedBody = await closedResponse.json();
+assert.equal(closedBody.error, "DATA_SUPPLY_SECURITY_CLOSED");
+assert.equal(closedBody.data_supply.source_as_of, null);
+assert.equal(closedBody.data_supply.security_lifecycle.last_source_as_of, lifecycle.last_source_as_of);
+const renamed = await fixture({ ticker: "MGKX", lifecycle: { ...lifecycle, status: "renamed", successor_ticker: "MEGX" },
+  now: "2026-10-11T00:00:00Z" });
+const renamedResponse = await buildEtfResponse(renamed, "MGKX");
+assert.equal(renamedResponse.status, 410);
+assert.equal((await renamedResponse.json()).error, "DATA_SUPPLY_SECURITY_RENAMED");
+const premature = await fixture({ lifecycle, now: "2026-07-12T00:00:00Z" });
+assert.equal(premature.kind, "error", "future lifecycle evidence cannot close a live identifier");
+
 const shardUnavailableResponse = await buildEtfResponse({
   kind: "shard_unavailable",
   reason: "fixture-corrupt-shard",

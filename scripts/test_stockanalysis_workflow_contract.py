@@ -598,7 +598,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', natural_body)
         etf_natural = natural_body.split('elif [ "$EVENT_SCHEDULE" = "50 23 * * 1-5" ]', 1)[1]
         self.assertIn('INPUT_INCREMENTAL_ETF_BACKFILL="true"', etf_natural)
-        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="100"', etf_natural)
+        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="200"', etf_natural)
         self.assertIn('INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"', etf_natural)
         self.assertNotIn('INPUT_INCREMENTAL_ETF_LIMIT="0"', etf_natural)
 

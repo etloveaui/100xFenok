@@ -23,6 +23,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Mapping
 
 from data_supply_state import DataSupplyStateStore, canonical_sha256
+from yahoo_batch_state import verified_yahoo_terminal_evidence, _raw_payload_source_fields
 
 
 DOMAIN = "etf_detail"
@@ -463,6 +464,40 @@ class PublicDataSupplyMaterializer:
                     "payload_path": None,
                 }
 
+        # Primary lifecycle facts classify an ended identifier independently of
+        # payload availability. Never replace its last real quote with a new date.
+        lifecycle = verified_yahoo_terminal_evidence(generated_at)["tickers"]
+        lifecycle_paths: set[str] = set()
+        for entity, entry in entries.items():
+            if entity not in lifecycle:
+                continue
+            evidence = lifecycle[entity][0]
+            dates = [row["source_as_of"] for row in retained_refs.values() if row["entity"] == entity]
+            # The detail LKG may already have expired. A retained canonical raw
+            # quote can still disclose the identifier's last actual trade clock.
+            provider_path = self.repo_root / "data/yf/finance" / f"{entity}.json"
+            if provider_path.exists():
+                self._regular_file(provider_path, root=self.repo_root, label=f"lifecycle provider {entity}")
+                lifecycle_paths.add(self._repo_rel(provider_path))
+                payload = _strict_json_bytes(provider_path.read_bytes(), f"lifecycle provider {entity}")
+                info = (payload.get("data") or {}).get("info") or {}
+                if (payload.get("schema_version") == "yf-finance/v2" and payload.get("ticker") == entity
+                    and info.get("symbol") == entity and info.get("quoteType") == "ETF"):
+                    quote = _raw_payload_source_fields(payload)["quote_as_of"]
+                    if quote and quote[:10] < evidence["effective_date"]:
+                        dates.append(quote)
+            entry["security_lifecycle"] = {
+                "status": "renamed" if evidence["alias_target"] else "closed",
+                "effective_date": evidence["effective_date"],
+                "successor_ticker": evidence["alias_target"],
+                "reason": evidence["reason"],
+                "primary_reference": evidence["source_url"].removeprefix("https://"),
+                "last_source_as_of": max(dates) if dates else None,
+            }
+
+        self._require_tracked(lifecycle_paths)
+        required_paths.update(lifecycle_paths)
+
         logical_index = {
             "schema_version": INDEX_SCHEMA,
             "domain": DOMAIN,
@@ -547,9 +582,23 @@ class PublicDataSupplyMaterializer:
             entry = entries[ticker]
             if not isinstance(entry, dict) or entry.get("ticker") != ticker or entry.get("enrollment_state") != "enrolled":
                 raise MaterializationError(f"projection entry identity mismatch: {ticker}")
+            lifecycle = entry.get("security_lifecycle")
+            if "security_lifecycle" in entry:
+                evidence = verified_yahoo_terminal_evidence(index["generated_at"])["tickers"].get(ticker)
+                expected = evidence[0] if evidence else None
+                if (not isinstance(lifecycle, dict) or not expected
+                    or set(lifecycle) != {"status", "effective_date", "successor_ticker", "reason", "primary_reference", "last_source_as_of"}
+                    or lifecycle["status"] != ("renamed" if expected["alias_target"] else "closed")
+                    or lifecycle["effective_date"] != expected["effective_date"]
+                    or lifecycle["successor_ticker"] != expected["alias_target"]
+                    or lifecycle["reason"] != expected["reason"]
+                    or lifecycle["primary_reference"] != expected["source_url"].removeprefix("https://")):
+                    raise MaterializationError(f"projection lifecycle evidence mismatch: {ticker}")
+                if lifecycle["last_source_as_of"] is not None:
+                    _timestamp(lifecycle["last_source_as_of"], "lifecycle last_source_as_of")
             state = entry.get("resolution_state")
             if state == "unavailable":
-                if set(entry) != UNAVAILABLE_ENTRY_KEYS:
+                if set(entry) - {"security_lifecycle"} != UNAVAILABLE_ENTRY_KEYS:
                     raise MaterializationError(f"unavailable entry fields are not public-contract exact: {ticker}")
                 unavailable_count += 1
                 state_counts[state] += 1
@@ -558,7 +607,7 @@ class PublicDataSupplyMaterializer:
                 continue
             if state not in SELECTED_STATES:
                 raise MaterializationError(f"projection entry has unknown state: {ticker}")
-            if set(entry) != SELECTED_ENTRY_KEYS:
+            if set(entry) - {"security_lifecycle"} != SELECTED_ENTRY_KEYS:
                 raise MaterializationError(f"selected entry fields are not public-contract exact: {ticker}")
             expected_role = "primary" if state in {"fresh_primary", "lkg_primary"} else "fallback"
             if entry.get("provider_role") != expected_role or entry.get("payload_path") != f"payloads/{ticker}.json":

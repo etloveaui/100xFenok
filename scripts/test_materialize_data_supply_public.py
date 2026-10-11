@@ -221,6 +221,32 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.close()
 
+    def test_verified_lifecycle_keeps_retained_dates_and_does_not_invent_missing_dates(self):
+        self.fixture._seed_selection("MGKX", "lkg_fallback", "provider_lkg", "2026-07-01T00:00:00Z")
+        self.fixture.recovery["DEFI"] = {"last_transition": "unavailable"}
+        self.fixture.recovery["DVIN"] = {"last_transition": "unavailable"}
+        provider = self.fixture.repo / "data/yf/finance/DEFI.json"
+        provider.parent.mkdir(parents=True)
+        provider.write_bytes(pretty_bytes({"ticker": "DEFI", "schema_version": "yf-finance/v2",
+            "fetched_at": "2026-10-11T00:00:00Z", "data": {"info": {
+                "symbol": "DEFI", "quoteType": "ETF", "regularMarketTime": 1786996800}}}))
+        subprocess.run(["git", "add", "--", "data/yf/finance/DEFI.json"], cwd=self.fixture.repo, check=True)
+        self.fixture._write_state_files()
+        self.fixture._git_init_and_add()
+        materializer, reader = self.fixture.materializer()
+        projection = materializer.build_projection(generated_at="2026-10-11T00:00:00Z")
+        renamed = projection.index["entries"]["MGKX"]
+        self.assertEqual(renamed["security_lifecycle"]["status"], "renamed")
+        self.assertEqual(renamed["security_lifecycle"]["successor_ticker"], "MEGX")
+        self.assertEqual(renamed["security_lifecycle"]["last_source_as_of"], "2026-07-01T00:00:00Z")
+        self.assertEqual(projection.payloads["MGKX"], self.fixture.payloads["MGKX"])
+        closed = projection.index["entries"]["DEFI"]
+        self.assertEqual(closed["security_lifecycle"]["status"], "closed")
+        self.assertIsNone(closed["source_as_of"])
+        self.assertEqual(closed["security_lifecycle"]["last_source_as_of"], "2026-08-17T20:00:00Z")
+        self.assertIsNone(projection.index["entries"]["DVIN"]["security_lifecycle"]["last_source_as_of"])
+        self.assertNotIn("DEFI", projection.payloads)
+
     def test_bootstrap_materializes_one_snapshot_exact_payloads_and_cross_bound_guard(self):
         materializer, reader = self.fixture.materializer()
         result = materializer.write_canonical(
