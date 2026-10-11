@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import MetricHelp from "@/components/MetricHelp";
 import { Panel, PanelHeader, Stat, StatStrip } from "@/components/ui";
@@ -120,6 +120,23 @@ export function loadIndustryBenchmarks(): Promise<BenchDoc | null> {
   // never cached, so it retries instead of sticking (the old pending promise
   // used to hold a resolved http-error null for the whole visit).
   return fetchJsonOrNull<BenchDoc>("/data/damodaran/industry_benchmarks.json");
+}
+
+// The compact extract above carries no vintage of its own. Its source tables
+// do: industries.json metadata.source_date (the same annual US industry-table
+// release as industry_metrics.json), e.g. "January 2026".
+function loadIndustrySourceDate(): Promise<string | null> {
+  return fetchJsonOrNull<{ metadata?: { source_date?: string } }>("/data/damodaran/industries.json")
+    .then((doc) => doc?.metadata?.source_date?.trim() || null);
+}
+
+const ENGLISH_MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** "January 2026" -> "2026년 1월"; any other form is printed as the source wrote it. */
+function sourceMonthLabel(raw: string): string {
+  const match = /^([A-Z][a-z]+)(?: \d{1,2},)? (\d{4})$/.exec(raw);
+  const month = match ? ENGLISH_MONTH_NAMES.indexOf(match[1]) + 1 : 0;
+  return match && month > 0 ? `${match[2]}년 ${month}월` : raw;
 }
 
 export function resolveIndustryBench(doc: BenchDoc | null, yfIndustry: string | undefined | null): IndustryBench | null {
@@ -269,6 +286,13 @@ function FinancialsTab({ data }: { data: YfData }) {
 // ---------------------------------------------------------------------------
 
 function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; industry: IndustryBench }) {
+  // undefined = still loading, null = the source date could not be read.
+  const [sourceDate, setSourceDate] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    loadIndustrySourceDate().then((value) => { if (!cancelled) setSourceDate(value); });
+    return () => { cancelled = true; };
+  }, []);
   const rows: Array<{ label: string; stock: number | null; ind: number | null; isFraction: boolean; lowerBetter: boolean }> = [
     { label: "PER (TTM)", stock: finiteNumber(info.trailingPE), ind: finiteNumber(industry.trailing_pe), isFraction: false, lowerBetter: true },
     { label: "FY+1 PER", stock: finiteNumber(info.forwardPE), ind: finiteNumber(industry.forward_pe), isFraction: false, lowerBetter: true },
@@ -280,7 +304,15 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
   const fmt = (v: number, frac: boolean) => (frac ? `${(v * 100).toFixed(1)}%` : v.toFixed(1));
   return (
     <Panel>
-      <PanelHeader eyebrow="Industry Compare · 다모다란" title={`산업 대비 — ${industry.name}${industry.num_firms ? ` (${industry.num_firms}개사)` : ""}`} />
+      <PanelHeader
+        eyebrow="Industry Compare · 다모다란"
+        title={`산업 대비 — ${industry.name}${industry.num_firms ? ` (${industry.num_firms}개사)` : ""}`}
+        right={sourceDate === undefined ? undefined : (
+          <span className="whitespace-nowrap text-[12px] font-semibold text-slate-500" data-industry-source-date>
+            {sourceDate ? `산업 자료 ${sourceMonthLabel(sourceDate)}` : "산업 자료 시점 확인 불가"}
+          </span>
+        )}
+      />
       <div className="grid gap-1.5 px-4 py-2 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((r) => {
           const better = r.lowerBetter ? (r.stock as number) < (r.ind as number) : (r.stock as number) > (r.ind as number);
