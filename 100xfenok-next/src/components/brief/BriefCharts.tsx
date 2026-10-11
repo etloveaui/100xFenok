@@ -20,17 +20,37 @@ export const SPX_COLOR = "#1B73D3";
 export const TNX_COLOR = "#D97706";
 const TNX_INK = "#B45309";
 
+/**
+ * "app" keeps the approved hub/card colours. "broadsheet" is the morning
+ * article's 2026-10-11 owner-chosen design (feno-canvas concept c4): black
+ * index line, grey yield line, Korean market colours (red up, blue down).
+ */
+export type BriefPalette = "app" | "broadsheet";
+
+const PALETTES = {
+  app: {
+    up: UP, down: DOWN, flat: MUTE_T, spx: SPX_COLOR, tnx: TNX_COLOR, tnxInk: TNX_INK, area: SPX_COLOR, areaOpacity: 0.22,
+    grid: "#EEF2F6", tick: "#CBD5E1", xLabel: "#475569", xSub: "#94A3B8", record: "#D1344C",
+  },
+  broadsheet: {
+    up: "#E10600", down: "#0A57D0", flat: "#9A9A96", spx: "#111111", tnx: "#8A8A8A", tnxInk: "#555555", area: "#111111", areaOpacity: 0.08,
+    grid: "#E6E6E1", tick: "#BDBDB8", xLabel: "#333333", xSub: "#888888", record: "#D00000",
+  },
+} as const;
+
 /** charts.js spark(): a 2px-inset polyline with an end dot. */
 export function Spark({
   values,
   width,
   height,
   direction,
+  palette = "app",
 }: {
   values: readonly number[] | null | undefined;
   width: number;
   height: number;
   direction: Dir;
+  palette?: BriefPalette;
 }) {
   if (!values || values.length < 2) return null;
   const mn = Math.min(...values);
@@ -39,7 +59,8 @@ export function Spark({
   const points = values.map(
     (v, i) => `${((i / (values.length - 1)) * (width - 4) + 2).toFixed(1)},${(height - 2 - ((v - mn) / range) * (height - 4)).toFixed(1)}`,
   );
-  const color = direction === "up" ? UP : direction === "down" ? DOWN : MUTE_T;
+  const pal = PALETTES[palette];
+  const color = direction === "up" ? pal.up : direction === "down" ? pal.down : pal.flat;
   const [lx, ly] = points[points.length - 1].split(",");
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} aria-hidden="true" className="va-spark">
@@ -94,6 +115,36 @@ function paddedRange(points: readonly Point[]) {
   return { mn: mn - pad, mx: mx + pad };
 }
 
+type AnnotationIn = { note: BriefAnnotation; isB: boolean; best: Point; x: number; y: number };
+type AnnotationOut = AnnotationIn & { bx: number; by: number; w: number; label: string };
+
+/**
+ * Label boxes above or below their point, flipped or pushed further away when
+ * they would cover an earlier label (labels used to collide on busy sessions).
+ */
+function placeAnnotations(
+  items: readonly AnnotationIn[],
+  g: { L: number; R: number; T: number; B: number; W: number; H: number; leadHours: number },
+  reserved: readonly { bx: number; by: number; w: number }[] = [],
+): AnnotationOut[] {
+  const placed: AnnotationOut[] = [];
+  const taken = () => [...reserved, ...placed];
+  const hits = (bx: number, by: number, w: number) =>
+    taken().some((p) => bx < p.bx + p.w + 4 && bx + w + 4 > p.bx && by < p.by + 26 && by + 26 > p.by);
+  for (const item of items) {
+    const label = `${item.note.label} · ${kst(item.best[0], g.leadHours)}`;
+    const w = label.length * 6.6 + 16;
+    const bx = Math.max(g.L, Math.min(g.W - g.R - w, item.x - w / 2));
+    const above = item.y > g.T + 46;
+    const candidates = [above ? item.y - 34 : item.y + 12, above ? item.y + 12 : item.y - 34];
+    for (let step = 1; step <= 3; step += 1) candidates.push(item.y - 34 - 26 * step, item.y + 12 + 26 * step);
+    const inside = (by: number) => by >= 0 && by + 22 <= g.H - g.B;
+    const by = candidates.find((c) => inside(c) && !hits(bx, c, w)) ?? candidates.find(inside) ?? candidates[0];
+    placed.push({ ...item, bx, by, w, label });
+  }
+  return placed;
+}
+
 /**
  * Session map: S&P 500 (area + line, left axis) and the US 10-year yield
  * (line, right axis) through the cash session, x axis in KST with the local
@@ -104,12 +155,21 @@ export function SessionMap({
   tnx,
   annotations,
   leadHours,
+  palette = "app",
+  recordClose,
+  recordDate,
 }: {
   spx: readonly Point[];
   tnx: readonly Point[];
   annotations: readonly BriefAnnotation[];
   leadHours: number;
+  palette?: BriefPalette;
+  /** Approximate record close of the index (from its distance to the record); drawn as a dashed level. */
+  recordClose?: number | null;
+  /** Date of that record, shown in the line label; no number is printed because the level is derived. */
+  recordDate?: string | null;
 }) {
+  const pal = PALETTES[palette];
   const [boxRef, W] = useElementWidth<HTMLDivElement>();
   const svgRef = useRef<SVGSVGElement | null>(null);
   const gradientId = `brief-ga-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -129,7 +189,10 @@ export function SessionMap({
   const T = 18;
   const B = 34;
   const X = (t: string) => L + (minutesFromOpen(t) / 390) * (W - L - R);
-  const ra = ready ? paddedRange(a) : { mn: 0, mx: 1 };
+  const ra0 = ready ? paddedRange(a) : { mn: 0, mx: 1 };
+  // Show the record line only when it is within two session ranges of the high.
+  const showRecord = ready && recordClose != null && recordClose > ra0.mn && recordClose < ra0.mx + 2 * (ra0.mx - ra0.mn);
+  const ra = showRecord && recordClose != null ? { mn: ra0.mn, mx: Math.max(ra0.mx, recordClose + (ra0.mx - ra0.mn) * 0.08) } : ra0;
   const rb = ready ? paddedRange(b) : { mn: 0, mx: 1 };
   const Ya = (v: number) => T + ((ra.mx - v) / (ra.mx - ra.mn)) * (H - T - B);
   const Yb = (v: number) => T + ((rb.mx - v) / (rb.mx - rb.mn)) * (H - T - B);
@@ -180,19 +243,19 @@ export function SessionMap({
         >
           <defs>
             <linearGradient id={gradientId} x1={0} x2={0} y1={0} y2={1}>
-              <stop offset="0%" stopColor={SPX_COLOR} stopOpacity={0.22} />
-              <stop offset="100%" stopColor={SPX_COLOR} stopOpacity={0} />
+              <stop offset="0%" stopColor={pal.area} stopOpacity={pal.areaOpacity} />
+              <stop offset="100%" stopColor={pal.area} stopOpacity={0} />
             </linearGradient>
           </defs>
           {[0, 1, 2, 3, 4].map((i) => {
             const y = T + (i * (H - T - B)) / 4;
             return (
               <g key={`grid-${i}`}>
-                <line x1={L} x2={W - R} y1={y} y2={y} stroke="#EEF2F6" strokeDasharray={i === 4 ? "0" : "2 4"} />
-                <text x={L - 8} y={y + 4} textAnchor="end" fontSize={10.5} fill={SPX_COLOR} opacity={0.85}>
+                <line x1={L} x2={W - R} y1={y} y2={y} stroke={pal.grid} strokeDasharray={i === 4 ? "0" : "2 4"} />
+                <text x={L - 8} y={y + 4} textAnchor="end" fontSize={10.5} fill={pal.spx} opacity={0.85}>
                   {fmt(ra.mx - (i * (ra.mx - ra.mn)) / 4, 0)}
                 </text>
-                <text x={W - R + 8} y={y + 4} fontSize={10.5} fill={TNX_INK} opacity={0.9}>
+                <text x={W - R + 8} y={y + 4} fontSize={10.5} fill={pal.tnxInk} opacity={0.9}>
                   {`${fmt(rb.mx - (i * (rb.mx - rb.mn)) / 4, 2)}%`}
                 </text>
               </g>
@@ -202,11 +265,11 @@ export function SessionMap({
             const x = X(t);
             return (
               <g key={`tick-${t}`}>
-                <line x1={x} x2={x} y1={H - B} y2={H - B + 4} stroke="#CBD5E1" />
-                <text x={x} y={H - B + 17} textAnchor="middle" fontSize={11} fontWeight={600} fill="#475569">
+                <line x1={x} x2={x} y1={H - B} y2={H - B + 4} stroke={pal.tick} />
+                <text x={x} y={H - B + 17} textAnchor="middle" fontSize={11} fontWeight={600} fill={pal.xLabel}>
                   {kst(t, leadHours)}
                 </text>
-                <text x={x} y={H - B + 30} textAnchor="middle" fontSize={9.5} fill="#94A3B8">
+                <text x={x} y={H - B + 30} textAnchor="middle" fontSize={9.5} fill={pal.xSub}>
                   현지 {t}
                 </text>
               </g>
@@ -216,27 +279,35 @@ export function SessionMap({
             d={`${linePath(a, Ya)} L${X(a[a.length - 1][0]).toFixed(1)} ${H - B} L${X(a[0][0]).toFixed(1)} ${H - B} Z`}
             fill={`url(#${gradientId})`}
           />
-          <path d={linePath(b, Yb)} fill="none" stroke={TNX_COLOR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          <path d={linePath(a, Ya)} fill="none" stroke={SPX_COLOR} strokeWidth={2.6} strokeLinejoin="round" strokeLinecap="round" />
-          {annotations.map((note, k) => {
-            const isB = note.series.includes("10");
-            const pts = isB ? b : a;
-            const Y = isB ? Yb : Ya;
-            const color = isB ? TNX_INK : SPX_COLOR;
-            const best = nearest(pts, minutesFromOpen(note.time_et));
-            const x = X(best[0]);
-            const y = Y(best[1]);
-            const label = `${note.label} · ${kst(best[0], leadHours)}`;
-            const w = label.length * 6.6 + 16;
-            const up = y > T + 46;
-            const bx = Math.max(L, Math.min(W - R - w, x - w / 2));
-            const by = up ? y - 34 : y + 12;
+          {showRecord && recordClose != null ? (
+            <g>
+              <line x1={L} x2={W - R} y1={Ya(recordClose)} y2={Ya(recordClose)} stroke={pal.record} strokeDasharray="5 4" strokeWidth={1.2} />
+              <text x={W - R - 4} y={Ya(recordClose) - 6} textAnchor="end" fontSize={11} fontWeight={700} fill={pal.record}>
+                {recordDate ? `사상 최고 종가 (${monthDay(recordDate)})` : "사상 최고 종가"}
+              </text>
+            </g>
+          ) : null}
+          <path d={linePath(b, Yb)} fill="none" stroke={pal.tnx} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+          <path d={linePath(a, Ya)} fill="none" stroke={pal.spx} strokeWidth={2.6} strokeLinejoin="round" strokeLinecap="round" />
+          {placeAnnotations(
+            annotations.map((note) => {
+              const isB = note.series.includes("10");
+              const best = nearest(isB ? b : a, minutesFromOpen(note.time_et));
+              return { note, isB, best, x: X(best[0]), y: (isB ? Yb : Ya)(best[1]) };
+            }),
+            { L, R, T, B, W, H, leadHours },
+            showRecord && recordClose != null
+              ? [{ bx: W - R - 4 - (recordDate ? 132 : 92), by: Ya(recordClose) - 20, w: recordDate ? 132 : 92 }]
+              : [],
+          ).map(({ isB, x, y, bx, by, w, label }, k) => {
+            const color = isB ? pal.tnxInk : pal.spx;
             return (
               <g key={`ann-${k}`}>
                 <line x1={x} x2={x} y1={y} y2={H - B} stroke={color} strokeDasharray="2 3" opacity={0.45} />
                 <circle cx={x} cy={y} r={7} fill={color} opacity={0.15} />
                 <circle cx={x} cy={y} r={4} fill="#fff" stroke={color} strokeWidth={2.2} />
-                <rect x={bx} y={by} width={w} height={22} rx={11} fill="#fff" stroke={color} strokeWidth={1.2} />
+                {/* the label box masks the line it sits over, so text stays readable */}
+                <rect x={bx} y={by} width={w} height={22} rx={palette === "broadsheet" ? 0 : 11} fill="#fff" stroke={color} strokeWidth={1.2} />
                 <text x={bx + w / 2} y={by + 15} textAnchor="middle" fontSize={11.5} fontWeight={700} fill={color}>
                   {label}
                 </text>
@@ -251,8 +322,8 @@ export function SessionMap({
             stroke="#0F172A"
             opacity={hover ? 0.2 : 0}
           />
-          <circle cx={hover ? X(hover.a[0]) : 0} cy={hover ? Ya(hover.a[1]) : 0} r={4} fill={SPX_COLOR} opacity={hover ? 1 : 0} />
-          <circle cx={hover ? X(hover.b[0]) : 0} cy={hover ? Yb(hover.b[1]) : 0} r={4} fill={TNX_COLOR} opacity={hover ? 1 : 0} />
+          <circle cx={hover ? X(hover.a[0]) : 0} cy={hover ? Ya(hover.a[1]) : 0} r={4} fill={pal.spx} opacity={hover ? 1 : 0} />
+          <circle cx={hover ? X(hover.b[0]) : 0} cy={hover ? Yb(hover.b[1]) : 0} r={4} fill={pal.tnx} opacity={hover ? 1 : 0} />
         </svg>
       ) : null}
     </div>

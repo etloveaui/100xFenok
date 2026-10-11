@@ -121,7 +121,7 @@ export type BriefArticle = {
     ticker?: string;
     name: string;
     reason: string;
-    stats?: { chg_pct?: number; vol_vs_20d?: number; from_52w_high_pct?: number; ytd_pct?: number };
+    stats?: { close?: number; chg_pct?: number; vol_vs_20d?: number; from_52w_high_pct?: number; ytd_pct?: number; streak?: number };
   }[];
   tonight?: { kst: string; what: string; why?: string }[];
   yesterday_check?: { was: string; now: string }[];
