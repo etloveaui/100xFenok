@@ -130,6 +130,48 @@ const valid = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
 }), "SPY");
 assert.equal(valid.kind, "ok");
 
+const retainedYahoo = {
+  schema_version: "yf-etf-detail/v1", asset_type: "etf", ticker: "ACHX",
+  source_as_of: "2026-07-08T22:43:26Z", fetched_at: "2026-07-09T00:00:00Z",
+  data_supply: { ...base, resolution_state: "lkg_fallback", fallback_depth: 2 },
+  normalized: {
+    overview: { aum: 255105, beta: 0 }, quote: { p: 26.205 },
+    asset_allocation: { cashPosition: -1.9417, stockPosition: 1.962, bondPosition: 0 },
+    sectors: { technology: 0.75 },
+    history: [{ date: "2026-07-07", Close: 27.2, Volume: 0 }],
+    history_periods: { daily_1y: [{ date: "2026-07-07", Close: 27.2 }] },
+  },
+  raw: { yf: { info: { longName: "Captured fund name", fundFamily: "Captured issuer",
+    trailingPE: 12, sharesOutstanding: 100, fiftyTwoWeekHigh: 30, fiftyTwoWeekLow: 20 } } },
+};
+const retainedBytes = JSON.stringify(retainedYahoo);
+const parsedYahoo = await parseEtfApiResponse<typeof retainedYahoo & { normalized: any }>(Response.json(retainedYahoo), "ACHX");
+assert.equal(parsedYahoo.kind, "ok");
+if (parsedYahoo.kind === "ok") {
+  const normalized = parsedYahoo.data.normalized;
+  assert.deepEqual(normalized.asset_allocation, [
+    { key: "cashPosition", value: -194.17 }, { key: "stockPosition", value: 196.2 }, { key: "bondPosition", value: 0 },
+  ]);
+  assert.deepEqual(normalized.sectors, [{ key: "technology", value: 75 }]);
+  assert.equal(normalized.history[0].close, 27.2);
+  assert.equal(normalized.history[0].volume, 0);
+  assert.equal(normalized.history_periods.daily_1y[0].close, 27.2);
+  assert.equal(normalized.overview.name, "Captured fund name");
+  assert.equal(normalized.overview.peRatio, 12);
+  assert.equal(normalized.overview.beta, 0);
+  assert.equal(normalized.quote.h52, 30);
+  assert.equal(normalized.quote.l52, 20);
+  assert.deepEqual(parsedYahoo.data.raw, retainedYahoo.raw);
+  assert.equal(parsedYahoo.data.source_as_of, retainedYahoo.source_as_of);
+  assert.equal(parsedYahoo.data.fetched_at, retainedYahoo.fetched_at);
+  assert.deepEqual(parsedYahoo.dataSupply, retainedYahoo.data_supply);
+  assert.equal(getEtfDataSupplyPresentation(parsedYahoo.dataSupply).degraded, true);
+  const twice = await parseEtfApiResponse<typeof parsedYahoo.data>(Response.json(parsedYahoo.data), "ACHX");
+  assert.equal(twice.kind, "ok");
+  if (twice.kind === "ok") assert.deepEqual(twice.data, parsedYahoo.data, "already normalized ratios must not be multiplied twice");
+}
+assert.equal(JSON.stringify(retainedYahoo), retainedBytes, "captured source input is immutable");
+
 const crossTicker = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
   schema_version: "stockanalysis/v1",
   source: "stockanalysis",

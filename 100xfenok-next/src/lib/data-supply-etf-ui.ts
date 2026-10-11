@@ -52,6 +52,54 @@ function isTimestamp(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
+// Retained Yahoo selections predate the weighted-row/lowercase-history
+// contract. Adapt their own captured values for display; never fetch a newer
+// value, mutate the immutable object, or change its source/resolution clocks.
+function yahooDetailForDisplay(record: Record<string, unknown>): Record<string, unknown> {
+  if (record.schema_version !== "yf-etf-detail/v1") return record;
+  const normalized = asRecord(record.normalized);
+  if (!normalized) return record;
+  const yahoo = asRecord(asRecord(record.raw)?.yf);
+  const info = asRecord(yahoo?.info) ?? {};
+  const fundOverview = asRecord(asRecord(yahoo?.funds_data)?.fund_overview);
+  const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+  const weights = (value: unknown) => {
+    const mapping = asRecord(value);
+    return mapping ? Object.entries(mapping).filter(([, weight]) => finite(weight))
+      .map(([key, weight]) => ({ key, value: (weight as number) * 100 })) : value;
+  };
+  const history = (value: unknown) => Array.isArray(value) ? value.map((value) => {
+    const row = asRecord(value);
+    if (!row) return value;
+    const result = { ...row };
+    for (const field of ["open", "high", "low", "close", "volume"]) {
+      const legacy = row[field[0].toUpperCase() + field.slice(1)];
+      if (!finite(result[field]) && finite(legacy)) result[field] = legacy;
+    }
+    return result;
+  }) : value;
+  const overview = { ...asRecord(normalized.overview) };
+  for (const [field, providerField] of Object.entries({
+    name: "longName", provider: "fundFamily", peRatio: "trailingPE",
+    sharesOut: "sharesOutstanding", etf_website: "website",
+  })) {
+    const value = info[providerField] ?? (field === "name" ? info.shortName : field === "provider" ? fundOverview?.family : null);
+    if (overview[field] == null && (finite(value) || typeof value === "string" && value.trim())) overview[field] = value;
+  }
+  const quote = { ...asRecord(normalized.quote) };
+  for (const [field, providerField] of Object.entries({ h52: "fiftyTwoWeekHigh", l52: "fiftyTwoWeekLow" })) {
+    if (!finite(quote[field]) && finite(info[providerField])) quote[field] = info[providerField];
+  }
+  const periods = asRecord(normalized.history_periods);
+  return { ...record, normalized: {
+    ...normalized, overview, quote,
+    asset_allocation: weights(normalized.asset_allocation),
+    sectors: weights(normalized.sectors),
+    history: history(normalized.history),
+    ...(periods ? { history_periods: Object.fromEntries(Object.entries(periods).map(([key, rows]) => [key, history(rows)])) } : {}),
+  } };
+}
+
 export function parseEtfDataSupply(value: unknown): EtfDataSupply | null {
   const record = asRecord(value);
   if (!record || record.enrollment_state !== "enrolled") return null;
@@ -174,7 +222,7 @@ export async function parseEtfApiResponse<T>(
     || !record.ticker.trim()
     || record.ticker !== expectedTicker
   ) return { kind: "failed", data: null, dataSupply: null };
-  return { kind: "ok", data: record as T, dataSupply };
+  return { kind: "ok", data: yahooDetailForDisplay(record) as T, dataSupply };
 }
 
 export function isLegacyEtfDetailCompatibilityActive(

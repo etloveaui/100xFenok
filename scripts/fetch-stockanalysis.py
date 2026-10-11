@@ -6212,7 +6212,7 @@ def normalize_yahoo_holdings(rows) -> list[dict]:
             "rank": idx,
             "symbol": symbol,
             "name": row.get("Name") or row.get("name"),
-            "weight_pct": ratio_to_percent(row.get("Holding Percent") or row.get("weight")),
+            "weight_pct": ratio_to_percent(first_number(row.get("Holding Percent"), row.get("weight"))),
             "raw": row,
         }
         holdings.append({key: value for key, value in item.items() if value is not None})
@@ -6240,7 +6240,12 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
             continue
         if not isinstance(close, (int, float)) or isinstance(close, bool) or not math.isfinite(close):
             raise ValueError("Yahoo fallback history close must be finite numeric")
-        normalized_history.append(row)
+        normalized_history.append({
+            **row,
+            **{key: first_number(row.get(key), row.get(key.title()))
+               for key in ("open", "high", "low", "close", "volume")
+               if first_number(row.get(key), row.get(key.title())) is not None},
+        })
     fund_overview = funds_data.get("fund_overview") or {}
     if not isinstance(fund_overview, dict):
         raise ValueError("Yahoo fallback fund_overview must be an object")
@@ -6275,7 +6280,7 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
     if response_symbol != ticker:
         raise ValueError(f"Yahoo fallback symbol mismatch: requested={ticker} response={response_symbol}")
 
-    price = first_number(info.get("currentPrice"), fast_info.get("last_price"), fast_info.get("lastPrice"))
+    price = first_number(info.get("currentPrice"), info.get("regularMarketPrice"), fast_info.get("last_price"), fast_info.get("lastPrice"))
     previous_close = first_number(info.get("previousClose"), fast_info.get("previous_close"), fast_info.get("previousClose"))
     change = None if price is None or previous_close is None else price - previous_close
     change_pct = None if change is None or previous_close in (None, 0) else (change / previous_close) * 100
@@ -6287,11 +6292,16 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
         normalize_yahoo_date((fund_overview or {}).get("inception")),
     )
     overview = {
+        "name": info.get("longName") or info.get("shortName"),
+        "provider": info.get("fundFamily") or fund_overview.get("family"),
         "aum": first_number(info.get("totalAssets"), info.get("netAssets")),
         "nav": first_number(info.get("navPrice")),
         "expenseRatio": first_number(info.get("netExpenseRatio"), info.get("annualReportExpenseRatio")),
         "dividendYield": first_number(info.get("dividendYield"), info.get("yield")),
         "beta": first_number(info.get("beta3Year"), info.get("beta")),
+        "peRatio": first_number(info.get("trailingPE")),
+        "sharesOut": first_number(info.get("sharesOutstanding")),
+        "etf_website": info.get("website"),
         "provider_page": info.get("fundFamily") or (fund_overview or {}).get("family"),
         "category": info.get("category") or (fund_overview or {}).get("categoryName"),
         "legalType": info.get("legalType") or (fund_overview or {}).get("legalType"),
@@ -6339,8 +6349,14 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
         "role": "ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet",
         "normalized": {
             "holdings": holdings,
-            "asset_allocation": asset_classes,
-            "sectors": sector_weightings,
+            # Yahoo fund weights are ratios; the detail UI reads weighted rows
+            # in percent points, including zero, negative and leveraged weights.
+            "asset_allocation": ([{"key": key, "value": value * 100}
+                                  for key, value in asset_classes.items()]
+                                 if asset_classes is not None else None),
+            "sectors": ([{"key": key, "value": value * 100}
+                         for key, value in sector_weightings.items()]
+                        if sector_weightings is not None else None),
             "countries": None,
             "holding_count": len(holdings) if holdings else None,
             "holdings_updated": yahoo_detail_source_timestamp(yf_payload),
@@ -6354,7 +6370,9 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
                     "c": change,
                     "cp": change_pct,
                     "u": yahoo_detail_source_timestamp(yf_payload),
-                    "ex": "yahoo_finance",
+                    "ex": info.get("exchange") or "yahoo_finance",
+                    "h52": first_number(info.get("fiftyTwoWeekHigh")),
+                    "l52": first_number(info.get("fiftyTwoWeekLow")),
                 }.items()
                 if value is not None
             },

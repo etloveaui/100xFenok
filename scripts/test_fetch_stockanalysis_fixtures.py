@@ -5975,6 +5975,10 @@ module.main()
                         "quoteType": "ETF",
                         "longName": "Invesco BulletShares 2034 High Yield Corporate Bond ETF",
                         "currentPrice": 25.07,
+                        "fiftyTwoWeekHigh": 30.0,
+                        "fiftyTwoWeekLow": 20.0,
+                        "trailingPE": 12.0,
+                        "sharesOutstanding": 100000,
                         "previousClose": 25.205,
                         "regularMarketTime": 1781767851,
                         "navPrice": 20.21,
@@ -5997,7 +6001,7 @@ module.main()
                         "asset_classes": {"bondPosition": 0.875, "cashPosition": 0.125},
                         "sector_weightings": {"financial_services": 0.25},
                     },
-                    "history_1y": [{"date": "2026-06-18", "close": 25.07}],
+                    "history_1y": [{"date": "2026-06-18", "Close": 25.07, "Volume": 0}],
                 },
             },
         )
@@ -6012,8 +6016,18 @@ module.main()
         self.assertAlmostEqual(payload["normalized"]["quote"]["c"], -0.135)
         self.assertEqual(payload["normalized"]["overview"]["provider_page"], "Invesco")
         self.assertEqual(payload["normalized"]["holdings"][0]["weight_pct"], 12.5)
-        self.assertEqual(payload["normalized"]["asset_allocation"]["bondPosition"], 0.875)
+        self.assertEqual(payload["normalized"]["asset_allocation"], [
+            {"key": "bondPosition", "value": 87.5}, {"key": "cashPosition", "value": 12.5}])
+        self.assertEqual(payload["normalized"]["sectors"], [{"key": "financial_services", "value": 25.0}])
+        self.assertEqual(payload["normalized"]["overview"]["name"], "Invesco BulletShares 2034 High Yield Corporate Bond ETF")
+        self.assertEqual(payload["normalized"]["overview"]["provider"], "Invesco")
+        self.assertEqual(payload["normalized"]["overview"]["peRatio"], 12.0)
+        self.assertEqual(payload["normalized"]["overview"]["sharesOut"], 100000)
+        self.assertEqual(payload["normalized"]["quote"]["h52"], 30.0)
+        self.assertEqual(payload["normalized"]["quote"]["l52"], 20.0)
         self.assertEqual(payload["normalized"]["history"][0]["close"], 25.07)
+        self.assertEqual(payload["normalized"]["history"][0]["volume"], 0)
+        self.assertNotIn("close", payload["raw"]["yf"]["history_1y"][0])
         self.assertEqual(payload["normalized"]["history_periods"]["daily_1y"][0]["close"], 25.07)
 
     def test_yahoo_etf_payload_rejects_non_fund_quote_type(self) -> None:
