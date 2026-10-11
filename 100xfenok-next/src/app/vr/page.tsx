@@ -124,7 +124,7 @@ export default async function VRPage({ searchParams }: PageProps) {
               </div>
               <div className="flex items-center text-sm text-slate-600">
                 <span aria-hidden="true" className="mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
-                <span>실시간 공식 시뮬레이터</span>
+                <span>입력 즉시 계산되는 공식 시뮬레이터</span>
               </div>
               <div className="flex items-center text-sm text-slate-600">
                 <span aria-hidden="true" className="mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
@@ -149,12 +149,12 @@ export default async function VRPage({ searchParams }: PageProps) {
               밸류 리밸런싱 계산기
             </h3>
             <p className="text-slate-600 text-sm leading-relaxed mb-6">
-              TQQQ와 현금 비율을 조절하는 장기 투자 전략 계산기입니다. 실시간 가격 연동과 주문표 자동 생성 기능을 제공합니다.
+              TQQQ와 현금 비율을 조절하는 장기 투자 전략 계산기입니다. TQQQ 지연 시세 자동입력과 주문표 자동 생성 기능을 제공합니다.
             </p>
             <div className="space-y-3 mb-6">
               <div className="flex items-center text-sm text-slate-600">
                 <span aria-hidden="true" className="mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
-                <span>실시간 TQQQ 가격 연동</span>
+                <span>TQQQ 지연 시세 자동입력</span>
               </div>
               <div className="flex items-center text-sm text-slate-600">
                 <span aria-hidden="true" className="mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
@@ -167,7 +167,7 @@ export default async function VRPage({ searchParams }: PageProps) {
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">TQQQ</span>
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">실시간</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">지연 시세</span>
               <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">주문표</span>
             </div>
           </Link>

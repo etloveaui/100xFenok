@@ -204,7 +204,7 @@
                              <button id="fetch-price-btn" class="text-xs btn-auto-calc text-white font-bold py-1 px-2 rounded">자동입력</button>
                         </div>
                         <input type="number" id="tqqq-price" step="0.01" placeholder="현재 TQQQ 가격" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
-                        <p id="fetched-price-info" class="text-xs text-gray-400 mt-1 h-4"></p>
+                        <p id="fetched-price-info" class="text-xs text-gray-400 mt-1 min-h-[1rem]"></p>
                     </div>
                     <div>
                         <label for="current-shares" class="block mb-2 font-semibold">현재 TQQQ 수량</label>
@@ -356,17 +356,26 @@
             fetchPriceBtn.addEventListener('click', async () => {
                 fetchedPriceInfo.textContent = '시세 조회 중…';
                 try {
-                    const res = await fetch('/api/ticker/TQQQ', { headers: { 'Accept': 'application/json' } });
+                    const res = await fetch('/api/ticker/TQQQ/', { headers: { 'Accept': 'application/json' } });
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     const data = await res.json();
-                    const livePrice = Number(data && data.price);
-                    if (!Number.isFinite(livePrice) || livePrice <= 0) throw new Error('invalid price');
-                    tqqqPriceInput.value = livePrice.toFixed(2);
-                    const asOf = (data && data.state && data.state.asOf) || data.fetchedAt;
-                    const asOfLabel = asOf ? ` (기준 ${new Date(asOf).toLocaleString()})` : '';
-                    fetchedPriceInfo.textContent = `조회가: $${livePrice.toFixed(2)}${asOfLabel}`;
+                    const quotePrice = Number(data && data.price);
+                    if (!Number.isFinite(quotePrice) || quotePrice <= 0) throw new Error('invalid price');
+                    tqqqPriceInput.value = quotePrice.toFixed(2);
+                    // state.asOf is the provider's own regular-session quote time. fetchedAt is only
+                    // when this site asked, so it is never printed as the basis of the price.
+                    const state = data.state || {};
+                    const asOf = state.asOf ? new Date(state.asOf) : null;
+                    const basisLabel = data.marketState === 'PRE' && data.preMarket === data.price ? '장전 거래가 · 직전 정규장'
+                        : data.marketState === 'POST' && data.postMarket === data.price ? '장후 거래가 · 직전 정규장'
+                        : '시세 기준';
+                    const asOfLabel = asOf && !Number.isNaN(asOf.getTime())
+                        ? `${basisLabel} ${asOf.toLocaleString('sv-SE', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })} 미 동부시간`
+                        : '시세 기준시각 없음';
+                    const delayLabel = state.quoteStatus === 'live' ? '' : ' · 지연 시세';
+                    fetchedPriceInfo.textContent = `조회가: $${quotePrice.toFixed(2)} (${asOfLabel}${delayLabel})`;
                 } catch (err) {
-                    fetchedPriceInfo.textContent = '시세 조회 실패 — 현재가를 직접 입력해주세요.';
+                    fetchedPriceInfo.textContent = '시세를 불러오지 못해 현재가를 입력하지 않았습니다.';
                 }
             });
             
