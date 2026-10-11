@@ -10,7 +10,7 @@ import {
 } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
 import { yahooBusinessDayAge } from "./market-calendar.mjs";
 import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from "./kpi-contract-constants.mjs";
-import { summarizeSourceHealth } from "./family-health.mjs";
+import { summarizeSourceHealth, buildDetailRefreshCadence, detailSourcePolicy } from "./family-health.mjs";
 import { DATA_SUPPLY_POLICY_REGISTRY } from "../data-supply-policy-registry.mjs";
 
 export const DETECTION_CALENDARS_PATH = path.resolve(
@@ -72,8 +72,12 @@ export function readEtfSourceHealth(dataRoot, nowIso, fallbackOnly = false) {
   const entries = Object.entries(index.entries);
   if (entries.length !== index.enrolled_count
     || entries.some(([ticker, row]) => row?.ticker !== ticker || row.enrollment_state !== "enrolled")) return null;
+  const cadence = index.detail_refresh_cadence ?? buildDetailRefreshCadence(
+    readOptionalJson(dataRoot, "stockanalysis/etf_universe.json"),
+    readOptionalJson(dataRoot, "admin/fenok-etf-core-daily-basket.json"));
   const members = entries.filter(([, row]) => !fallbackOnly || row.provider_role === "fallback")
-    .map(([member, row]) => ({ member, source_as_of: row.resolution_state === "unavailable" ? null : row.source_as_of }));
+    .map(([member, row]) => ({ member, source_as_of: row.resolution_state === "unavailable" ? null : row.source_as_of,
+      refresh_policy: detailSourcePolicy(member, cadence, DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail.emergency_lkg_ttl_days) }));
   return summarizeSourceHealth(members, nowIso, DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail);
 }
 
@@ -536,7 +540,8 @@ export function summarizeDataSetFreshness(
       newest_source_date: dateValue(health.newest_source_date),
       oldest_source_date: dateValue(health.oldest_source_date),
       oldest_source_member: health.oldest_source_member,
-      max_age: `${health.policy.fresh_ttl_hours / 24}d`,
+      max_age: health.policy.fresh_bound_days?.length
+        ? `${Math.min(...health.policy.fresh_bound_days)}-${Math.max(...health.policy.fresh_bound_days)}d` : null,
       status: health.status === "degraded" ? "delayed" : health.status,
       fresh_members: health.fresh_members, total_members: health.total_members,
       source_health: health,
