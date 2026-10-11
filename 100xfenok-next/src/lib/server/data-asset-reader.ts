@@ -169,6 +169,7 @@ export async function readPrivateCloudGenerationAsset(
       expectedPrivacyClass: "private",
       pointerStore: plane.pointerStore,
       objectStore: plane.objectStore,
+      manifestCacheScope: env.DATA_PLANE_BUCKET,
     });
     if (
       resolved?.kind !== "ok"

@@ -921,4 +921,76 @@ assert.equal(second.pointer.previous.generation_id, "generation-1");
   assert.equal(isolated.inspect().pointer, null);
 }
 
+// Reader caching is opt-in. It saves immutable manifest work, never the
+// current pointer, per-request privacy decision, or selected payload check.
+{
+  const cachedPlane = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest: firstManifest, payloads: payloadMap(firstManifest, firstValues),
+    expectedPointerSequence: 0, ...cachedPlane, policy: PUBLICATION_POLICY,
+    now: () => NOW, receiptId: "cache-first",
+  });
+  const scope = {};
+  let manifestReads = 0;
+  let pointerReads = 0;
+  let badPointer = false;
+  let badPayload = false;
+  let badManifest = false;
+  const cachedObjects = {
+    async get(key) {
+      if (key.startsWith("manifests/")) {
+        manifestReads += 1;
+        if (badManifest) return encoder.encode("{}");
+      } else if (badPayload) return encoder.encode("corrupt");
+      return cachedPlane.objectStore.get(key);
+    },
+  };
+  const currentPointer = {
+    async get() {
+      pointerReads += 1;
+      const pointer = await cachedPlane.pointerStore.get();
+      return badPointer ? { ...pointer, source_sha: "f".repeat(64) } : pointer;
+    },
+  };
+  const read = (overrides = {}) => resolveGenerationAsset({
+    assetPath: "public/data/market.json", expectedPrivacyClass: "public",
+    objectStore: cachedObjects, pointerStore: currentPointer,
+    manifestCacheScope: scope, ...overrides,
+  });
+  const concurrent = await Promise.all(Array.from({ length: 20 }, () => read()));
+  assert.equal(concurrent.every((result) => result.kind === "ok"), true);
+  assert.equal(manifestReads, 1, "concurrent readers share one verified manifest");
+  assert.equal(pointerReads, 20, "the active pointer is read for every request");
+  assert.equal((await read({ assetPath: "data/private/source.json" })).kind, "not_enrolled");
+  assert.equal((await read({ assetPath: "data/private/source.json", expectedPrivacyClass: "private" })).kind, "ok");
+  badPointer = true;
+  assert.equal((await read()).reason, "MANIFEST_CROSS_BIND_INVALID");
+  badPointer = false;
+  badPayload = true;
+  assert.equal((await read()).reason, "PAYLOAD_INTEGRITY_UNAVAILABLE");
+  badPayload = false;
+  const otherScope = {};
+  badManifest = true;
+  assert.equal((await read({ manifestCacheScope: otherScope })).reason, "MANIFEST_INTEGRITY_UNAVAILABLE");
+  badManifest = false;
+  assert.equal((await read({ manifestCacheScope: otherScope })).kind, "ok", "failed manifest reads are evicted");
+  const nextValues = { "public/data/market.json": '{"value":3}\n' };
+  const nextManifest = buildManifest("cache-generation-2", [{ path: "public/data/market.json", text: nextValues["public/data/market.json"] }]);
+  await publishGeneration({
+    manifest: nextManifest, payloads: payloadMap(nextManifest, nextValues),
+    expectedPointerSequence: 1, ...cachedPlane, policy: PUBLICATION_POLICY,
+    now: () => NOW, receiptId: "cache-second",
+  });
+  const next = await read();
+  assert.equal(next.generation_id, "cache-generation-2");
+  assert.equal(new TextDecoder().decode(next.bytes), nextValues["public/data/market.json"]);
+  await rollbackGeneration({
+    expectedPointerSequence: 2, ...cachedPlane,
+    now: () => NOW, receiptId: "cache-rollback",
+  });
+  const rolledBack = await read();
+  assert.equal(rolledBack.generation_id, firstManifest.generation_id);
+  assert.equal(new TextDecoder().decode(rolledBack.bytes), firstValues["public/data/market.json"]);
+}
+
 console.log("test-cloud-data-plane-generation: ok");

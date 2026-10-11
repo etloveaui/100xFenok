@@ -830,11 +830,70 @@ export async function rollbackGeneration({
   return { pointer: nextPointer, receipt: promoted, summary };
 }
 
+// Opt-in serving cache, scoped to the actual R2 binding. Publication/repair
+// callers omit the scope and retain their uncached verification. Only verified
+// immutable manifests are cached; pointers and payloads are always read again.
+const readManifestCaches = new WeakMap();
+const MAX_READ_MANIFESTS = 8;
+const MAX_READ_MANIFEST_BYTES = 8 * 1024 * 1024;
+
+async function verifiedReadManifest(pointer, objectStore, scope) {
+  const load = async () => {
+    const bytes = await objectStore.get(pointer.active.manifest_key);
+    if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== pointer.active.manifest_sha256) {
+      return { kind: "unavailable", reason: "MANIFEST_INTEGRITY_UNAVAILABLE" };
+    }
+    const manifest = JSON.parse(new TextDecoder().decode(bytes));
+    const summary = validateGenerationManifest(manifest);
+    return {
+      kind: "ok", manifest, summary, bytes: bytes.byteLength,
+      assets: new Map(manifest.assets.map((asset) => [asset.path, asset])),
+    };
+  };
+  if (!scope || (typeof scope !== "object" && typeof scope !== "function")) return load();
+  let cache = readManifestCaches.get(scope);
+  if (!cache) {
+    cache = { entries: new Map(), bytes: 0 };
+    readManifestCaches.set(scope, cache);
+  }
+  const key = `${pointer.active.manifest_key}:${pointer.active.manifest_sha256}`;
+  const prior = cache.entries.get(key);
+  if (prior) {
+    cache.entries.delete(key);
+    cache.entries.set(key, prior);
+    return prior.promise;
+  }
+  const remove = (entryKey) => {
+    const entry = cache.entries.get(entryKey);
+    if (entry) cache.bytes -= entry.bytes;
+    cache.entries.delete(entryKey);
+  };
+  const entry = { bytes: 0, promise: null };
+  entry.promise = load().then((result) => {
+    if (cache.entries.get(key) === entry) {
+      if (result.kind !== "ok") remove(key);
+      else {
+        entry.bytes = result.bytes;
+        cache.bytes += entry.bytes;
+        while (cache.bytes > MAX_READ_MANIFEST_BYTES) remove(cache.entries.keys().next().value);
+      }
+    }
+    return result;
+  }).catch((error) => {
+    if (cache.entries.get(key) === entry) remove(key);
+    throw error;
+  });
+  cache.entries.set(key, entry);
+  while (cache.entries.size > MAX_READ_MANIFESTS) remove(cache.entries.keys().next().value);
+  return entry.promise;
+}
+
 export async function resolveGenerationAsset({
   assetPath,
   expectedPrivacyClass,
   pointerStore,
   objectStore,
+  manifestCacheScope,
 }) {
   if (expectedPrivacyClass !== "public" && expectedPrivacyClass !== "private") {
     return { kind: "unavailable", reason: "PRIVACY_CLASS_INVALID" };
@@ -849,15 +908,9 @@ export async function resolveGenerationAsset({
     const pointer = await pointerStore.get();
     if (!pointer) return { kind: "unavailable", reason: "ACTIVE_POINTER_UNAVAILABLE" };
     validateActivePointer(pointer);
-    const manifestBytes = await objectStore.get(pointer.active.manifest_key);
-    if (
-      !(manifestBytes instanceof Uint8Array)
-      || sha256Bytes(manifestBytes) !== pointer.active.manifest_sha256
-    ) {
-      return { kind: "unavailable", reason: "MANIFEST_INTEGRITY_UNAVAILABLE" };
-    }
-    const manifest = JSON.parse(new TextDecoder().decode(manifestBytes));
-    const summary = validateGenerationManifest(manifest);
+    const verified = await verifiedReadManifest(pointer, objectStore, manifestCacheScope);
+    if (verified.kind !== "ok") return verified;
+    const { manifest, summary, assets } = verified;
     if (
       summary.generation_id !== pointer.active.generation_id
       || summary.manifest_sha256 !== pointer.active.manifest_sha256
@@ -865,7 +918,7 @@ export async function resolveGenerationAsset({
     ) {
       return { kind: "unavailable", reason: "MANIFEST_CROSS_BIND_INVALID" };
     }
-    const asset = manifest.assets.find((entry) => entry.path === normalized);
+    const asset = assets.get(normalized);
     if (!asset || asset.privacy_class !== expectedPrivacyClass) return { kind: "not_enrolled" };
     const payload = await objectStore.get(asset.object_key);
     if (
@@ -892,12 +945,14 @@ export async function resolvePublicAsset({
   publicPath,
   pointerStore,
   objectStore,
+  manifestCacheScope,
 }) {
   return resolveGenerationAsset({
     assetPath: publicPath,
     expectedPrivacyClass: "public",
     pointerStore,
     objectStore,
+    manifestCacheScope,
   });
 }
 

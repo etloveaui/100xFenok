@@ -75,6 +75,7 @@ export async function handleCloudDataPlaneAsset(request, env) {
       publicPath: manifestPathFor(url.pathname),
       pointerStore: plane.pointerStore,
       objectStore: plane.objectStore,
+      manifestCacheScope: env.DATA_PLANE_BUCKET,
     });
   } catch {
     return null;
