@@ -10,7 +10,7 @@ most 6 GitHub API calls:
   alarm   completion time of the newest successful `check` job of pipeline-failure-alarm.yml (the job that judges
           and writes the issue; the persist job after it waits in the shared writer queue and says nothing here)
   clock   creation time of the newest workflow_dispatch run titled "external-clock/a1/v1 ..."
-  ledger  generated_at of data/admin/fenok-data-health-kpi.json on main
+  ledger  generated_at and the declared Update Manifest calendar on main
 
 The first run records a baseline and sends nothing. A line the Gateway did not deliver is retried on the next run.
 """
@@ -43,19 +43,19 @@ SECRETS = HOME / ".secrets/all-keys.env"  # the file run_m4.sh reads; only GITHU
 #   alarm   2 x its cadence (cron '23 * * * *' plus the A1 clock slot :23); the age is that of the `check` job.
 #   clock   3 x the longest gap between declared clock slots, 15 minutes (:49 -> :04, ops/a1-lanes/external-clock.mjs;
 #           measured maximum 15.0 minutes over 80 marked runs on 2026-10-11).
-#   ledger  6 hours: the KPI file's commits had a median gap of 0.73 h, and 5 of 399 gaps above 6 h (2026-09-18..10-11).
+#   ledger  two declared Update Manifest slots plus its one-hour execution allowance.
 CHECKS = {
     "issues": ("경보 이슈 목록", "이", None, ""),
     "alarm": ("경보 워크플로", "가", 120, "성공 실행 없음"),
     "clock": ("A1 시계", "가", 45, "실행 없음"),
-    "ledger": ("건강 원장", "이", 360, "갱신 없음"),
+    "ledger": ("건강 원장", "이", None, "갱신 없음"),
 }
 UNREAD_MIN = 120  # a read that keeps failing this long is reported once (past the alarm bound nothing vouches for the alarm)
 REASONS = {"failure_streak": "연속 실패", "missed_schedule_window": "실행 누락", "lost_schedule_slot": "예약 실행 유실",
            "a1_clock_stale": "A1 시계 멈춤", "data_stopped_two_generations": "데이터 정지",
            "health_record_stale": "건강 기록 멈춤"}
 DELIVERED = ("success", "dedup_skipped", "already_delivered")
-MAX_CALLS = 6  # GitHub API calls per run
+MAX_CALLS = 7  # the Manifest calendar plus the existing six reads/probes
 TOKEN: str | None = None
 RATE = ""
 CALLS = 0
@@ -83,7 +83,7 @@ def load_token() -> str | None:
     return m.group(1) if m else None
 
 
-def gh(path: str, accept: str = "application/vnd.github+json"):
+def gh(path: str, accept: str = "application/vnd.github+json", *, as_text=False):
     """One GitHub GET. A rejected token is dropped for the rest of the run: the repository is public."""
     global TOKEN, RATE, CALLS
     while True:
@@ -94,7 +94,7 @@ def gh(path: str, accept: str = "application/vnd.github+json"):
         try:
             with urllib.request.urlopen(urllib.request.Request(API + path, headers=headers), timeout=20) as r:
                 RATE = f"{r.headers.get('X-RateLimit-Remaining')}/{r.headers.get('X-RateLimit-Limit')}"
-                return json.load(r)
+                return r.read().decode("utf-8") if as_text else json.load(r)
         except urllib.error.HTTPError as e:
             if e.code != 401 or not TOKEN:
                 raise
@@ -140,8 +140,56 @@ def read_clock() -> dt.datetime:
     return max(marked) if marked else min(ts(r["created_at"]) for r in runs)
 
 
+def ledger_deadline(generated: dt.datetime, workflow: str) -> dt.datetime:
+    def field(raw, lower, upper):
+        values = set()
+        for token in raw.split(","):
+            base, _, step = token.partition("/")
+            stride = int(step or "1")
+            if base == "*":
+                first, last = lower, upper
+            elif "-" in base:
+                first, last = map(int, base.split("-"))
+            else:
+                first, last = int(base), upper if step else int(base)
+            if stride < 1 or not lower <= first <= last <= upper:
+                raise ValueError("invalid Manifest cron field")
+            values.update(range(first, last + 1, stride))
+        return values
+
+    crons = re.findall(r"^\s*-\s*cron:\s*['\"]([^'\"]+)['\"]", workflow, re.M)
+    calendars = []
+    for cron in crons:
+        parts = cron.split()
+        if len(parts) != 5:
+            raise ValueError("invalid Manifest cron")
+        values = [field(raw, lo, hi) for raw, (lo, hi) in zip(parts, ((0, 59), (0, 23), (1, 31), (1, 12), (0, 7)))]
+        values[4] = {day % 7 for day in values[4]}
+        calendars.append((parts, values))
+    if not calendars:
+        raise ValueError("Manifest schedule is unavailable")
+    cursor = generated.astimezone(dt.timezone.utc).replace(second=0, microsecond=0)
+    slots = 0
+    for _ in range(400 * 1440):
+        cursor += dt.timedelta(minutes=1)
+        for parts, (minutes, hours, days, months, weekdays) in calendars:
+            dom, dow = cursor.day in days, (cursor.weekday() + 1) % 7 in weekdays
+            day_ok = dom and dow if parts[2].startswith("*") or parts[4].startswith("*") else dom or dow
+            if cursor.minute in minutes and cursor.hour in hours and cursor.month in months and day_ok:
+                slots += 1
+                if slots == 2:
+                    return cursor + dt.timedelta(hours=1)
+                break
+    raise ValueError("two Manifest slots were not found")
+
+
 def read_ledger() -> dt.datetime:
-    return ts(gh("/contents/data/admin/fenok-data-health-kpi.json?ref=main", "application/vnd.github.raw+json")["generated_at"])
+    generated = ts(gh("/contents/data/admin/fenok-data-health-kpi.json?ref=main", "application/vnd.github.raw+json")["generated_at"])
+    workflow = gh("/contents/.github/workflows/update-manifest.yml?ref=main", "application/vnd.github.raw+json", as_text=True)
+    deadline = ledger_deadline(generated, workflow)
+    noun, particle, _, reason = CHECKS["ledger"]
+    CHECKS["ledger"] = (noun, particle, int((deadline - generated).total_seconds() / 60), reason)
+    return generated
 
 
 READERS = {"issues": read_issues, "clock": read_clock, "ledger": read_ledger, "alarm": read_alarm}  # alarm last: it probes
