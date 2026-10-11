@@ -1,4 +1,5 @@
 name: Pipeline Failure Alarm
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 pipeline-failure-alarm.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
@@ -7,6 +8,17 @@ on:
     workflows: ['Update Manifest', 'Deploy Worker (Cloudflare)', 'Fenok Edge Daily Data', 'SlickCharts Symbols']
     types: [completed]
   workflow_dispatch:
+    inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
+import { EXTERNAL_CLOCK_CRONS, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
@@ -784,11 +785,10 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     // queue-delayed execution order. Only restore observes schedule liveness.
     let sinceMs = latestStartedAt ? Date.parse(latestStartedAt) : null;
     if (isScheduledProducer) {
-      // Trigger liveness uses only schedule-created runs, regardless of manual
-      // recovery or another automatic event. A queued producer proves creation,
-      // but its creation time cannot cover later absent scheduled slots.
-      const evidence = runs.filter((run) => run?.event === "schedule")
-        .map((run) => Date.parse(run?.created_at || run?.run_started_at))
+      // Trigger liveness admits declared external slots, while unmarked manual
+      // recovery cannot cover absent slots. Queued producers prove creation only.
+      const evidence = runs.map((run) => run?.event === "schedule"
+        ? Date.parse(run?.created_at || run?.run_started_at) : externalClockSlot(workflow, run))
         .filter((stamp) => Number.isFinite(stamp) && stamp <= now);
       const activatedAt = Date.parse(workflow.schedule_activated_at);
       sinceMs = evidence.length > 0 ? Math.max(...evidence)
@@ -796,16 +796,17 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     } else if (isRestoreWatchdog) {
       // A manual dispatch is useful recovery evidence for a lost acquisition
       // slot, but it is not evidence that the schedule itself remains live.
-      // Anchor missed-window counting only to scheduled runs, with an additional
-      // recent in-progress schedule observation for the bounded restore watchdog.
-      const completedLivenessRuns = countedRuns.filter((run) => run?.event === "schedule");
+      // Admit schedules and marked slots, with a recent in-progress observation
+      // for the bounded restore watchdog. Unmarked dispatches stay excluded.
+      const completedLivenessRuns = runs.filter((run) => (!run.status || run.status === "completed")
+        && (run?.event === "schedule" || externalClockSlot(workflow, run) !== null));
       const completedScheduleEvidence = completedLivenessRuns
-        .map((run) => run?.run_started_at || run?.created_at)
-        .map((timestamp) => Date.parse(timestamp))
+        .map((run) => externalClockSlot(workflow, run) ?? Date.parse(run?.run_started_at || run?.created_at))
         .filter((timestamp) => Number.isFinite(timestamp) && timestamp <= now);
       const inProgressScheduleEvidence = Array.isArray(activeScheduledRuns)
         ? activeScheduledRuns
-          .filter((run) => run?.event === "schedule" && run?.status === "in_progress")
+          .filter((run) => (run?.event === "schedule" || externalClockSlot(workflow, run) !== null)
+            && run?.status === "in_progress")
           // Use actual execution start, not created_at: a long queue wait is
           // outside the job timeout and cannot establish a healthy run window.
           .map((run) => Date.parse(run?.run_started_at))
@@ -815,6 +816,11 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
         : [];
       const scheduleEvidence = [...completedScheduleEvidence, ...inProgressScheduleEvidence];
       sinceMs = scheduleEvidence.length > 0 ? Math.max(...scheduleEvidence) : null;
+    } else {
+      const external = runs.filter((run) => !run.status || run.status === "completed")
+        .map((run) => externalClockSlot(workflow, run))
+        .filter((stamp) => Number.isFinite(stamp) && stamp <= now);
+      if (external.length) sinceMs = Math.max(sinceMs ?? -Infinity, ...external);
     }
     const tightestCron = (Array.isArray(workflow.crons) ? workflow.crons : [])
       .find((cron) => cronIntervalHours(cron) === intervalHours) ?? null;
@@ -1101,8 +1107,8 @@ export async function main() {
     try {
       const batches = [];
       // workflow_dispatch is fetched even when it is not a counted event:
-      // evaluateWorkflow uses dispatch successes purely as lost-slot recovery
-      // evidence, never for streak or alarm counting.
+      // evaluateWorkflow admits marked external slots for trigger liveness;
+      // ordinary dispatch successes remain recovery evidence only.
       const fetchEvents = workflow.events.includes("workflow_dispatch")
         ? workflow.events
         : [...workflow.events, "workflow_dispatch"];
@@ -1114,21 +1120,23 @@ export async function main() {
           file: workflow.file,
           branch,
           event,
-          status: workflow.scheduled_producer && event === "schedule" ? null : "completed",
+          status: workflow.scheduled_producer && (event === "schedule"
+            || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file])) ? null : "completed",
         }));
       }
       const fetchInProgressScheduledRuns = async () => {
         if (!MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file)) return [];
-        return fetchWorkflowRuns({
+        const activeBatches = await Promise.all(["schedule", "workflow_dispatch"].map((event) => fetchWorkflowRuns({
           token,
           owner,
           repo,
           file: workflow.file,
           branch,
-          event: "schedule",
+          event,
           perPage: 5,
           status: "in_progress",
-        });
+        })));
+        return mergeWorkflowRunBatches(activeBatches);
       };
       let activeScheduledRuns = await fetchInProgressScheduledRuns();
       const runs = await annotateQueueEvictions({
@@ -1147,7 +1155,8 @@ export async function main() {
             branch,
             event,
             perPage: 100,
-            status: workflow.scheduled_producer && event === "schedule" ? null : "completed",
+            status: workflow.scheduled_producer && (event === "schedule"
+              || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file])) ? null : "completed",
           }));
         }
         activeScheduledRuns = await fetchInProgressScheduledRuns();

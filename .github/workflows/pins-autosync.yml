@@ -4,12 +4,24 @@
 # The lane shares the global writer queue and stages its direct registry policy.
 
 name: Pins Autosync
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 pins-autosync.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
     # Every 30 minutes, off the herd marks (UTC).
     - cron: '7,37 * * * *'
   workflow_dispatch:
+    inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write

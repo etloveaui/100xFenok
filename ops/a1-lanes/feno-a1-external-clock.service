@@ -1,0 +1,11 @@
+[Unit]
+Description=100xFenok frequent GitHub workflow external clock
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/fenok/external-clock.env
+ExecStart=/usr/bin/node %h/.local/lib/fenok-external-clock/external-clock.mjs
+TimeoutStartSec=90
+UMask=0077

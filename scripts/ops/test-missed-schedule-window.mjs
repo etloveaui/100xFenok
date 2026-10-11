@@ -20,6 +20,9 @@
 // would only produce false alarms.
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_MARKER, dueDispatches, dispatchDue,
+  externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 import {
   MISSED_WINDOW_MULTIPLIER,
@@ -355,6 +358,64 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     id: 112, event: "schedule", status: "queued", conclusion: null, created_at: "2026-08-20T23:35:00Z",
   }], { now: NOW });
   assert.equal(staleQueued.missed_schedule_slot_count, 2, "an old queued run cannot cover later absent slots");
+}
+
+{
+  const marked = (file, slot, extra = {}) => ({ ...run(200, slot, { event: "workflow_dispatch" }),
+    created_at: slot, display_title: `${EXTERNAL_CLOCK_MARKER} ${file} ${slot}`, ...extra });
+  for (const [file, cron] of Object.entries(EXTERNAL_CLOCK_CRONS)) {
+    // The alarm excludes itself from monitoring; cadence validation still reads it.
+    const workflow = deriveWorkflowWatchPolicy({ scheduledExclusions: {} }).watched.find((row) => row.file === file);
+    assert.ok(workflow.crons.includes(cron), `${file} external cadence must match the actual declaration`);
+    const yaml = fs.readFileSync(new URL(`../../.github/workflows/${file}`, import.meta.url), "utf8");
+    assert.ok(yaml.includes(`external-clock/a1/v1 ${file} {0}`));
+    assert.ok(yaml.includes("external_clock_slot:"));
+    assert.ok(yaml.includes("concurrency:") && yaml.includes("cancel-in-progress: false"));
+    assert.ok(!yaml.includes("event_name") && !yaml.includes("event.schedule"), `${file} must be event-independent`);
+  }
+  assert.ok(!EXTERNAL_CLOCK_CRONS["worker-request-budget-alarm.yml"], "event-branching workflow stays excluded");
+  const producer = { ...detector("fetch-yahoo-ticker.yml", "5 * * * *"), scheduled_producer: true };
+  const prior = run(100, "2026-08-20T23:05:00Z");
+  const slot = "2026-08-21T01:05:00.000Z";
+  const external = marked(producer.file, slot, { status: "queued", conclusion: null });
+  assert.equal(evaluateWorkflow(producer, [external, prior], { now: NOW }).missed_schedule_slot_count, 0);
+  for (const changed of [
+    { display_title: "Human dispatch" },
+    { display_title: `${EXTERNAL_CLOCK_MARKER} other.yml ${slot}` },
+    { display_title: `${EXTERNAL_CLOCK_MARKER} ${producer.file} 2026-08-21T01:06:00.000Z` },
+    { display_title: `${EXTERNAL_CLOCK_MARKER} ${producer.file} 2026-08-21T02:05:00.000Z` },
+  ]) {
+    assert.equal(externalClockSlot(producer, { ...external, ...changed }), null);
+    assert.equal(evaluateWorkflow(producer, [{ ...external, ...changed }, prior], { now: NOW })
+      .missed_schedule_slot_count, 2, "unmarked/malformed dispatch cannot cover absent slots");
+  }
+  const observer = detector("global-writer-queue-observer.yml", "11 * * * *");
+  assert.equal(evaluateWorkflow(observer, [marked(observer.file, "2026-08-21T01:11:00.000Z"), prior],
+    { now: NOW }).missed_schedule_slot_count, 0);
+  const restore = detector("retention-restore.yml", RESTORE_CRON);
+  const restoreRun = marked(restore.file, "2026-08-21T01:19:00.000Z");
+  assert.equal(evaluateWorkflow(restore, [restoreRun, prior], { now: NOW }).missed_schedule_slot_count, 0);
+  assert.equal(evaluateWorkflow(restore, [prior], { now: Date.parse("2026-08-21T01:25:00Z"),
+    activeScheduledRuns: [{ ...restoreRun, status: "in_progress" }] }).missed_schedule_slot_count, 0);
+  assert.equal(evaluateWorkflow(restore, [prior], { now: Date.parse("2026-08-21T01:40:00Z"),
+    activeScheduledRuns: [{ ...restoreRun, status: "in_progress" }] }).alarming, true,
+    "an old running dispatch cannot conceal a stopped restore watchdog");
+  const state = {};
+  const calls = [];
+  const now = new Date(slot);
+  const dispatch = async (row) => { calls.push(row); return "dispatched"; };
+  await dispatchDue({ now, state, dispatch });
+  await dispatchDue({ now, state, dispatch });
+  assert.equal(calls.length, 1, "same-slot repeat must not dispatch twice");
+  assert.equal(calls[0].file, producer.file);
+  assert.deepEqual(dueDispatches(new Date("2026-08-21T01:06:00Z")), []);
+  assert.equal(dueDispatches(new Date("2026-08-21T01:37:00Z"))[0].file, "pins-autosync.yml");
+  const disabledState = {};
+  const disabled = await dispatchDue({ now, state: disabledState, dispatch: async () => "disabled" });
+  assert.equal(disabled[0].outcome, "disabled");
+  assert.deepEqual(disabledState, {}, "retention-paused workflow remains undispatched");
+  const failed = await dispatchDue({ now, state: {}, dispatch: async () => { throw new Error("HTTP 503"); } });
+  assert.equal(failed[0].outcome, "failed", "API failure must remain observable");
 }
 
 console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors plus registry producers, x${MISSED_WINDOW_MULTIPLIER} tolerance)`);

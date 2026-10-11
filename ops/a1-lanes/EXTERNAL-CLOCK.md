@@ -1,0 +1,79 @@
+# A1 frequent workflow clock
+
+B-434, authorized 2026-10-11. One user timer on `ubuntu@feno-sin-a1`
+dispatches existing GitHub workflows on `etloveaui/100xFenok`, branch `main`.
+GitHub schedules remain enabled as fallback. There is no catch-up burst.
+
+| Workflow | UTC minutes each hour | Existing duplicate serialization |
+|---|---|---|
+| fetch-defillama.yml | 12 | global Git writer group |
+| fetch-yahoo-ticker.yml | 05 | global Git writer + yahoo-ticker-macro-publish |
+| global-writer-queue-observer.yml | 11 | global-writer-queue-observer |
+| pins-autosync.yml | 07, 37 | global Git writer group; unchanged pins produce no commit |
+| pipeline-failure-alarm.yml | 23 | pipeline-failure-alarm + global Git writer persistence |
+| retention-restore.yml | 04, 19, 34, 49 | retention-restore; journal restore is a no-op when nothing is pending |
+
+All six declare `workflow_dispatch` and execute the same jobs for dispatch and
+schedule. Existing concurrency groups serialize duplicate GitHub/A1 runs;
+additional runs can still consume runner/API budget. The clock checks workflow
+metadata before dispatch and leaves disabled workflows disabled, preserving the
+retention pause set. Same-slot service restarts use a local dispatch receipt.
+
+`worker-request-budget-alarm.yml` is excluded: dispatch executes both jobs,
+whereas the hourly and twice-daily schedules select different jobs. Its missing
+schedule alarm remains an unresolved GitHub-clock dependency.
+
+Dispatch inputs `external_clock=a1-v1` and `external_clock_slot=<UTC ISO minute>`
+produce `external-clock/a1/v1 <workflow> <slot>` in the Actions run title.
+The existing missed-slot detector admits only these bound titles at a declared
+minute. Human dispatch defaults stay unmarked. Queued producer runs prove
+creation; restore still requires completion or a running job under ten minutes.
+Per-run failure handling remains unchanged.
+
+## Credential and rebuild
+
+The token is only in `/home/ubuntu/.config/fenok/external-clock.env` (mode 600,
+owned by ubuntu). The persistent service reads it via `EnvironmentFile=`; it is
+not exported from shell profiles. `feno secret` currently handles only
+`opencode-go-2`, and the dotfiles cloud bootstrap does not provision a GitHub
+Actions credential. This dedicated env file is the authorized fallback.
+
+From the authenticated Mac, re-provision the existing token over SSH stdin.
+Never put the value in argv, terminal output, logs, Git, reports, or the keychain:
+
+```sh
+python3 - <<'PY'
+import os, re, subprocess
+token = os.environ.get('GH_TOKEN') or subprocess.check_output(['gh', 'auth', 'token'], text=True).strip()
+if not re.fullmatch(r'[A-Za-z0-9_]+', token):
+    raise SystemExit('GitHub token is missing or malformed')
+remote = ('umask 077; mkdir -p ~/.config/fenok; '
+          'cat > ~/.config/fenok/external-clock.env.new && '
+          'chmod 600 ~/.config/fenok/external-clock.env.new && '
+          'mv ~/.config/fenok/external-clock.env.new ~/.config/fenok/external-clock.env')
+subprocess.run(['ssh', 'ubuntu@feno-sin-a1', remote], input='GH_TOKEN='+token+'\n', text=True, check=True)
+PY
+```
+
+Install these tracked files from the verified published revision on A1:
+
+```sh
+install -Dm644 ops/a1-lanes/external-clock.mjs "$HOME/.local/lib/fenok-external-clock/external-clock.mjs"
+install -Dm644 ops/a1-lanes/feno-a1-external-clock.service "$HOME/.config/systemd/user/feno-a1-external-clock.service"
+install -Dm644 ops/a1-lanes/feno-a1-external-clock.timer "$HOME/.config/systemd/user/feno-a1-external-clock.timer"
+systemctl --user daemon-reload
+# Read-only credential proof before enabling any dispatch:
+systemd-run --user --wait --pipe --collect \
+  --property="EnvironmentFile=$HOME/.config/fenok/external-clock.env" \
+  /usr/bin/node "$HOME/.local/lib/fenok-external-clock/external-clock.mjs" --probe
+systemctl --user enable --now feno-a1-external-clock.timer
+systemctl --user list-timers feno-a1-external-clock.timer
+journalctl --user -u feno-a1-external-clock.service --since today --no-pager
+```
+
+The probe prints only workflow ID, path and state. Ubuntu lingering must remain
+enabled (already enabled at installation). The service receipt is
+`~/.local/state/fenok-external-clock/dispatches.json`, with no credential.
+If a declared cron changes, update `EXTERNAL_CLOCK_CRONS` and the timer calendar
+together, run the existing missed-slot tests, publish, then reinstall. To roll
+back the clock, disable its user timer; GitHub schedules continue unchanged.

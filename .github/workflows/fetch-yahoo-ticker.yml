@@ -1,4 +1,5 @@
 name: Fetch Yahoo Finance Ticker Snapshot
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 fetch-yahoo-ticker.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 # DEC-196 — cron pre-fetch for admin design-lab calculators (TQQQ/SOXL).
 # Output: data/macro/yahoo-ticker.json (same-origin, 1h stale tolerance).
@@ -9,6 +10,16 @@ on:
     - cron: '5 * * * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       controlled_failure_tickers:
         description: 'Dispatch-only comma-separated chaos targets (TQQQ,SOXL)'
         required: false
