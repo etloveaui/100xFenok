@@ -755,7 +755,7 @@ jobs:
           name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
           path: ${{ runner.temp }}/stockanalysis-artifact
 
-      - name: Apply the immutable candidate without taking the Git writer lock
+      - name: Validate the immutable candidate without modifying canonical Git files
         env:
           ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
           ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
@@ -765,7 +765,7 @@ jobs:
           git checkout -f -B main origin/main
           ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
           APPLY_JSON="$(
-            python3 scripts/stockanalysis_artifact.py apply \
+            python3 scripts/stockanalysis_artifact.py validate-plane \
               --artifact-root "$ARTIFACT_ROOT" \
               --run-id "${{ github.run_id }}" \
               --run-number "${{ github.run_number }}" \
@@ -775,14 +775,15 @@ jobs:
               --github-output "$RUNNER_TEMP/stockanalysis-plane-apply-output"
           )"
           APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
-          if [ "$APPLY_STATUS" != "applied" ]; then
-            echo "::error::ETF plane publication requires an applied immutable candidate; got $APPLY_STATUS" >&2
+          if [ "$APPLY_STATUS" != "validated" ]; then
+            echo "::error::ETF plane publication requires a validated immutable candidate; got $APPLY_STATUS" >&2
             exit 75
           fi
           printf '%s\n' "$APPLY_JSON" > "$RUNNER_TEMP/stockanalysis-plane-apply.json"
 
       - name: Build ETF candidate from the verified active generation
         env:
+          ETF_ADMISSION_REPORT: ${{ runner.temp }}/stockanalysis-etf-admission.json
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
@@ -823,10 +824,15 @@ jobs:
           fetcher = module_from_spec(spec)
           sys.modules[spec.name] = fetcher
           spec.loader.exec_module(fetcher)
+          sys.path.insert(0, str(fetcher_path.resolve().parent))
+          from yahoo_batch_state import YAHOO_RUN_REFUSAL_BUDGET
+
+          class MemberRefusal(Exception):
+              pass
           manifest = json.loads((artifact / "manifest.json").read_text(encoding="utf-8"))
           applied = json.loads(applied_path.read_text(encoding="utf-8"))
-          if applied.get("status") != "applied" or applied.get("paths") != manifest.get("paths"):
-              raise SystemExit("ETF candidate artifact paths differ from the applied immutable artifact")
+          if applied.get("status") != "validated" or applied.get("paths") != manifest.get("paths"):
+              raise SystemExit("ETF candidate artifact paths differ from the validated immutable artifact")
           prefix = "data/stockanalysis/etfs/"
           rows = [row for row in manifest["files"] if row["path"].startswith(prefix)]
           overlay_names = {row["path"][len(prefix):] for row in rows}
@@ -855,11 +861,11 @@ jobs:
                       payload["source_as_of"] = fetcher.stockanalysis_detail_source_timestamp(payload)
                   fetcher.validate_stockanalysis_etf_payload(ticker, payload)
               except (ValueError, TypeError) as error:
-                  raise SystemExit(f"ETF {label} contract invalid for {ticker}: {error}") from error
+                  raise MemberRefusal(f"ETF {label} contract invalid for {ticker}: {error}") from error
               source = fetcher.parse_iso_timestamp(payload.get("source_as_of"))
               fetched = fetcher.parse_iso_timestamp(payload.get("fetched_at"))
               if fetched is None or fetched > datetime.now(timezone.utc) or (source and source > fetched):
-                  raise SystemExit(f"ETF {label} source/fetch clock invalid for {ticker}")
+                  raise MemberRefusal(f"ETF {label} source/fetch clock invalid for {ticker}")
               complete = fetcher.is_complete_stockanalysis_etf_payload(ticker, payload)
               return payload, source, complete, legacy_unclassified
 
@@ -869,7 +875,7 @@ jobs:
               baseline, baseline_source, baseline_complete, legacy_unclassified = checked_payload(
                   baseline_bytes, ticker, label, legacy_baseline=True)
               if baseline_source and (candidate_source is None or candidate_source < baseline_source):
-                  raise SystemExit(f"ETF {ticker} artifact source date regresses {label}")
+                  raise MemberRefusal(f"ETF {ticker} artifact source date regresses {label}")
               old_normalized = baseline.get("normalized") or {}
               new_normalized = candidate_payload.get("normalized") or {}
               old_holdings = (baseline.get("raw") or {}).get("holdings")
@@ -901,13 +907,13 @@ jobs:
                   and (not old_holdings.get("sectors") or bool(new_holdings.get("sectors")))
               )
               if baseline_complete and not candidate_complete and not same_legacy_country_gap:
-                  raise SystemExit(f"ETF {ticker} artifact loses complete {label} detail")
+                  raise MemberRefusal(f"ETF {ticker} artifact loses complete {label} detail")
               if baseline_complete:
                   old_normalized = baseline.get("normalized") or {}
                   new_normalized = candidate_payload.get("normalized") or {}
                   for field in ("holding_count", "holdings_updated"):
                       if old_normalized.get(field) is not None and new_normalized.get(field) is None:
-                          raise SystemExit(f"ETF {ticker} artifact loses {label} {field}")
+                          raise MemberRefusal(f"ETF {ticker} artifact loses {label} {field}")
                   old_quote = (baseline.get("raw") or {}).get("quote")
                   new_quote = (candidate_payload.get("raw") or {}).get("quote")
                   if isinstance(old_quote, dict):
@@ -920,7 +926,7 @@ jobs:
                           if (not isinstance(new_price, (int, float)) or isinstance(new_price, bool)
                                   or not math.isfinite(new_price) or new_price <= 0 or not new_clock
                                   or fetcher.parse_iso_timestamp(new_clock) < fetcher.parse_iso_timestamp(old_clock)):
-                              raise SystemExit(f"ETF {ticker} artifact loses {label} usable quote")
+                              raise MemberRefusal(f"ETF {ticker} artifact loses {label} usable quote")
                   old_periods = old_normalized.get("history_periods") or {}
                   new_periods = new_normalized.get("history_periods") or {}
                   for period, rows in old_periods.items():
@@ -928,9 +934,9 @@ jobs:
                       required_count = min(old_count, fetcher.history_period_min_rows(period) or old_count)
                       if old_count > 0 and fetcher.valid_unique_history_date_count(
                               new_periods.get(period)) < required_count:
-                          raise SystemExit(f"ETF {ticker} artifact loses {label} {period} history")
+                          raise MemberRefusal(f"ETF {ticker} artifact loses {label} {period} history")
               if detail_loss:
-                  raise SystemExit(f"ETF {ticker} artifact loses {label} {detail_loss}")
+                  raise MemberRefusal(f"ETF {ticker} artifact loses {label} {detail_loss}")
 
           def retain_active_holdings(ticker, payload, baseline_bytes):
               reasons = payload.get("partial_reason_codes") or []
@@ -974,6 +980,9 @@ jobs:
               return True
 
           retained_names = []
+          refused_members = []
+          deferred_names = set()
+          accepted_names = []
           for name in git_only:
               body = (git_root / name).read_bytes()
               digest = hashlib.sha256(body).hexdigest()
@@ -993,22 +1002,56 @@ jobs:
               if len(body) != row["size"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
                   raise SystemExit(f"ETF candidate artifact changed after apply: {rel}")
               ticker = name[:-5]
-              payload, source_as_of, complete, _ = checked_payload(body, ticker, "artifact")
               active_file = active_root / name
               active_bytes = active_file.read_bytes() if active_file.exists() else None
-              if retain_active_holdings(ticker, payload, active_bytes):
-                  body = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
-                  payload, source_as_of, complete, _ = checked_payload(body, ticker, "assembled candidate")
-                  retained_names.append(ticker)
-              enforce_floor(ticker, payload, source_as_of, complete, active_bytes, "active")
               lkg = subprocess.run(["git", "show", f"HEAD:{rel}"], capture_output=True, check=False)
-              if lkg.returncode == 0:
-                  enforce_floor(ticker, payload, source_as_of, complete, lkg.stdout, "Git LKG")
-              else:
+              if lkg.returncode != 0:
                   tracked = subprocess.run(["git", "ls-files", "--error-unmatch", "--", rel],
                                            capture_output=True, check=False)
                   if tracked.returncode == 0:
                       raise SystemExit(f"ETF {ticker} Git LKG is unreadable")
+              try:
+                  payload, source_as_of, complete, _ = checked_payload(body, ticker, "artifact")
+                  held_components = retain_active_holdings(ticker, payload, active_bytes)
+                  if held_components:
+                      body = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
+                      payload, source_as_of, complete, _ = checked_payload(body, ticker, "assembled candidate")
+                  enforce_floor(ticker, payload, source_as_of, complete, active_bytes, "active")
+                  if lkg.returncode == 0:
+                      enforce_floor(ticker, payload, source_as_of, complete, lkg.stdout, "Git LKG")
+              except MemberRefusal as error:
+                  # Never replace a verified prior object with a refused member.
+                  # A new member may use verified canonical LKG, or be explicitly
+                  # deferred when no previous object exists. Every refusal counts.
+                  prior_bytes = active_bytes if active_bytes is not None else (lkg.stdout if lkg.returncode == 0 else None)
+                  prior_kind = "active" if active_bytes is not None else "Git LKG"
+                  prior_date = None
+                  if prior_bytes is not None:
+                      if active_bytes is None:
+                          try:
+                              checked_payload(prior_bytes, ticker, prior_kind, legacy_baseline=True)
+                          except MemberRefusal:
+                              prior_bytes = None
+                              deferred_names.add(name)
+                          else:
+                              (candidate / name).write_bytes(prior_bytes)
+                      if prior_bytes is not None:
+                          # Active bytes were already verified against the plane
+                          # manifest. Do not reclassify retained data as newly
+                          # acquired, or stamp the refusal time onto its source.
+                          prior = json.loads(prior_bytes)
+                          prior_date = prior.get("source_as_of") or fetcher.stockanalysis_detail_source_timestamp(prior)
+                  else:
+                      deferred_names.add(name)
+                  refused_members.append({"ticker": ticker, "reason": str(error),
+                                          "disposition": "retained" if prior_bytes is not None else "deferred",
+                                          "retained_from": prior_kind if prior_bytes is not None else None,
+                                          "source_as_of": prior_date,
+                                          "sha256": hashlib.sha256(prior_bytes).hexdigest() if prior_bytes is not None else None})
+                  continue
+              if held_components:
+                  retained_names.append(ticker)
+              accepted_names.append(ticker)
               target = candidate / name
               with tempfile.NamedTemporaryFile(dir=candidate, prefix=f".{name}.", delete=False) as handle:
                   temporary = Path(handle.name)
@@ -1016,12 +1059,21 @@ jobs:
               os.replace(temporary, target)
               if hashlib.sha256(target.read_bytes()).hexdigest() != hashlib.sha256(body).hexdigest():
                   raise SystemExit(f"ETF candidate overlay readback failed: {rel}")
-          expected_names = active_names | git_names | overlay_names
+          budget = max(YAHOO_RUN_REFUSAL_BUDGET[1], int(len(rows) * YAHOO_RUN_REFUSAL_BUDGET[0]))
+          report = {"attempted_members": len(rows), "accepted_members": len(accepted_names),
+                    "refused_members": refused_members, "refusal_budget": budget,
+                    "retained_active_holdings": retained_names}
+          if os.environ.get("ETF_ADMISSION_REPORT"):
+              Path(os.environ["ETF_ADMISSION_REPORT"]).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          if len(refused_members) > budget:
+              print(json.dumps(report))
+              raise SystemExit(f"ETF member refusals exceed budget: {len(refused_members)} > {budget}")
+          expected_names = (active_names | git_names | overlay_names) - deferred_names
           if {path.name for path in candidate.iterdir()} != expected_names:
               raise SystemExit("ETF candidate membership differs from active/Git/artifact union")
           print(json.dumps({"active_etf_files": len(active_names), "git_only_additions": len(git_only),
                             "artifact_etf_overlays": len(rows), "candidate_etf_files": len(expected_names),
-                            "retained_active_holdings": retained_names}))
+                            **report}))
           PYEOF
           # The base tree and pointer must still match the receipt after the
           # hard-link overlay; publisher also checks the same pointer identity.
@@ -1042,6 +1094,14 @@ jobs:
               env.write(f"PUBLISH_EXPECTED_ACTIVE_GENERATION_ID={receipt['generation_id']}\n")
               env.write(f"PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256={receipt['manifest_sha256']}\n")
           PYEOF
+
+      - name: Upload ETF member admission report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stockanalysis-etf-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/stockanalysis-etf-admission.json
+          if-no-files-found: ignore
 
       - name: Publish guarded stockanalysis-etf-detail generation
         id: publish_cloud_generation

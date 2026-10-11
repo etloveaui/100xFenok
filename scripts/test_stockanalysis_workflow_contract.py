@@ -194,8 +194,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "needs: acquire-stockanalysis",
             "actions/download-artifact@v4",
             "needs.acquire-stockanalysis.outputs.artifact_digest",
-            "scripts/stockanalysis_artifact.py apply",
-            'if [ "$APPLY_STATUS" != "applied" ]; then',
+            "scripts/stockanalysis_artifact.py validate-plane",
+            'if [ "$APPLY_STATUS" != "validated" ]; then',
             "group: stockanalysis-etf-detail-publish",
             "node scripts/materialize-cloud-data-plane-family.mjs \\",
             "--manifest-prefix data/stockanalysis/etfs/ \\",
@@ -211,7 +211,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''",
         ):
             self.assertIn(expected, plane_body)
-        self.assertLess(plane_body.index("scripts/stockanalysis_artifact.py apply"),
+        self.assertLess(plane_body.index("scripts/stockanalysis_artifact.py validate-plane"),
                         plane_body.index("scripts/materialize-cloud-data-plane-family.mjs"))
         self.assertLess(plane_body.index('cp -al "$ACTIVE_ROOT" "$CANDIDATE_ROOT"'),
                         plane_body.index('--verify-receipt "$RECEIPT"'))
@@ -299,7 +299,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 self.assertEqual(completed.returncode, 0, completed.stderr)
             target_rel = "data/stockanalysis/etfs/TARGET.json"
             applied = root / "applied.json"
-            applied.write_text(json.dumps({"status": "applied", "paths": [target_rel]}), encoding="utf-8")
+            applied.write_text(json.dumps({"status": "validated", "paths": [target_rel]}), encoding="utf-8")
             def run_candidate(label: str, target_bytes: bytes) -> tuple[subprocess.CompletedProcess, Path]:
                 candidate = root / label
                 candidate.mkdir()
@@ -332,6 +332,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 "active_etf_files": 3, "git_only_additions": 1,
                 "artifact_etf_overlays": 1, "candidate_etf_files": 4,
                 "retained_active_holdings": [],
+                "attempted_members": 1, "accepted_members": 1, "refused_members": [], "refusal_budget": 3,
             })
             partial_bytes = etf_payload(1, partial=True)
             recovered, recovered_root = run_candidate("missing-holdings-retained", partial_bytes)
@@ -360,8 +361,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             (active / "TARGET.json").write_bytes(etf_payload(3))
             broken = json.loads(etf_payload(1, partial=True, truncated_history=True))
             rejected, _ = run_candidate("retained-holdings-still-rejects-history-loss", json.dumps(broken).encode())
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses active daily_1y history", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses active daily_1y history", rejected.stdout)
             for label, body, diagnostic in (
                 ("active-regression", etf_payload(4), "regresses active"),
                 ("lkg-regression", etf_payload(2.5), "regresses Git LKG"),
@@ -370,8 +371,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 ("history-truncated", etf_payload(1, truncated_history=True), "loses active daily_1y history"),
             ):
                 rejected, rejected_root = run_candidate(label, body)
-                self.assertNotEqual(rejected.returncode, 0, label)
-                self.assertIn(diagnostic, rejected.stderr)
+                self.assertEqual(rejected.returncode, 0, rejected.stderr)
+                self.assertIn(diagnostic, rejected.stdout)
                 self.assertEqual((rejected_root / "TARGET.json").read_bytes(), (active / "TARGET.json").read_bytes())
 
             legacy = json.loads(etf_payload(3))
@@ -389,8 +390,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 ("unstamped-artifact", legacy_bytes, "artifact contract invalid"),
             ):
                 rejected, rejected_root = run_candidate(label, body)
-                self.assertNotEqual(rejected.returncode, 0, label)
-                self.assertIn(diagnostic, rejected.stderr)
+                self.assertEqual(rejected.returncode, 0, rejected.stderr)
+                self.assertIn(diagnostic, rejected.stdout)
                 self.assertEqual((rejected_root / "TARGET.json").read_bytes(), legacy_bytes)
 
             # Older payloads did not label their already-missing country surface.
@@ -447,8 +448,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 ("country-chart-inconsistent", json.dumps(chart_country).encode(), "loses complete active"),
             ):
                 rejected, rejected_root = run_candidate(label, body)
-                self.assertNotEqual(rejected.returncode, 0, label)
-                self.assertIn(diagnostic, rejected.stderr)
+                self.assertEqual(rejected.returncode, 0, rejected.stderr)
+                self.assertIn(diagnostic, rejected.stdout)
                 self.assertEqual((rejected_root / "TARGET.json").read_bytes(), legacy_country_bytes)
 
             for label, update in (
@@ -458,49 +459,49 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 explicit = {**legacy, **update}
                 (active / "TARGET.json").write_bytes(json.dumps(explicit).encode())
                 rejected, _ = run_candidate(label, country_bytes)
-                self.assertNotEqual(rejected.returncode, 0)
-                self.assertIn("loses complete active", rejected.stderr)
+                self.assertEqual(rejected.returncode, 0, rejected.stderr)
+                self.assertIn("loses complete active", rejected.stdout)
 
             legacy["raw"]["holdings"]["allocationChartData"] = {
                 "countries": [{"country": "United States", "weight": 100}]}
             (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
             rejected, _ = run_candidate("country-baseline-chart-loss", country_bytes)
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses complete active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses complete active", rejected.stdout)
             legacy["raw"]["holdings"]["allocationChartData"] = {"countries": []}
 
             legacy["normalized"]["holdings"].append({"symbol": "OTHER"})
             legacy["normalized"]["holding_count"] = 2
             (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
             rejected, _ = run_candidate("country-nonempty-shorter-holdings", json.dumps(changed_count).encode())
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses complete active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses complete active", rejected.stdout)
             legacy["normalized"]["holdings"].pop()
             legacy["normalized"]["holding_count"] = 1
 
             legacy["normalized"]["sectors"] = [{"sector": "Financials", "weight": 100}]
             (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
             rejected, _ = run_candidate("country-sector-loss", country_bytes)
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses complete active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses complete active", rejected.stdout)
             empty_sector = json.loads(country_bytes)
             empty_sector["normalized"]["sectors"] = []
             rejected, _ = run_candidate("country-sector-empty", json.dumps(empty_sector).encode())
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses complete active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses complete active", rejected.stdout)
             legacy["normalized"]["sectors"] = None
             legacy["raw"]["holdings"]["sectors"] = [{"sector": "Financials"}]
             (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
             rejected, _ = run_candidate("country-raw-sector-loss", country_bytes)
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses complete active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses complete active", rejected.stdout)
             legacy["raw"]["holdings"]["sectors"] = None
 
             legacy["normalized"]["countries"] = [{"country": "United States", "weight": 100}]
             (active / "TARGET.json").write_bytes(json.dumps(legacy).encode())
             rejected, _ = run_candidate("country-actual-loss", country_bytes)
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("loses complete active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("loses complete active", rejected.stdout)
 
             def whole_native_portfolio(body, count):
                 payload = json.loads(country_partial(body))
@@ -531,13 +532,77 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 candidate_body = json.loads(whole_new_bytes)
                 edit(candidate_body)
                 rejected, rejected_root = run_candidate(label, json.dumps(candidate_body).encode())
-                self.assertNotEqual(rejected.returncode, 0, label)
-                self.assertIn("loses complete active", rejected.stderr)
+                self.assertEqual(rejected.returncode, 0, rejected.stderr)
+                self.assertIn("loses complete active", rejected.stdout)
                 self.assertEqual((rejected_root / "TARGET.json").read_bytes(), whole_old_bytes)
             regressed_source = whole_native_portfolio(etf_payload(4), 21)
             rejected, _ = run_candidate("whole-fund-source-regression", json.dumps(regressed_source).encode())
-            self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("regresses active", rejected.stderr)
+            self.assertEqual(rejected.returncode, 0, rejected.stderr)
+            self.assertIn("regresses active", rejected.stdout)
+
+            # One refusal among400 retains its exact prior object while399
+            # new members reach the candidate. Four refusals exceed floor3.
+            for directory in (active, git_etfs, payloads):
+                for owned in directory.iterdir():
+                    owned.unlink()
+            old_bodies = {}
+            for index in range(400):
+                ticker = f"ETF{index:03d}"
+                old = json.loads(etf_payload(3)); old["ticker"] = ticker
+                body = json.dumps(old).encode()
+                old_bodies[ticker] = body
+                (active / f"{ticker}.json").write_bytes(body)
+                (git_etfs / f"{ticker}.json").write_bytes(body)
+            subprocess.run(["git", "add", "--", "data/stockanalysis/etfs"], cwd=repo, check=True)
+            subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                            "commit", "-qm", "400 ETF baseline"], cwd=repo, check=True, capture_output=True)
+
+            def run_batch(label, refusal_count, corrupt=False):
+                target = root / label; target.mkdir()
+                for original in active.iterdir():
+                    os.link(original, target / original.name)
+                rows = []
+                for index in range(400):
+                    ticker = f"ETF{index:03d}"
+                    payload = json.loads(etf_payload(4 if index < refusal_count else 1))
+                    payload["ticker"] = ticker
+                    body = json.dumps(payload).encode()
+                    rel = f"data/stockanalysis/etfs/{ticker}.json"
+                    (payloads / f"{ticker}.json").write_bytes(body)
+                    rows.append({"path": rel, "size": len(body), "sha256": hashlib.sha256(body).hexdigest()})
+                if corrupt:
+                    (payloads / "ETF000.json").write_bytes(b"corrupt")
+                paths = [row["path"] for row in rows]
+                (artifact / "manifest.json").write_text(json.dumps({"paths": paths, "files": rows}))
+                applied.write_text(json.dumps({"status": "validated", "paths": paths}))
+                result = subprocess.run([sys.executable, "-c", script, str(artifact), str(applied),
+                                         str(target), str(active), str(ROOT / "scripts" / "fetch-stockanalysis.py")],
+                                        cwd=repo, text=True, capture_output=True, check=False)
+                return result, target
+
+            batch, batch_root = run_batch("one-refusal-in-400", 1)
+            self.assertEqual(batch.returncode, 0, batch.stderr)
+            report = json.loads(batch.stdout)
+            self.assertEqual(report["accepted_members"], 399)
+            self.assertEqual(report["refusal_budget"], 3)
+            self.assertEqual([row["ticker"] for row in report["refused_members"]], ["ETF000"])
+            self.assertEqual(report["refused_members"][0]["disposition"], "retained")
+            self.assertEqual((batch_root / "ETF000.json").read_bytes(), old_bodies["ETF000"])
+            self.assertEqual(report["refused_members"][0]["source_as_of"], json.loads(old_bodies["ETF000"])["source_as_of"])
+            self.assertEqual(len(list(batch_root.iterdir())), 400)
+            for index in range(1, 400):
+                name = f"ETF{index:03d}.json"
+                self.assertEqual((batch_root / name).read_bytes(), (payloads / name).read_bytes())
+            over, _ = run_batch("too-many-refusals", 4)
+            self.assertNotEqual(over.returncode, 0)
+            self.assertIn("exceed budget: 4 > 3", over.stderr)
+            self.assertEqual([r["ticker"] for r in json.loads(over.stdout)["refused_members"]],
+                             ["ETF000", "ETF001", "ETF002", "ETF003"])
+            corrupt, corrupt_root = run_batch("artifact-integrity-failure", 0, corrupt=True)
+            self.assertNotEqual(corrupt.returncode, 0)
+            self.assertIn("artifact changed after apply", corrupt.stderr)
+            self.assertEqual((corrupt_root / "ETF001.json").read_bytes(), old_bodies["ETF001"])
+            self.assertEqual((active / "ETF000.json").read_bytes(), old_bodies["ETF000"])
 
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (

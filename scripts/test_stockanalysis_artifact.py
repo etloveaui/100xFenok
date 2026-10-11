@@ -116,6 +116,29 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         run("git", "add", "--", "data/stockanalysis", cwd=self.root)
         self.helper.audit_staged_paths(self.root, self.artifact)
 
+    def test_plane_validation_keeps_integrity_without_git_path_staleness(self) -> None:
+        target = self.candidate / "data/admin/data-supply-state/state.json"
+        target.write_text('{"state":2}\n')
+        manifest = self.pack()
+        canonical = self.root / "data/admin/data-supply-state/state.json"
+        canonical.write_text('{"state":3}\n')
+        run("git", "add", "--", "data/admin/data-supply-state/state.json", cwd=self.root)
+        run("git", "commit", "-qm", "shared recovery changed", cwd=self.root)
+        self.assertEqual(self.apply()["status"], "stale", "Git publication retains its overlap fence")
+        kwargs = dict(repo_root=self.root, artifact_root=self.artifact, workflow=WORKFLOW,
+                      run_id="1000", run_number=10, run_attempt=1,
+                      artifact_name="stockanalysis-1000-1", artifact_digest="a" * 64)
+        before = canonical.read_bytes()
+        result = self.helper.validate_plane_artifact(**kwargs)
+        self.assertEqual(result["status"], "validated")
+        self.assertEqual(result["paths"], manifest["paths"])
+        self.assertEqual(canonical.read_bytes(), before, "plane validation cannot copy artifact bytes into Git")
+        self.assertEqual(run("git", "status", "--porcelain", cwd=self.root), "")
+        (self.artifact / "files/data/admin/data-supply-state/state.json").write_text("corrupt\n")
+        with self.assertRaisesRegex(ValueError, "hash or size mismatch"):
+            self.helper.validate_plane_artifact(**kwargs)
+        self.assertEqual(canonical.read_bytes(), before)
+
     def test_publisher_retry_applies_the_existing_acquisition_bytes(self) -> None:
         (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')
         self.pack(run_attempt=1)

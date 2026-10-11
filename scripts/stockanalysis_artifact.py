@@ -578,6 +578,34 @@ def stale_reason(repo: Path, manifest: dict) -> str | None:
     return None
 
 
+def validate_plane_artifact(
+    *, repo_root: Path, artifact_root: Path, workflow: str, run_id: str,
+    run_number: int, run_attempt: int, artifact_name: str, artifact_digest: str,
+) -> dict:
+    """Validate immutable acquisition bytes without copying them into Git.
+
+    Plane admission compares each ETF with active and canonical source floors.
+    An unrelated stock/recovery path changing on main cannot invalidate those
+    ETF bytes. The Git publisher continues to use its stricter staleness fence.
+    """
+    if not re.fullmatch(r"[0-9a-f]{64}", str(artifact_digest)):
+        fail("GitHub artifact digest is invalid")
+    manifest = load_and_validate_artifact(
+        repo_root=repo_root, artifact_root=artifact_root, workflow=workflow,
+        run_id=run_id, run_number=run_number, run_attempt=run_attempt,
+        artifact_name=artifact_name,
+    )
+    repo = repo_root.resolve(strict=True)
+    base = manifest["base_sha"]
+    if run_git(repo, "cat-file", "-e", f"{base}^{{commit}}", check=False).returncode != 0:
+        fail("artifact base commit is unavailable")
+    if run_git(repo, "merge-base", "--is-ancestor", base, "HEAD", check=False).returncode != 0:
+        fail("artifact base is not an ancestor of current main")
+    return {"status": "validated", "confirmation": "pending_member_admission",
+            "paths": manifest["paths"], "artifact_digest": artifact_digest,
+            "base_sha": manifest["base_sha"]}
+
+
 def apply_artifact(
     *,
     repo_root: Path,
@@ -721,8 +749,9 @@ def main() -> None:
     seed = subparsers.add_parser("seed")
     pack = subparsers.add_parser("pack")
     apply = subparsers.add_parser("apply")
+    validate_plane = subparsers.add_parser("validate-plane")
     audit = subparsers.add_parser("audit-stage")
-    for item in (seed, pack, apply, audit):
+    for item in (seed, pack, apply, validate_plane, audit):
         item.add_argument("--repo-root", default=".")
         item.add_argument("--workflow", default=DEFAULT_WORKFLOW)
     seed.add_argument("--candidate-root", required=True)
@@ -730,7 +759,7 @@ def main() -> None:
     pack.add_argument("--candidate-root", required=True)
     pack.add_argument("--artifact-root", required=True)
     pack.add_argument("--base-sha", required=True)
-    for item in (pack, apply):
+    for item in (pack, apply, validate_plane):
         item.add_argument("--run-id", required=True)
         item.add_argument("--run-number", required=True, type=int)
         item.add_argument("--run-attempt", required=True, type=int)
@@ -738,6 +767,9 @@ def main() -> None:
     apply.add_argument("--artifact-root", required=True)
     apply.add_argument("--artifact-digest", required=True)
     apply.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT"))
+    validate_plane.add_argument("--artifact-root", required=True)
+    validate_plane.add_argument("--artifact-digest", required=True)
+    validate_plane.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT"))
     audit.add_argument("--artifact-root", required=True)
     args = parser.parse_args()
     repo = Path(args.repo_root)
@@ -755,8 +787,9 @@ def main() -> None:
             run_attempt=args.run_attempt,
             artifact_name=args.artifact_name,
         )
-    elif args.command == "apply":
-        result = apply_artifact(
+    elif args.command in {"apply", "validate-plane"}:
+        operation = apply_artifact if args.command == "apply" else validate_plane_artifact
+        result = operation(
             repo_root=repo,
             artifact_root=Path(args.artifact_root),
             workflow=args.workflow,
