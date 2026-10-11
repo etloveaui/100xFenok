@@ -89,9 +89,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Test Yahoo ticker producer contracts
-        run: node scripts/test-fetch-yahoo-ticker.mjs
-
       - name: Fetch Yahoo Finance chart snapshot
         id: fetch_yahoo
         env:

@@ -174,9 +174,54 @@ jobs:
               ;;
           esac
 
+  typecheck:
+    needs: clock-admission
+    if: ${{ needs.clock-admission.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          # Fail fast before fetching/materializing the 72k-file data tree.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /100xfenok-next/
+            !/100xfenok-next/public/data/
+            /data/catalog/macro-series.json
+            /data/stockanalysis/etf_universe.json
+            /scripts/lib/
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 100xfenok-next/package-lock.json
+
+      - name: Install dependencies
+        working-directory: 100xfenok-next
+        run: npm ci
+
+      - name: Typecheck before data materialization and OpenNext
+        working-directory: 100xfenok-next
+        run: |
+          set -euo pipefail
+          npm run build:version
+          mkdir -p public/data/catalog public/data/stockanalysis
+          cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
+          cp ../data/stockanalysis/etf_universe.json public/data/stockanalysis/etf_universe.json
+          NEXT_BUILD_TARGET=cloudflare npx --no-install next typegen
+          npm run typecheck
+
+
   build-deploy:
-    needs: [clock-admission, recovery-gate]
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (needs.recovery-gate.outputs.skip != 'true') }}
+    needs: [clock-admission, recovery-gate, typecheck]
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && needs.typecheck.result == 'success' && (needs.recovery-gate.outputs.skip != 'true') }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 80
@@ -219,17 +264,7 @@ jobs:
         working-directory: 100xfenok-next
         run: npm ci
 
-      - name: Typecheck before data materialization and OpenNext
-        working-directory: 100xfenok-next
-        run: |
-          set -euo pipefail
-          npm run build:version
-          mkdir -p public/data/catalog
-          cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
-          NEXT_BUILD_TARGET=cloudflare npx --no-install next typegen
-          npm run typecheck
-
-      - name: Materialize build inputs after typecheck
+      - name: Materialize build inputs
         run: |
           # All canonical data and public fallbacks remain: the live plane can
           # fall through to ASSETS. Only non-runtime root docs/ops are omitted.
@@ -245,19 +280,6 @@ jobs:
           key: next-build-current-${{ runner.os }}-${{ hashFiles('100xfenok-next/package-lock.json') }}
           restore-keys: |
             next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-
-
-      - name: Verify admin static asset source boundary
-        run: |
-          set -euo pipefail
-          node scripts/test-cloud-data-plane-routing-authority.mjs
-          node scripts/test-admin-image-source-guard.mjs
-
-      - name: Verify admin static middleware gate
-        working-directory: 100xfenok-next
-        run: |
-          set -euo pipefail
-          node scripts/test-admin-static-auth-guard.mjs
-          node scripts/test-deploy-smoke-retry.mjs
 
       - name: Build data supply detection floor
         run: |

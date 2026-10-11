@@ -89,8 +89,7 @@ jobs:
           # Required. GITHUB_TOKEN is not a default runner variable, and without
           # it the check cannot read the alarm's run history, returns
           # "unreadable", and exits 1 - which would fire the surfacing step below
-          # with a message that is false. Asserted by
-          # scripts/ops/test-workflow-credential-wiring.mjs.
+          # with a message that is false.
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/ops/check-alarm-liveness.mjs
 

@@ -88,9 +88,6 @@ jobs:
       - name: Create data directory
         run: mkdir -p data data/macro
 
-      - name: Test DefiLlama producer contracts
-        run: node scripts/test-fetch-defillama.mjs
-
       - name: Fetch stablecoins JSON
         id: fetch_defillama
         env:

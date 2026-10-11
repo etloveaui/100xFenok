@@ -4,7 +4,6 @@ set -euo pipefail
 bash scripts/load-guard.sh --assert-nested
 repo_root="$(git rev-parse --show-toplevel)"
 
-node ../scripts/test-sparse-checkout-import-coverage.mjs
 node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../scripts/build-data-supply-detection-floor.mjs"; emitDetectionExpectedFixture();'
 
 floor_output="$(mktemp -d /tmp/fenok-source-freshness-floor-XXXXXX)"

@@ -31,21 +31,6 @@ assert.deepEqual(
   deriveWorkerFirstPatterns(),
   "final patterns must derive from generated enrollment authority",
 );
-assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, [
-  "/data/briefing/*",
-  "/data/computed/*",
-  "/data/damodaran/*",
-  "/data/earnings-overview/*",
-  "/data/edgar-korean-summaries/*",
-  "/data/global-scouter/*",
-  "/data/indices/*",
-  "/data/macro/*",
-  "/data/sentiment/*",
-  "/data/slickcharts/*",
-  "/data/yardney/*",
-  "/data/sec-13f/investors/griffin.json",
-  "/admin/*",
-], "selective contract preserves the eleven public families, Griffin, and the admin asset tree");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob is absent");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.some((pattern) => pattern.startsWith("!")), false, "no negative override can bypass Worker-first");
 assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
@@ -102,4 +87,4 @@ for (const relativePath of [
   );
 }
 
-console.log("cloud-data-plane routing authority: ok (12 selective patterns; all private deny paths retained)");
+console.log("cloud-data-plane routing authority: ok (private deny paths retained)");

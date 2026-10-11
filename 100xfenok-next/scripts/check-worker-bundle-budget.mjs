@@ -7,14 +7,12 @@ import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 export const BUILD_COMMAND = "npm run cf:build";
-export const WARN_GZIP_BYTES = 2950 * 1024;
-export const HARD_GZIP_BYTES = 3000 * 1024;
-export const BASELINE_DELTA_BYTES = 128 * 1024;
+// https://developers.cloudflare.com/workers/platform/limits/#worker-size
+// Current platform limit: uncompressed upload, with no gzip limit.
+export const WORKER_SIZE_LIMIT_BYTES = 64 * 1024 * 1024;
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const APP_ROOT = path.resolve(path.dirname(SCRIPT_PATH), "..");
-const BASELINE_PATH = path.join(APP_ROOT, "scripts", "worker-bundle-baseline.json");
-const BASELINE_RELATIVE_PATH = path.relative(APP_ROOT, BASELINE_PATH);
 const WRANGLER_OUTDIR = path.join(APP_ROOT, ".wrangler", "worker-bundle-budget");
 const WRANGLER_META_PATH = path.join(WRANGLER_OUTDIR, "bundle-meta.json");
 const WRANGLER_BUNDLE_PATH = path.join(WRANGLER_OUTDIR, "worker.js");
@@ -23,34 +21,14 @@ export function formatKiB(bytes) {
   return `${(bytes / 1024).toFixed(2)} KiB`;
 }
 
-export function evaluateBudget(gzipBytes, options = {}) {
-  const warnBytes = options.warnBytes ?? WARN_GZIP_BYTES;
-  const hardBytes = options.hardBytes ?? HARD_GZIP_BYTES;
-  const maxBaselineDeltaBytes = options.maxBaselineDeltaBytes ?? BASELINE_DELTA_BYTES;
-  const baselineGzipBytes = options.baselineGzipBytes;
-  const baselineDeltaBytes = Number.isFinite(baselineGzipBytes) ? gzipBytes - baselineGzipBytes : null;
+export function evaluateBudget(rawBytes) {
   const hardFailures = [];
-  const warnings = [];
-
-  if (gzipBytes > hardBytes) {
-    hardFailures.push(`gzip ${formatKiB(gzipBytes)} exceeds hard budget ${formatKiB(hardBytes)}`);
+  if (!Number.isFinite(rawBytes) || rawBytes < 0) {
+    hardFailures.push("uncompressed upload size is unavailable");
+  } else if (rawBytes > WORKER_SIZE_LIMIT_BYTES) {
+    hardFailures.push(`uncompressed upload ${formatKiB(rawBytes)} exceeds Cloudflare's 64 MiB limit`);
   }
-  if (baselineDeltaBytes !== null && baselineDeltaBytes > maxBaselineDeltaBytes) {
-    hardFailures.push(`baseline delta ${formatKiB(baselineDeltaBytes)} exceeds ${formatKiB(maxBaselineDeltaBytes)}`);
-  }
-  if (hardFailures.length > 0) {
-    return { status: "fail", exitCode: 1, baselineDeltaBytes, hardFailures, warnings };
-  }
-  if (gzipBytes >= warnBytes) {
-    warnings.push(`gzip ${formatKiB(gzipBytes)} is at or above warn budget ${formatKiB(warnBytes)}`);
-  }
-  return {
-    status: warnings.length > 0 ? "warn" : "pass",
-    exitCode: 0,
-    baselineDeltaBytes,
-    hardFailures,
-    warnings,
-  };
+  return { status: hardFailures.length ? "fail" : "pass", exitCode: hardFailures.length ? 1 : 0, hardFailures };
 }
 
 export function parseWranglerUploadSummary(output) {
@@ -70,60 +48,12 @@ export function summarizeMetafileInputs(metafile, limit = 8) {
     .slice(0, limit);
 }
 
-export function parseBaseline(jsonText) {
-  const data = JSON.parse(jsonText);
-  const rawBytes = Number(data.raw_bytes);
-  const gzipBytes = Number(data.gzip_bytes);
-  if (!Number.isFinite(rawBytes) || rawBytes < 0) {
-    throw new Error("baseline raw_bytes must be a non-negative number");
-  }
-  if (!Number.isFinite(gzipBytes) || gzipBytes < 0) {
-    throw new Error("baseline gzip_bytes must be a non-negative number");
-  }
-  return {
-    updatedAt: String(data.updated_at ?? ""),
-    rawBytes,
-    gzipBytes,
-    gzipKiB: Number(data.gzip_kib ?? gzipBytes / 1024),
-  };
-}
-
-export function serializeBaseline(measurement, updatedAt = new Date().toISOString()) {
-  return `${JSON.stringify({
-    updated_at: updatedAt,
-    raw_bytes: measurement.rawBytes,
-    gzip_bytes: measurement.gzipBytes,
-    gzip_kib: measurement.gzipBytes / 1024,
-  }, null, 2)}${os.EOL}`;
-}
-
 export function missingBuildMessage(reason) {
   return [
     "[qa:worker-bundle-budget] OpenNext build output not found.",
     `reason: ${reason}`,
     `Run: ${BUILD_COMMAND}`,
   ].join(os.EOL);
-}
-
-export function missingBaselineMessage(reason) {
-  return [
-    "[qa:worker-bundle-budget] Worker bundle baseline not found.",
-    `reason: ${reason}`,
-    "Run: npm run qa:worker-bundle-budget -- --update-baseline",
-  ].join(os.EOL);
-}
-
-function readBaseline() {
-  if (!fs.existsSync(BASELINE_PATH)) {
-    throw new Error(`missing ${BASELINE_RELATIVE_PATH}`);
-  }
-  return parseBaseline(fs.readFileSync(BASELINE_PATH, "utf8"));
-}
-
-function writeBaseline(measurement) {
-  const updatedAt = new Date().toISOString();
-  fs.writeFileSync(BASELINE_PATH, serializeBaseline(measurement, updatedAt));
-  return parseBaseline(fs.readFileSync(BASELINE_PATH, "utf8"));
 }
 
 function requireOpenNextBuild() {
@@ -187,50 +117,19 @@ function readComposition() {
   return summarizeMetafileInputs(metafile);
 }
 
-function printReport({ measurement, baseline, baselineUpdated, wranglerSummary, composition, budget }) {
-  const hardHeadroom = HARD_GZIP_BYTES - measurement.gzipBytes;
-  const warnHeadroom = WARN_GZIP_BYTES - measurement.gzipBytes;
-  const statusLabel = budget.status === "fail"
-    ? "FAIL"
-    : budget.status === "warn"
-      ? "WARN"
-      : "OK";
-
-  console.log(`[qa:worker-bundle-budget] Worker bundle budget ${statusLabel}`);
+function printReport({ measurement, wranglerSummary, composition, budget }) {
+  console.log(`[qa:worker-bundle-budget] Worker upload ${budget.status === "fail" ? "FAIL" : "OK"}`);
   console.log(`- artifact: ${measurement.bundlePath}`);
   if (wranglerSummary) {
-    console.log(`- wrangler total upload: ${wranglerSummary.rawKiB.toFixed(2)} KiB / gzip: ${wranglerSummary.gzipKiB.toFixed(2)} KiB`);
+    console.log(`- uncompressed total upload: ${wranglerSummary.rawKiB.toFixed(2)} KiB (platform limit 64 MiB)`);
+    console.log(`- gzip: ${wranglerSummary.gzipKiB.toFixed(2)} KiB (informational)`);
   }
-  console.log(`- raw: ${formatKiB(measurement.rawBytes)} (${measurement.rawBytes} bytes)`);
-  console.log(`- gzip: ${formatKiB(measurement.gzipBytes)} (${measurement.gzipBytes} bytes)`);
-  console.log(`- warn budget: ${formatKiB(WARN_GZIP_BYTES)} gzip`);
-  console.log(`- hard budget: ${formatKiB(HARD_GZIP_BYTES)} gzip`);
-  console.log(`- headroom to warn: ${formatKiB(warnHeadroom)} (${warnHeadroom} bytes)`);
-  console.log(`- headroom to hard: ${formatKiB(hardHeadroom)} (${hardHeadroom} bytes)`);
-  if (baseline) {
-    console.log(`- baseline: ${BASELINE_RELATIVE_PATH} gzip=${formatKiB(baseline.gzipBytes)} (${baseline.gzipBytes} bytes) updated_at=${baseline.updatedAt}`);
-    console.log(`- baseline delta: ${formatKiB(budget.baselineDeltaBytes)} (${budget.baselineDeltaBytes} bytes)`);
-    console.log(`- baseline delta hard budget: ${formatKiB(BASELINE_DELTA_BYTES)} gzip`);
-  }
-  if (baselineUpdated) {
-    console.log(`- baseline updated: ${BASELINE_RELATIVE_PATH}`);
-  }
-  for (const warning of budget.warnings) {
-    console.log(`- WARN: ${warning}`);
-  }
-  for (const failure of budget.hardFailures) {
-    console.log(`- FAIL: ${failure}`);
-  }
+  for (const failure of budget.hardFailures) console.log(`- FAIL: ${failure}`);
   console.log("- top composition:");
-  for (const item of composition) {
-    console.log(`  - ${formatKiB(item.bytes)} ${item.path}`);
-  }
+  for (const item of composition) console.log(`  - ${formatKiB(item.bytes)} ${item.path}`);
 }
 
 export function main() {
-  const updateBaseline = process.argv.slice(2).includes("--update-baseline");
-  let baseline = null;
-
   try {
     requireOpenNextBuild();
   } catch (error) {
@@ -238,36 +137,13 @@ export function main() {
     return 1;
   }
 
-  if (!updateBaseline) {
-    try {
-      baseline = readBaseline();
-    } catch (error) {
-      console.error(missingBaselineMessage(error instanceof Error ? error.message : String(error)));
-      return 1;
-    }
-  }
-
   const wranglerOutput = runWranglerDryRun();
   const wranglerSummary = parseWranglerUploadSummary(wranglerOutput);
   const measurement = readBundleMeasurement();
   const composition = readComposition();
 
-  if (updateBaseline) {
-    if (measurement.gzipBytes > HARD_GZIP_BYTES) {
-      const budget = evaluateBudget(measurement.gzipBytes, {
-        baselineGzipBytes: baseline?.gzipBytes,
-      });
-      printReport({ measurement, baseline, baselineUpdated: false, wranglerSummary, composition, budget });
-      console.error(`[qa:worker-bundle-budget] baseline not updated because gzip exceeds hard budget ${formatKiB(HARD_GZIP_BYTES)}`);
-      return 1;
-    }
-    baseline = writeBaseline(measurement);
-  }
-
-  const budget = evaluateBudget(measurement.gzipBytes, {
-    baselineGzipBytes: baseline.gzipBytes,
-  });
-  printReport({ measurement, baseline, baselineUpdated: updateBaseline, wranglerSummary, composition, budget });
+  const budget = evaluateBudget(wranglerSummary ? Math.ceil(wranglerSummary.rawKiB * 1024) : NaN);
+  printReport({ measurement, wranglerSummary, composition, budget });
   return budget.exitCode;
 }
 

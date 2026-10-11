@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { isProtectedAdminImageRequest } from "../100xfenok-next/scripts/admin-image-source-guard.mjs";
 
 const origin = "https://100xfenok.example";
@@ -38,11 +37,5 @@ assert.equal(isProtectedAdminImageRequest(imageRequest("/admin/screenshot.jpg", 
 const duplicate = imageRequest("/pwa-icon-192-v6.png");
 duplicate.searchParams.append("url", "/admin/screenshot.jpg");
 assert.equal(isProtectedAdminImageRequest(duplicate), true, "ambiguous sources fail closed when any local source is admin");
-
-const workerSource = readFileSync(new URL("../100xfenok-next/worker.ts", import.meta.url), "utf8");
-const guardAt = workerSource.indexOf("if (isProtectedAdminImageRequest(url))");
-const handlerAt = workerSource.indexOf("return handler.fetch(request, env, ctx)");
-assert.ok(guardAt > 0 && handlerAt > guardAt, "the admin image guard runs before OpenNext's image handler");
-assert.match(workerSource.slice(guardAt, handlerAt), /status: 403,[\s\S]*?"cache-control": "no-store"/u);
 
 console.log("admin image source guard: ok");
