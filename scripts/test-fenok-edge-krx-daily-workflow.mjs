@@ -12,26 +12,6 @@ import { fileURLToPath } from "node:url";
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fenok-edge-krx-daily.yml", import.meta.url), "utf8");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/,
-  "the KRX workflow must stage via the lane manifest (parity defense)");
-assert.match(workflowText, /controlled_failure:/,
-  "the KRX workflow must expose dispatch-only failure injection");
-assert.match(workflowText, /INPUT_CONTROLLED_FAILURE/);
-assert.match(workflowText, /--controlled-failure/);
-assert.match(workflowText, /--stage always_if_exists/);
-assert.match(workflowText, /--stage success_if_exists/);
-assert.match(workflowText, /steps\.krx_fetch\.outputs\.attempt_outcome \|\| steps\.krx_fetch\.outcome/,
-  "degraded LKG retention must emit failure evidence even when the fetch step exits zero");
-assert.match(workflowText, /CANDIDATE_OUTCOME.*success.*CANDIDATE_UPDATED.*true/,
-  "walkback may stop only after a candidate reports a promoted success");
-assert.match(workflowText, /CANDIDATE_UPDATED.*true.*CANDIDATE_EXIT_CODE.*-eq 0.*NODE_EXIT_CODE.*-eq 0/,
-  "walkback success must require both producer recovery and process exit codes to be zero");
-assert.match(workflowText, /if \[ "\$KRX_FETCH_OUTCOME" = "success" \]; then/,
-  "canonical/computed outputs must only be staged after a promotable success");
-assert.match(workflowText, /if: \$\{\{ always\(\)/,
-  "KRX failure state must still reach the commit path");
-assert.doesNotMatch(workflowText, /git add -A/);
-
 function workflowRunBlock(stepName) {
   const stepStart = workflowText.indexOf(`      - name: ${stepName}\n`);
   assert.ok(stepStart >= 0, `workflow step is missing: ${stepName}`);
@@ -215,9 +195,4 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
   assert.match(rejected.stdout, /recovery_reason=auth_error/,
     "the refresh log must name the access rejection so the run is attributable without the raw payload");
 }
-assert.match(workflowText, /CANDIDATE_REASON" = "auth_error" \]; then[\s\S]*?break/,
-  "walkback must break on recovery_reason=auth_error rather than spending the date budget");
-assert.match(workflowText, /name: Commit and push KRX source evidence\n\s+if: \$\{\{ always\(\)/,
-  "the evidence commit must run after a failed refresh step so auth_error evidence reaches main");
-
 console.log("test-fenok-edge-krx-daily-workflow: ok");

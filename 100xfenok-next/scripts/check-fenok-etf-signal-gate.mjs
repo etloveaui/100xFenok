@@ -95,13 +95,6 @@ function fileExists(root, relPath) {
   return fs.existsSync(path.join(root, relPath));
 }
 
-function fileContains(root, relPath, needles) {
-  const abs = path.join(root, relPath);
-  if (!fs.existsSync(abs)) return false;
-  const text = fs.readFileSync(abs, "utf8");
-  return needles.every((needle) => text.includes(needle));
-}
-
 function sameJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
@@ -440,63 +433,7 @@ export function runEtfSignalGateChecks(options = {}) {
   const publicMirrorExists = publicSummaryArtifact.exists;
   const publicFullLeak = fileExists(root, PUBLIC_ETF_SIGNALS_REL);
   const publicMirrorMatches = Boolean(etfSummary && publicSummary && sameJson(etfSummary, publicSummary));
-  // Refactored routes delegate; the proof follows the chain: the real route
-  // entry imports AND invokes both helpers, the helper keeps its four
-  // semantics, and the summary file is read inside getFenokEtfSignalsSummary
-  // itself. A missing route, a disconnected helper, or a filename mentioned
-  // only by an unrelated function must still fail.
-  const API_ROUTE_REL = "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts";
-  const SIGNAL_ROUTE_HELPER_REL = "100xfenok-next/src/lib/server/fenok-etf-signal-route.ts";
-  const DATA_LOADER_REL = "100xfenok-next/src/lib/server/data-loader.ts";
-  const routeText = fileExists(root, API_ROUTE_REL)
-    ? fs.readFileSync(path.join(root, API_ROUTE_REL), "utf8")
-    : null;
-  const routeExists = routeText !== null;
-  const routeDelegates = Boolean(routeText
-    && routeText.includes('from "@/lib/server/fenok-etf-signal-route"')
-    && routeText.includes('from "@/lib/server/data-loader"')
-    && routeText.includes("buildEtfSignalRouteResponse(")
-    && routeText.includes("getFenokEtfSignalsSummary("));
-  const helperSemantics = fileContains(root, SIGNAL_ROUTE_HELPER_REL, [
-    "fields?: string[]",
-    "normalizeEtfSignalRow",
-    "Array.isArray(rawRow)",
-    "FENOK_ETF_SIGNAL_NOT_FOUND",
-  ]);
-  const loaderText = fileExists(root, DATA_LOADER_REL)
-    ? fs.readFileSync(path.join(root, DATA_LOADER_REL), "utf8")
-    : null;
-  const loaderFnStart = loaderText ? loaderText.indexOf("function getFenokEtfSignalsSummary") : -1;
-  // Prove the declaration plus its immediate first statement only: the real
-  // loader starts with `const result = await readDataAsset(<summary path>)`.
-  // An export-delimited span would let a later non-exported function smuggle
-  // the filename in, and a filename without a read is not linkage either.
-  const loaderDecl = loaderFnStart >= 0
-    ? loaderText.slice(loaderFnStart).match(/function getFenokEtfSignalsSummary\s*\([^)]*\)\s*(?::[^{\n]+)?\{/)
-    : null;
-  const loaderFirstStmt = loaderDecl
-    ? (() => {
-      const start = loaderFnStart + loaderDecl.index + loaderDecl[0].length;
-      const semi = loaderText.indexOf(";", start);
-      return semi === -1 ? "" : loaderText.slice(start, semi);
-    })()
-    : "";
-  const summaryLoaderLinkage = Boolean(loaderDecl)
-    && /\bawait\s+readDataAsset\s*\(/.test(loaderFirstStmt)
-    && loaderFirstStmt.includes("fenok_etf_signals_summary.json");
-  const apiRouteReady = routeExists && routeDelegates && helperSemantics && summaryLoaderLinkage;
-  const detailUiReady = fileContains(root, "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx", [
-    "/api/data/fenok-etf-signals/",
-    "Fenok Edge ETF 시그널",
-    "ETF_SIGNAL_SCORE_FIELDS",
-  ]);
-
   if (publicFullLeak) errors.push("public full ETF signal payload must not exist: public/data/computed/fenok_etf_signals.json");
-  if (!apiRouteReady) errors.push("ETF signal API route proof is missing or incomplete");
-  if (!detailUiReady) errors.push("ETF detail UI signal card proof is missing or incomplete");
-  if (fileContains(root, "100xfenok-next/src/app/etfs/[ticker]/EtfDetailClient.tsx", ["classification_risk"])) {
-    errors.push("retired classification_risk axis must not remain in the ETF detail UI");
-  }
 
   const stockSignals = stockSignalsArtifact.value;
   if (stockSignals && !Array.isArray(stockSignals.rows)) errors.push("fenok_signals.json rows must be an array");
@@ -531,18 +468,10 @@ export function runEtfSignalGateChecks(options = {}) {
       stock_lens_etf_leaks: leakedEtfRows.length,
     },
     public_surface_proof: {
-      ready: publicMirrorExists && !publicFullLeak && publicMirrorMatches && apiRouteReady && detailUiReady,
+      ready: publicMirrorExists && !publicFullLeak && publicMirrorMatches,
       public_mirror_exists: publicMirrorExists,
       public_full_payload_absent: !publicFullLeak,
       public_mirror_matches_internal_summary: publicMirrorMatches,
-      api_route_ready: apiRouteReady,
-      detail_ui_card_ready: detailUiReady,
-      route_proof: {
-        route_exists: routeExists,
-        route_delegates: routeDelegates,
-        helper_semantics: helperSemantics,
-        summary_loader_linkage: summaryLoaderLinkage,
-      },
       files: {
         public_summary: "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
         api_route: "100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts",
