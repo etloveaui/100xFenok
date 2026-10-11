@@ -17,6 +17,7 @@ import {
   classifyKpiGenerationStoppage,
   evaluateWorkflow,
   fetchKpiGenerationSnapshots,
+  fetchRetentionSweepHealth,
   isQueueEvictedRun,
   mergeWorkflowRunBatches,
   needsMissedWindowReverification,
@@ -869,5 +870,30 @@ assert.match(
   /status=in_progress.*event=schedule/,
   "the restore liveness query can inspect active scheduled runs",
 );
+
+// A green out-of-window job cannot heal a two-campaign sweep gap. Read the
+// durable outcome, including pagination, and surface unreadable state loudly.
+{
+  const { STATE_TITLE, classifyRetentionSchedule } = await import('./retention-schedule.mjs');
+  const state = { schema: 1, weekly_enabled: true, first_success: { at: '2026-09-26T15:13:58.775Z' } };
+  const now = Date.parse('2026-10-11T14:00:00Z');
+  const stale = classifyRetentionSchedule(state, {now});
+  assert.deepEqual(stale.alarm_reasons, ['retention_sweep_stale']);
+  assert.match(buildIssueBody([stale]), /2026-09-26T15:13:58.775Z/);
+  assert.equal(classifyRetentionSchedule({...state,last_success:{at:'2026-10-10T17:00:00Z'}},{now}).status,'ok');
+  for (const invalid of [null,{}, {...state,last_success:{at:'not-a-date'}}, {...state,last_success:{at:'2026-11-01T00:00:00Z'}}]) {
+    assert.deepEqual(classifyRetentionSchedule(invalid,{now}).alarm_reasons,['retention_sweep_unreadable']);
+  }
+  const issue = { title: STATE_TITLE, body: '[retention-schedule-state]\n'+JSON.stringify(state) };
+  let calls=0;
+  const paginated = await fetchRetentionSweepHealth({token:'test',owner:'o',repo:'r',now,
+    fetchFn:async()=>({ok:true,json:async()=>++calls===1?Array.from({length:100},()=>({title:'another'})):[issue]})});
+  assert.equal(calls,2);
+  assert.deepEqual(paginated.alarm_reasons,['retention_sweep_stale']);
+  for (const rows of [[],[issue,issue],[{...issue,pull_request:{}}],[{...issue,body:'broken'}]]) {
+    const result=await fetchRetentionSweepHealth({owner:'o',repo:'r',now,fetchFn:async()=>({ok:true,json:async()=>rows})});
+    assert.deepEqual(result.alarm_reasons,['retention_sweep_unreadable']);
+  }
+}
 
 console.log("check-pipeline-job-health tests passed");

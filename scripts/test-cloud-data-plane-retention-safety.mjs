@@ -1085,10 +1085,11 @@ try {
 
   // Scheduled retries are bounded, idempotent, and cannot infer acceptance from a green job.
   {
-    const {freshState, claim, finish, acceptedReport, ready} = await import('./ops/retention-schedule.mjs');
+    const {freshState, claim, finish, acceptedReport, ready, classifyRetentionSchedule} = await import('./ops/retention-schedule.mjs');
     let state=freshState();
     assert.equal(claim(state,{now:'2026-09-26T15:59:00Z',runId:'x'}).run,false);
-    assert.equal(claim(state,{now:'2026-09-26T21:00:00Z',runId:'x'}).run,false);
+    assert.equal(claim(state,{now:'2026-09-27T00:00:00Z',runId:'x'}).run,false);
+    assert.equal(claim(state,{now:'2026-09-26T23:16:00Z',runId:'delayed'}).run,true);
     assert.equal(claim(state,{now:'2026-10-03T16:00:00Z',runId:'x'}).run,false);
     for(let i=0;i<10;i++) {
       const now=new Date(Date.parse('2026-09-26T16:00:00Z')+i*1800000).toISOString();
@@ -1102,18 +1103,35 @@ try {
     state=claim(freshState(),{now:'2026-09-26T16:00:00Z',runId:'success'}).state;
     assert.equal(claim(state,{now:'2026-09-26T16:30:00Z',runId:'unresolved'}).run,false);
     assert.equal(ready(state,{now:'2026-09-26T16:03:00Z',runId:'success'}).run,true);
-    assert.equal(ready(state,{now:'2026-09-26T21:00:00Z',runId:'success'}).run,false);
-    assert.equal(ready(state,{now:'2026-09-26T20:57:00Z',runId:'success'}).run,false);
+    assert.equal(ready(state,{now:'2026-09-27T00:00:00Z',runId:'success'}).run,false);
+    assert.equal(ready(state,{now:'2026-09-26T23:57:00Z',runId:'success'}).run,false);
+    assert.equal(ready(state,{now:'2026-09-26T23:16:00Z',runId:'success'}).run,true);
     await assert.rejects(runWindow({repo:'o/r',hardDeadlineEpochSeconds:1,io:{error:()=>{}},deps:{now:()=>Date.parse('2026-09-26T21:00:00Z')}}),/WINDOW_BUDGET_INVALID/);
-    const report={result:'retention_window_applied',publishers:Array(28).fill('p'),
-      restore:{confirmed:Array(28).fill('p'),unconfirmed:[],failed:[]},duration:{first_disable_to_restore_seconds:120},
-      apply:{result:'retention_batch_applied',apply_exit_code:0,verification:'ok',verification_datasets:Object.fromEntries(Array.from({length:26},(_,i)=>[i,{missing_referenced_payloads:[]}])),payloads:{bytes:100},manifests:{bytes:20}}};
+    const report={result:'retention_window_applied',publishers:['p.yml','q.yml'],
+      restore:{confirmed:['q.yml','p.yml'],unconfirmed:[],failed:[]},duration:{first_disable_to_restore_seconds:120},
+      apply:{result:'retention_batch_applied',apply_exit_code:0,verification:'ok',verification_datasets:{one:{missing_referenced_payloads:[]}},payloads:{bytes:100},manifests:{bytes:20}}};
     assert.equal(acceptedReport(report),true);
     for(const bad of [null,{result:'retention_window_deferred'}, {...report,restore:{confirmed:[],unconfirmed:['p']}}, {...report,duration:{first_disable_to_restore_seconds:1201}}, {...report,apply:{...report.apply,verification:'failed'}}]) assert.equal(acceptedReport(bad),false);
+    for(const bad of [
+      {...report,publishers:'p.yml'}, {...report,publishers:['p.yml','p.yml']},
+      {...report,restore:{confirmed:['p.yml','other.yml']}},
+      {...report,restore:{confirmed:['p.yml','q.yml'],failed:['q.yml']}},
+      {...report,apply:{...report.apply,verification_datasets:{}}},
+      {...report,apply:{...report.apply,verification_datasets:{one:{missing_referenced_payloads:['live-object']}}}},
+      {...report,duration:{first_disable_to_restore_seconds:-1}},
+    ]) assert.equal(acceptedReport(bad),false);
     state=finish(state,{now:'2026-09-26T16:02:00Z',runId:'success',report});
     assert.equal(state.weekly_enabled,true);assert.equal(state.first_success.bytes_freed,120);
+    assert.deepEqual(state.last_success,state.first_success);
+    assert.equal(classifyRetentionSchedule(state,{now:Date.parse('2026-10-10T16:02:00Z')}).status,'alarm');
+    assert.equal(classifyRetentionSchedule(state,{now:Date.parse('2026-10-10T16:01:59Z')}).status,'ok');
     assert.equal(claim(state,{now:'2026-09-26T16:30:00Z',runId:'after'}).run,false);
     assert.equal(claim(state,{now:'2026-10-03T16:00:00Z',runId:'next_week'}).run,true);
+    state=claim(state,{now:'2026-10-03T16:00:00Z',runId:'next_week'}).state;
+    state=finish(state,{now:'2026-10-03T16:02:00Z',runId:'next_week',report});
+    assert.equal(state.first_success.at,'2026-09-26T16:02:00Z');
+    assert.equal(state.last_success.at,'2026-10-03T16:02:00Z');
+    assert.equal(classifyRetentionSchedule(state,{now:Date.parse('2026-10-10T16:02:00Z')}).status,'ok');
     console.log('retention safety 18 ok (ten attempts; busy defer; strict success; next-week gate)');
   }
 

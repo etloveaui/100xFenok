@@ -6,11 +6,13 @@ import {pathToFileURL} from 'node:url';
 
 export const FIRST_NIGHT = '2026-09-27';
 export const STATE_TITLE = '100xFenok R2 retention schedule state';
+export const NIGHT_CLOSE_HOUR_KST = 9;
+const WEEK_MS = 7 * 86400_000;
 const MARKER = '[retention-schedule-state]\n';
 export function freshState() { return {schema: 1, weekly_enabled: false, campaign: null}; }
 export function campaignAt(iso) {
   const kst = new Date(new Date(iso).getTime() + 9 * 3600_000);
-  if (!Number.isFinite(kst.getTime()) || kst.getUTCDay() !== 0 || kst.getUTCHours() < 1 || kst.getUTCHours() >= 6) return null;
+  if (!Number.isFinite(kst.getTime()) || kst.getUTCDay() !== 0 || kst.getUTCHours() < 1 || kst.getUTCHours() >= NIGHT_CLOSE_HOUR_KST) return null;
   return kst.toISOString().slice(0,10);
 }
 export function claim(state, {now, runId}) {
@@ -29,7 +31,7 @@ export function claim(state, {now, runId}) {
 }
 export function ready(state, {now, runId}) {
   const id=campaignAt(now), c=state.campaign;
-  const close=id ? Date.parse(`${id}T06:00:00+09:00`) : NaN;
+  const close=id ? Date.parse(`${id}T${String(NIGHT_CLOSE_HOUR_KST).padStart(2,'0')}:00:00+09:00`) : NaN;
   const own=c?.attempts.find(a=>a.run_id===runId && a.outcome==='pending');
   const run=Boolean(id && c?.id===id && own && !c.succeeded && close-Date.parse(now)>240000);
   return {run, reason:run?'ready':'window_closed_or_claim_invalid', hard_deadline_epoch_seconds:run?Math.floor(close/1000):null};
@@ -38,14 +40,20 @@ export function acceptedReport(report) {
   const a = report?.apply;
   const datasets = Object.values(a?.verification_datasets ?? {});
   const restore = report?.restore;
+  if (!Array.isArray(report?.publishers) || !Array.isArray(restore?.confirmed)) return false;
+  const publishers = new Set(report?.publishers ?? []);
+  const confirmed = new Set(restore?.confirmed ?? []);
   return report?.result === 'retention_window_applied'
     && a?.result === 'retention_batch_applied' && a.apply_exit_code === 0
-    && a.verification === 'ok' && datasets.length === 26
-    && datasets.every(d => Array.isArray(d.missing_referenced_payloads) && d.missing_referenced_payloads.length === 0)
-    && (report.publishers?.length ?? 0) === 28
-    && restore?.confirmed?.length === 28
+    && a.verification === 'ok' && datasets.length > 0
+    && datasets.every(d => Array.isArray(d?.missing_referenced_payloads) && d.missing_referenced_payloads.length === 0)
+    && publishers.size > 0 && publishers.size === report.publishers.length
+    && [...publishers].every(file => typeof file === 'string' && file.length > 0)
+    && confirmed.size === publishers.size && confirmed.size === restore.confirmed.length
+    && [...publishers].every(file => confirmed.has(file))
     && ['unconfirmed','failed','missing','unsupported'].every(k => !restore[k]?.length)
     && Number.isFinite(report.duration?.first_disable_to_restore_seconds)
+    && report.duration.first_disable_to_restore_seconds >= 0
     && report.duration.first_disable_to_restore_seconds <= 1200;
 }
 export function finish(state, {runId, report, now}) {
@@ -63,9 +71,26 @@ export function finish(state, {runId, report, now}) {
     a.pause_seconds = report.duration.first_disable_to_restore_seconds;
     c.succeeded = true;
     next.weekly_enabled = true;
-    next.first_success ??= {campaign:c.id,run_id:runId,at:now,bytes_freed:a.bytes_freed,pause_seconds:a.pause_seconds};
+    next.last_success = {campaign:c.id,run_id:runId,at:now,bytes_freed:a.bytes_freed,pause_seconds:a.pause_seconds};
+    next.first_success ??= next.last_success;
   }
   return next;
+}
+
+// Job success includes out-of-window no-ops. Only a verified sweep advances this
+// clock; two missed weekly campaigns raise an incident independently of job exits.
+export function classifyRetentionSchedule(state, {now = Date.now()} = {}) {
+  const base = {file:'retention-sweep.yml', label:'R2 retention sweep', alarming:true,
+    status:'alarm', alarm_reasons:['retention_sweep_unreadable']};
+  if (state?.schema !== 1 || typeof state.weekly_enabled !== 'boolean') return base;
+  const success = state.last_success ?? state.first_success;
+  const stamp = Date.parse(success?.at ?? ''), observed = Number(now);
+  if (!Number.isFinite(stamp) || !Number.isFinite(observed) || stamp > observed) return base;
+  const stale = observed - stamp >= 2 * WEEK_MS;
+  return {...base, status:stale?'alarm':'ok', alarming:stale,
+    alarm_reasons:stale?['retention_sweep_stale']:[], last_verified_sweep_at:success.at,
+    missed_sweep_cycles:Math.floor((observed-stamp)/WEEK_MS),
+    message:stale?'No verified sweep in two weekly campaigns. Green skipped runs do not refresh this clock.':null};
 }
 function gh(args, repo) {
   return execFileSync('gh', [...args, ...(!['api'].includes(args[0]) ? ['--repo',repo] : [])], {encoding:'utf8',timeout:20000,maxBuffer:4*1024*1024});
@@ -107,7 +132,7 @@ export function main(argv=process.argv.slice(2), env=process.env) {
     const result=claim(state,{now,runId});
     if (result.run) save(repo,number,result.state);
     if (env.GITHUB_OUTPUT) fs.appendFileSync(env.GITHUB_OUTPUT,`run=${result.run}\n`);
-    console.log(JSON.stringify({run:result.run,reason:result.reason,campaign:result.state.campaign?.id}));return;
+    console.log(JSON.stringify({run:result.run,outcome:result.run?'claimed':'skipped',reason:result.reason,campaign:result.state.campaign?.id}));return;
   }
   if (command === 'finish') {
     let report=null;
