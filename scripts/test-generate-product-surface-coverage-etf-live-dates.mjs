@@ -60,7 +60,7 @@ try {
   });
   writeJson("stockanalysis/etfs/AAOX.json", {
     ticker: "AAOX",
-    source_as_of: "2026-07-25T00:00:00Z",
+    source_as_of: "2026-07-26T02:00:00+09:00",
     partial_reason_codes: ["quote_deferred_initial_reconcile", "history_deferred_initial_reconcile"],
   });
   writeJson("stockanalysis/etfs/AAAU.json", {
@@ -246,6 +246,11 @@ try {
   assert.equal(lifecycleFresh.checks.find((row) => row.label === "ETF 상세 전체 구성원 원천 기준일").status, "ready");
   assert.ok(lifecycleFresh.stamp_evidence.members.every((row) => row.stamp_class === "date_bearing"));
   assert.deepEqual(fs.readFileSync(oldHistoryPath), oldHistory);
+  execFileSync("node", [path.join(ROOT, "scripts", "generate-product-surface-coverage.mjs"), "--data-root", fixtureRoot],
+    {env: {...process.env, PS_GENERATED_AT: "2026-07-27T02:00:00Z"}, stdio: ["ignore", "pipe", "pipe"]});
+  const midnightOutput = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "data", "admin", "product-surface-coverage.json"), "utf8"));
+  assert.equal(midnightOutput.surfaces.find((row) => row.id === "stock_detail").checks.find((row) => row.label === "가격 원천 기준일").age_days, 0,
+    "US Sunday evening must not accrue a UTC Monday trading day");
   console.log("test-generate-product-surface-coverage-etf-live-dates: ok");
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });

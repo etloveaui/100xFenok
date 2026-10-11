@@ -1,3 +1,5 @@
+import { dateOnly as policyDateOnly } from "./freshness-policy.mjs";
+
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -29,8 +31,7 @@ export function todayKST(): string {
 }
 
 export function dateOnly(value: string | null | undefined): string | null {
-  const match = typeof value === "string" ? DATE_RE.exec(value) : null;
-  return match ? `${match[1]}-${match[2]}-${match[3]}` : null;
+  return policyDateOnly(value, { calendar: "kr_trading" });
 }
 
 export function formatAsOf(value: string | null | undefined): string | null {

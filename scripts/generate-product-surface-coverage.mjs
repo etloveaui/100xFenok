@@ -8,6 +8,7 @@
  */
 
 import fs from "node:fs";
+import { dateOnly } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 import path from "node:path";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
@@ -100,12 +101,6 @@ function firstDate(...values) {
   return null;
 }
 
-function dateOnly(value) {
-  if (typeof value !== "string") return null;
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return match ? `${match[1]}-${match[2]}-${match[3]}` : null;
-}
-
 function latestDate(...values) {
   return values
     .map((value) => ({ raw: firstDate(value), key: dateOnly(value) }))
@@ -137,9 +132,10 @@ function freshness(label, asOf, maxAgeDays, { warnOnly = false, calendar = null,
   // wall-clock time here made a fully fresh fixture appear stale as the test
   // date aged, while the emitted generated_at claimed the injected clock.
   const clockMs = new Date(generatedAt).getTime();
-  const clockDate = new Date(clockMs).toISOString().slice(0, 10);
+  const policy = { calendar: calendar === "us_market" ? "us_trading" : calendar === "krx_market" ? "kr_trading" : "calendar" };
+  const clockDate = dateOnly(generatedAt, policy);
   const days = calendar
-    ? businessDayAge(dateOnly(asOf), clockDate, calendar)
+    ? businessDayAge(dateOnly(asOf, policy), clockDate, calendar)
     : ageDays(asOf, clockMs);
   if (!asOf || days === null) {
     return check(
@@ -155,7 +151,7 @@ function freshness(label, asOf, maxAgeDays, { warnOnly = false, calendar = null,
   return check(
     label,
     stale ? "stale" : "ready",
-    `기준 ${dateOnly(asOf) ?? asOf} · ${days}일 전${stale && warnOnly ? ` (경고: ${maxAgeDays}일 초과 노후화)` : ""}`,
+    `기준 ${dateOnly(asOf, policy) ?? asOf} · ${days}일 전${stale && warnOnly ? ` (경고: ${maxAgeDays}일 초과 노후화)` : ""}`,
     { as_of: asOf, age_days: days, max_age_days: maxAgeDays, calendar, warn_only: warnOnly || undefined },
   );
 }
@@ -228,13 +224,7 @@ function datelessMembers(names) {
 }
 
 function trueSourceDate(value) {
-  if (value == null) return null;
-  if (isRealCalendarDate(value)) return value;
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) && Number.isFinite(new Date(value).getTime())) {
-    const day = value.slice(0, 10);
-    if (isRealCalendarDate(day)) return day;
-  }
-  return value;
+  return dateOnly(value);
 }
 
 function stampEvidence(members) {

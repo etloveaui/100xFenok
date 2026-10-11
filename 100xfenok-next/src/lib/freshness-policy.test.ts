@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { FAMILY_POLICY, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "./freshness-policy.mjs";
+import { FAMILY_POLICY, dateOnly, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "./freshness-policy.mjs";
+
+import { dateOnly as kstDateOnly, daysUntilKstDate, isStaleAsOf } from "./data-state";
 
 const calendars = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, "../../../scripts/lib/data-supply-detection-calendars.json"), "utf8"));
 
@@ -220,4 +222,24 @@ test("lane-registry drift guard: matching ids keep the same cadence kind", () =>
     if (kind === null) continue; // no lane record for this id; nothing to drift against
     assert.equal(kind, FAMILY_POLICY[id].cadence, `${id}: lane=${kind} policy=${FAMILY_POLICY[id].cadence}`);
   }
+});
+
+
+test("timestamp days follow the policy zone; civil dates never shift", () => {
+  const us = { cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading" };
+  const kr = { ...us, calendar: "kr_trading" };
+  assert.equal(dateOnly("2026-10-06T02:30:00Z", us), "2026-10-05");
+  assert.equal(dateOnly("2026-10-05T16:30:00Z", kr), "2026-10-06");
+  assert.equal(dateOnly("2026-10-06T02:30:00+09:00"), "2026-10-05");
+  for (const policy of [us, kr, { calendar: "calendar" }]) {
+    assert.equal(dateOnly("2026-10-05", policy), "2026-10-05");
+    for (const invalid of ["2026-02-30T00:00:00Z", "2026-10-05garbage", "2026-10-05T00:00:00", "2026-10-05T25:00:00Z"]) {
+      assert.equal(dateOnly(invalid, policy), null);
+    }
+  }
+  assert.equal(freshnessVerdict("2026-10-06T02:30:00Z", us, "2026-10-07T02:30:00Z").ageDays, 1);
+  assert.equal(freshnessVerdict("2026-10-05T16:30:00Z", kr, "2026-10-07").ageDays, 1);
+  assert.equal(kstDateOnly("2026-10-05T16:30:00Z"), "2026-10-06");
+  assert.equal(daysUntilKstDate("2026-10-05T16:30:00Z", "2026-10-06"), 0);
+  assert.equal(isStaleAsOf("2026-10-05T16:30:00Z", 0, "2026-10-06"), false);
 });

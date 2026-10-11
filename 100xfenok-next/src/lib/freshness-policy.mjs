@@ -126,14 +126,14 @@ export function policyToday(now, policy) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: zone }).format(new Date(now));
 }
 
-export function dateOnly(value) {
+export function dateOnly(value, policy = null) {
   if (typeof value !== "string") return null;
   const text = value.trim();
   const day = text.slice(0, 10);
   if (!isRealCalendarDate(day)) return null;
   if (DATE_RE.test(text)) return day;
   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(text)
-    && Number.isFinite(Date.parse(text)) ? day : null;
+    && Number.isFinite(Date.parse(text)) ? policyToday(text, policy) : null;
 }
 
 function utcMs(date) {
@@ -151,7 +151,7 @@ export function ageInTradingDays(asOf, today) {
 }
 
 export function sourceAgeAnchor(asOf, policy) {
-  const day = dateOnly(asOf);
+  const day = dateOnly(asOf, policy);
   if (!day) return null;
   if (policy?.sourceAnchor === "week_end") {
     const weekday = new Date(`${day}T00:00:00Z`).getUTCDay();
@@ -181,8 +181,8 @@ export function freshnessVerdict(asOf, family, today, { calendars = null } = {})
     cadence: policy?.cadence ?? null,
   };
   if (!policy) return unknown;
-  const asOfDate = dateOnly(asOf);
-  const todayDate = dateOnly(today === undefined ? policyToday(new Date(), policy) : today);
+  const asOfDate = dateOnly(asOf, policy);
+  const todayDate = dateOnly(today === undefined ? policyToday(new Date(), policy) : today, policy);
   if (!asOfDate || !todayDate || asOfDate > todayDate) return unknown;
   const klass = FRESHNESS_CLASSES[policy.cadence];
   if (!klass) return unknown;
