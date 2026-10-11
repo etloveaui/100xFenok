@@ -184,12 +184,13 @@ export class LaneLkgStore {
   _readValidLkg(key, item, validateDocument, sourceAsOf) {
     const descriptor = item?.lkg;
     const current = item?.current;
-    if (item?.resolution_state !== "lkg_primary" || item?.retry !== true
-      || !descriptor || !current || descriptor.path !== this._lkgRelativePath(key)
+    if (!descriptor || !current || descriptor.path !== this._lkgRelativePath(key)
       || typeof descriptor.payload_sha256 !== "string" || typeof descriptor.source_as_of !== "string") {
       return null;
     }
-    if (current.path !== descriptor.path
+    const retained = item.resolution_state === "lkg_primary" && item.retry === true;
+    const published = item.resolution_state === "fresh_primary" && item.retry === false;
+    if ((!retained && !published) || (retained && current.path !== descriptor.path)
       || current.payload_sha256 !== descriptor.payload_sha256
       || current.source_as_of !== descriptor.source_as_of) return null;
     const lkgPath = this._lkgPath(key);
@@ -228,7 +229,8 @@ export class LaneLkgStore {
       const priorLkg = this._readValidLkg(artifact.key, priorItem, artifact.validateDocument, artifact.sourceAsOf);
       const canonical = this._readValidCanonical(artifact);
       let lkg = priorLkg?.descriptor ?? null;
-      if (canonical !== null) {
+      if (canonical !== null && (priorLkg === null
+        || Date.parse(canonical.sourceAsOf) >= Date.parse(priorLkg.descriptor.source_as_of))) {
         atomicWrite(this._lkgPath(artifact.key), canonical.bytes);
         lkg = {
           path: this._lkgRelativePath(artifact.key),
@@ -302,17 +304,25 @@ export class LaneLkgStore {
     if (rejected) throw new Error(`recovery promotion rejected for ${this.laneId}/${rejected.key}: ${rejected.reason}`);
     const state = this._loadState();
     for (const artifact of artifacts) {
-      const priorItem = state.items[artifact.key] ?? {};
+      const bytes = Buffer.from(artifact.payloadBytes);
+      const payloadHash = sha256(bytes);
+      // Keep the validated publication available even if canonical bytes are
+      // later missing or corrupt when the next acquisition fails.
+      atomicWrite(this._lkgPath(artifact.key), bytes);
       state.items[artifact.key] = {
         key: artifact.key,
         resolution_state: "fresh_primary",
         retry: false,
         current: {
           path: normalizedRelative(artifact.currentRelativePath),
-          payload_sha256: sha256(Buffer.from(artifact.payloadBytes)),
+          payload_sha256: payloadHash,
           source_as_of: artifact.sourceAsOf,
         },
-        ...(priorItem.lkg ? { lkg: priorItem.lkg } : {}),
+        lkg: {
+          path: this._lkgRelativePath(artifact.key),
+          payload_sha256: payloadHash,
+          source_as_of: artifact.sourceAsOf,
+        },
         updated_at: run.observedAt,
       };
     }
