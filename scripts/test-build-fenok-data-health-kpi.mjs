@@ -288,7 +288,7 @@ try {
       `${id} uses US trading days for Friday-to-Monday age`);
   }
   const fallback = rootDoc.sets.find((set) => set.set === "yahoo_etf_fallback");
-  assert.equal(fallback, undefined, "an on-demand fallback store is not a scheduled health set");
+  assert.equal(fallback.status, "stopped", "an old fallback source cannot disappear from health reporting");
   const collectedUniverse = rootDoc.sets.find((set) => set.set === "stockanalysis_etf_universe");
   assert.equal(collectedUniverse.newest_source_date, "2026-09-21");
   assert.equal(collectedUniverse.date_basis, "collected");

@@ -15,6 +15,7 @@ import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 import { freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 import { KRX_MARKET_HOLIDAYS } from "./lib/market-calendar.mjs";
+import { readEtfSourceHealth } from "./lib/fenok-data-health-freshness.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1574,6 +1575,9 @@ export function buildDetectionReport({
     };
     if (lane.monitoring_mode === "composite") laneRow.members = members;
     if (lane.id === "fred_banking") laneRow.source_artifacts = firstMember.source_artifacts;
+    if (["stockanalysis_etf_detail", "yahoo_etf_fallback"].includes(lane.id)) {
+      laneRow.source_health = readEtfSourceHealth(path.join(artifactRoot, "data"), now, lane.id === "yahoo_etf_fallback");
+    }
     return laneRow;
   });
   const counts = {
@@ -1667,7 +1671,7 @@ export function validateDetectionReport(report, config = DATA_SUPPLY_DETECTION_C
     const composite = laneConfig.monitoring_mode === "composite";
     exactKeys(row, composite
       ? ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", "members"]
-      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", ...(row.id === "fred_banking" ? ["source_artifacts"] : [])], `report.lanes[${index}]`);
+      : ["id", "label", "enforcement", "kpi_required", "monitoring_mode", "status", "reason", "artifact", "affected_surface_ids", ...(row.id === "fred_banking" ? ["source_artifacts"] : [])], `report.lanes[${index}]`, ["source_health"]);
     if (row.id !== laneConfig.id || row.label !== laneConfig.label || row.monitoring_mode !== laneConfig.monitoring_mode
       || row.enforcement !== laneConfig.enforcement || row.kpi_required !== laneConfig.kpi_required
       || canonicalJson(row.affected_surface_ids) !== canonicalJson(laneConfig.affected_surface_ids)) {

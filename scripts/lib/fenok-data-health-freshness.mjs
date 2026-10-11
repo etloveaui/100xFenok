@@ -10,6 +10,8 @@ import {
 } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
 import { yahooBusinessDayAge } from "./market-calendar.mjs";
 import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from "./kpi-contract-constants.mjs";
+import { summarizeSourceHealth } from "./family-health.mjs";
+import { DATA_SUPPLY_POLICY_REGISTRY } from "../data-supply-policy-registry.mjs";
 
 export const DETECTION_CALENDARS_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -59,12 +61,21 @@ const MEMBER_CALENDAR = Object.freeze({
 });
 
 // Data sets that are not scheduled producers and have no cadence to judge.
-export const HEALTH_SET_EXCLUSIONS = new Set([
-  // An on-demand Yahoo ETF fallback store, read only when a detail refresh needs
-  // it. A scheduled verdict would read "stopped" for a store nobody is waiting on;
-  // its effect is already visible through the ETF detail set.
-  "yahoo_etf_fallback",
-]);
+export const HEALTH_SET_EXCLUSIONS = new Set();
+
+// Read the selections actually served, including fallback and unavailable
+// members. The abandoned one-ticker fallback recovery index is not this set.
+export function readEtfSourceHealth(dataRoot, nowIso, fallbackOnly = false) {
+  const index = readOptionalJson(dataRoot, "computed/data-supply/etf-detail/index.json");
+  if (index?.schema_version !== "data-supply-etf-detail-public-index/v1"
+    || !index.entries || typeof index.entries !== "object" || Array.isArray(index.entries)) return null;
+  const entries = Object.entries(index.entries);
+  if (entries.length !== index.enrolled_count
+    || entries.some(([ticker, row]) => row?.ticker !== ticker || row.enrollment_state !== "enrolled")) return null;
+  const members = entries.filter(([, row]) => !fallbackOnly || row.provider_role === "fallback")
+    .map(([member, row]) => ({ member, source_as_of: row.resolution_state === "unavailable" ? null : row.source_as_of }));
+  return summarizeSourceHealth(members, nowIso, DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail);
+}
 
 function validCalendarDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -519,6 +530,18 @@ export function summarizeDataSetFreshness(
   calendars = DETECTION_CALENDARS,
   dataRoot = null,
 ) {
+  if (dataRoot && ["stockanalysis_etf_detail", "yahoo_etf_fallback"].includes(lane.id)) {
+    const health = readEtfSourceHealth(dataRoot, nowIso, lane.id === "yahoo_etf_fallback");
+    if (health) return {
+      newest_source_date: dateValue(health.newest_source_date),
+      oldest_source_date: dateValue(health.oldest_source_date),
+      oldest_source_member: health.oldest_source_member,
+      max_age: `${health.policy.fresh_ttl_hours / 24}d`,
+      status: health.status === "degraded" ? "delayed" : health.status,
+      fresh_members: health.fresh_members, total_members: health.total_members,
+      source_health: health,
+    };
+  }
   const outputs = lane.roots?.canonical_outputs ?? [];
   const outputPolicies = outputs.map((output) => policyForPath(lane, output));
   const policy = widestPolicy(lane, outputPolicies);

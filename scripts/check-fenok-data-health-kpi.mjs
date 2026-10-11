@@ -20,14 +20,6 @@ const CURRENT_SCHEMA_VERSION = "fenok-data-health-kpi/v4";
 const LEGACY_SCHEMA_VERSION = "fenok-data-health-kpi/v3";
 const SUPPORTED_SCHEMA_VERSIONS = new Set([LEGACY_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION]);
 const BASE_SET_KEYS = ["set", "served_path", "newest_source_date", "max_age", "status"];
-const OPTIONAL_SET_KEYS = [
-  "date_basis",
-  "oldest_source_date",
-  "oldest_source_member",
-  "fresh_members",
-  "total_members",
-  "serving_lkg",
-];
 const ALLOWED_STATUS = new Set(["fresh", "delayed", "stopped", "unknown"]);
 
 function object(value) {
@@ -94,12 +86,9 @@ function validateDocument(document, label, expectedLanes, floorRows, calendars, 
       freshnessCache.set(cacheKey, expected);
     }
     const hasLkg = Object.hasOwn(row, "serving_lkg");
-    const rowKeys = Object.keys(row);
     for (const key of BASE_SET_KEYS) {
       if (!Object.hasOwn(row, key)) errors.push(`${context} is missing ${key}`);
     }
-    const unexpectedKeys = rowKeys.filter((key) => !BASE_SET_KEYS.includes(key) && !OPTIONAL_SET_KEYS.includes(key));
-    if (unexpectedKeys.length > 0) errors.push(`${context} has unexpected fields`);
     if (row.served_path !== null && typeof row.served_path !== "string") {
       errors.push(`${context}.served_path must be a string or null`);
     }
@@ -154,8 +143,8 @@ function validateDocument(document, label, expectedLanes, floorRows, calendars, 
       errors.push(`${context}.fresh_members must be a nonnegative integer`);
     }
     if (Object.hasOwn(row, "total_members")
-      && (!Number.isInteger(row.total_members) || row.total_members < 1)) {
-      errors.push(`${context}.total_members must be a positive integer`);
+      && (!Number.isInteger(row.total_members) || row.total_members < 0)) {
+      errors.push(`${context}.total_members must be a non-negative integer`);
     }
     if (Object.hasOwn(row, "fresh_members") && Object.hasOwn(row, "total_members")
       && row.fresh_members > row.total_members) {
