@@ -4,11 +4,12 @@
  * "broadsheet terminal" with the first-screen session chart of the combo).
  * Every rule is scoped under `.fnk-brief.bs` and layered over brief.css, which
  * still styles the hub, the loading and not-found states and shared chart
- * internals. Korean market colours on this page: red up, blue down.
+ * internals. Gains and losses keep the app-wide colours (green up, red down,
+ * inherited from brief.css); the record level is a black dashed line.
  */
 .fnk-brief.bs{
   --paper:#FBFBF8; --ink:#1A1A1A; --k:#000; --rule:#D0D0D0; --rule2:#E6E6E1; --muted:#666; --fg2:#333; --faint:#8A8A8A;
-  --up:#E10600; --down:#0A57D0; --flat:#9A9A96; --rec:#D00000;
+  --flat:#9A9A96; --rec:#111111;
   --mono:var(--font-mono); --sans:var(--font-sans);
   --bs-top:calc(var(--topbar-h,48px) + var(--shell-ticker-h,0px)); --navh:42px;
   background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.6;

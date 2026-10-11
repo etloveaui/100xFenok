@@ -23,7 +23,8 @@ const TNX_INK = "#B45309";
 /**
  * "app" keeps the approved hub/card colours. "broadsheet" is the morning
  * article's 2026-10-11 owner-chosen design (feno-canvas concept c4): black
- * index line, grey yield line, Korean market colours (red up, blue down).
+ * index line, grey yield line and a black record level; gains and losses keep
+ * the app-wide green-up/red-down colours (owner decision, same day).
  */
 export type BriefPalette = "app" | "broadsheet";
 
@@ -33,8 +34,8 @@ const PALETTES = {
     grid: "#EEF2F6", tick: "#CBD5E1", xLabel: "#475569", xSub: "#94A3B8", record: "#D1344C",
   },
   broadsheet: {
-    up: "#E10600", down: "#0A57D0", flat: "#9A9A96", spx: "#111111", tnx: "#8A8A8A", tnxInk: "#555555", area: "#111111", areaOpacity: 0.08,
-    grid: "#E6E6E1", tick: "#BDBDB8", xLabel: "#333333", xSub: "#888888", record: "#D00000",
+    up: UP, down: DOWN, flat: "#9A9A96", spx: "#111111", tnx: "#8A8A8A", tnxInk: "#555555", area: "#111111", areaOpacity: 0.08,
+    grid: "#E6E6E1", tick: "#BDBDB8", xLabel: "#333333", xSub: "#888888", record: "#111111",
   },
 } as const;
 
