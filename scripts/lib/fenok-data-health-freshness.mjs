@@ -331,10 +331,9 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
     const members = symbols.map((id) => {
       if (typeof id !== "string" || !/^[A-Z0-9^=.-]+$/i.test(id)) return memberDate(null, "source", id);
       const state = readOptionalJson(dataRoot, `admin/yahoo-batch-quote-history/tickers/${id}.json`);
-      const selected = state?.resolution_state === "lkg_primary" ? state?.lkg : state?.current;
-      const source = selected?.source_as_of ?? state?.current?.source_as_of ?? state?.lkg?.source_as_of;
-      const fetched = selected?.fetched_at ?? state?.current?.fetched_at ?? state?.lkg?.fetched_at;
-      return datedOrCollected({ source_as_of: source, fetched_at: fetched }, ["source_as_of"], ["fetched_at"], id);
+      const selected = state?.resolution_state === "unavailable" ? null
+        : state?.resolution_state === "lkg_primary" ? state?.lkg : state?.current;
+      return memberDate(selected?.source_as_of, "source", id);
     });
     return {
       members,
@@ -489,7 +488,24 @@ function memberSummary(lane, evidence, nowIso, calendars) {
   const fredLimits = lane.id === "fred_banking"
     ? memberPolicies.map(policyLimit).filter(Number.isFinite)
     : [];
+  const counts = { fresh: 0, stale: 0, expired: 0, unknown: Math.max(0, totalMembers - members.length) };
+  const verdictKeys = { fresh: "fresh", delayed: "stale", stopped: "expired", unknown: "unknown" };
+  for (const member of members) counts[verdictKeys[member.status] ?? "unknown"] += 1;
+  const sourceHealth = {
+    observed_at: nowIso, scope: lane.id,
+    policy: evidence.yahooBusinessDays
+      ? { basis: "business_days", fresh_bound_business_days: evidence.yahooBusinessDays }
+      : { basis: "source_calendar", fresh_bound_days: [...new Set(memberPolicies.map(policyLimit).filter(Number.isFinite))].sort((a, b) => a - b) },
+    status: status === "delayed" ? "degraded" : status,
+    reason: status === "unknown" ? "source_dates_unavailable" : status === "fresh" ? null : "member_ratio_low",
+    date_basis: dateBasis ?? "source",
+    total_members: totalMembers, fresh_members: freshMembers, counts,
+    oldest_source_date: oldest?.date ?? null,
+    oldest_source_member: evidence.oldestSourceMember ?? oldest?.id ?? null,
+    newest_source_date: newest?.date ?? null,
+  };
   return {
+    source_health: sourceHealth,
     newest_source_date: newest?.date ?? null,
     max_age: evidence.yahooBusinessDays ? maxAge : fredLimits.length > 0 ? `${Math.min(...fredLimits)}d` : maxAge === null ? null : `${maxAge}d`,
     status,
@@ -554,6 +570,17 @@ export function summarizeDataSetFreshness(
   const result = verdictForSource(collectedDate.date, policy, nowIso, calendars);
   const limit = policyLimit(policy);
   return {
+    source_health: {
+      observed_at: nowIso, scope: lane.id,
+      policy: { basis: "source_calendar", fresh_bound_days: limit === null ? [] : [limit] },
+      status: result.status === "delayed" ? "degraded" : result.status,
+      reason: !result.date ? "source_dates_unavailable" : result.status === "fresh" ? null : "member_ratio_low",
+      date_basis: collectedDate.basis,
+      total_members: 1, fresh_members: result.status === "fresh" ? 1 : 0,
+      counts: { fresh: Number(result.status === "fresh"), stale: Number(result.status === "delayed"),
+        expired: Number(result.status === "stopped"), unknown: Number(result.status === "unknown") },
+      oldest_source_date: result.date, oldest_source_member: lane.id, newest_source_date: result.date,
+    },
     newest_source_date: result.date,
     max_age: limit === null ? null : `${limit}d`,
     status: result.status,
