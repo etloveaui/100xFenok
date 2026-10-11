@@ -3575,18 +3575,18 @@ module.main()
         self.assertEqual(summary["counts"]["selected"], 5)
 
     def test_natural_general_budget_and_verified_retired_identifiers(self) -> None:
-        self.assertEqual(self.fetcher.NATURAL_GENERAL_INCREMENTAL_LIMIT, 200)
+        self.assertEqual(self.fetcher.NATURAL_GENERAL_INCREMENTAL_LIMIT, 400)
         with tempfile.TemporaryDirectory() as tmp, \
              patch.object(self.fetcher, "OUT_DIR", Path(tmp)), \
              patch.object(self.fetcher, "latest_stockanalysis_etf_detail_observations", return_value={}):
             plan = self.fetcher.incremental_etf_backfill_candidates(
                 {"records": [{"ticker": name} for name in ("DEFI", "DVIN", "IWDL", "MGKX", "MEGX", "LIVE")]},
-                200, 720, pending_ledger={"entries": {}},
+                400, 720, pending_ledger={"entries": {}},
                 now_dt=datetime(2026, 10, 11, tzinfo=timezone.utc), natural_general_priority=True,
                 selected_etf_state={"recovery": {name: {} for name in ("DEFI", "MGKX")}})
             self.assertEqual({row["ticker"] for row in plan["selected"]}, {"MEGX", "LIVE"})
             self.assertEqual({row["ticker"] for row in plan["terminal_securities"]}, {"DEFI", "MGKX"})
-            self.assertEqual(plan["priority_selector"]["quota_policy"]["scheduled_total_limit"], 200)
+            self.assertEqual(plan["priority_selector"]["quota_policy"]["scheduled_total_limit"], 400)
 
     def test_natural_general_incremental_priority_rotates_tail_and_records_evidence(self) -> None:
         now_dt = datetime(2026, 10, 6, tzinfo=timezone.utc)
