@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import MetricHelp from "@/components/MetricHelp";
 import { Panel, PanelHeader, Stat, StatStrip } from "@/components/ui";
@@ -101,6 +101,7 @@ function getCurrencyFn(currency: string) {
 
 export interface IndustryBench {
   name: string;
+  source_date?: string | null;
   num_firms: number | null;
   trailing_pe: number | null;
   forward_pe: number | null;
@@ -111,6 +112,7 @@ export interface IndustryBench {
 }
 
 type BenchDoc = {
+  source_date?: string | null;
   yf_industry_map?: Record<string, string>;
   industries?: Record<string, Omit<IndustryBench, "name">>;
 };
@@ -120,14 +122,6 @@ export function loadIndustryBenchmarks(): Promise<BenchDoc | null> {
   // never cached, so it retries instead of sticking (the old pending promise
   // used to hold a resolved http-error null for the whole visit).
   return fetchJsonOrNull<BenchDoc>("/data/damodaran/industry_benchmarks.json");
-}
-
-// The compact extract above carries no vintage of its own. Its source tables
-// do: industries.json metadata.source_date (the same annual US industry-table
-// release as industry_metrics.json), e.g. "January 2026".
-function loadIndustrySourceDate(): Promise<string | null> {
-  return fetchJsonOrNull<{ metadata?: { source_date?: string } }>("/data/damodaran/industries.json")
-    .then((doc) => doc?.metadata?.source_date?.trim() || null);
 }
 
 const ENGLISH_MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -143,7 +137,7 @@ export function resolveIndustryBench(doc: BenchDoc | null, yfIndustry: string | 
   if (!doc || !yfIndustry) return null;
   const key = doc.yf_industry_map?.[yfIndustry];
   const row = key ? doc.industries?.[key] : undefined;
-  return key && row ? { name: key, ...row } : null;
+  return key && row ? { name: key, ...row, source_date: doc.source_date?.trim() || null } : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -286,13 +280,7 @@ function FinancialsTab({ data }: { data: YfData }) {
 // ---------------------------------------------------------------------------
 
 function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; industry: IndustryBench }) {
-  // undefined = still loading, null = the source date could not be read.
-  const [sourceDate, setSourceDate] = useState<string | null | undefined>(undefined);
-  useEffect(() => {
-    let cancelled = false;
-    loadIndustrySourceDate().then((value) => { if (!cancelled) setSourceDate(value); });
-    return () => { cancelled = true; };
-  }, []);
+  const sourceDate = industry.source_date;
   const rows: Array<{ label: string; stock: number | null; ind: number | null; isFraction: boolean; lowerBetter: boolean }> = [
     { label: "PER (TTM)", stock: finiteNumber(info.trailingPE), ind: finiteNumber(industry.trailing_pe), isFraction: false, lowerBetter: true },
     { label: "FY+1 PER", stock: finiteNumber(info.forwardPE), ind: finiteNumber(industry.forward_pe), isFraction: false, lowerBetter: true },
@@ -307,7 +295,7 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
       <PanelHeader
         eyebrow="Industry Compare · 다모다란"
         title={`산업 대비 — ${industry.name}${industry.num_firms ? ` (${industry.num_firms}개사)` : ""}`}
-        right={sourceDate === undefined ? undefined : (
+        right={(
           <span className="whitespace-nowrap text-[12px] font-semibold text-slate-500" data-industry-source-date>
             {sourceDate ? `산업 자료 ${sourceMonthLabel(sourceDate)}` : "산업 자료 시점 확인 불가"}
           </span>
@@ -764,7 +752,8 @@ export function computeSummaryScores(
     pushCheck(c, "EV/EBITDA 15배 미만", lt(info.enterpriseToEbitda, 15));
     const indPe = finiteNumber(industry?.trailing_pe);
     const pe = n(info.trailingPE);
-    pushCheck(c, "PER 산업 평균 미만 (다모다란)", indPe !== null && pe !== null ? pe < indPe : null);
+    const industryDate = industry?.source_date ? sourceMonthLabel(industry.source_date) : "기준일 미상";
+    pushCheck(c, `PER 산업 평균 미만 (다모다란 ${industryDate})`, indPe !== null && pe !== null ? pe < indPe : null);
   });
 
   area("미래 성장", (c) => {
@@ -934,8 +923,9 @@ export function buildThreeSecondSummary(
   const trailingPe = finiteNumber(info.trailingPE);
   if (industryPe !== null && industryPe > 0 && trailingPe !== null) {
     const ratio = trailingPe / industryPe;
-    if (ratio <= 0.85) val.push(`산업 평균 PER(${industryPe.toFixed(0)}배)보다 싸게 거래`);
-    else if (ratio >= 1.15) val.push(`산업 평균 PER(${industryPe.toFixed(0)}배)의 ${ratio.toFixed(1)}배 수준`);
+    const industryDate = industry?.source_date ? sourceMonthLabel(industry.source_date) : "기준일 미상";
+    if (ratio <= 0.85) val.push(`산업 평균 PER(${industryPe.toFixed(0)}배, 다모다란 ${industryDate})보다 싸게 거래`);
+    else if (ratio >= 1.15) val.push(`산업 평균 PER(${industryPe.toFixed(0)}배, 다모다란 ${industryDate})의 ${ratio.toFixed(1)}배 수준`);
   }
   const target = finiteNumber(data.analyst_price_targets?.mean);
   const price = finiteNumber(info.currentPrice);
