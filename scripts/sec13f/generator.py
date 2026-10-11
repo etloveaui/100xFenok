@@ -134,13 +134,22 @@ def _summary(
     all_tickers: dict[str, dict[str, int | float]] = {}
     for investor_id, investor in investors.items():
         latest = investor["filings"][-1]
-        top = sorted(latest["holdings"], key=lambda row: (-row["market_value"], row["ticker"], row["cusip"]))
+        position_values: dict[tuple, int | float] = {}
+        position_labels: dict[tuple, str] = {}
+        for holding in latest["holdings"]:
+            ticker = holding.get("ticker")
+            label = ticker or holding.get("name") or "?"
+            key = ("ticker", ticker) if ticker else ("cusip", holding.get("cusip")) if holding.get("cusip") else ("name", label)
+            position_values[key] = position_values.get(key, 0) + holding["market_value"]
+            position_labels[key] = min(position_labels.get(key, label), label)
+        ranked = sorted(position_values, key=lambda key: (-position_values[key], position_labels[key], key))
+        top = list(dict.fromkeys(position_labels[key] for key in ranked))
         investor_summary[investor_id] = {
             "name": investor["name"],
             "group": investor["group"],
             "aum": latest["aum_total"],
             "holdings_count": latest["holdings_count"],
-            "top5": [row["ticker"] for row in top[:5]],
+            "top5": top[:5],
             "quarter": latest["quarter"],
             "latest_quarter": latest["quarter"],
             "global_latest_quarter": latest_quarter,
