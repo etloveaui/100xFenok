@@ -85,6 +85,8 @@ on:
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/test-export-computed-signals.mjs'
       - 'scripts/test-coordinate-computed-signals-workflow.mjs'
+      - 'scripts/prepare-lane-commit.mjs'
+      - 'scripts/test-prepare-lane-commit.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
@@ -204,6 +206,8 @@ on:
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/test-export-computed-signals.mjs'
       - 'scripts/test-coordinate-computed-signals-workflow.mjs'
+      - 'scripts/prepare-lane-commit.mjs'
+      - 'scripts/test-prepare-lane-commit.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
@@ -340,6 +344,7 @@ jobs:
         run: |
           node scripts/test-export-computed-signals.mjs
           node scripts/test-coordinate-computed-signals-workflow.mjs
+          node scripts/test-prepare-lane-commit.mjs
 
       - name: Install pinned actionlint
         env:

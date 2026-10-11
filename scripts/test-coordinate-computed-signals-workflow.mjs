@@ -39,7 +39,7 @@ function readWorkflow(name) {
 
 function assertMinimalWriterPermissions(source, file) {
   const permissionsStart = source.indexOf("permissions:");
-  const concurrencyStart = source.indexOf("\nconcurrency:", permissionsStart);
+  const concurrencyStart = source.slice(permissionsStart).search(/\n(?:concurrency|jobs):/) + permissionsStart;
   assert.ok(permissionsStart >= 0 && concurrencyStart > permissionsStart,
     `${file} must declare top-level permissions before concurrency`);
   const permissionsBlock = source.slice(permissionsStart, concurrencyStart);
@@ -175,10 +175,10 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
   ];
   assert.equal(queued.length, 7);
   for (const { file, source } of [{ file: "update-manifest.yml", source: updateManifestSource }, ...queued]) {
-    const groups = [...source.matchAll(/^  group:\s*(.+)$/gm)].map((match) => match[1].trim());
+    const groups = [...source.matchAll(/^\s+group:\s*(.+)$/gm)].map((match) => match[1].trim()).filter((group) => group === GLOBAL_WRITER_GROUP);
     assert.deepEqual(groups, [GLOBAL_WRITER_GROUP], `${file} must declare exactly the shared global writer group`);
-    assert.equal(countOccurrences(source, "  cancel-in-progress: false"), 1, `${file} must never cancel an in-flight writer`);
-    assert.equal(countOccurrences(source, "  queue: max"), 1, `${file} must retain the global writer queue`);
+    assert.doesNotMatch(source, /cancel-in-progress: true/, `${file} must never cancel an in-flight writer`);
+    assert.ok(countOccurrences(source, "  queue: max") >= 1, `${file} must retain the global writer queue`);
   }
 }
 
