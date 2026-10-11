@@ -221,6 +221,26 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.close()
 
+    def test_automatic_lifecycle_projects_evidence_and_retains_last_real_date(self):
+        self.fixture._seed_selection("LOST", "lkg_fallback", "provider_lkg", "2026-07-01T00:00:00Z")
+        self.fixture._write_state_files()
+        state = self.fixture.repo / "data/admin/stockanalysis-recovery/states/etf/LOST.json"
+        state.parent.mkdir(parents=True)
+        state.write_bytes(pretty_bytes({"schema_version": "stockanalysis-recovery-state/v1", "entity": "LOST",
+            "etf_lifecycle": {"status": "closed", "method": "automatic_provider_absence", "classified_at": "2026-10-13T23:20:00Z",
+                "last_history_as_of": "2026-08-01", "attempts": [{"observed_at": f"2026-10-{day}T23:20:00Z", "reason": "provider_absent",
+                    "event_name": "schedule", "endpoint": "/etf/lost/__data.json"} for day in (11, 12, 13)]}}))
+        subprocess.run(["git", "add", "--", str(state.relative_to(self.fixture.repo))], cwd=self.fixture.repo, check=True)
+        self.fixture._git_init_and_add()
+        materializer, _ = self.fixture.materializer()
+        projection = materializer.build_projection(generated_at="2026-10-14T00:00:00Z")
+        life = projection.index["entries"]["LOST"]["security_lifecycle"]
+        self.assertEqual(life["status"], "closed")
+        self.assertEqual(life["evidence_kind"], "provider_observations")
+        self.assertEqual(life["last_source_as_of"], "2026-08-01")
+        self.assertEqual(projection.payloads["LOST"], self.fixture.payloads["LOST"])
+        self.assertIn("data/admin/stockanalysis-recovery/states/etf/LOST.json", projection.tracked_paths)
+
     def test_verified_lifecycle_keeps_retained_dates_and_does_not_invent_missing_dates(self):
         self.fixture._seed_selection("MGKX", "lkg_fallback", "provider_lkg", "2026-07-01T00:00:00Z")
         self.fixture.recovery["DEFI"] = {"last_transition": "unavailable"}

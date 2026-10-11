@@ -24,6 +24,7 @@ from typing import Any, Callable, Mapping
 
 from data_supply_state import DataSupplyStateStore, canonical_sha256
 from yahoo_batch_state import verified_yahoo_terminal_evidence, _raw_payload_source_fields
+from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, terminal_evidence as etf_terminal_evidence
 
 
 DOMAIN = "etf_detail"
@@ -466,13 +467,18 @@ class PublicDataSupplyMaterializer:
 
         # Primary lifecycle facts classify an ended identifier independently of
         # payload availability. Never replace its last real quote with a new date.
-        lifecycle = verified_yahoo_terminal_evidence(generated_at)["tickers"]
+        lifecycle = etf_terminal_evidence(EtfLifecycleInputs(self.repo_root), generated_at, entries)
         lifecycle_paths: set[str] = set()
         for entity, entry in entries.items():
             if entity not in lifecycle:
                 continue
-            evidence = lifecycle[entity][0]
+            evidence = lifecycle[entity]
+            if evidence.get("evidence_path"):
+                self._regular_file(self.repo_root / evidence["evidence_path"], root=self.repo_root, label=f"lifecycle evidence {entity}")
+                lifecycle_paths.add(evidence["evidence_path"])
             dates = [row["source_as_of"] for row in retained_refs.values() if row["entity"] == entity]
+            if evidence.get("last_history_as_of"):
+                dates.append(evidence["last_history_as_of"])
             # The detail LKG may already have expired. A retained canonical raw
             # quote can still disclose the identifier's last actual trade clock.
             provider_path = self.repo_root / "data/yf/finance" / f"{entity}.json"
@@ -492,7 +498,8 @@ class PublicDataSupplyMaterializer:
                 "successor_ticker": evidence["alias_target"],
                 "reason": evidence["reason"],
                 "primary_reference": evidence["source_url"].removeprefix("https://"),
-                "last_source_as_of": max(dates) if dates else None,
+                "last_source_as_of": evidence.get("last_history_as_of") or (max(dates) if dates else None),
+                **({"evidence_kind": "provider_observations"} if evidence["source"] == "automatic_provider_observations" else {}),
             }
 
         self._require_tracked(lifecycle_paths)
@@ -578,16 +585,21 @@ class PublicDataSupplyMaterializer:
         unavailable_count = 0
         expected_files = {"enrollment.json", "index.json"}
         state_counts = {key: 0 for key in STATE_COUNT_KEYS}
+        terminal_evidence = etf_terminal_evidence(EtfLifecycleInputs(self.repo_root), index["generated_at"], tickers)
         for ticker in tickers:
             entry = entries[ticker]
             if not isinstance(entry, dict) or entry.get("ticker") != ticker or entry.get("enrollment_state") != "enrolled":
                 raise MaterializationError(f"projection entry identity mismatch: {ticker}")
             lifecycle = entry.get("security_lifecycle")
             if "security_lifecycle" in entry:
-                evidence = verified_yahoo_terminal_evidence(index["generated_at"])["tickers"].get(ticker)
-                expected = evidence[0] if evidence else None
+                expected = terminal_evidence.get(ticker)
+                automatic = bool(expected and expected["source"] == "automatic_provider_observations")
+                lifecycle_keys = {"status", "effective_date", "successor_ticker", "reason", "primary_reference", "last_source_as_of"}
+                if automatic:
+                    lifecycle_keys.add("evidence_kind")
                 if (not isinstance(lifecycle, dict) or not expected
-                    or set(lifecycle) != {"status", "effective_date", "successor_ticker", "reason", "primary_reference", "last_source_as_of"}
+                    or set(lifecycle) != lifecycle_keys
+                    or (automatic and lifecycle["evidence_kind"] != "provider_observations")
                     or lifecycle["status"] != ("renamed" if expected["alias_target"] else "closed")
                     or lifecycle["effective_date"] != expected["effective_date"]
                     or lifecycle["successor_ticker"] != expected["alias_target"]

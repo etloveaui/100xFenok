@@ -103,6 +103,16 @@ const wrongTerminal = await parseEtfApiResponse<Record<string, unknown>>(Respons
   error: "DATA_SUPPLY_SECURITY_CLOSED", ticker: "OTHER", data_supply: noTime,
 }, { status: 410 }), "MGKX");
 assert.equal(wrongTerminal.kind, "failed");
+const inferredClosed = parseEtfDataSupply({ ...noTime, security_lifecycle: {
+  status: "closed", effective_date: "2026-10-14", successor_ticker: null,
+  reason: "three scheduled provider observations", primary_reference: "stockanalysis.com/etf/lost/",
+  last_source_as_of: "2026-08-01", evidence_kind: "provider_observations",
+} });
+assert.ok(inferredClosed);
+const inferredPresentation = getEtfDataSupplyPresentation(inferredClosed);
+assert.equal(inferredPresentation.label, "공급자 제공 종료");
+assert.equal(inferredPresentation.sourceDate, "2026-08-01");
+assert.ok(!inferredPresentation.description?.includes("공식 공시"));
 
 const shardUnavailable = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
   { error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE", ticker: "SPY" },

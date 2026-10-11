@@ -65,6 +65,40 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
+    def test_etf_screener_partial_bootstrap_fetches_complete_public_catalogue(self):
+        columns = ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings"]
+        rows = [[ticker, ticker, "Equity", 100, 10, 1, 500, 20] for ticker in ["AAA", "BBB", "CCC"]]
+        catalogue = {"status": 200, "data": {"columns": columns, "rows": rows, "count": 3}}
+        bootstrap = {"data": [dict(zip(columns, rows[0]))], "count": 3, "dataIsPartial": True}
+        definition = self.fetcher.SURFACE_DEFINITIONS["etf_screener"]
+        with patch.object(self.fetcher, "extract_svelte_node", return_value=bootstrap), \
+                patch.object(self.fetcher, "enrich_etf_records", side_effect=lambda rows: rows), \
+                patch.object(self.fetcher, "fetch_json_response", side_effect=[({}, 200), (catalogue, 200)]) as fetch:
+            result, status = self.fetcher.fetch_svelte_surface_response("etf_screener", definition, 30)
+            self.assertEqual(status, 200)
+            self.assertEqual(result["counts"]["records"], 3)
+            self.assertFalse(result["metadata"]["dataIsPartial"])
+            self.assertEqual(fetch.call_args_list[1].args[0], definition["catalog_path"])
+            self.assertEqual([r["s"] for r in result["records"]], ["AAA", "BBB", "CCC"])
+            self.assertIsNone(result["source_as_of"])
+        with patch.object(self.fetcher, "extract_svelte_node", return_value=bootstrap):
+            with self.assertRaisesRegex(ValueError, "partial"):
+                self.fetcher.build_svelte_surface_payload("etf_screener", definition, {})
+
+    def test_etf_screener_rejects_truncation_duplicates_and_schema_drift(self):
+        columns = ["s", "n", "assetClass", "aum", "price", "change", "volume", "holdings"]
+        row = ["AAA", "AAA", "Equity", 100, 10, 1, 500, 20]
+        for data in [
+            {"columns": columns, "rows": [row], "count": 2},
+            {"columns": columns, "rows": [row, row], "count": 2},
+            {"columns": columns, "rows": [row[:-1]], "count": 1},
+            {"columns": columns[:-1], "rows": [row[:-1]], "count": 1},
+            {"columns": columns, "rows": [row], "count": True},
+            {"columns": columns, "rows": [row], "count": 1, "dataIsPartial": True},
+        ]:
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                self.fetcher.complete_etf_screener_records({"status": 200, "data": data})
+
     def test_ishares_term_tips_official_holdings_exact_fund_schema_and_country(self) -> None:
         urls = {
             "IBIC": "https://www.ishares.com/us/products/333118/ishares-ibonds-oct-2026-term-tips-etf/latest-holdings.csv",
@@ -3709,7 +3743,7 @@ module.main()
                 self.assertEqual(first_stale | next_stale, set(tail))
                 self.assertTrue(set(tail) - first_stale <= next_stale)
                 self.assertEqual(first["priority_selector"]["quota_policy"]["priority_order"],
-                                 ["new_listings", "missing", "oldest_stale", "pending_retry", "fresh"])
+                             ["new_listings", "missing", "oldest_stale", "pending_retry", "orphan_probe", "fresh"])
                 self.assertEqual(first["priority_selector"]["selected_counts"]["total"], 40)
 
     def test_source_date_non_advance_uses_existing_bounded_cooldown(self) -> None:

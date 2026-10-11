@@ -34,6 +34,10 @@ try {
   const data = { fetched_at: "2026-10-10T00:00:00Z", raw: { quote: { td: "2026-10-10" } } };
   await fs.writeFile(path.join(root, prefix, "ONE.json"), JSON.stringify(data));
   await fs.writeFile(path.join(root, prefix, "TWO.json"), JSON.stringify(data));
+  await fs.mkdir(path.join(root, "data/stockanalysis/surfaces"), { recursive: true });
+  for (const filename of ["etf_universe.json", "surfaces/etf_screener.json"]) {
+    await fs.writeFile(path.join(root, "data/stockanalysis", filename), JSON.stringify({ records: [{ ticker: "ONE" }] }));
+  }
   const git = args => execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
   git(["init", "-b", "main"]); git(["config", "user.name", "Health fixture"]); git(["config", "user.email", "fixture@example.invalid"]);
   git(["add", "."]); git(["commit", "-m", "canonical reference"]);
@@ -55,6 +59,15 @@ try {
   let record = buildFamilyHealth({ snapshot, now });
   assert.equal(record.source_health.status, "not_evaluated");
   assert.equal(record.parity.matched, 2);
+  assert.equal(record.lifecycle.orphan_count, 1);
+  const oldOrphan = structuredClone(snapshot);
+  oldOrphan.reference.lifecycle.orphans[0].first_seen_at = "2026-09-26T09:00:00Z";
+  const orphanHealth = buildFamilyHealth({ snapshot: oldOrphan, now });
+  const orphanAlarm = classifyFamilyHealth(orphanHealth, { now: Date.parse(now) });
+  assert.deepEqual(orphanAlarm.alarm_reasons, ["orphan_unclassified_over_14_days"]);
+  assert.equal(buildAlarmState({ health: { status: "alarm", workflows: [orphanAlarm] } }).status, "open");
+  const followupOrphan = buildFamilyHealth({ snapshot, previous: orphanHealth, now });
+  assert.equal(followupOrphan.lifecycle.orphans[0].first_seen_at, "2026-09-26T09:00:00Z");
   assert.equal(classifyFamilyHealth(record, { now: Date.parse(now) }).status, "ok");
 
   const older = structuredClone(snapshot);

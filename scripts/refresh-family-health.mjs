@@ -74,7 +74,10 @@ export async function readCanonicalReference({ root = ROOT, ref = "origin/main" 
     }
     const [code] = await completed;
     if (code !== 0 || buffer.length || current || index !== rows.length) throw new Error(`CANONICAL_READ_INCOMPLETE:${stderr}`);
-    return { kind: "git_commit", commit, tree, prefix: PREFIX, total_bytes: total, assets };
+    const lifecycle = JSON.parse(execFileSync("python3", [path.join(ROOT, "scripts/stockanalysis_etf_lifecycle.py"),
+      "--root", root, "--git-ref", commit], { encoding: "utf8", timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }));
+    if (lifecycle.detail_count !== assets.length) throw new Error("HEALTH_LIFECYCLE_MEMBERSHIP_INVALID");
+    return { kind: "git_commit", commit, tree, prefix: PREFIX, total_bytes: total, assets, lifecycle };
   } finally {
     clearTimeout(timer);
     if (child.exitCode === null) child.kill("SIGTERM");
@@ -98,6 +101,9 @@ function validateSnapshot(snapshot, { runId, runAttempt, now }) {
     || snapshot.manifest.source_sha !== snapshot.pointer.source_sha) throw new Error("HEALTH_PREPARATION_MANIFEST_INVALID");
   if (snapshot.reference?.kind !== "git_commit" || !/^[a-f0-9]{40}$/.test(snapshot.reference.commit)
     || !/^[a-f0-9]{40}$/.test(snapshot.reference.tree)) throw new Error("HEALTH_REFERENCE_INVALID");
+  if (snapshot.reference.lifecycle?.detail_count !== snapshot.reference.assets?.length
+    || !Array.isArray(snapshot.reference.lifecycle?.orphans)
+    || !Array.isArray(snapshot.reference.lifecycle?.live_catalogue_gaps)) throw new Error("HEALTH_LIFECYCLE_REFERENCE_INVALID");
 }
 
 export async function prepareHealth({ plane, reference, runId, runAttempt, now = new Date().toISOString() }) {

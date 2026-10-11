@@ -8,6 +8,7 @@ export interface EtfDataSupply {
     reason: string;
     primary_reference: string;
     last_source_as_of: string | null;
+    evidence_kind?: "provider_observations";
   };
   enrollment_state: "enrolled";
   resolution_state: EtfResolutionState;
@@ -149,6 +150,7 @@ export function parseEtfDataSupply(value: unknown): EtfDataSupply | null {
       || !isTimestamp(lifecycle.effective_date)
       || typeof lifecycle.reason !== "string" || !lifecycle.reason
       || typeof lifecycle.primary_reference !== "string" || !lifecycle.primary_reference
+      || (lifecycle.evidence_kind !== undefined && lifecycle.evidence_kind !== "provider_observations")
       || (lifecycle.last_source_as_of !== null && !isTimestamp(lifecycle.last_source_as_of))
       || (lifecycle.status === "closed" ? lifecycle.successor_ticker !== null
         : typeof lifecycle.successor_ticker !== "string" || !/^[A-Z0-9][A-Z0-9.-]*$/.test(lifecycle.successor_ticker))) return null;
@@ -160,9 +162,11 @@ export function getEtfDataSupplyPresentation(dataSupply: EtfDataSupply | null): 
   if (dataSupply?.security_lifecycle) {
     const lifecycle = dataSupply.security_lifecycle;
     return {
-      label: lifecycle.status === "renamed" ? "티커 변경" : "거래 종료",
+      label: lifecycle.status === "renamed" ? "티커 변경" : lifecycle.evidence_kind === "provider_observations" ? "공급자 제공 종료" : "거래 종료",
       description: lifecycle.status === "renamed"
         ? `현재 티커는 ${lifecycle.successor_ticker}입니다.`
+        : lifecycle.evidence_kind === "provider_observations"
+        ? "서로 다른 3일의 수집에서 제공이 확인되지 않았습니다. 마지막 실제 데이터를 보존합니다."
         : "공식 공시에 따라 거래가 종료된 종목입니다.",
       sourceDate: lifecycle.last_source_as_of,
       ageDays: null,

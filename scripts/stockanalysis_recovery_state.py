@@ -590,7 +590,7 @@ class StockAnalysisRecoveryStateStore:
         existing = _read_json(self._state_path(kind, entity)) or {}
         # Slim only an entity being touched; existing payload files stay intact.
         keys = {"schema_version", "artifact_kind", "entity", "resolution_state",
-                "retry", "current", "lkg", "updated_at", "latest_failure", "failure_count"}
+                "retry", "current", "lkg", "updated_at", "latest_failure", "failure_count", "etf_lifecycle"}
         state = {key: value for key, value in existing.items() if key in keys}
         failure = state.get("latest_failure")
         if isinstance(failure, dict):
@@ -866,6 +866,9 @@ class StockAnalysisRecoveryStateStore:
             "failure_count": 0,
         })
         state.pop("latest_failure", None)
+        if kind == "etf" and state.get("etf_lifecycle"):
+            state["etf_lifecycle"].update(status="live", method="valid_provider_detail", attempts=[],
+                                           returned_at=state["updated_at"])
         self._results[(kind, entity)] = {"artifact_kind": kind, "entity": entity}
         _atomic_write_json(self._state_path(kind, entity), state)
         return state

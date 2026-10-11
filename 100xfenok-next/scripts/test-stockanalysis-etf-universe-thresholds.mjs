@@ -23,6 +23,12 @@ assert.equal(oldDynamicExpenseFloor, 4638);
 assert.equal(4638 >= oldDynamicExpenseFloor, true, "the old dynamic denominator would hide this regression");
 assert.equal(4638 < belowBaseline.expense_ratio_floor, true, "the fixed R2.4 floor must catch denominator shrink");
 assert.equal(MIN_MERGED_EXPENSE_RATIO_COUNT, 5000);
+const classified = deriveStockAnalysisEtfUniverseThresholds(5874, 25);
+assert.equal(classified.catalog_participation_floor, 5791);
+assert.equal(classified.expense_ratio_floor, 4684);
+assert.equal(classified.baseline_satisfied, true, "retained detail baseline never shrinks with lifecycle exclusions");
+assert.throws(() => deriveStockAnalysisEtfUniverseThresholds(5874, 5875), /inside the detail population/);
+assert.throws(() => deriveStockAnalysisEtfUniverseThresholds(5874, -1), /inside the detail population/);
 
 assert.throws(() => deriveStockAnalysisEtfUniverseThresholds(-1), /non-negative integer/);
 assert.throws(() => deriveStockAnalysisEtfUniverseThresholds(4731.5), /non-negative integer/);

@@ -946,6 +946,7 @@ export function buildIssueBody(alarms) {
         lines.push(`- Matched: ${alarm.parity.matched}; mismatched: ${alarm.parity.mismatched}; plane older: ${alarm.parity.plane_older}`);
         lines.push(`- Consecutive natural publication cycles behind: ${alarm.streak}`);
       }
+      if (alarm.lifecycle) lines.push(`- Unclassified orphans: ${alarm.lifecycle.orphan_count}; older than 14 days: ${alarm.lifecycle.overdue_count}`);
       if (alarm.message) lines.push(`- ${alarm.message}`);
       lines.push("");
       continue;

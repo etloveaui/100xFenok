@@ -82,6 +82,8 @@ on:
       - 'scripts/test_build_market_facts.py'
       - 'scripts/fetch-stockanalysis.py'
       - 'scripts/test_fetch_stockanalysis_fixtures.py'
+      - 'scripts/stockanalysis_etf_lifecycle.py'
+      - 'scripts/test_stockanalysis_etf_lifecycle.py'
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/test-export-computed-signals.mjs'
       - 'scripts/test-coordinate-computed-signals-workflow.mjs'
@@ -206,6 +208,8 @@ on:
       - 'scripts/test_build_market_facts.py'
       - 'scripts/fetch-stockanalysis.py'
       - 'scripts/test_fetch_stockanalysis_fixtures.py'
+      - 'scripts/stockanalysis_etf_lifecycle.py'
+      - 'scripts/test_stockanalysis_etf_lifecycle.py'
       - 'scripts/export-computed-signals.mjs'
       - 'scripts/test-export-computed-signals.mjs'
       - 'scripts/test-coordinate-computed-signals-workflow.mjs'
@@ -336,7 +340,9 @@ jobs:
         run: npm --prefix 100xfenok-next run qa:alarm-state
 
       - name: Prove family health parity and silent-record alarms
-        run: node scripts/test-family-health.mjs
+        run: |
+          python3 -m unittest scripts.test_stockanalysis_etf_lifecycle
+          node scripts/test-family-health.mjs
 
       - name: Validate Update Manifest policy
         run: |

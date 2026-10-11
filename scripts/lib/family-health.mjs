@@ -24,6 +24,17 @@ export function validateFamilyHealth(record, family = ETF_FAMILY) {
   }
   if ((record.parity.behind_publication_cycles > 1)
     !== record.parity.alarm_reasons.includes("plane_behind_canonical")) throw new Error("FAMILY_HEALTH_REASON_INVALID");
+  if (record.lifecycle) {
+    const rows = record.lifecycle.orphans;
+    if (!Array.isArray(rows) || record.lifecycle.orphan_count !== rows.length
+      || new Set(rows.map(row => row.ticker)).size !== rows.length
+      || rows.some(row => !/^[A-Z0-9][A-Z0-9.-]*$/.test(row.ticker)
+        || !Number.isFinite(Date.parse(row.first_seen_at))
+        || Date.parse(row.first_seen_at) > Date.parse(record.observed_at))) throw new Error("FAMILY_HEALTH_ORPHANS_INVALID");
+    const overdue = rows.filter(row => Date.parse(record.observed_at) - Date.parse(row.first_seen_at) > 14 * 86400_000).length;
+    if (record.lifecycle.overdue_count !== overdue
+      || JSON.stringify(record.lifecycle.alarm_reasons) !== JSON.stringify(overdue ? ["orphan_unclassified_over_14_days"] : [])) throw new Error("FAMILY_HEALTH_ORPHAN_REASON_INVALID");
+  }
   const assets = side => record.members.filter(row => row[side]).map(row => ({ path: row.member, ...row[side] }));
   const derived = compareFamilyMembers(assets("reference"), assets("plane"));
   if (derived.members.length !== record.members.length
@@ -75,14 +86,21 @@ export function buildFamilyHealth({ snapshot, previous = null, cycle = null, now
   const streak = newCycle
     ? counts.plane_older > 0 ? (previous?.parity.behind_publication_cycles ?? 0) + 1 : 0
     : previous?.parity.behind_publication_cycles ?? 0;
+  const priorOrphans = new Map((previous?.lifecycle?.orphans ?? []).map(row => [row.ticker, row]));
+  const orphanRows = (snapshot.reference.lifecycle?.orphans ?? []).map(row => ({ ...row,
+    first_seen_at: row.first_seen_at ?? priorOrphans.get(row.ticker)?.first_seen_at ?? snapshot.observed_at }));
+  const overdue = orphanRows.filter(row => Date.parse(snapshot.observed_at) - Date.parse(row.first_seen_at) > 14 * 86400_000).length;
   return validateFamilyHealth({
     schema_version: FAMILY_HEALTH_SCHEMA, family: ETF_FAMILY,
     observed_at: snapshot.observed_at, updated_at: now,
-    reference: { ...snapshot.reference, assets: undefined },
+    reference: { ...snapshot.reference, assets: undefined, lifecycle: undefined },
     plane: { generation_id: snapshot.manifest.generation_id, pointer_sequence: snapshot.pointer.sequence },
     source_health: { status: "not_evaluated", reason: "shared_calendar_model_pending" },
     last_publication_cycle: newCycle ? cycle : last,
     members,
+    lifecycle: { orphan_count: orphanRows.length, orphans: orphanRows, overdue_count: overdue,
+      live_catalogue_gaps: snapshot.reference.lifecycle?.live_catalogue_gaps ?? [],
+      alarm_reasons: overdue ? ["orphan_unclassified_over_14_days"] : [] },
     parity: { ...counts, status: counts.mismatched + counts.missing_plane + counts.plane_only + counts.plane_older ? "degraded" : "ok",
       behind_publication_cycles: streak,
       alarm_reasons: streak > 1 ? ["plane_behind_canonical"] : [] },
@@ -100,7 +118,8 @@ export function classifyFamilyHealth(record, { now = Date.now(), family = ETF_FA
     return { ...row, status: "alarm", alarm_reasons: ["health_record_stale"],
       message: invalid ? "Family record is missing, unreadable or invalid" : "Family record is outside its 48-hour refresh bound" };
   }
-  return { ...row, status: record.parity.alarm_reasons.length ? "alarm" : "ok",
-    alarm_reasons: [...record.parity.alarm_reasons], streak: record.parity.behind_publication_cycles,
-    parity: record.parity, reference: record.reference };
+  const reasons = [...record.parity.alarm_reasons, ...(record.lifecycle?.alarm_reasons ?? [])];
+  return { ...row, status: reasons.length ? "alarm" : "ok",
+    alarm_reasons: reasons, streak: record.parity.behind_publication_cycles,
+    parity: record.parity, lifecycle: record.lifecycle, reference: record.reference };
 }

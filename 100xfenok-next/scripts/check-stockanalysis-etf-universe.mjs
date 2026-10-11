@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import {
   MIN_MERGED_EXPENSE_RATIO_COUNT,
   MIN_TRUE_PRIMARY_COVERAGE_RATE,
@@ -320,11 +321,19 @@ const counts = merged.counts;
 const truePrimaryDetailTickers = jsonFileTickerSet(SOURCE_ETF_DETAIL_ROOT);
 const truePrimaryDetailCount = truePrimaryDetailTickers.size;
 const publicShardManifest = assertPublicShardProjection(truePrimaryDetailTickers, errors);
+const lifecycle = JSON.parse(execFileSync("python3", ["../scripts/stockanalysis_etf_lifecycle.py"], {
+  encoding: "utf8", timeout: 120_000, maxBuffer: 8 * 1024 * 1024,
+}));
+const lifecycleExcluded = new Set(Object.keys(lifecycle.exclusions));
+assert(lifecycle.detail_count === truePrimaryDetailCount, "lifecycle/detail membership mismatch", errors);
 const truePrimaryMergedRecords = merged.records.filter((row) => (
-  truePrimaryDetailTickers.has(cleanTicker(row.ticker))
+  truePrimaryDetailTickers.has(cleanTicker(row.ticker)) && !lifecycleExcluded.has(cleanTicker(row.ticker))
 ));
 const truePrimaryMergedCount = truePrimaryMergedRecords.length;
-const thresholds = deriveStockAnalysisEtfUniverseThresholds(truePrimaryDetailCount);
+const thresholds = deriveStockAnalysisEtfUniverseThresholds(truePrimaryDetailCount, lifecycleExcluded.size);
+console.log(JSON.stringify({ lifecycle_excluded: [...lifecycleExcluded].sort(),
+  eligible_details: lifecycle.eligible_count, unresolved_catalogue_members: lifecycle.orphans.map(row => row.ticker),
+  live_catalogue_gaps: lifecycle.live_catalogue_gaps }));
 const truePrimaryCatalogFloor = thresholds.catalog_participation_floor;
 const truePrimaryExpenseRatioCount = truePrimaryMergedRecords.filter((row) => (
   numericValue(row.expense_ratio ?? row.expenseRatio) !== null
@@ -347,7 +356,7 @@ assert(
 assert(
   truePrimaryMergedCount >= truePrimaryCatalogFloor,
   `Merged ETF universe expected >= ${truePrimaryCatalogFloor} R2.4 true-primary rows ` +
-    `(${Math.round(MIN_TRUE_PRIMARY_COVERAGE_RATE * 100)}% of ${truePrimaryDetailCount}), got ${truePrimaryMergedCount}`,
+    `(${Math.round(MIN_TRUE_PRIMARY_COVERAGE_RATE * 100)}% of ${lifecycle.eligible_count} eligible legacy details), got ${truePrimaryMergedCount}`,
   errors,
 );
 assert(

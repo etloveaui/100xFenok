@@ -51,6 +51,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
 from yahoo_batch_state import current_yahoo_universe_sources, verified_yahoo_terminal_evidence
+from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, membership as etf_membership, record_probe as record_etf_lifecycle_probe, ORPHAN_PROBE_LIMIT
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from data_supply_resolver import _ETF_DETAIL_POLICY, _provider_object_path
 from stockanalysis_recovery_state import (
@@ -422,6 +423,7 @@ SURFACE_DEFINITIONS = {
     },
     "etf_screener": {
         "path": "/etf/screener/__data.json?x-sveltekit-invalidated=01",
+        "catalog_path": "/_api/endpoints/screener/initial?type=etf&countryCode=&format=compact",
         "page_path": "/etf/screener/",
         "format": "svelte_devalue",
         "group": "etf",
@@ -2520,7 +2522,32 @@ def fetch_table_surface_response(name: str, definition: dict, timeout: int) -> t
     return build_table_surface_payload(name, definition, html), status
 
 
-def build_svelte_surface_payload(name: str, definition: dict, payload: dict) -> dict:
+def complete_etf_screener_records(catalog: dict) -> tuple[list[dict], int]:
+    """Decode the provider's public browser catalogue, never its SSR preview."""
+    data = catalog.get("data") if isinstance(catalog, dict) else None
+    if not isinstance(data, dict):
+        raise ValueError("ETF screener catalogue has no data object")
+    columns, rows, count = data.get("columns"), data.get("rows"), data.get("count")
+    required = {"s", "n", "assetClass", "aum", "price", "change", "volume", "holdings"}
+    if (not isinstance(columns, list) or not all(isinstance(c, str) for c in columns)
+            or len(set(columns)) != len(columns) or not required.issubset(columns)
+            or not isinstance(rows, list) or type(count) is not int or count < 1
+            or len(rows) != count or data.get("dataIsPartial") is True):
+        raise ValueError("ETF screener catalogue is incomplete or its schema changed")
+    records, seen = [], set()
+    for row in rows:
+        if not isinstance(row, list) or len(row) != len(columns):
+            raise ValueError("ETF screener catalogue row/column width mismatch")
+        record = dict(zip(columns, row))
+        symbol = record.get("s")
+        if not isinstance(symbol, str) or not symbol.strip() or symbol in seen:
+            raise ValueError("ETF screener catalogue has missing/duplicate symbols")
+        seen.add(symbol)
+        records.append(record)
+    return records, count
+
+
+def build_svelte_surface_payload(name: str, definition: dict, payload: dict, *, screener_catalog=None) -> dict:
     path = definition["path"]
     page_path = definition.get("page_path") or path.replace("/__data.json?x-sveltekit-invalidated=01", "/")
 
@@ -2536,6 +2563,13 @@ def build_svelte_surface_payload(name: str, definition: dict, payload: dict) -> 
         decoded = extract_svelte_node(payload, ("data",))
         records = decoded.get("data") if isinstance(decoded.get("data"), list) else []
         if name == "etf_screener":
+            if decoded.get("dataIsPartial") is True or decoded.get("count") != len(records):
+                if screener_catalog is None:
+                    raise ValueError("ETF screener SSR response is partial; complete catalogue required")
+                records, count = complete_etf_screener_records(screener_catalog)
+                decoded = {**decoded, "bootstrap_count": decoded.get("count"),
+                           "count": count, "dataIsPartial": False,
+                           "catalog_endpoint": definition["catalog_path"]}
             records = enrich_etf_records(records)
         metadata = {
             key: value
@@ -2577,12 +2611,17 @@ def build_svelte_surface_payload(name: str, definition: dict, payload: dict) -> 
 
 
 def fetch_svelte_surface(name: str, definition: dict, timeout: int) -> dict:
-    return build_svelte_surface_payload(name, definition, fetch_json(definition["path"], timeout))
+    return fetch_svelte_surface_response(name, definition, timeout)[0]
 
 
 def fetch_svelte_surface_response(name: str, definition: dict, timeout: int) -> tuple[dict, int]:
     payload, status = fetch_json_response(definition["path"], timeout)
-    return build_svelte_surface_payload(name, definition, payload), status
+    catalog = None
+    if name == "etf_screener":
+        decoded = extract_svelte_node(payload, ("data",))
+        if decoded.get("dataIsPartial") is True or decoded.get("count") != len(decoded.get("data") or []):
+            catalog, status = fetch_json_response(definition["catalog_path"], timeout)
+    return build_svelte_surface_payload(name, definition, payload, screener_catalog=catalog), status
 
 
 def parse_surface_names(value: str, surface_set: str) -> list[str]:
@@ -5620,7 +5659,7 @@ def select_natural_general_incremental_candidates(
 ) -> tuple[list[dict], dict]:
     """Rank source debt by explicit tier deadlines inside the existing budget."""
     buckets = {name: [] for name in (
-        "new_listings", "missing", "oldest_stale", "pending_retry", "fresh",
+        "new_listings", "missing", "oldest_stale", "pending_retry", "orphan_probe", "fresh",
     )}
     # Rank the full catalogue, not today's eligible subset: cooldown or a core
     # exclusion must not promote a smaller fund into a different tier.
@@ -5644,7 +5683,9 @@ def select_natural_general_incremental_candidates(
     for row in candidates:
         context = contexts.get(row["ticker"]) or {}
         pending = bool(row.get("prior_failures") or row.get("provider_absent"))
-        if pending:
+        if row["reason"] == "lifecycle_probe":
+            bucket = "orphan_probe"
+        elif pending:
             bucket = "pending_retry"
         elif row["reason"] == "missing" and "new_etfs" in context.get("sources", set()):
             bucket = "new_listings"
@@ -5696,6 +5737,8 @@ def select_natural_general_incremental_candidates(
         # nearest tier deadline instead of draining every pending name first.
         if bucket == "pending_retry":
             available = min(available, pending_minimum)
+        if bucket == "orphan_probe":
+            available = min(available, ORPHAN_PROBE_LIMIT)
         chosen = rows[:available]
         selected.extend(selection(row, bucket) for row in chosen)
         selected_counts[bucket] = len(chosen)
@@ -5757,6 +5800,12 @@ def incremental_etf_backfill_candidates(
     selected_recovery = ((selected_etf_state or {}).get("recovery") or {}) if use_serving_freshness else {}
     enrolled = set(selected_current) | set(selected_recovery)
     source_records = etf_incremental_source_records(universe_payload)
+    lifecycle_membership = None
+    if use_serving_freshness and all((OUT_DIR / rel).is_file() for rel in ("etf_universe.json", "surfaces/etf_screener.json")):
+        lifecycle_membership = etf_membership(EtfLifecycleInputs(OUT_DIR.parent.parent, yahoo_root=REPOSITORY_INPUTS.root), now_dt.isoformat())
+        source_records.append(("lifecycle_live", [{"ticker": row["ticker"]} for row in lifecycle_membership["live_catalogue_gaps"]]))
+    orphan_tickers = {row["ticker"] for row in (lifecycle_membership or {}).get("orphans", [])}
+    excluded_lifecycle = set((lifecycle_membership or {}).get("exclusions", {}))
     if enrolled:
         # Enrollment survives catalog removal and explicit unavailable state.
         # Historical LKG rows alone are audit evidence, not serving authority.
@@ -5782,7 +5831,7 @@ def incremental_etf_backfill_candidates(
 
     for source_name, symbols in sources:
         for ticker in unique_symbols(symbols):
-            if ticker in seen or ticker in exclude:
+            if ticker in seen or ticker in exclude or ticker in orphan_tickers or ticker in excluded_lifecycle:
                 continue
             pending_entry = pending_entries.get(ticker)
             reason, age_hours = etf_detail_backfill_reason(
@@ -5886,6 +5935,13 @@ def incremental_etf_backfill_candidates(
                     row["pre_fetch_payload_fetched_at"] = payload.get("fetched_at") if isinstance(payload, dict) else None
             candidates.append(row)
 
+    for row in (lifecycle_membership or {}).get("orphans", []):
+        if row["ticker"] in exclude or str(row.get("last_probe_at") or "")[:10] == now_dt.date().isoformat():
+            continue
+        candidates.append({**row, "reason": "lifecycle_probe", "age_hours": None,
+                           "source": "legacy_detail_orphan", "prior_failures": 0,
+                           "priority": 99, "reason_priority": 99,
+                           "last_attempt_utc": row.get("last_probe_at")})
     candidates.sort(key=incremental_candidate_sort_key)
     priority_selector = None
     if natural_general_priority and 0 <= limit <= NATURAL_GENERAL_INCREMENTAL_LIMIT:
@@ -5946,6 +6002,7 @@ def incremental_etf_backfill_candidates(
         "inception_limited": inception_limited_rows,
         "terminal_limited": terminal_limited_rows,
         "terminal_securities": terminal_rows,
+        **({"orphan_lifecycle": lifecycle_membership} if lifecycle_membership is not None else {}),
         **({"priority_selector": priority_selector} if priority_selector is not None else {}),
     }
 
@@ -6996,6 +7053,7 @@ def run_one(
     provider_availability_status = None
     provider_availability_reason = None
     provider_response = None
+    provider_absence_endpoint = None
     recovery_failure_recorded = False
     etf_recovery_pending = False
     financials_error = None
@@ -7042,6 +7100,7 @@ def run_one(
                 )
                 if provider_gap:
                     provider_availability_status = "absent"
+                    provider_absence_endpoint = urlparse(str(getattr(exc, "url", ""))).path
                     provider_availability_reason = "provider_coverage_gap"
                     provider_response = provider_response_from_error(stockanalysis_error)
                     record_etf_detail_unavailability_observation(
@@ -7084,6 +7143,7 @@ def run_one(
                             "provider_availability_status": provider_availability_status,
                             "provider_availability_reason": provider_availability_reason,
                             "provider_response": provider_response,
+                            "provider_absence_endpoint": provider_absence_endpoint,
                             "error": None,
                         }
                     raise
@@ -7955,6 +8015,9 @@ def _main() -> None:
             flush=True,
         )
     results = []
+    orphan_probe_rows = {row["ticker"]: row for row in (incremental_summary or {}).get("selected", [])
+                         if row.get("selection_bucket") == "orphan_probe"}
+    lifecycle_live_rows = {row["ticker"]: row for row in ((incremental_summary or {}).get("orphan_lifecycle") or {}).get("live_catalogue_gaps", [])}
     stop_reason = None
     # ETF detail writes 5,605 canonical payloads. Until this attempt record
     # existed, no lane owned that output and the data-plane inventory could not
@@ -7966,7 +8029,7 @@ def _main() -> None:
             skip=set(yahoo_retry_etfs) | controlled_failure_etfs,
         )) as collections:
             for idx, (ticker, etf_collection) in enumerate(collections, 1):
-                if kind == "etf" and ticker in yahoo_retry_etfs:
+                if kind == "etf" and ticker in yahoo_retry_etfs and ticker not in orphan_probe_rows:
                     result = run_yahoo_etf_fallback_recovery(
                         ticker,
                         mirror_public,
@@ -7985,6 +8048,7 @@ def _main() -> None:
                         yf_fallback=(
                             kind == "etf"
                             and args.yf_etf_fallback
+                            and ticker not in orphan_probe_rows
                             and not args.reconcile_missing_etf_details
                         ),
                         include_etf_history=not args.reconcile_missing_etf_details,
@@ -8004,6 +8068,10 @@ def _main() -> None:
                         ),
                         etf_collection=etf_collection,
                     )
+                lifecycle_row = orphan_probe_rows.get(ticker) or lifecycle_live_rows.get(ticker)
+                if kind == "etf" and lifecycle_row is not None and recovery_store is not None:
+                    record_etf_lifecycle_probe(recovery_store, ticker, result, recovery_run,
+                                               lifecycle_row["missing_catalogues"])
                 results.append(result)
                 status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
                 if result["error"] is None and result.get("provider") == "yahoo_finance":

@@ -57,8 +57,8 @@ jobs:
           timeout 120s git fetch --filter=blob:none --depth=1 origin main
           # Fetch all canonical blobs once, outside the lock, rather than let
           # cat-file lazily fetch thousands of objects one by one.
-          timeout 300s git sparse-checkout add data/stockanalysis/etfs
-          timeout 300s git checkout origin/main -- data/stockanalysis/etfs
+          timeout 300s git sparse-checkout add data/stockanalysis/etfs data/stockanalysis/surfaces data/admin/stockanalysis-recovery/states/etf data/admin/yahoo-batch-quote-history/tickers
+          timeout 300s git checkout origin/main -- data/stockanalysis/etfs data/stockanalysis/etf_universe.json data/stockanalysis/surfaces/etf_screener.json data/admin/stockanalysis-recovery/states/etf data/admin/yahoo-batch-quote-history/tickers
           node scripts/refresh-family-health.mjs prepare "$RUNNER_TEMP/family-health/prepared.json"
           printf '%s\n' 'prepared=true' >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
