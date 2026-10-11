@@ -12,7 +12,7 @@ from yahoo_batch_state import source_business_day_age, verified_yahoo_terminal_e
 from stockanalysis_recovery_state import _atomic_write_json, _iso_timestamp, _read_json, _valid_payload
 
 ORPHAN_PROBE_LIMIT = 60
-ROTATION_POLICY = json.loads(Path(__file__).with_name("etf_detail_rotation_policy.json").read_text())
+ROTATION_POLICY = json.loads((Path(__file__).parent / "lib" / "etf-detail-rotation-policy.json").read_text())
 CATALOGUES = {
     "etf_universe": "data/stockanalysis/etf_universe.json",
     "etf_screener": "data/stockanalysis/surfaces/etf_screener.json",
