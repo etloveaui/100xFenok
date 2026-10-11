@@ -331,11 +331,40 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.assertEqual(json.loads(run.stdout), {
                 "active_etf_files": 3, "git_only_additions": 1,
                 "artifact_etf_overlays": 1, "candidate_etf_files": 4,
+                "retained_active_holdings": [],
             })
+            partial_bytes = etf_payload(1, partial=True)
+            recovered, recovered_root = run_candidate("missing-holdings-retained", partial_bytes)
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            combined = json.loads((recovered_root / "TARGET.json").read_bytes())
+            baseline = json.loads(etf_payload(3))
+            for key in ("holdings", "holding_count", "holdings_updated"):
+                self.assertEqual(combined["normalized"][key], baseline["normalized"][key])
+            self.assertEqual(combined["raw"]["quote"], json.loads(partial_bytes)["raw"]["quote"])
+            self.assertEqual(combined["retained_holdings"]["fetched_at"], baseline["fetched_at"])
+            self.assertEqual((active / "TARGET.json").read_bytes(), etf_payload(3))
+            self.assertEqual((payloads / "TARGET.json").read_bytes(), partial_bytes)
+            self.assertEqual(json.loads(recovered.stdout)["retained_active_holdings"], ["TARGET"])
+            # TOCT/BCCC: overview samples remain nonempty after the holdings
+            # endpoint fails. Preserve the larger verified active portfolio.
+            sample = json.loads(partial_bytes)
+            sample["normalized"].update(holdings=[{"symbol": "SAMPLE"}], holding_count=1)
+            sample["partial_reason_codes"] = ["holdings_surface_fallback_overview", "holdings_countries_unavailable"]
+            baseline["normalized"]["holdings"].append({"symbol": "SECOND"})
+            baseline["normalized"]["holding_count"] = 2
+            (active / "TARGET.json").write_bytes(json.dumps(baseline).encode())
+            recovered, recovered_root = run_candidate("overview-sample-retained", json.dumps(sample).encode())
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual(json.loads((recovered_root / "TARGET.json").read_bytes())["normalized"]["holdings"],
+                             baseline["normalized"]["holdings"])
+            (active / "TARGET.json").write_bytes(etf_payload(3))
+            broken = json.loads(etf_payload(1, partial=True, truncated_history=True))
+            rejected, _ = run_candidate("retained-holdings-still-rejects-history-loss", json.dumps(broken).encode())
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("loses active daily_1y history", rejected.stderr)
             for label, body, diagnostic in (
                 ("active-regression", etf_payload(4), "regresses active"),
                 ("lkg-regression", etf_payload(2.5), "regresses Git LKG"),
-                ("complete-regression", etf_payload(1, partial=True), "loses complete active"),
                 ("quote-regression", etf_payload(1, empty_quote=True), "loses active usable quote"),
                 ("history-regression", etf_payload(1, malformed_history=True), "loses active daily_1y history"),
                 ("history-truncated", etf_payload(1, truncated_history=True), "loses active daily_1y history"),
@@ -355,7 +384,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.assertEqual((active / "TARGET.json").read_bytes(), legacy_bytes)
             for label, body, diagnostic in (
                 ("legacy-active-regression", etf_payload(4), "regresses active"),
-                ("legacy-complete-regression", etf_payload(1, partial=True), "loses complete active"),
                 ("legacy-quote-regression", etf_payload(1, empty_quote=True), "loses active usable quote"),
                 ("legacy-history-regression", etf_payload(1, truncated_history=True), "loses active daily_1y history"),
                 ("unstamped-artifact", legacy_bytes, "artifact contract invalid"),

@@ -932,6 +932,48 @@ jobs:
               if detail_loss:
                   raise SystemExit(f"ETF {ticker} artifact loses {label} {detail_loss}")
 
+          def retain_active_holdings(ticker, payload, baseline_bytes):
+              reasons = payload.get("partial_reason_codes") or []
+              missing_surface = any(reason == "holdings_unavailable" or reason.startswith("holdings_surface_")
+                                    for reason in reasons)
+              if not baseline_bytes or not missing_surface:
+                  return False
+              baseline, _, _, _ = checked_payload(baseline_bytes, ticker, "active", legacy_baseline=True)
+              old = baseline.get("normalized") or {}
+              if not old.get("holdings"):
+                  return False
+              # The overview is a sample when the holdings endpoint is absent.
+              # Keep the verified portfolio and its dates as one bound component.
+              for key in ("holdings", "holding_count", "holdings_updated", "countries", "sectors", "asset_allocation"):
+                  payload["normalized"].pop(key, None)
+                  if key in old:
+                      payload["normalized"][key] = old[key]
+              for section, keys in (("raw", ("holdings", "official_holdings")),
+                                    ("endpoints", ("holdings",)), ("endpoint_contracts", ("holdings",))):
+                  target = payload.setdefault(section, {})
+                  for key in keys:
+                      target.pop(key, None)
+                      if key in (baseline.get(section) or {}):
+                          target[key] = baseline[section][key]
+              payload.pop("holdings_source", None)
+              if "holdings_source" in baseline:
+                  payload["holdings_source"] = baseline["holdings_source"]
+              payload["retained_holdings"] = {
+                  "provider": "stockanalysis", "payload_sha256": hashlib.sha256(baseline_bytes).hexdigest(),
+                  "source_as_of": baseline.get("source_as_of"), "fetched_at": baseline.get("fetched_at"),
+                  "holdings_updated": old.get("holdings_updated"),
+              }
+              remaining = [reason for reason in reasons if not reason.startswith("holdings_")]
+              remaining += [reason for reason in baseline.get("partial_reason_codes", []) if reason.startswith("holdings_")]
+              if remaining:
+                  payload["partial_reason_codes"] = sorted(set(remaining))
+              else:
+                  payload.pop("partial_reason_codes", None)
+                  payload.pop("detail_status", None)
+              payload["source_as_of"] = fetcher.stockanalysis_detail_source_timestamp(payload)
+              return True
+
+          retained_names = []
           for name in git_only:
               body = (git_root / name).read_bytes()
               digest = hashlib.sha256(body).hexdigest()
@@ -953,8 +995,12 @@ jobs:
               ticker = name[:-5]
               payload, source_as_of, complete, _ = checked_payload(body, ticker, "artifact")
               active_file = active_root / name
-              enforce_floor(ticker, payload, source_as_of, complete,
-                            active_file.read_bytes() if active_file.exists() else None, "active")
+              active_bytes = active_file.read_bytes() if active_file.exists() else None
+              if retain_active_holdings(ticker, payload, active_bytes):
+                  body = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
+                  payload, source_as_of, complete, _ = checked_payload(body, ticker, "assembled candidate")
+                  retained_names.append(ticker)
+              enforce_floor(ticker, payload, source_as_of, complete, active_bytes, "active")
               lkg = subprocess.run(["git", "show", f"HEAD:{rel}"], capture_output=True, check=False)
               if lkg.returncode == 0:
                   enforce_floor(ticker, payload, source_as_of, complete, lkg.stdout, "Git LKG")
@@ -968,13 +1014,14 @@ jobs:
                   temporary = Path(handle.name)
                   handle.write(body)
               os.replace(temporary, target)
-              if hashlib.sha256(target.read_bytes()).hexdigest() != row["sha256"]:
+              if hashlib.sha256(target.read_bytes()).hexdigest() != hashlib.sha256(body).hexdigest():
                   raise SystemExit(f"ETF candidate overlay readback failed: {rel}")
           expected_names = active_names | git_names | overlay_names
           if {path.name for path in candidate.iterdir()} != expected_names:
               raise SystemExit("ETF candidate membership differs from active/Git/artifact union")
           print(json.dumps({"active_etf_files": len(active_names), "git_only_additions": len(git_only),
-                            "artifact_etf_overlays": len(rows), "candidate_etf_files": len(expected_names)}))
+                            "artifact_etf_overlays": len(rows), "candidate_etf_files": len(expected_names),
+                            "retained_active_holdings": retained_names}))
           PYEOF
           # The base tree and pointer must still match the receipt after the
           # hard-link overlay; publisher also checks the same pointer identity.
