@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { CpDataTable, type CpDataTableColumn } from "@/components/canvas-plus/kit";
 import { EmptyState, Panel, useDelayedLoading } from "@/components/ui";
-import { loadEdgarKoreanSummaryTickers } from "@/lib/edgarKoreanSummaries";
+import { loadEdgarKoreanSummaryTickers, type EdgarTickerSummaryCoverage } from "@/lib/edgarKoreanSummaries";
 import { ROUTES } from "@/lib/routes";
 
-type TickerRow = { ticker: string };
+type TickerRow = { ticker: string; summary?: EdgarTickerSummaryCoverage };
 const columns: readonly CpDataTableColumn<TickerRow>[] = [
   { key: "ticker", header: "종목", render: (row) => <strong>{row.ticker}</strong> },
+  { key: "latestSummary", header: "최근 요약 공시일", render: (row) => row.summary ? row.summary.latestSummaryFilingDate ?? "요약 없음" : "확인 불가" },
+  { key: "pending", header: "요약 대기", render: (row) => row.summary ? `${row.summary.pendingCount}건` : "확인 불가" },
   { key: "summary", header: "공시", render: (row) => (
     <TransitionLink prefetch={false} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={ROUTES.stockFilings(row.ticker)}>
       {row.ticker} 공시 요약 보기
@@ -18,7 +20,7 @@ const columns: readonly CpDataTableColumn<TickerRow>[] = [
 ];
 
 export default function FilingsDirectoryClient() {
-  const [directory, setDirectory] = useState<{ tickers: string[]; updated: string } | null>(null);
+  const [directory, setDirectory] = useState<Awaited<ReturnType<typeof loadEdgarKoreanSummaryTickers>>>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
@@ -40,7 +42,7 @@ export default function FilingsDirectoryClient() {
   }, [attempt]);
   const rows = useMemo(() => {
     const needle = query.trim().toUpperCase();
-    return (directory?.tickers ?? []).filter((ticker) => ticker.includes(needle)).map((ticker) => ({ ticker }));
+    return (directory?.tickers ?? []).filter((ticker) => ticker.includes(needle)).map((ticker) => ({ ticker, summary: directory?.summaryByTicker[ticker] }));
   }, [directory, query]);
 
   return <div className="space-y-4" data-filings-directory>
@@ -48,7 +50,7 @@ export default function FilingsDirectoryClient() {
       <h1 className="text-xl font-bold">공시 한글 요약</h1>
       <p className="mt-2 text-sm text-slate-600">종목을 고르면 공시 목록, 한글 요약과 SEC 원문을 확인할 수 있습니다.</p>
       {directory ? <p className="mt-2 text-sm text-slate-500">{directory.tickers.length}개 종목 · 공시 목록 갱신 {directory.updated}</p> : null}
-      {directory ? <p className="mt-1 text-sm text-slate-500">이 날짜는 공시 목록을 갱신한 날이며 한글 요약을 쓴 날이 아닙니다. 한글 요약은 일부 공시에만 있고, 종목을 열면 요약 건수와 요약 준비 전 공시를 확인할 수 있습니다.</p> : null}
+      {directory ? <p className="mt-1 text-sm text-slate-500">최근 요약 공시일은 한글 요약이 있는 공시의 원문 날짜입니다. 목록 갱신일과 요약 작성일은 다릅니다.</p> : null}
     </header>
     <label className="block text-sm font-semibold" htmlFor="filings-ticker-search">종목 검색
       <input id="filings-ticker-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)}

@@ -1023,8 +1023,16 @@ function manifestMirrorEntries(paths, ticker, manifest) {
 function buildIndex({ manifests, updated, generatedAt }) {
   const tickers = [...manifests.keys()].sort();
   const byTicker = {};
+  const summaryByTicker = {};
   for (const ticker of tickers) {
     byTicker[ticker] = `/data/edgar-korean-summaries/by-ticker/${ticker.toLowerCase()}.json`;
+    const filings = manifests.get(ticker)?.filings ?? [];
+    const summarized = filings.filter(isReadySummaryRow);
+    summaryByTicker[ticker] = {
+      latestSummaryFilingDate: summarized.map((row) => row.filingDate).filter(Boolean).sort().at(-1) ?? null,
+      summaryCount: summarized.length,
+      pendingCount: filings.length - summarized.length,
+    };
   }
   const memberDates = tickers
     .map((ticker) => String(manifests.get(ticker)?.updated ?? ""))
@@ -1043,6 +1051,7 @@ function buildIndex({ manifests, updated, generatedAt }) {
     },
     tickers,
     byTicker,
+    summaryByTicker,
   };
 }
 
@@ -1329,6 +1338,7 @@ export {
   FOREIGN_FORM_SECTION_REQUESTS,
   isForeignForm,
   maxFilingDateAcrossManifests,
+  buildIndex,
   mergeFilings,
   retainLatestFilingDates,
   secArchiveIdentity,

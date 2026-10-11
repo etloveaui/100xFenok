@@ -10,6 +10,7 @@ import {
   EDGAR_PUBLICATION_JOURNAL_SCHEMA,
   FOREIGN_FORM_SECTION_REQUESTS,
   applyPersistenceToExistingManifest,
+  buildIndex,
   mergeFilings,
   recoverJsonBundleTransaction,
   retainLatestFilingDates,
@@ -22,6 +23,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const OBSERVED_AT = "2026-07-15T02:00:00Z";
 const ATTEMPT_ID = "edgar-filings-test-1";
+
+{
+  const index = buildIndex({ manifests: new Map([
+    ["AAPL", { updated: "2026-10-05", filings: [
+      { filingDate: "2026-10-05", summaryPath: null },
+      { filingDate: "2026-09-02", summaryPath: "/summary" },
+      { filingDate: "2026-09-03", translationPath: "/translation" },
+    ] }],
+    ["NVDA", { updated: "2026-10-05", filings: [{ filingDate: "2026-10-05" }] }],
+  ]), updated: "2026-10-11", generatedAt: "2026-10-11T14:00:00Z" });
+  assert.deepEqual(index.summaryByTicker.AAPL, { latestSummaryFilingDate: "2026-09-03", summaryCount: 2, pendingCount: 1 });
+  assert.deepEqual(index.summaryByTicker.NVDA, { latestSummaryFilingDate: null, summaryCount: 0, pendingCount: 1 });
+  assert.equal(index.updated, "2026-10-05", "index regeneration cannot refresh the acquisition clock");
+}
 
 function response(statusCode, document) {
   return {
