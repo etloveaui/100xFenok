@@ -697,8 +697,12 @@ export function cronIntervalHours(cron) {
   return hour === "*" ? 1 : 24;
 }
 
-export function isLostScheduledSlot(run) {
-  return run?.event === "schedule"
+function isScheduledRun(workflow, run) {
+  return run?.event === "schedule" || externalClockSlot(workflow, run) !== null;
+}
+
+export function isLostScheduledSlot(run, workflow = {}) {
+  return isScheduledRun(workflow, run)
     && (run?.jobs_empty === true || run?.queue_evicted === true);
 }
 
@@ -719,7 +723,7 @@ export function needsMissedWindowReverification(row) {
 export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeScheduledRuns = [] } = {}) {
   const countedRuns = runs.filter((run) => {
     if (run?.status && run.status !== "completed") return false;
-    if (run?.event === "workflow_dispatch") return false;
+    if (run?.event === "workflow_dispatch") return externalClockSlot(workflow, run) !== null;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
   const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
@@ -728,7 +732,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   // is proof the refresh has since happened, so the slot stops paging. Without
   // this, one evicted monthly slot pages hourly until the NEXT natural slot
   // (the 2026-08-01 storm left OECD paging toward September 1 past five
-  // dispatch recoveries). Dispatch runs stay excluded from streak/alarm
+  // dispatch recoveries). Unmarked dispatches stay excluded from streak/alarm
   // counting above; they participate only as recovery evidence, the same
   // admission rule the promotion gate adopted in 1f3fc3518f. Run ids are
   // monotonic, so "newer" is an id comparison.
@@ -737,7 +741,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     const id = Number(run?.id);
     return Number.isFinite(id) && id > max ? id : max;
   }, -Infinity);
-  const lostSlotCandidates = countedRuns.filter(isLostScheduledSlot);
+  const lostSlotCandidates = countedRuns.filter((run) => isLostScheduledSlot(run, workflow));
   const lostScheduledSlots = lostSlotCandidates.filter((run) => {
     const id = Number(run?.id);
     return !Number.isFinite(id) || id > newestSuccessId;
@@ -1010,7 +1014,7 @@ async function fetchRunJobs({ token, owner, repo, runId }) {
 // The lookup is capped and fail-open: an API error preserves the run-list result.
 export const QUEUE_EVICTION_INSPECTION_LIMIT = 5;
 
-export async function annotateQueueEvictions({ runs, fetchJobsFn, limit = QUEUE_EVICTION_INSPECTION_LIMIT }) {
+export async function annotateQueueEvictions({ runs, fetchJobsFn, workflow = {}, limit = QUEUE_EVICTION_INSPECTION_LIMIT }) {
   if (!Array.isArray(runs) || typeof fetchJobsFn !== "function") return runs;
   let inspected = 0;
   for (const run of runs) {
@@ -1018,7 +1022,7 @@ export async function annotateQueueEvictions({ runs, fetchJobsFn, limit = QUEUE_
     // completed failure prefix from queue-eviction classification.
     if (run?.status && run.status !== "completed") continue;
     const inspectable = FAILURE_CONCLUSIONS.has(run?.conclusion)
-      || (run?.event === "schedule" && run?.conclusion === "cancelled");
+      || (isScheduledRun(workflow, run) && run?.conclusion === "cancelled");
     if (!inspectable) break;
     if (inspected >= limit) break;
     inspected += 1;
@@ -1140,6 +1144,7 @@ export async function main() {
       };
       let activeScheduledRuns = await fetchInProgressScheduledRuns();
       const runs = await annotateQueueEvictions({
+        workflow,
         runs: mergeWorkflowRunBatches(batches),
         fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
       });
@@ -1161,6 +1166,7 @@ export async function main() {
         }
         activeScheduledRuns = await fetchInProgressScheduledRuns();
         evaluated = evaluateWorkflow(workflow, await annotateQueueEvictions({
+          workflow,
           runs: mergeWorkflowRunBatches([...batches, ...verifyBatches]),
           fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
         }), { activeScheduledRuns });

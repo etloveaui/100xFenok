@@ -23,6 +23,42 @@ import {
   parseWorkflowRunsPayload,
 } from "./check-pipeline-job-health.mjs";
 
+// Marked A1 dispatches are automatic slots, including failures and evictions.
+{
+  const workflow = { file: "fetch-yahoo-ticker.yml", label: "Yahoo ticker", events: ["schedule"],
+    crons: ["5 * * * *"], scheduled_producer: true };
+  const marked = (hour, conclusion = "failure") => {
+    const slot = `2026-10-11T0${hour}:05:00.000Z`;
+    return { id: hour, event: "workflow_dispatch", status: "completed", conclusion,
+      created_at: slot, run_started_at: slot, html_url: `https://gh/run/${hour}`,
+      display_title: `external-clock/a1/v1 ${workflow.file} ${slot}` };
+  };
+  const failures = [6, 5, 4, 3, 2, 1].map((hour) => marked(hour));
+  const now = Date.parse("2026-10-11T06:30:00Z");
+  const failed = evaluateWorkflow(workflow, failures, { now });
+  assert.equal(failed.status, "alarm");
+  assert.equal(failed.streak, 6);
+  assert.deepEqual(failed.alarm_reasons, ["failure_streak"]);
+  assert.equal(failed.firstFailingRunId, 1);
+  assert.match(buildIssueBody([failed]), /First failing run: 1 started 2026-10-11T01:05/);
+  const recovered = evaluateWorkflow(workflow,
+    [{ ...marked(7, "success"), event: "schedule" }, ...failures],
+    { now: Date.parse("2026-10-11T07:30:00Z") });
+  assert.equal(recovered.status, "ok");
+  assert.equal(recovered.streak, 0);
+  assert.equal(recovered.failure_streak_recovered, true);
+  const manual = evaluateWorkflow(workflow,
+    [{ ...marked(7), display_title: "Human dispatch" }, marked(6, "success")],
+    { now: Date.parse("2026-10-11T07:30:00Z") });
+  assert.equal(manual.streak, 0, "an unmarked human failure stays excluded");
+  assert.equal(manual.status, "ok");
+  const evicted = marked(6, "cancelled");
+  await annotateQueueEvictions({ workflow, runs: [evicted], fetchJobsFn: async () => [] });
+  const lost = evaluateWorkflow(workflow, [evicted], { now });
+  assert.equal(lost.streak, 0);
+  assert.deepEqual(lost.alarm_reasons, ["lost_schedule_slot"]);
+}
+
 // The alarm's data-stoppage input is two committed KPI generations. A single
 // stopped generation is not yet a K3 incident; unreadable history is unknown,
 // never a healthy result that can clear an open issue.
