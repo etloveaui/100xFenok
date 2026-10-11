@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-11T12:39:28.514Z",
+  "generated_at": "2026-10-11T13:33:07.526Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-10-09",
   "source_date_reason": null,
-  "source_generated_at": "2026-10-11T12:39:25.639Z",
+  "source_generated_at": "2026-10-11T13:33:04.724Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -54,8 +54,8 @@
       "short_pressure_proxy": 689
     },
     "confidence_counts": {
-      "high": 932,
-      "medium": 204,
+      "high": 931,
+      "medium": 205,
       "low": 51
     },
     "market_scope_counts": {
@@ -97932,7 +97932,7 @@
               "company": "Fast Retailing",
               "market_scope": "us",
               "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 80.52,
+              "similarity_score": 80.63,
               "shared_feature_count": 7
             }
           ]
@@ -133119,7 +133119,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 86.51,
+          "score_0_100": 86.5,
           "direction": "peer_comparable",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -133132,7 +133132,7 @@
               "company": "Fast Retailing",
               "market_scope": "us",
               "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 89.93,
+              "similarity_score": 89.88,
               "shared_feature_count": 7
             },
             {
@@ -179985,12 +179985,12 @@
       }
     },
     {
-      "ticker": "9983.T",
-      "ticker_normalized": "9983-T",
-      "company": "Fast Retailing",
-      "market_scope": "us",
-      "market": "US_CLASS",
-      "canonical_sector": "Consumer Discretionary",
+      "ticker": "601919.SS",
+      "ticker_normalized": "601919",
+      "company": "COSCO SHIPPING Holdings Co., Ltd.",
+      "market_scope": "asia",
+      "market": "SSE",
+      "canonical_sector": "Industrials",
       "as_of": "2026-10-09",
       "as_of_reason": null,
       "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
@@ -180007,16 +180007,16 @@
         "yf/finance/SPY.json"
       ],
       "stock_action_context": {
-        "action_score": 43.74,
-        "signal_score": 51.06,
-        "coverage_ratio": 0.5222,
-        "confidence_label": "medium",
+        "action_score": 55.32,
+        "signal_score": 55.32,
+        "coverage_ratio": 1,
+        "confidence_label": "high",
         "action_bucket": "momentum"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 67.66,
+        "common_basis_score_0_100": 59.21,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 67.66,
+        "conviction_score_0_100": 59.21,
         "conviction_call": "mixed",
         "input_count": 3,
         "basis_code": "common_3_v1",
@@ -180025,46 +180025,46 @@
       },
       "signals": {
         "profitability": {
-          "score_0_100": 67.39,
-          "direction": "constructive",
+          "score_0_100": 29.9,
+          "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "gross_margin_avg": {
-              "value": 55.597,
-              "score": 78.02,
-              "peer_group": "market_sector",
-              "peer_count": 92
+              "value": 9.208,
+              "score": 7.81,
+              "peer_group": "market_scope",
+              "peer_count": 65
             },
             "operating_margin_avg": {
-              "value": 19.028,
-              "score": 75,
-              "peer_group": "market_sector",
-              "peer_count": 93
+              "value": 12.398,
+              "score": 37.78,
+              "peer_group": "market_scope",
+              "peer_count": 91
             },
             "roe_avg": {
-              "value": 20.521,
-              "score": 51.09,
-              "peer_group": "market_sector",
-              "peer_count": 93
+              "value": 10.32,
+              "score": 36.67,
+              "peer_group": "market_scope",
+              "peer_count": 91
             }
           }
         },
         "durability_profitability": {
-          "score_0_100": 65.64,
-          "direction": "constructive",
+          "score_0_100": 45.28,
+          "direction": "neutral",
           "coverage_ratio": 0.7,
-          "confidence": "medium",
+          "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 65.64,
-          "coverage_adjusted_score_0_100": 45.95,
+          "observed_only_score_0_100": 45.28,
+          "coverage_adjusted_score_0_100": 31.7,
           "missing_inputs": [
             "cash_durability",
             "multi_year_stability"
           ],
           "financials_source": null,
           "sector_caps": {
-            "grossMargin": 75,
+            "grossMargin": 70,
             "operatingMargin": 40,
             "roe": 45,
             "roic": 45,
@@ -180073,8 +180073,8 @@
           "components": {
             "positive_earnings": {
               "score": 100,
-              "operating_margin": 19.028,
-              "roe": 20.521,
+              "operating_margin": 12.398,
+              "roe": 10.32,
               "latest_eps": null,
               "source_field": null,
               "note": "inferred from positive operating margin and ROE"
@@ -180092,18 +180092,18 @@
               "status": "missing_financials_input"
             },
             "margin_level": {
-              "score": 58.19,
+              "score": 23.86,
               "coverage_ratio": 1,
-              "gross_margin": 55.597,
-              "gross_margin_score": 74.13,
-              "operating_margin": 19.028,
-              "operating_margin_score": 47.57
+              "gross_margin": 9.208,
+              "gross_margin_score": 13.15,
+              "operating_margin": 12.398,
+              "operating_margin_score": 31
             },
             "roe_roic_efficiency": {
-              "score": 45.6,
+              "score": 22.93,
               "coverage_ratio": 0.7,
-              "roe": 20.521,
-              "roe_score": 45.6,
+              "roe": 10.32,
+              "roe_score": 22.93,
               "roic": null,
               "roic_field": null,
               "roic_score": null,
@@ -180125,48 +180125,48 @@
           }
         },
         "growth": {
-          "score_0_100": 56.81,
-          "direction": "constructive",
+          "score_0_100": 21.51,
+          "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "revenue_growth_avg": {
-              "value": 11.284,
-              "score": 85.87,
-              "peer_group": "market_sector",
-              "peer_count": 93
+              "value": 3.501,
+              "score": 35.56,
+              "peer_group": "market_scope",
+              "peer_count": 91
             },
             "eps_growth_avg": {
-              "value": 9.758,
-              "score": 26.09,
-              "peer_group": "market_sector",
-              "peer_count": 93
+              "value": -5.597,
+              "score": 2.22,
+              "peer_group": "market_scope",
+              "peer_count": 91
             },
             "forward_eps_growth_span": {
-              "value": 30.1996,
-              "score": 55.43,
-              "peer_group": "market_sector",
-              "peer_count": 93
+              "value": -39.0135,
+              "score": 1.11,
+              "peer_group": "market_scope",
+              "peer_count": 91
             },
             "revision_direction": {
-              "value": 0.0614,
-              "score": 80.06,
+              "value": 0.0519,
+              "score": 80.05,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "technical_flow": {
-          "score_0_100": 97.85,
+          "score_0_100": 81.32,
           "direction": "strong",
           "coverage_ratio": 0.45,
-          "confidence": "low",
+          "confidence": "medium",
           "components": {
             "return12m": {
-              "value": 0.4864,
-              "score": 97.85,
-              "peer_group": "market_sector",
-              "peer_count": 94
+              "value": 0.1592,
+              "score": 81.32,
+              "peer_group": "market_scope",
+              "peer_count": 92
             },
             "ret1y": null,
             "slick_latest_return": null,
@@ -180174,41 +180174,41 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 43.54,
+          "score_0_100": 44.06,
           "direction": "balanced",
           "coverage_ratio": 1,
           "confidence": "high",
-          "upside_score_0_100": 41.14,
-          "downside_score_0_100": 54.06,
+          "upside_score_0_100": 40.48,
+          "downside_score_0_100": 52.35,
           "components": {
             "upside": {
               "valuation_room": {
                 "value": 0,
-                "score": 12.03,
-                "peer_group": "market_sector",
-                "peer_count": 80
+                "score": 17.05,
+                "peer_group": "market_scope",
+                "peer_count": 89
               },
               "forward_pe_discount": {
-                "value": 52.442,
-                "score": 3.23,
-                "peer_group": "market_sector",
-                "peer_count": 94
+                "value": 11.5489,
+                "score": 48.91,
+                "peer_group": "market_scope",
+                "peer_count": 93
               },
               "growth_support": {
                 "value": null,
-                "score": 56.81,
+                "score": 21.51,
                 "peer_group": "rule",
                 "peer_count": null
               },
               "technical_confirmation": {
                 "value": null,
-                "score": 97.85,
+                "score": 81.32,
                 "peer_group": "rule",
                 "peer_count": null
               },
               "revision_support": {
-                "value": 0.0614,
-                "score": 80.06,
+                "value": 0.0519,
+                "score": 80.05,
                 "peer_group": "rule",
                 "peer_count": null
               }
@@ -180216,31 +180216,31 @@
             "downside": {
               "valuation_crowding": {
                 "value": 1,
-                "score": 87.97,
-                "peer_group": "market_sector",
-                "peer_count": 80
+                "score": 82.95,
+                "peer_group": "market_scope",
+                "peer_count": 89
               },
               "forward_pe_pressure": {
-                "value": 52.442,
-                "score": 96.77,
-                "peer_group": "market_sector",
-                "peer_count": 94
+                "value": 11.5489,
+                "score": 51.09,
+                "peer_group": "market_scope",
+                "peer_count": 93
               },
               "negative_momentum": {
-                "value": -0.4864,
-                "score": 2.15,
-                "peer_group": "market_sector",
-                "peer_count": 94
+                "value": -0.1592,
+                "score": 18.68,
+                "peer_group": "market_scope",
+                "peer_count": 92
               },
               "profitability_gap": {
                 "value": null,
-                "score": 32.61,
+                "score": 70.1,
                 "peer_group": "rule",
                 "peer_count": null
               },
               "revision_pressure": {
-                "value": 0.0614,
-                "score": 19.94,
+                "value": 0.0519,
+                "score": 19.95,
                 "peer_group": "rule",
                 "peer_count": null
               }
@@ -180248,113 +180248,113 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 83.61,
+          "score_0_100": 85.18,
           "direction": "peer_comparable",
           "coverage_ratio": 1,
           "confidence": "high",
-          "peer_group": "market_sector",
-          "peer_count": 93,
+          "peer_group": "market_scope",
+          "peer_count": 92,
           "vector_feature_count": 7,
           "nearest_peers": [
             {
-              "ticker": "ROST",
-              "company": "Ross Stores",
-              "market_scope": "us",
-              "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 89.93,
+              "ticker": "601328.SS",
+              "company": "Bank of Communications Co., Ltd.",
+              "market_scope": "asia",
+              "canonical_sector": "Financials",
+              "similarity_score": 88.19,
               "shared_feature_count": 7
             },
             {
-              "ticker": "MAR",
-              "company": "Marriott International Class A",
-              "market_scope": "us",
+              "ticker": "0857.HK",
+              "company": "PetroChina H",
+              "market_scope": "asia",
+              "canonical_sector": "Energy",
+              "similarity_score": 84.22,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "9999.HK",
+              "company": "NetEase",
+              "market_scope": "asia",
+              "canonical_sector": "Technology",
+              "similarity_score": 83.13,
+              "shared_feature_count": 5
+            },
+            {
+              "ticker": "0001.HK",
+              "company": "CK Hutchison Holdings",
+              "market_scope": "asia",
               "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 80.52,
+              "similarity_score": 82.52,
               "shared_feature_count": 7
             },
             {
-              "ticker": "HLT",
-              "company": "Hilton Worldwide Holdings",
-              "market_scope": "us",
-              "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 80.38,
-              "shared_feature_count": 7
-            },
-            {
-              "ticker": "SBUX",
-              "company": "Starbucks",
-              "market_scope": "us",
-              "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 80.36,
-              "shared_feature_count": 7
-            },
-            {
-              "ticker": "WSM",
-              "company": "Williams Sonoma",
-              "market_scope": "us",
-              "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 78.12,
+              "ticker": "000725.SZ",
+              "company": "BOE Technology Group Ord Shs A",
+              "market_scope": "asia",
+              "canonical_sector": "Technology",
+              "similarity_score": 82.27,
               "shared_feature_count": 7
             }
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 72.31,
-          "direction": "strong",
+          "score_0_100": 48.41,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 86029765600,
-              "score": 100,
+              "value": 1231014771.023,
+              "score": 77.26,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.0742,
-              "score": 49.9,
+              "value": 0.8477,
+              "score": 23.26,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.7744,
-              "score": 84.96,
+              "value": 1.1283,
+              "score": 41.88,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0444,
-              "score": 48.35,
+              "value": 0.006,
+              "score": 37.07,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 32.81,
-          "direction": "weak",
+          "score_0_100": 47.91,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0224,
-              "score": 47.47,
+              "value": -0.0159,
+              "score": 34.69,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.1556,
-              "score": 5.08,
+              "value": 0.1612,
+              "score": 71.09,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0444,
-              "score": 48.35,
+              "value": 0.006,
+              "score": 37.07,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -291992,397 +291992,6 @@
       }
     },
     {
-      "ticker": "601919.SS",
-      "ticker_normalized": "601919",
-      "company": "COSCO SHIPPING Holdings Co., Ltd.",
-      "market_scope": "asia",
-      "market": "SSE",
-      "canonical_sector": "Industrials",
-      "as_of": "2026-10-09",
-      "as_of_reason": null,
-      "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
-      "confidence": "high",
-      "coverage_ratio": 0.845,
-      "source_families": [
-        "computed/stock_action_index.json",
-        "global-scouter/stocks/detail/*.json",
-        "global-scouter/core/revision_movers.json",
-        "yf/quarter_closes.json",
-        "slickcharts/stocks-returns.json",
-        "stockanalysis/financials/*.json",
-        "yf/finance/{TICKER}.json",
-        "yf/finance/SPY.json"
-      ],
-      "stock_action_context": {
-        "action_score": 38.3,
-        "signal_score": 38.3,
-        "coverage_ratio": 1,
-        "confidence_label": "high",
-        "action_bucket": "watch"
-      },
-      "short_term_composite": {
-        "common_basis_score_0_100": 59.21,
-        "common_basis_call": "mixed",
-        "conviction_score_0_100": 59.21,
-        "conviction_call": "mixed",
-        "input_count": 3,
-        "basis_code": "common_3_v1",
-        "comparable_score_0_100": null,
-        "comparable_call": null
-      },
-      "signals": {
-        "profitability": {
-          "score_0_100": 29.9,
-          "direction": "stressed",
-          "coverage_ratio": 1,
-          "confidence": "high",
-          "components": {
-            "gross_margin_avg": {
-              "value": 9.208,
-              "score": 7.81,
-              "peer_group": "market_scope",
-              "peer_count": 65
-            },
-            "operating_margin_avg": {
-              "value": 12.398,
-              "score": 37.78,
-              "peer_group": "market_scope",
-              "peer_count": 91
-            },
-            "roe_avg": {
-              "value": 10.32,
-              "score": 36.67,
-              "peer_group": "market_scope",
-              "peer_count": 91
-            }
-          }
-        },
-        "durability_profitability": {
-          "score_0_100": 45.28,
-          "direction": "neutral",
-          "coverage_ratio": 0.7,
-          "confidence": "high",
-          "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 45.28,
-          "coverage_adjusted_score_0_100": 31.7,
-          "missing_inputs": [
-            "cash_durability",
-            "multi_year_stability"
-          ],
-          "financials_source": null,
-          "sector_caps": {
-            "grossMargin": 70,
-            "operatingMargin": 40,
-            "roe": 45,
-            "roic": 45,
-            "fcfMargin": 25
-          },
-          "components": {
-            "positive_earnings": {
-              "score": 100,
-              "operating_margin": 12.398,
-              "roe": 10.32,
-              "latest_eps": null,
-              "source_field": null,
-              "note": "inferred from positive operating margin and ROE"
-            },
-            "cash_durability": {
-              "score": null,
-              "coverage_ratio": 0,
-              "average_fcf_margin": null,
-              "fcf_margin_field": null,
-              "fcf_margin_score": null,
-              "fcf_field": null,
-              "fcf_positive_count": 0,
-              "fcf_years": 0,
-              "positive_fcf_count_score": null,
-              "status": "missing_financials_input"
-            },
-            "margin_level": {
-              "score": 23.86,
-              "coverage_ratio": 1,
-              "gross_margin": 9.208,
-              "gross_margin_score": 13.15,
-              "operating_margin": 12.398,
-              "operating_margin_score": 31
-            },
-            "roe_roic_efficiency": {
-              "score": 22.93,
-              "coverage_ratio": 0.7,
-              "roe": 10.32,
-              "roe_score": 22.93,
-              "roic": null,
-              "roic_field": null,
-              "roic_score": null,
-              "note": "ROIC missing; ROE available when profitability signal exists"
-            },
-            "multi_year_stability": {
-              "score": null,
-              "coverage_ratio": 0,
-              "eps_field": null,
-              "eps_positive_count": 0,
-              "eps_years": 0,
-              "eps_consecutive_positive_from_latest": 0,
-              "fcf_field": null,
-              "fcf_positive_count": 0,
-              "fcf_years": 0,
-              "fcf_consecutive_positive_from_latest": 0,
-              "status": "missing_history_input"
-            }
-          }
-        },
-        "growth": {
-          "score_0_100": 15,
-          "direction": "stressed",
-          "coverage_ratio": 0.9,
-          "confidence": "high",
-          "components": {
-            "revenue_growth_avg": {
-              "value": 3.501,
-              "score": 35.56,
-              "peer_group": "market_scope",
-              "peer_count": 91
-            },
-            "eps_growth_avg": {
-              "value": -5.597,
-              "score": 2.22,
-              "peer_group": "market_scope",
-              "peer_count": 91
-            },
-            "forward_eps_growth_span": {
-              "value": -39.0135,
-              "score": 1.11,
-              "peer_group": "market_scope",
-              "peer_count": 91
-            },
-            "revision_direction": null
-          }
-        },
-        "technical_flow": {
-          "score_0_100": 81.32,
-          "direction": "strong",
-          "coverage_ratio": 0.45,
-          "confidence": "medium",
-          "components": {
-            "return12m": {
-              "value": 0.1592,
-              "score": 81.32,
-              "peer_group": "market_scope",
-              "peer_count": 92
-            },
-            "ret1y": null,
-            "slick_latest_return": null,
-            "momentum_consistency": null
-          }
-        },
-        "upside_downside": {
-          "score_0_100": 38.11,
-          "direction": "balanced",
-          "coverage_ratio": 0.875,
-          "confidence": "high",
-          "upside_score_0_100": 34.27,
-          "downside_score_0_100": 58.06,
-          "components": {
-            "upside": {
-              "valuation_room": {
-                "value": 0,
-                "score": 17.05,
-                "peer_group": "market_scope",
-                "peer_count": 89
-              },
-              "forward_pe_discount": {
-                "value": 11.5489,
-                "score": 48.91,
-                "peer_group": "market_scope",
-                "peer_count": 93
-              },
-              "growth_support": {
-                "value": null,
-                "score": 15,
-                "peer_group": "rule",
-                "peer_count": null
-              },
-              "technical_confirmation": {
-                "value": null,
-                "score": 81.32,
-                "peer_group": "rule",
-                "peer_count": null
-              },
-              "revision_support": null
-            },
-            "downside": {
-              "valuation_crowding": {
-                "value": 1,
-                "score": 82.95,
-                "peer_group": "market_scope",
-                "peer_count": 89
-              },
-              "forward_pe_pressure": {
-                "value": 11.5489,
-                "score": 51.09,
-                "peer_group": "market_scope",
-                "peer_count": 93
-              },
-              "negative_momentum": {
-                "value": -0.1592,
-                "score": 18.68,
-                "peer_group": "market_scope",
-                "peer_count": 92
-              },
-              "profitability_gap": {
-                "value": null,
-                "score": 70.1,
-                "peer_group": "rule",
-                "peer_count": null
-              },
-              "revision_pressure": null
-            }
-          }
-        },
-        "market_similarity": {
-          "score_0_100": 84.64,
-          "direction": "peer_comparable",
-          "coverage_ratio": 1,
-          "confidence": "high",
-          "peer_group": "market_scope",
-          "peer_count": 92,
-          "vector_feature_count": 7,
-          "nearest_peers": [
-            {
-              "ticker": "601328.SS",
-              "company": "Bank of Communications Co., Ltd.",
-              "market_scope": "asia",
-              "canonical_sector": "Financials",
-              "similarity_score": 86.57,
-              "shared_feature_count": 7
-            },
-            {
-              "ticker": "0857.HK",
-              "company": "PetroChina H",
-              "market_scope": "asia",
-              "canonical_sector": "Energy",
-              "similarity_score": 84.22,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "9999.HK",
-              "company": "NetEase",
-              "market_scope": "asia",
-              "canonical_sector": "Technology",
-              "similarity_score": 83.13,
-              "shared_feature_count": 5
-            },
-            {
-              "ticker": "0001.HK",
-              "company": "CK Hutchison Holdings",
-              "market_scope": "asia",
-              "canonical_sector": "Consumer Discretionary",
-              "similarity_score": 81.05,
-              "shared_feature_count": 7
-            },
-            {
-              "ticker": "000725.SZ",
-              "company": "BOE Technology Group Ord Shs A",
-              "market_scope": "asia",
-              "canonical_sector": "Technology",
-              "similarity_score": 80.95,
-              "shared_feature_count": 7
-            }
-          ]
-        },
-        "volume_liquidity_trend": {
-          "score_0_100": 48.41,
-          "direction": "neutral",
-          "coverage_ratio": 1,
-          "confidence": "high",
-          "basis": "local_yf_1y_volume_liquidity_trend_proxy",
-          "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
-          "components": {
-            "dollar_liquidity_20d": {
-              "value": 1231014771.023,
-              "score": 77.26,
-              "peer_group": "rule",
-              "peer_count": null
-            },
-            "volume_trend_20d_vs_60d": {
-              "value": 0.8477,
-              "score": 23.26,
-              "peer_group": "rule",
-              "peer_count": null
-            },
-            "latest_volume_vs_20d": {
-              "value": 1.1283,
-              "score": 41.88,
-              "peer_group": "rule",
-              "peer_count": null
-            },
-            "price_confirmation_20d": {
-              "value": 0.006,
-              "score": 37.07,
-              "peer_group": "rule",
-              "peer_count": null
-            }
-          }
-        },
-        "short_term_relative_strength": {
-          "score_0_100": 47.91,
-          "direction": "neutral",
-          "coverage_ratio": 1,
-          "confidence": "high",
-          "basis": "local_yf_20d_60d_relative_strength_vs_spy",
-          "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
-          "components": {
-            "relative_return_20d_vs_spy": {
-              "value": -0.0159,
-              "score": 34.69,
-              "peer_group": "rule",
-              "peer_count": null
-            },
-            "relative_return_60d_vs_spy": {
-              "value": 0.1612,
-              "score": 71.09,
-              "peer_group": "rule",
-              "peer_count": null
-            },
-            "absolute_return_20d": {
-              "value": 0.006,
-              "score": 37.07,
-              "peer_group": "rule",
-              "peer_count": null
-            }
-          }
-        },
-        "net_options_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
-          "basis": "occ_listed_options_volume_missing",
-          "caveat": "Options activity proxy requires an OCC listed-options volume row; no raw OCC CSV is public."
-        },
-        "off_exchange_activity_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
-          "basis": "computed_fenok_flow_proxies_off_exchange_activity_proxy",
-          "caveat": "Off-exchange activity proxy uses FINRA reported off-exchange volume share; it is not ATS-only dark-pool flow.",
-          "source_date": null,
-          "components": null
-        },
-        "short_pressure_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
-          "basis": "computed_fenok_flow_proxies_short_pressure_proxy",
-          "caveat": "Short-volume pressure proxy uses FINRA reported short-sale volume share; it is not short interest.",
-          "source_date": null,
-          "components": null
-        }
-      }
-    },
-    {
       "ticker": "6098.T",
       "ticker_normalized": "6098-T",
       "company": "Recruit Holdings",
@@ -304468,6 +304077,397 @@
             "absolute_return_20d": {
               "value": 0.0226,
               "score": 41.93,
+              "peer_group": "rule",
+              "peer_count": null
+            }
+          }
+        },
+        "net_options_proxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "coverage_ratio": 0,
+          "confidence": "low",
+          "basis": "occ_listed_options_volume_missing",
+          "caveat": "Options activity proxy requires an OCC listed-options volume row; no raw OCC CSV is public."
+        },
+        "off_exchange_activity_proxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "coverage_ratio": 0,
+          "confidence": "low",
+          "basis": "computed_fenok_flow_proxies_off_exchange_activity_proxy",
+          "caveat": "Off-exchange activity proxy uses FINRA reported off-exchange volume share; it is not ATS-only dark-pool flow.",
+          "source_date": null,
+          "components": null
+        },
+        "short_pressure_proxy": {
+          "score_0_100": null,
+          "direction": "unavailable",
+          "coverage_ratio": 0,
+          "confidence": "low",
+          "basis": "computed_fenok_flow_proxies_short_pressure_proxy",
+          "caveat": "Short-volume pressure proxy uses FINRA reported short-sale volume share; it is not short interest.",
+          "source_date": null,
+          "components": null
+        }
+      }
+    },
+    {
+      "ticker": "9983.T",
+      "ticker_normalized": "9983-T",
+      "company": "Fast Retailing",
+      "market_scope": "us",
+      "market": "US_CLASS",
+      "canonical_sector": "Consumer Discretionary",
+      "as_of": "2026-10-09",
+      "as_of_reason": null,
+      "formula_version": "fenok-native-signals-v0.2.4-null-comparable",
+      "confidence": "medium",
+      "coverage_ratio": 0.845,
+      "source_families": [
+        "computed/stock_action_index.json",
+        "global-scouter/stocks/detail/*.json",
+        "global-scouter/core/revision_movers.json",
+        "yf/quarter_closes.json",
+        "slickcharts/stocks-returns.json",
+        "stockanalysis/financials/*.json",
+        "yf/finance/{TICKER}.json",
+        "yf/finance/SPY.json"
+      ],
+      "stock_action_context": {
+        "action_score": 29.16,
+        "signal_score": 34.04,
+        "coverage_ratio": 0.5222,
+        "confidence_label": "medium",
+        "action_bucket": "watch"
+      },
+      "short_term_composite": {
+        "common_basis_score_0_100": 67.66,
+        "common_basis_call": "mixed",
+        "conviction_score_0_100": 67.66,
+        "conviction_call": "mixed",
+        "input_count": 3,
+        "basis_code": "common_3_v1",
+        "comparable_score_0_100": null,
+        "comparable_call": null
+      },
+      "signals": {
+        "profitability": {
+          "score_0_100": 67.39,
+          "direction": "constructive",
+          "coverage_ratio": 1,
+          "confidence": "high",
+          "components": {
+            "gross_margin_avg": {
+              "value": 55.597,
+              "score": 78.02,
+              "peer_group": "market_sector",
+              "peer_count": 92
+            },
+            "operating_margin_avg": {
+              "value": 19.028,
+              "score": 75,
+              "peer_group": "market_sector",
+              "peer_count": 93
+            },
+            "roe_avg": {
+              "value": 20.521,
+              "score": 51.09,
+              "peer_group": "market_sector",
+              "peer_count": 93
+            }
+          }
+        },
+        "durability_profitability": {
+          "score_0_100": 65.64,
+          "direction": "constructive",
+          "coverage_ratio": 0.7,
+          "confidence": "medium",
+          "basis": "observed_only_absolute_durability_phase_a",
+          "observed_only_score_0_100": 65.64,
+          "coverage_adjusted_score_0_100": 45.95,
+          "missing_inputs": [
+            "cash_durability",
+            "multi_year_stability"
+          ],
+          "financials_source": null,
+          "sector_caps": {
+            "grossMargin": 75,
+            "operatingMargin": 40,
+            "roe": 45,
+            "roic": 45,
+            "fcfMargin": 25
+          },
+          "components": {
+            "positive_earnings": {
+              "score": 100,
+              "operating_margin": 19.028,
+              "roe": 20.521,
+              "latest_eps": null,
+              "source_field": null,
+              "note": "inferred from positive operating margin and ROE"
+            },
+            "cash_durability": {
+              "score": null,
+              "coverage_ratio": 0,
+              "average_fcf_margin": null,
+              "fcf_margin_field": null,
+              "fcf_margin_score": null,
+              "fcf_field": null,
+              "fcf_positive_count": 0,
+              "fcf_years": 0,
+              "positive_fcf_count_score": null,
+              "status": "missing_financials_input"
+            },
+            "margin_level": {
+              "score": 58.19,
+              "coverage_ratio": 1,
+              "gross_margin": 55.597,
+              "gross_margin_score": 74.13,
+              "operating_margin": 19.028,
+              "operating_margin_score": 47.57
+            },
+            "roe_roic_efficiency": {
+              "score": 45.6,
+              "coverage_ratio": 0.7,
+              "roe": 20.521,
+              "roe_score": 45.6,
+              "roic": null,
+              "roic_field": null,
+              "roic_score": null,
+              "note": "ROIC missing; ROE available when profitability signal exists"
+            },
+            "multi_year_stability": {
+              "score": null,
+              "coverage_ratio": 0,
+              "eps_field": null,
+              "eps_positive_count": 0,
+              "eps_years": 0,
+              "eps_consecutive_positive_from_latest": 0,
+              "fcf_field": null,
+              "fcf_positive_count": 0,
+              "fcf_years": 0,
+              "fcf_consecutive_positive_from_latest": 0,
+              "status": "missing_history_input"
+            }
+          }
+        },
+        "growth": {
+          "score_0_100": 54.23,
+          "direction": "neutral",
+          "coverage_ratio": 0.9,
+          "confidence": "high",
+          "components": {
+            "revenue_growth_avg": {
+              "value": 11.284,
+              "score": 85.87,
+              "peer_group": "market_sector",
+              "peer_count": 93
+            },
+            "eps_growth_avg": {
+              "value": 9.758,
+              "score": 26.09,
+              "peer_group": "market_sector",
+              "peer_count": 93
+            },
+            "forward_eps_growth_span": {
+              "value": 30.1996,
+              "score": 55.43,
+              "peer_group": "market_sector",
+              "peer_count": 93
+            },
+            "revision_direction": null
+          }
+        },
+        "technical_flow": {
+          "score_0_100": 97.85,
+          "direction": "strong",
+          "coverage_ratio": 0.45,
+          "confidence": "low",
+          "components": {
+            "return12m": {
+              "value": 0.4864,
+              "score": 97.85,
+              "peer_group": "market_sector",
+              "peer_count": 94
+            },
+            "ret1y": null,
+            "slick_latest_return": null,
+            "momentum_consistency": null
+          }
+        },
+        "upside_downside": {
+          "score_0_100": 38.01,
+          "direction": "balanced",
+          "coverage_ratio": 0.875,
+          "confidence": "high",
+          "upside_score_0_100": 36.1,
+          "downside_score_0_100": 60.08,
+          "components": {
+            "upside": {
+              "valuation_room": {
+                "value": 0,
+                "score": 12.03,
+                "peer_group": "market_sector",
+                "peer_count": 80
+              },
+              "forward_pe_discount": {
+                "value": 52.442,
+                "score": 3.23,
+                "peer_group": "market_sector",
+                "peer_count": 94
+              },
+              "growth_support": {
+                "value": null,
+                "score": 54.23,
+                "peer_group": "rule",
+                "peer_count": null
+              },
+              "technical_confirmation": {
+                "value": null,
+                "score": 97.85,
+                "peer_group": "rule",
+                "peer_count": null
+              },
+              "revision_support": null
+            },
+            "downside": {
+              "valuation_crowding": {
+                "value": 1,
+                "score": 87.97,
+                "peer_group": "market_sector",
+                "peer_count": 80
+              },
+              "forward_pe_pressure": {
+                "value": 52.442,
+                "score": 96.77,
+                "peer_group": "market_sector",
+                "peer_count": 94
+              },
+              "negative_momentum": {
+                "value": -0.4864,
+                "score": 2.15,
+                "peer_group": "market_sector",
+                "peer_count": 94
+              },
+              "profitability_gap": {
+                "value": null,
+                "score": 32.61,
+                "peer_group": "rule",
+                "peer_count": null
+              },
+              "revision_pressure": null
+            }
+          }
+        },
+        "market_similarity": {
+          "score_0_100": 83.64,
+          "direction": "peer_comparable",
+          "coverage_ratio": 1,
+          "confidence": "high",
+          "peer_group": "market_sector",
+          "peer_count": 93,
+          "vector_feature_count": 7,
+          "nearest_peers": [
+            {
+              "ticker": "ROST",
+              "company": "Ross Stores",
+              "market_scope": "us",
+              "canonical_sector": "Consumer Discretionary",
+              "similarity_score": 89.88,
+              "shared_feature_count": 7
+            },
+            {
+              "ticker": "MAR",
+              "company": "Marriott International Class A",
+              "market_scope": "us",
+              "canonical_sector": "Consumer Discretionary",
+              "similarity_score": 80.63,
+              "shared_feature_count": 7
+            },
+            {
+              "ticker": "SBUX",
+              "company": "Starbucks",
+              "market_scope": "us",
+              "canonical_sector": "Consumer Discretionary",
+              "similarity_score": 80.41,
+              "shared_feature_count": 7
+            },
+            {
+              "ticker": "HLT",
+              "company": "Hilton Worldwide Holdings",
+              "market_scope": "us",
+              "canonical_sector": "Consumer Discretionary",
+              "similarity_score": 80.17,
+              "shared_feature_count": 7
+            },
+            {
+              "ticker": "WSM",
+              "company": "Williams Sonoma",
+              "market_scope": "us",
+              "canonical_sector": "Consumer Discretionary",
+              "similarity_score": 78.49,
+              "shared_feature_count": 7
+            }
+          ]
+        },
+        "volume_liquidity_trend": {
+          "score_0_100": 72.31,
+          "direction": "strong",
+          "coverage_ratio": 1,
+          "confidence": "high",
+          "basis": "local_yf_1y_volume_liquidity_trend_proxy",
+          "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
+          "components": {
+            "dollar_liquidity_20d": {
+              "value": 86029765600,
+              "score": 100,
+              "peer_group": "rule",
+              "peer_count": null
+            },
+            "volume_trend_20d_vs_60d": {
+              "value": 1.0742,
+              "score": 49.9,
+              "peer_group": "rule",
+              "peer_count": null
+            },
+            "latest_volume_vs_20d": {
+              "value": 1.7744,
+              "score": 84.96,
+              "peer_group": "rule",
+              "peer_count": null
+            },
+            "price_confirmation_20d": {
+              "value": 0.0444,
+              "score": 48.35,
+              "peer_group": "rule",
+              "peer_count": null
+            }
+          }
+        },
+        "short_term_relative_strength": {
+          "score_0_100": 32.81,
+          "direction": "weak",
+          "coverage_ratio": 1,
+          "confidence": "high",
+          "basis": "local_yf_20d_60d_relative_strength_vs_spy",
+          "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
+          "components": {
+            "relative_return_20d_vs_spy": {
+              "value": 0.0224,
+              "score": 47.47,
+              "peer_group": "rule",
+              "peer_count": null
+            },
+            "relative_return_60d_vs_spy": {
+              "value": -0.1556,
+              "score": 5.08,
+              "peer_group": "rule",
+              "peer_count": null
+            },
+            "absolute_return_20d": {
+              "value": 0.0444,
+              "score": 48.35,
               "peer_group": "rule",
               "peer_count": null
             }

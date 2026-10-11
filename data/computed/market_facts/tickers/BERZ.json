@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BERZ",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T07:40:14Z",
+  "generated_at": "2026-10-11T13:31:32Z",
   "source_as_of": "2026-08-10",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -295,9 +295,17 @@
           "fetched_at": "2026-06-19T10:06:47Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": -12.003211561621832,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": -8.917191261799848,
@@ -362,6 +370,14 @@
           "unit": "percent_points"
         },
         {
+          "value": -61.34038800705467,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -51.37207,
           "source": "yf",
           "as_of": "2026-08-10",
@@ -370,7 +386,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_1y": {
       "value": -79.57142784481957,
@@ -404,6 +420,14 @@
           "unit": "percent_points"
         },
         {
+          "value": -83.6661698956781,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -77.58368,
           "source": "yf",
           "as_of": "2026-08-10",
@@ -412,7 +436,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_3y_avg": {
       "value": -74.60169,
@@ -465,9 +489,17 @@
           "fetched_at": "2026-06-19T10:06:47Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": -67.40654820855127,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -708,14 +740,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/BERZ.json",
     "stockanalysis": "stockanalysis/etfs/BERZ.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "FNGO",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T07:40:14Z",
+  "generated_at": "2026-10-11T13:31:32Z",
   "source_as_of": "2026-08-06",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -295,9 +295,17 @@
           "fetched_at": "2026-06-19T10:06:56Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 3.415,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
       "value": 14.959474862626301,
@@ -362,6 +370,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 18.645,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 11.74735,
           "source": "yf",
           "as_of": "2026-08-06",
@@ -370,7 +386,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_1y": {
       "value": 37.66567516731551,
@@ -404,6 +420,14 @@
           "unit": "percent_points"
         },
         {
+          "value": 38.309,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 34.415245,
           "source": "yf",
           "as_of": "2026-08-06",
@@ -412,7 +436,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 3
+      "candidate_count": 4
     },
     "return_3y_avg": {
       "value": 56.743120000000005,
@@ -474,9 +498,17 @@
           "fetched_at": "2026-06-19T10:06:56Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 26.827,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_max_avg": {
       "value": 38.002,
@@ -498,9 +530,17 @@
           "fetched_at": "2026-06-19T10:06:56Z",
           "confidence": "observed",
           "unit": "percent_points"
+        },
+        {
+          "value": 38.002,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-11T12:09:00Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -676,14 +716,14 @@
     "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
-    "stockanalysis_etf_catalog": false,
+    "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": "yf/finance/FNGO.json",
     "stockanalysis": "stockanalysis/etfs/FNGO.json",
     "stockanalysis_yf_fallback": null,
-    "stockanalysis_etf_catalog": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
