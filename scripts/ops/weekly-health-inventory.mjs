@@ -26,9 +26,11 @@ const alarm = read("data/admin/alarm-state.json");
 const sets = new Map((kpi?.sets ?? []).map(row => [row.set, row]));
 const floors = new Map((floor?.lanes ?? []).map(row => [row.id, row]));
 const board = new Map((projection?.lanes ?? []).map(row => [row.id, row]));
-const ownerSources = new Set(LANE_REGISTRY.providers.filter(row => row.class === "owner_managed_data").map(row => row.id));
+const ownerSources = new Set(LANE_REGISTRY.providers.filter(row => row.class === "owner_managed_data"
+  && row.id !== "fenok_briefing").map(row => row.id)); // Briefing is scheduled on M4.
 
 for (const lane of LANE_REGISTRY.lanes) {
+  if (lane.id === "admin_live_voice_logs" || lane.id.startsWith("mona_")) continue;
   const ownerSupplied = lane.provider_refs.some(row => row.role === "source" && ownerSources.has(row.provider_id));
   if (lane.owner_workflow && !fs.existsSync(path.join(root, lane.owner_workflow))) {
     note(`owner:${lane.id}`, "lanes", `${lane.label}: 선언된 수집 워크플로 없음`);

@@ -589,6 +589,24 @@ function buildScheduleState(lane, context, attempt) {
 // clocks never become collection attempts.
 export function readLaneAttempt(lane, context = {}) {
   const normalized = { ...context, repoRoot: context.repoRoot || REPO_ROOT };
+  if (lane.id === "earnings_overview") {
+    const summary = readJson(path.join(normalized.repoRoot, "data/admin/earnings_overview/refresh-summary.json"));
+    const rows = Object.values(summary?.tickers ?? {});
+    const succeeded = rows.filter(row => row.ok === true).length;
+    return normalizeAttempt({ observed_at: summary?.attemptedAt,
+      outcome: rows.length === 0 ? "unknown" : succeeded === rows.length ? "success" : succeeded ? "partial" : "failed" });
+  }
+  if (lane.id === "briefing") {
+    const index = readJson(path.join(normalized.repoRoot, "data/briefing/index.json"));
+    const editions = (index?.editions ?? []).filter(row => row.edition_date === index?.latest?.[row.product]);
+    const rows = editions.map(edition => {
+      if (typeof edition.path !== "string" || edition.path.startsWith("/") || edition.path.split("/").includes("..")) return null;
+      const document = readJson(path.join(normalized.repoRoot, "data/briefing", edition.path));
+      const epoch = Date.parse(document?.published_kst);
+      return Number.isFinite(epoch) ? { observed_at: new Date(epoch).toISOString(), outcome: "success" } : null;
+    }).filter(Boolean);
+    return normalizeAttempt(latestAttempt(rows));
+  }
   if (lane.external_status) {
     const status = readJson(path.join(normalized.repoRoot, lane.external_status));
     if (status?.last_run) {

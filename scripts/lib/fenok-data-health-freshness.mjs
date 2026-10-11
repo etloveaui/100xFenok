@@ -230,6 +230,31 @@ function datedOrCollected(
 }
 
 function sourceMembersForLane(lane, floorRow, dataRoot) {
+  if (dataRoot && lane.id === "earnings_overview") {
+    const summary = readOptionalJson(dataRoot, "admin/earnings_overview/refresh-summary.json");
+    const directory = path.join(dataRoot, "earnings-overview");
+    const files = fs.existsSync(directory) ? fs.readdirSync(directory).filter(name => name.endsWith(".json")) : [];
+    const tickers = [...new Set([...Object.keys(summary?.tickers ?? {}), ...files.map(name => name.slice(0, -5))])];
+    const members = tickers.map(ticker => {
+      const document = readOptionalJson(dataRoot, `earnings-overview/${ticker}.json`);
+      const periods = Array.isArray(document?.periods) ? document.periods : [];
+      const latest = periods.map(row => row.end).filter(validCalendarDate).sort().at(-1);
+      return memberDate(latest, "source", ticker);
+    });
+    return { members, totalMembers: members.length };
+  }
+  if (dataRoot && lane.id === "briefing") {
+    const index = readOptionalJson(dataRoot, "briefing/index.json");
+    const products = (index?.products ?? []).filter(row => row.status === "live");
+    const members = products.map(product => {
+      const edition = (index?.editions ?? []).find(row => row.product === product.id
+        && row.edition_date === index?.latest?.[product.id]);
+      const document = edition?.path ? readOptionalJson(dataRoot, `briefing/${edition.path}`) : null;
+      return memberDate(document?.edition_date === edition?.edition_date ? document?.published_kst : null,
+        "source", product.id);
+    });
+    return { members, totalMembers: members.length };
+  }
   if (!dataRoot) return null;
   if (lane.id === "gdelt_news_tone") {
     // The retained eight-reference document reports its oldest article clock.
