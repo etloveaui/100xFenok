@@ -42,11 +42,34 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs coordinate-computed-signals.yml
+
   coordinate-computed-signals:
+    needs: clock-admission
     # Fail closed: only successful completions of the six source workflows on
     # main may enter. The branch gate mirrors the workflow_run branches filter
     # so a non-main completion can never slip through.
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     # The cloud data plane's credentials live in the production environment
     # (same secret surface as the source publishers).

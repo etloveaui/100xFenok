@@ -6,7 +6,20 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const EXTERNAL_CLOCK_CRONS = Object.freeze({
-  "deploy-worker.yml": "49 * * * *",
+  "deploy-worker.yml": ["49 * * * *", "30 3 * * *"],
+  "fetch-fred-macro.yml": "0 8 * * *",
+  "fetch-fred-banking.yml": "0 7 * * *",
+  "fetch-sentiment.yml": "0 22 * * 1-5",
+  "fetch-us-indices-daily.yml": "0 22 * * 1-5",
+  "fetch-nasdaq-giw-sox.yml": "50 23 * * 1-5",
+  "slickcharts-daily.yml": "0 6 * * *",
+  "fetch-fenok-apewisdom.yml": "17 13 * * *",
+  "fetch-fenok-private-options.yml": "10 1 * * 2-6",
+  "fenok-edge-daily.yml": "30 0 * * 2-6",
+  "fenok-edge-krx-daily.yml": "30 10 * * 1-5",
+  "check-sec13f-live-parity.yml": "15 10 * * *",
+  "build-stocks-analyzer.yml": "7 6 * * *",
+  "update-manifest.yml": ["30 2 * * *", "30 9 * * *"],
   "fetch-defillama.yml": "12 * * * *",
   "fetch-yahoo-ticker.yml": "5 * * * *",
   "global-writer-queue-observer.yml": "11 * * * *",
@@ -22,7 +35,12 @@ export const EXTERNAL_CLOCK_MARKER = "external-clock/a1/v1";
 // Admission dates bound the never-ran case without inventing pre-install slots.
 export const EXTERNAL_CLOCK_ADMITTED_AT = Object.freeze(Object.fromEntries(
   Object.keys(EXTERNAL_CLOCK_CRONS).map((file) => [file,
-    file === "deploy-worker.yml" ? "2026-10-11T08:40:00.000Z"
+    !(["deploy-worker.yml", "fetch-defillama.yml", "fetch-yahoo-ticker.yml",
+      "global-writer-queue-observer.yml", "pins-autosync.yml", "pipeline-failure-alarm.yml",
+      "retention-restore.yml", "worker-request-budget-alarm.yml", "fetch-treasury-tga.yml",
+      "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file))
+      ? "2026-10-11T09:20:00.000Z"
+      : file === "deploy-worker.yml" ? "2026-10-11T08:40:00.000Z"
       : file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z"
       : ["fetch-treasury-tga.yml", "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file)
         ? "2026-10-11T07:18:00.000Z" : "2026-10-11T03:34:00.000Z"]),
@@ -33,29 +51,40 @@ function clockFieldMatches(field, value) {
     if (part === "*") return true;
     if (/^\*\/[1-9]\d*$/.test(part)) return value % Number(part.slice(2)) === 0;
     if (/^\d+$/.test(part)) return value === Number(part);
+    const range = /^(\d+)-(\d+)$/.exec(part);
+    if (range) return value >= Number(range[1]) && value <= Number(range[2]);
     throw new Error(`Unsupported external clock field: ${field}`);
   });
+}
+
+export function externalClockCrons(file) {
+  const value = EXTERNAL_CLOCK_CRONS[file];
+  return value ? (Array.isArray(value) ? value : [value]) : [];
+}
+
+export function clockCronMatches(cron, slot) {
+  const [minute, hour, dom, month, dow, extra] = cron.split(" ");
+  if (extra !== undefined || dom !== "*" || month !== "*" || !dow) {
+    throw new Error(`Unsupported external clock calendar: ${cron}`);
+  }
+  return clockFieldMatches(minute, slot.getUTCMinutes())
+    && clockFieldMatches(hour, slot.getUTCHours())
+    && clockFieldMatches(dow, slot.getUTCDay());
 }
 
 export function dueDispatches(now = new Date()) {
   const slot = new Date(now);
   slot.setUTCSeconds(0, 0);
-  return Object.entries(EXTERNAL_CLOCK_CRONS)
-    .filter(([, cron]) => {
-      const [minute, hour, ...calendar] = cron.split(" ");
-      if (calendar.length !== 3 || calendar.some((field) => field !== "*")) {
-        throw new Error(`Unsupported external clock calendar: ${cron}`);
-      }
-      return clockFieldMatches(minute, slot.getUTCMinutes()) && clockFieldMatches(hour, slot.getUTCHours());
-    })
-    .map(([file]) => ({ file, slot: slot.toISOString() }));
+  return Object.keys(EXTERNAL_CLOCK_CRONS)
+    .filter((file) => externalClockCrons(file).some((cron) => clockCronMatches(cron, slot)))
+    .map((file) => ({ file, slot: slot.toISOString() }));
 }
 
 // Slot titles bind external dispatch evidence to one workflow and declared minute.
 // Ordinary human dispatches retain the workflow title and never enter this path.
 export function externalClockSlot(workflow, run) {
   if (run?.event !== "workflow_dispatch" || !EXTERNAL_CLOCK_CRONS[workflow.file]
-      || !workflow.crons?.includes(EXTERNAL_CLOCK_CRONS[workflow.file])) return null;
+      || !externalClockCrons(workflow.file).every((cron) => workflow.crons?.includes(cron))) return null;
   const prefix = `${EXTERNAL_CLOCK_MARKER} ${workflow.file} `;
   if (!run.display_title?.startsWith(prefix)) return null;
   const raw = run.display_title.slice(prefix.length);

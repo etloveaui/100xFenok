@@ -8,6 +8,7 @@
 # Reference: docs/planning/slickcharts-data-pipeline.md
 
 name: SlickCharts Daily
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 slickcharts-daily.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
@@ -15,6 +16,16 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       scraper:
         description: 'Which scraper to run'
         required: false
@@ -43,7 +54,31 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs slickcharts-daily.yml
+
   scrape-daily:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -201,7 +236,7 @@ jobs:
             --row "$RUNNER_TEMP/slickcharts-daily-row.json" \
             --receipts "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
-            --full-run "${{ (github.event_name == 'schedule' || github.event.inputs.scraper == 'all') && 'true' || 'false' }}"
+            --full-run "${{ (github.event_name == 'schedule' || inputs.external_clock == 'a1-v1' || github.event.inputs.scraper == 'all') && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}

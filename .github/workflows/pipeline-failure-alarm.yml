@@ -26,7 +26,31 @@ permissions:
   actions: read
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs pipeline-failure-alarm.yml
+
   check:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     # Serialize only the short detector/reporting critical section. The state
     # persistence job below has its own global writer lock, so a long writer
@@ -178,8 +202,8 @@ jobs:
     # Issue alert/all-clear failure, emitter failure, or state-artifact failure
     # must block persistence. A successful report is already durable in the OPS
     # issue even if this bounded writer job later waits or fails.
-    needs: check
-    if: ${{ needs.check.result == 'success' }}
+    needs: [clock-admission, check]
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (needs.check.result == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
-import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
+import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
@@ -167,7 +167,7 @@ function workflowMetadata(file, source) {
   // X7b's external hourly deploy catch-up is intentionally not a second
   // GitHub hourly schedule. The clock declaration is its cadence authority;
   // GitHub's daily fallback remains separately visible.
-  const crons = [...new Set([...githubCrons, ...(file === "deploy-worker.yml" && EXTERNAL_CLOCK_CRONS[file] ? [EXTERNAL_CLOCK_CRONS[file]] : [])])];
+  const crons = [...new Set([...githubCrons, ...(file === "deploy-worker.yml" ? externalClockCrons(file) : [])])];
   return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled, triggers, crons };
 }
 
@@ -726,8 +726,8 @@ export function needsMissedWindowReverification(row) {
 }
 
 export function evaluateExternalClock(workflow, runs, { now = Date.now() } = {}) {
-  const cron = EXTERNAL_CLOCK_CRONS[workflow.file];
-  if (!cron || !workflow.crons?.includes(cron)) {
+  const cron = externalClockCrons(workflow.file);
+  if (!cron.length || !cron.every((value) => workflow.crons?.includes(value))) {
     return { file: workflow.file, status: "unknown", message: "External clock declaration does not match the workflow." };
   }
   const marked = runs.map((run) => ({ run, slot: externalClockSlot(workflow, run) }))
@@ -822,7 +822,10 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   const intervalHours = intervals.length > 0 ? Math.min(...intervals) : null;
   let missedWindowHours = null;
   let missedSlots = null;
-  const isScheduledProducer = workflow.scheduled_producer === true;
+  // X8 gives these reconciliation consumers their own explicit clock. Count
+  // its declared slots, not arbitrary push-driven executions of the same job.
+  const isScheduledProducer = workflow.scheduled_producer === true
+    || ["build-stocks-analyzer.yml", "update-manifest.yml"].includes(workflow.file);
   if ((MISSED_WINDOW_WORKFLOWS.has(workflow.file) || isScheduledProducer) && intervalHours !== null) {
     const isRestoreWatchdog = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file);
     // Existing detectors retain their newest-counted-run anchor, including
@@ -834,7 +837,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
       const evidence = runs.map((run) => run?.event === "schedule"
         ? Date.parse(run?.created_at || run?.run_started_at) : externalClockSlot(workflow, run))
         .filter((stamp) => Number.isFinite(stamp) && stamp <= now);
-      const activatedAt = Date.parse(workflow.schedule_activated_at);
+      const activatedAt = Date.parse(workflow.schedule_activated_at || EXTERNAL_CLOCK_ADMITTED_AT[workflow.file]);
       sinceMs = evidence.length > 0 ? Math.max(...evidence)
         : Number.isFinite(activatedAt) && activatedAt <= now ? activatedAt : null;
     } else if (isRestoreWatchdog) {

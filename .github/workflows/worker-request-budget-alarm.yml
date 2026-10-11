@@ -30,8 +30,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs worker-request-budget-alarm.yml
+
   check:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '7 * * * *'
+    needs: clock-admission
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '7 * * * *') }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -118,7 +141,8 @@ jobs:
         run: node scripts/ops/sync-budget-issue.mjs worker-request-budget-result.json
 
   data-supply-analytics:
-    if: (github.event_name == 'workflow_dispatch' && inputs.external_clock == '') || github.event.schedule == '17 2,14 * * *'
+    needs: clock-admission
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && ((github.event_name == 'workflow_dispatch' && inputs.external_clock == '') || github.event.schedule == '17 2,14 * * *') }}
     runs-on: ubuntu-latest
     environment: production
     steps:

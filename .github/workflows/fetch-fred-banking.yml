@@ -1,10 +1,21 @@
 name: Fetch FRED Banking Data
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 fetch-fred-banking.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
     - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       data_type:
         description: 'Data type to fetch'
         required: false
@@ -34,7 +45,31 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs fetch-fred-banking.yml
+
   fetch-fred-data:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

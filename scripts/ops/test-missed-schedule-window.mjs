@@ -22,7 +22,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_MARKER, dueDispatches, dispatchDue,
-  externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
+  externalClockCrons, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 import {
   MISSED_WINDOW_MULTIPLIER,
@@ -73,7 +73,7 @@ for (const file of MISSED_WINDOW_WORKFLOWS) {
 }
 assert.ok(
   !MISSED_WINDOW_WORKFLOWS.has("update-manifest.yml") && MISSED_WINDOW_WORKFLOWS.has("deploy-worker.yml"),
-  "workflows that follow their producers must stay out of scope",
+  "reconciliation uses exact clock slots; deploy remains a detector",
 );
 assert.ok(MISSED_WINDOW_WORKFLOWS.has("retention-restore.yml"), "the restore watchdog owns a schedule to monitor");
 assert.ok(!MISSED_WINDOW_WORKFLOWS.has("retention-sweep.yml"), "the owner-controlled sweep campaign stays exempt");
@@ -129,7 +129,7 @@ assert.equal(reorderedStarts.missed_schedule_slot_count, 1, "existing detectors 
 {
   // A workflow outside the detector scope never gets this reason, however late.
   const result = evaluateWorkflow(
-    detector("update-manifest.yml", "11 * * * *"),
+    detector("coordinate-computed-signals.yml", "11 * * * *"),
     [run(2, new Date(NOW - 400 * HOUR).toISOString())],
     { now: NOW },
   );
@@ -370,14 +370,14 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
   for (const [file, cron] of Object.entries(EXTERNAL_CLOCK_CRONS)) {
     // The alarm excludes itself from monitoring; cadence validation still reads it.
     const workflow = deriveWorkflowWatchPolicy({ scheduledExclusions: {} }).watched.find((row) => row.file === file);
-    assert.ok(workflow.crons.includes(cron), `${file} external cadence must match the actual declaration`);
+    assert.ok(externalClockCrons(file).every((value) => workflow.crons.includes(value)), `${file} external cadence must match the actual declaration`);
     const yaml = fs.readFileSync(new URL(`../../.github/workflows/${file}`, import.meta.url), "utf8");
     assert.ok(yaml.includes(`external-clock/a1/v1 ${file} {0}`));
     assert.ok(yaml.includes("external_clock_slot:"));
     assert.ok(yaml.includes("concurrency:") && yaml.includes("cancel-in-progress: false"));
     if (file === "worker-request-budget-alarm.yml") {
-      assert.match(yaml, /check:\n    if: github.event_name == 'workflow_dispatch' \|\| github.event.schedule == '7 \* \* \* \*'/);
-      assert.match(yaml, /data-supply-analytics:\n    if: \(github.event_name == 'workflow_dispatch' && inputs.external_clock == ''\) \|\| github.event.schedule == '17 2,14 \* \* \*'/);
+      assert.match(yaml, /check:[\s\S]*github.event_name == 'workflow_dispatch' \|\| github.event.schedule == '7 \* \* \* \*'/);
+      assert.match(yaml, /data-supply-analytics:[\s\S]*\(github.event_name == 'workflow_dispatch' && inputs.external_clock == ''\) \|\| github.event.schedule == '17 2,14 \* \* \*'/);
     } else if (file === "deploy-worker.yml") {
       assert.match(yaml, /if: inputs.external_clock == 'a1-v1'/);
       assert.match(yaml, /check-bundled-data-catchup\.mjs/);
@@ -385,6 +385,8 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
       assert.ok(!/if:.*github\.event_name/.test(yaml), `${file} jobs cannot exclude marked dispatches`);
       assert.match(yaml, /controlled_failure/);
       assert.match(yaml, /default: ['"]['"]/);
+    } else if (["slickcharts-daily.yml", "update-manifest.yml", "build-stocks-analyzer.yml"].includes(file)) {
+      assert.ok(yaml.includes("workflow_dispatch:"), `${file} has dispatch-equivalent producer inputs`);
     } else {
       assert.ok(!yaml.includes("event_name") && !yaml.includes("event.schedule"), `${file} must be event-independent`);
     }

@@ -1,4 +1,5 @@
 name: Fetch Fenok ApeWisdom Attention Proxy
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 fetch-fenok-apewisdom.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   schedule:
@@ -7,6 +8,16 @@ on:
     - cron: '17 13 * * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       controlled_failure:
         description: 'Dispatch-only chaos: set to "transport" to force an honest provider failure shard'
         required: false
@@ -23,7 +34,31 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs fetch-fenok-apewisdom.yml
+
   fetch-apewisdom-attention:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

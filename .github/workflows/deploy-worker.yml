@@ -70,7 +70,31 @@ on:
     types: [completed]
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs deploy-worker.yml
+
   recovery-gate:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,7 +116,7 @@ jobs:
 
       - name: Admit marked hourly catch-up only for changed bundle inputs
         id: catchup
-        if: inputs.external_clock == 'a1-v1'
+        if: inputs.external_clock == 'a1-v1' && !endsWith(inputs.external_clock_slot, 'T03:30:00.000Z')
         env:
           GH_TOKEN: ${{ github.token }}
           FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
@@ -151,8 +175,8 @@ jobs:
           esac
 
   build-deploy:
-    needs: [recovery-gate]
-    if: ${{ needs.recovery-gate.outputs.skip != 'true' }}
+    needs: [clock-admission, recovery-gate]
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (needs.recovery-gate.outputs.skip != 'true') }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 80

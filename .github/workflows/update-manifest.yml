@@ -7,12 +7,13 @@
 # Infinite loop prevention:
 #   This workflow ignores data/manifest.json, data/computed/**, and the generated
 #   admin usage/product coverage/KPI manifests. Its generated-data commit
-#   is bundled by the daily deploy without retriggering itself.
+#   is bundled by the hourly catch-up deploy without retriggering itself.
 #
 # Manifest fields updated: file_count, updated, last_updated, generatedAt, categories, manifest_version
 # Manifest fields preserved: version, update_frequency, source, description, recent_changes
 
 name: Update Manifest
+run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 update-manifest.yml {0}', inputs.external_clock_slot) || github.workflow }}
 
 on:
   push:
@@ -108,6 +109,16 @@ on:
     - cron: '30 9 * * *'
   workflow_dispatch:
     inputs:
+      external_clock:
+        description: 'Automatic clock marker; leave empty for human dispatch'
+        required: false
+        default: ''
+        type: string
+      external_clock_slot:
+        description: 'Declared UTC slot from the A1 clock'
+        required: false
+        default: ''
+        type: string
       etf_cloud_generation:
         description: 'True only when a natural StockAnalysis ETF plane generation was published; enables the verified cloud overlay for this projection run'
         required: false
@@ -128,12 +139,36 @@ concurrency:
   queue: max
 
 jobs:
+  clock-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/check-external-clock-slot.mjs
+            /ops/a1-lanes/external-clock.mjs
+      - name: Admit uncovered automatic slot
+        id: slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-external-clock-slot.mjs update-manifest.yml
+
   update-manifest:
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: write  # Required for git push (manifest.json update)
-      actions: write   # Required to dispatch Worker deploy after bot-authored commits
+      actions: write   # Retained for existing workflow operations
 
     steps:
       - name: Checkout repository

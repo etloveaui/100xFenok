@@ -1,4 +1,4 @@
-# A1 frequent workflow clock
+# A1 workflow clock
 
 B-434, authorized 2026-10-11. One user timer on `ubuntu@feno-sin-a1`
 dispatches existing GitHub workflows on `etloveaui/100xFenok`, branch `main`.
@@ -6,7 +6,20 @@ GitHub schedules remain enabled as fallback. There is no catch-up burst.
 
 | Workflow | UTC cadence | Existing duplicate serialization |
 |---|---|---|
-| deploy-worker.yml | 49 each hour | unchanged bundle no-op; yields to pending/running code deploy |
+| deploy-worker.yml | 49 each hour; 03:30 daily | hourly input-diff/code priority; daily fallback preserved |
+| fetch-fred-macro.yml | 08:00 daily | shared writer; same-slot success receipt |
+| fetch-fred-banking.yml | 07:00 daily | shared writer; default all frequencies |
+| fetch-sentiment.yml | 22:00 Mon–Fri | shared writer |
+| fetch-us-indices-daily.yml | 22:00 Mon–Fri | shared writer |
+| fetch-nasdaq-giw-sox.yml | 23:50 Mon–Fri | shared writer |
+| slickcharts-daily.yml | 06:00 daily | all five scrapers; full-run recovery semantics |
+| fetch-fenok-apewisdom.yml | 13:17 daily | shared writer |
+| fetch-fenok-private-options.yml | 01:10 Tue–Sat | shared writer |
+| fenok-edge-daily.yml | 00:30 Tue–Sat | existing normal acquisition defaults |
+| fenok-edge-krx-daily.yml | 10:30 Mon–Fri | existing normal acquisition defaults |
+| check-sec13f-live-parity.yml | 10:15 daily | existing semantic parity probe |
+| build-stocks-analyzer.yml | 06:07 daily | full non-push build; same Manifest dispatch |
+| update-manifest.yml | 02:30 and 09:30 daily | both reconciliation slots |
 | fetch-defillama.yml | 12 | global Git writer group |
 | fetch-yahoo-ticker.yml | 05 | global Git writer + yahoo-ticker-macro-publish |
 | global-writer-queue-observer.yml | 11 | global-writer-queue-observer |
@@ -18,18 +31,37 @@ GitHub schedules remain enabled as fallback. There is no catch-up burst.
 | data-plane-serving-probe.yml | 00:41, 06:41, 12:41, 18:41 | data-plane-serving-probe |
 | fetch-fenok-news-tone.yml | 06:43, 14:43, 22:43 | global Git writer group |
 
-The deploy catch-up and the following seven rows specify minutes each hour. All eleven declare `workflow_dispatch`.
-All except the budget and deploy workflows execute the same jobs for dispatch and schedule.
-X7b (2026-10-11): marked Deploy compares the live provenance revision against its
-pinned main revision using full Git trees, and proceeds only for changed bundle
-inputs. It yields to pending/running code deploys. The existing GitHub 03:30 UTC
-daily fallback and SlickCharts recovery completion retain their original path.
-The alarm derives this A1-only hourly cadence from EXTERNAL_CLOCK_CRONS; no new
-GitHub hourly schedule is added. Minute 49 already exists in the timer.
-Existing concurrency groups serialize duplicate GitHub/A1 runs;
-additional runs can still consume runner/API budget. The clock checks workflow
-metadata before dispatch and leaves disabled workflows disabled, preserving the
-retention pause set. Same-slot service restarts use a local dispatch receipt.
+All 24 members declare `workflow_dispatch`. The existing frequent rows retain their
+cadences. X8 (2026-10-11) adds thirteen daily/weekday workflows plus the daily
+Deploy slot. Yahoo batch finance and StockAnalysis remain on GitHub pending the
+lead's first natural-run read; weekly/monthly families are also deferred.
+
+Every admitted workflow now has a small `clock-admission` job. A late GitHub
+schedule skips every producer/publisher job only after the run API proves a
+successful marked dispatch for the same workflow, main branch and declared slot.
+Failed, queued, unrelated-slot and unmarked human runs cannot suppress a fallback.
+Human dispatches and push events retain their original behavior. API uncertainty
+preserves the GitHub fallback with a warning; malformed marked slots fail closed.
+For daily and frequent schedules GitHub supplies the cron text and creation time,
+not an original `scheduled_at`: the helper uses the latest matching instant at
+run creation, never the later runner-start time. Cross-cadence scheduler delays
+cannot be attributed to an earlier intended slot that GitHub does not expose.
+
+Existing concurrency groups remain. They serialize the work; a duplicate fallback
+still needs the short admission job, but does not collect or publish again. The
+computed-signals coordinator checks source job outcomes, so a successful source
+no-op does not cause an extra derived rebuild/publication. Alarm `workflow_run`
+observations remain active. No new workflow/service or receipt registry is added.
+
+The clock still checks workflow metadata and leaves disabled workflows disabled.
+A same-slot service restart uses its existing local dispatch receipt. The existing
+service timeout is 150 seconds, covering the largest three-workflow slot with two
+20-second API bounds per workflow. Credentials and state location are unchanged.
+
+X7b marked hourly Deploy compares full Git trees to the live provenance and
+proceeds only for changed bundle inputs; pending/running code deploys take priority.
+X8's marked 03:30 daily run keeps the original daily path, rather than the hourly
+input-diff admission. GitHub daily fallback and SlickCharts recovery remain.
 
 For `worker-request-budget-alarm.yml`, the marked hourly dispatch executes only
 `check`. An unmarked human dispatch still executes both jobs. The separate
