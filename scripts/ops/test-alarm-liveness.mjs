@@ -195,7 +195,7 @@ assert.equal(earlyHourlyDispatch.missed_slots, 1);
 // ---------------------------------------------------------------------------
 // Fail closed. Absence of evidence is never an all-clear.
 // ---------------------------------------------------------------------------
-for (const missing of [null, undefined, "", "not a timestamp"]) {
+for (const missing of [null, undefined, "", "not a timestamp", "2026-08-22T00:00:00Z"]) {
   const r = evaluateAlarmLiveness({ latestRunStartedAt: missing, cron: "23 * * * *", nowMs: now });
   assert.equal(r.status, "unreadable", `a missing run time must not read live: ${String(missing)}`);
 }

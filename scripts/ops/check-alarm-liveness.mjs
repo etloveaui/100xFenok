@@ -120,10 +120,10 @@ export function evaluateAlarmLiveness({ latestRunStartedAt, cron, nowMs = Date.n
     };
   }
   const sinceMs = Date.parse(latestRunStartedAt);
-  if (!Number.isFinite(sinceMs)) {
+  if (!Number.isFinite(sinceMs) || sinceMs > nowMs) {
     return {
       status: "unreadable",
-      reason: `run start is not a timestamp: ${latestRunStartedAt}`,
+      reason: `run start is invalid or in the future: ${latestRunStartedAt}`,
       missed_slots: null,
       age_hours: null,
     };
@@ -159,6 +159,7 @@ async function fetchLatestAlarmRunStart() {
   const url = `${GITHUB_API}/repos/${repo}/actions/workflows/${ALARM_WORKFLOW}/runs`
     + `?status=completed&per_page=20&created=${created}`;
   const response = await fetch(url, {
+    signal: AbortSignal.timeout(20_000),
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github+json",
@@ -185,20 +186,40 @@ async function fetchLatestAlarmRunStart() {
   return latestRunStartedAt;
 }
 
+export function alarmLivenessIncident(result, { checkedAt = new Date().toISOString() } = {}) {
+  const status = result.status === "live" ? "ok" : result.status === "stale" ? "alert" : "blocked";
+  return {
+    ...result,
+    status,
+    liveness_status: result.status,
+    issueTitle: "100xFenok pipeline observer alarm",
+    issueBody: [
+      `Pipeline alarm observer: ${result.status}.`, "",
+      result.reason ?? "The pipeline alarm has run within its declared liveness window.", "",
+      `Checked at UTC: ${checkedAt}`,
+      `Missed slots: ${result.missed_slots ?? "unknown"} / ${ALARM_MISSED_SLOT_THRESHOLD}`,
+      `Age hours: ${result.age_hours ?? "unknown"}`,
+      "", "This observer runs independently of the pipeline alarm. Unreadable evidence is not recovery.",
+    ].join("\n"),
+  };
+}
+
 async function main() {
   let latestRunStartedAt = null;
   let cron = null;
+  let result;
   try {
     cron = readAlarmCron();
     latestRunStartedAt = await fetchLatestAlarmRunStart();
+    result = evaluateAlarmLiveness({ latestRunStartedAt, cron });
   } catch (error) {
-    process.stdout.write(JSON.stringify({
+    result = {
       status: "unreadable", reason: error.message, missed_slots: null, age_hours: null,
-    }) + "\n");
-    process.exitCode = 1;
-    return;
+    };
   }
-  const result = evaluateAlarmLiveness({ latestRunStartedAt, cron });
+  if (process.env.ALARM_LIVENESS_RESULT) {
+    fs.writeFileSync(process.env.ALARM_LIVENESS_RESULT, `${JSON.stringify(alarmLivenessIncident(result), null, 2)}\n`);
+  }
   process.stdout.write(JSON.stringify(result) + "\n");
   if (result.status === "stale") process.exitCode = 2;
   else if (result.status === "unreadable") process.exitCode = 1;

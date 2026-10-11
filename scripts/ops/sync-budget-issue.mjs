@@ -8,6 +8,7 @@ const gh = (args) => execFileSync("gh", args, { encoding: "utf8", timeout: 30_00
 const TITLES = new Set([
   "100xFenok Worker request budget alarm",
   "100xFenok ETF typed-unavailable telemetry budget alarm",
+  "100xFenok pipeline observer alarm",
 ]);
 
 // Synchronize only this automation's exact issue. A measurement failure is not
@@ -32,7 +33,7 @@ export function syncBudgetIssue(result, { repo, run = gh } = {}) {
     run(["issue", "edit", String(existing.number), "--repo", repo, "--body", result.issueBody]);
     if (result.status === "ok") {
       run(["issue", "close", String(existing.number), "--repo", repo, "--reason", "completed",
-        "--comment", "Budget measurement recovered. The latest measured result is in the issue body."]);
+        "--comment", "Measurement recovered. The latest measured result is in the issue body."]);
       return "closed";
     }
     // The body is live state; do not create another comment on every hourly run.
