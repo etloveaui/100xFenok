@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-10-11T07:40:45Z",
+  "generated_at": "2026-10-11T08:07:31Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7071,
     "fields": 19,
-    "multi_candidate_fields": 28536,
-    "divergence_rows": 28532,
+    "multi_candidate_fields": 28538,
+    "divergence_rows": 28534,
     "percent_scale_warnings": 6,
     "diagnosis_counts": {
-      "agreement": 23923,
+      "agreement": 23922,
       "scale_mismatch": 6,
-      "sign_divergence": 72,
+      "sign_divergence": 71,
       "stale": 3502,
-      "value_drift": 1029
+      "value_drift": 1033
     },
     "stale_rows": 3502,
     "scale_mismatch_rows": 6,
-    "sign_divergence_rows": 72
+    "sign_divergence_rows": 71
   },
   "by_field": {
     "beta": {
@@ -36,7 +36,7 @@
     },
     "change": {
       "ticker_count": 6953,
-      "multi_candidate_count": 1269,
+      "multi_candidate_count": 1268,
       "selected_sources": {
         "stockanalysis.quote": 5618,
         "yf": 1145,
@@ -45,13 +45,13 @@
       },
       "candidate_sources": {
         "stockanalysis.quote": 129,
-        "yf": 1267,
-        "yf.derived": 1203
+        "yf": 1266,
+        "yf.derived": 1202
       }
     },
     "change_pct": {
       "ticker_count": 6952,
-      "multi_candidate_count": 1268,
+      "multi_candidate_count": 1267,
       "selected_sources": {
         "stockanalysis.quote": 5618,
         "yf": 1145,
@@ -60,8 +60,8 @@
       },
       "candidate_sources": {
         "stockanalysis.quote": 129,
-        "yf": 1266,
-        "yf.derived": 1202
+        "yf": 1265,
+        "yf.derived": 1201
       }
     },
     "dividend_yield": {
@@ -81,15 +81,15 @@
     },
     "expense_ratio": {
       "ticker_count": 5647,
-      "multi_candidate_count": 67,
+      "multi_candidate_count": 69,
       "selected_sources": {
-        "stockanalysis.overview": 5408,
-        "yf": 67,
+        "stockanalysis.overview": 5406,
+        "yf": 69,
         "yf.stockanalysis_fallback.overview": 172
       },
       "candidate_sources": {
-        "stockanalysis.overview": 67,
-        "yf": 67
+        "stockanalysis.overview": 69,
+        "yf": 69
       }
     },
     "forward_pe": {
@@ -261,15 +261,15 @@
     },
     "total_assets": {
       "ticker_count": 5645,
-      "multi_candidate_count": 66,
+      "multi_candidate_count": 68,
       "selected_sources": {
-        "stockanalysis.overview": 5419,
-        "yf": 67,
+        "stockanalysis.overview": 5417,
+        "yf": 69,
         "yf.stockanalysis_fallback.overview": 159
       },
       "candidate_sources": {
-        "stockanalysis.overview": 66,
-        "yf": 66
+        "stockanalysis.overview": 68,
+        "yf": 68
       }
     },
     "trailing_pe": {
@@ -3533,47 +3533,6 @@
       }
     },
     {
-      "ticker": "TGLR",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 152.703226,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -2.039087816390316
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 3.869
-        },
-        {
-          "source": "stockanalysis.etf_universe.performance",
-          "value": 3.869
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 152.703226,
-      "fresh_spread_pct": 152.703226,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 106.0
-      }
-    },
-    {
       "ticker": "LNT",
       "asset_type": "stock",
       "field": "return_1y",
@@ -4026,6 +3985,43 @@
       ],
       "diagnosis": "stale",
       "spread_pct": 145.016101,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 95.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "SMCF",
+      "asset_type": "etf",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 144.028216,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 0.08
+        },
+        {
+          "source": "yf",
+          "value": -0.18170166
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 144.028216,
       "fresh_spread_pct": null,
       "stale_sources": [
         "stockanalysis.quote"
@@ -7938,43 +7934,6 @@
       }
     },
     {
-      "ticker": "TGLR",
-      "asset_type": "etf",
-      "field": "return_3m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 126.82112,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -2.9186255163711183
-        },
-        {
-          "source": "stockanalysis.detail.history",
-          "value": 10.881818186011857
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 126.82112,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.detail.history"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 106.0
-      }
-    },
-    {
       "ticker": "IETH",
       "asset_type": "etf",
       "field": "change_pct",
@@ -8109,6 +8068,48 @@
       "diagnosis": "stale",
       "spread_pct": 125.155253,
       "fresh_spread_pct": 8.2e-05,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 7.0,
+        "yf": 0.0,
+        "yf.derived": 0.0
+      }
+    },
+    {
+      "ticker": "AMAT",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 124.554729,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 2.03
+        },
+        {
+          "source": "yf",
+          "value": -0.498461
+        },
+        {
+          "source": "yf.derived",
+          "value": -0.4984594854485195
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 124.554729,
+      "fresh_spread_pct": 0.000304,
       "stale_sources": [
         "stockanalysis.quote"
       ],
@@ -9156,47 +9157,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
-      }
-    },
-    {
-      "ticker": "TGLR",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 152.703226,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -2.039087816390316
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 3.869
-        },
-        {
-          "source": "stockanalysis.etf_universe.performance",
-          "value": 3.869
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 152.703226,
-      "fresh_spread_pct": 152.703226,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 106.0
       }
     },
     {

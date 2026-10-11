@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-08-12T15:10:57Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MDCR.json",
-    "payload_sha256": "0b8f898774375aea2412af24ea7bf98b4ffd3fa180d9d55e496e537affa0845e",
-    "quote_as_of": "2026-08-12T13:46:07Z",
-    "source_as_of": "2026-08-12"
+    "fetched_at": "2026-10-11T06:27:28Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/MDCR.json",
+    "payload_sha256": "b2223b5f918e632d3295f548fdc20bbdb8516353fd6419a64f3015df8ca4eb6e",
+    "quote_as_of": "2026-06-30T17:04:53Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MDCR: quote_as_of",
     "failures": [],
-    "latency_ms": 618,
-    "observed_at": "2026-10-05T13:10:30Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MDCR: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T13:10:30Z"
+    "latency_ms": 671,
+    "observed_at": "2026-10-11T06:27:28Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-12T15:10:57Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-08-12T13:46:07Z",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:27:28Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "MDCR",
-  "updated_at": "2026-10-05T13:10:30Z"
+  "updated_at": "2026-10-11T06:27:28Z"
 }

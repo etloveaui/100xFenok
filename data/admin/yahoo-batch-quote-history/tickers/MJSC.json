@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:38:27Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MJSC.json",
-    "payload_sha256": "592ff823f380b22b114058da51893a4d3851f69b44dc03777a90ccbe71fefa81",
-    "quote_as_of": "2026-09-30T13:46:05Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T05:42:57Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/MJSC.json",
+    "payload_sha256": "a745aa1e47a4b4ec966cd7c45e1a60337d0548d11037058e65db8c601a4ebe1e",
+    "quote_as_of": "2026-10-08T13:30:00Z",
+    "source_as_of": "2026-10-08T13:30:00Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MJSC: quote_as_of",
     "failures": [],
-    "latency_ms": 688,
-    "observed_at": "2026-10-04T17:43:23Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MJSC: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-04T17:43:23Z"
+    "latency_ms": 520,
+    "observed_at": "2026-10-11T05:42:57Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:38:27Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T05:42:57Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-14T14:38:05Z"
   },
   "ticker": "MJSC",
-  "updated_at": "2026-10-04T17:43:23Z"
+  "updated_at": "2026-10-11T05:42:57Z"
 }

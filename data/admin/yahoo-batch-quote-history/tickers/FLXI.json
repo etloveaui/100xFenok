@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:36:13Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FLXI.json",
-    "payload_sha256": "938d052d5beaff9cfc718b000f824d58eac5e869f40c0d8ad01851f4d251f804",
-    "quote_as_of": "2026-09-30T13:46:04Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T05:42:36Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/FLXI.json",
+    "payload_sha256": "03e37563259c80b79bbd9e2692acb7de9fa6780ac770e7bff496792dbec6a78f",
+    "quote_as_of": "2026-09-29T19:21:52Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for FLXI: quote_as_of",
     "failures": [],
-    "latency_ms": 820,
-    "observed_at": "2026-10-04T17:37:08Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for FLXI: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-04T17:37:08Z"
+    "latency_ms": 624,
+    "observed_at": "2026-10-11T05:42:36Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:36:13Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:04Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T05:42:36Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 17,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-02T13:41:16Z"
   },
   "ticker": "FLXI",
-  "updated_at": "2026-10-04T17:37:08Z"
+  "updated_at": "2026-10-11T05:42:36Z"
 }

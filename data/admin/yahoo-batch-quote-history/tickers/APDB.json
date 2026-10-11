@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:32:34Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/APDB.json",
-    "payload_sha256": "abbad189c9d752670a6bf26c8574a9941d0db8e7c8b1ce35148e0f60e9fa700d",
-    "quote_as_of": "2026-09-30T13:46:01Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T05:42:26Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/APDB.json",
+    "payload_sha256": "9efd1ab17771308f6149e4fcabc8848b2bf0643079966ee2e4058d3bc120cf6c",
+    "quote_as_of": "2026-09-21T16:00:14Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for APDB: quote_as_of",
     "failures": [],
-    "latency_ms": 770,
-    "observed_at": "2026-10-04T17:29:23Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for APDB: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-04T17:29:23Z"
+    "latency_ms": 555,
+    "observed_at": "2026-10-11T05:42:26Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:32:34Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:01Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T05:42:26Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-21T16:00:14Z"
   },
   "ticker": "APDB",
-  "updated_at": "2026-10-04T17:29:23Z"
+  "updated_at": "2026-10-11T05:42:26Z"
 }

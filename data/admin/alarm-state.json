@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-11T04:26:21.627Z",
-  "status": "clear",
-  "open_incident_count": 0,
-  "open_incidents": [],
+  "generated_at": "2026-10-11T06:45:57.857Z",
+  "status": "open",
+  "open_incident_count": 1,
+  "open_incidents": [
+    {
+      "workflow": "fetch-fenok-news-tone.yml",
+      "label": "Fetch Fenok GDELT News Tone Proxy",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0
+    }
+  ],
   "watched_workflows": [
     {
       "file": "build-stocks-analyzer.yml",
@@ -344,14 +357,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38103568425",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38103568425",
-    "observed_at": "2026-10-11T02:01:12.758Z",
-    "event": "schedule",
+    "run_id": "38118950863",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38118950863",
+    "observed_at": "2026-10-11T06:45:57.857Z",
+    "event": "workflow_run",
     "workflows": [
-      "fetch-yahoo-ticker.yml",
-      "fetch-yf-finance.yml",
-      "worker-request-budget-alarm.yml"
+      "fetch-fenok-news-tone.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

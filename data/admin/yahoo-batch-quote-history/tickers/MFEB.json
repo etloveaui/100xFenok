@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:38:19Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MFEB.json",
-    "payload_sha256": "8cf4598c79b52258069cc0f4ca5859ceed343fbdca51fe0991d1900ce46c4ba0",
-    "quote_as_of": "2026-09-30T13:46:05Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T05:42:55Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/MFEB.json",
+    "payload_sha256": "40d46166925f2e4b6b52d63f6f837dce56595b1aab5229d7b054dd4d902aae6c",
+    "quote_as_of": "2026-09-18T18:45:17Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MFEB: quote_as_of",
     "failures": [],
-    "latency_ms": 1059,
-    "observed_at": "2026-10-04T17:43:12Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MFEB: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-04T17:43:12Z"
+    "latency_ms": 678,
+    "observed_at": "2026-10-11T05:42:55Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:38:19Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T05:42:55Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-18T18:45:17Z"
   },
   "ticker": "MFEB",
-  "updated_at": "2026-10-04T17:43:12Z"
+  "updated_at": "2026-10-11T05:42:55Z"
 }

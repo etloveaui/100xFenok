@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:35:57Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMJN.json",
-    "payload_sha256": "9cf9e0492085482947dda2af48beb674e6d195aca22662ce1587677dda7299d2",
-    "quote_as_of": "2026-09-30T13:46:03Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T06:18:53Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/EMJN.json",
+    "payload_sha256": "9665d01005a96e43a11f1b3947ed1a2e6927f477c1b66845bb58b3b596fb59dd",
+    "quote_as_of": "2026-09-10T13:44:36Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for EMJN: quote_as_of",
     "failures": [],
-    "latency_ms": 549,
-    "observed_at": "2026-10-05T05:38:35Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for EMJN: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T05:38:35Z"
+    "latency_ms": 568,
+    "observed_at": "2026-10-11T06:18:53Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:35:57Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:03Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:18:53Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 12,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-10T13:44:36Z"
   },
   "ticker": "EMJN",
-  "updated_at": "2026-10-05T05:38:35Z"
+  "updated_at": "2026-10-11T06:18:53Z"
 }
