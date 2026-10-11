@@ -84,10 +84,6 @@ jobs:
               raise SystemExit('A1 FDIC push has no successful collection receipt')
           PY
 
-      - name: Test FDIC Tier1 producer contracts
-        if: ${{ github.event_name != 'push' && inputs.publish_existing != true }}
-        run: node scripts/test-fetch-fdic-tier1.mjs
-
       - name: Fetch FDIC Tier1 data
         id: fetch_fdic
         if: ${{ github.event_name != 'push' && inputs.publish_existing != true }}

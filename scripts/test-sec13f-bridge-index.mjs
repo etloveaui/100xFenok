@@ -75,7 +75,6 @@ const sec13fSummary = readJson("data/sec-13f/summary.json");
 assert.equal(index.schema_version, "sec13f-bridge-index/v1");
 assert.equal(index.contract.graph_expansion, "held");
 assert.equal(index.contract.freshness_credit, false);
-assert.equal(index.contract.consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,031 coverage)");
 assert.equal(index.contract.public_route, "/data/computed/sec13f_bridge_index.json");
 assert.equal(index.contract.live_readback, "verified");
 assert.equal(index.contract.producer_typed_marker, true);

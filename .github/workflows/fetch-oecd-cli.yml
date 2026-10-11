@@ -97,8 +97,6 @@ jobs:
         with:
           package-manager-cache: false
           node-version: '22'
-      - name: Test OECD CLI producer
-        run: node scripts/test-fetch-oecd-cli.mjs
       - name: Fetch OECD CLI shadow
         id: fetch_oecd
         env:

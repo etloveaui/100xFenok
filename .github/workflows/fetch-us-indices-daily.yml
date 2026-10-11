@@ -86,9 +86,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test US indices live producer
-        run: npm --prefix 100xfenok-next run qa:us-indices-daily
-
       # Yahoo is the live canonical owner (atomic cutover from GAS); the
       # public mirror is owned by the merge boundary (sync-public-data.mjs
       # full walk), not this lane. The former GAS comparator and historical

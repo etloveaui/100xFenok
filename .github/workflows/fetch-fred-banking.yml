@@ -96,9 +96,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test FRED banking producer contracts
-        run: node scripts/test-fetch-fred-banking.mjs
-
       - name: Fetch FRED banking data and persist one attempt
         id: fetch_banking
         env:

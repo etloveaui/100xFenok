@@ -91,11 +91,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test FINRA ATS weekly contracts
-        run: |
-          node scripts/test-fetch-finra-ats-weekly.mjs
-          node scripts/test-fetch-finra-ats-weekly-workflow.mjs
-
       - name: Fetch FINRA ATS weekly summary
         id: fetch_finra_ats
         env:

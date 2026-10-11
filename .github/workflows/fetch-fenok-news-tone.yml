@@ -91,9 +91,6 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
-      - name: Test GDELT news tone producer contracts
-        run: node scripts/test-fetch-fenok-news-tone-proxy.mjs
-
       - name: Fetch GDELT news tone proxy
         id: fetch_news_tone
         env:

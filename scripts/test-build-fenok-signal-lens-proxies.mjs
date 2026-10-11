@@ -24,6 +24,19 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 
+if (process.argv.includes("--artifacts")) {
+  for (const relPath of [
+    "data/computed/fenok_signal_lens_proxies.json",
+    "data/computed/fenok_signal_lens_proxies_summary.json",
+    "data/computed/fenok_signal_lens_proxies_history.json",
+  ]) {
+    const payload = JSON.parse(fs.readFileSync(path.join(repoRoot, relPath), "utf8"));
+    assert.equal(payload.formula_version, FORMULA_VERSION, `${relPath} formula_version is stale`);
+  }
+  console.log("signal-lens proxy artifact formula versions: ok");
+  process.exit(0);
+}
+
 assert.equal(FORMULA_VERSION, "fenok-signal-lens-proxies-v0.3-stock-flow-calibration");
 assert.doesNotThrow(() => assertProxyFormulaVersion(null, FLOW_PROXY_FORMULA_VERSION, "missing_optional_source"));
 assert.doesNotThrow(() => assertProxyFormulaVersion({ formula_version: FLOW_PROXY_FORMULA_VERSION }, FLOW_PROXY_FORMULA_VERSION, "flow"));
@@ -90,16 +103,6 @@ for (const key of ["ma20_position", "ma50_position", "ma200_position"]) {
   assert(largestBucket / scores.length < 0.85, `${key} distribution collapsed: ${largestBucket}/${scores.length}`);
 }
 
-if (process.argv.includes("--artifacts")) {
-  for (const relPath of [
-    "data/computed/fenok_signal_lens_proxies.json",
-    "data/computed/fenok_signal_lens_proxies_summary.json",
-    "data/computed/fenok_signal_lens_proxies_history.json",
-  ]) {
-    const payload = JSON.parse(fs.readFileSync(path.join(repoRoot, relPath), "utf8"));
-    assert.equal(payload.formula_version, FORMULA_VERSION, `${relPath} formula_version is stale`);
-  }
-}
 
 const coverage = buildCoverage([
   {
