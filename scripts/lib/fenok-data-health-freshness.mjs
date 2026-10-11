@@ -562,6 +562,10 @@ export function summarizeDataSetFreshness(
   const policy = widestPolicy(lane, outputPolicies);
   const memberEvidence = sourceMembersForLane(lane, floorRow, dataRoot);
   if (memberEvidence) return memberSummary(lane, memberEvidence, nowIso, calendars);
+  if (lane.id === "yahoo_batch_quote_history") {
+    return memberSummary(lane, { members: [], totalMembers: 0,
+      yahooBusinessDays: YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS }, nowIso, calendars);
+  }
 
   const sourceDate = memberDate(floorRow?.artifact?.source_as_of);
   const collectedDate = sourceDate.date
