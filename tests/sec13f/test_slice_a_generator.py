@@ -19,7 +19,7 @@ SEC13F_SCRIPTS = ROOT / "scripts" / "sec13f"
 if str(SEC13F_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SEC13F_SCRIPTS))
 
-from generator import ANALYTIC_NAMES, GeneratorError, generate_base_outputs  # noqa: E402
+from generator import ANALYTIC_NAMES, GeneratorError, generate_base_outputs, _summary  # noqa: E402
 from input_adapter import prepare_investor_data  # noqa: E402
 
 
@@ -168,6 +168,21 @@ class SliceAGeneratorTest(unittest.TestCase):
                     (Path(first_root) / relative_path).read_bytes(),
                     (Path(second_root) / relative_path).read_bytes(),
                 )
+
+    def test_summary_ranks_unique_tickers_by_combined_value(self) -> None:
+        holdings = [{"ticker": ticker, "market_value": value, "shares": 1, "weight": 0.1}
+                    for ticker, value in [("BBB", 60), ("AAA", 40), ("AAA", 30),
+                                          ("CCC", 20), ("DDD", 15), ("EEE", 10), ("FFF", 5)]]
+        investor = {"name": "Example", "group": "value", "filings": [{
+            "quarter": "2026-Q2", "aum_total": 180, "holdings_count": 7, "holdings": holdings,
+        }]}
+        summary = _summary({"example": investor}, ["2026-Q2"], GENERATED_AT)
+        self.assertEqual(summary["investors"]["example"]["top5"], ["AAA", "BBB", "CCC", "DDD", "EEE"])
+        self.assertEqual(summary["investors"]["example"]["holdings_count"], 7)
+        holdings.extend([{"ticker": None, "name": "FUND TRUST", "cusip": cusip, "market_value": value}
+                         for cusip, value in [("ONE", 40), ("TWO", 35)]])
+        fallback = _summary({"example": investor}, ["2026-Q2"], GENERATED_AT)
+        self.assertEqual(fallback["investors"]["example"]["top5"], ["AAA", "BBB", "FUND TRUST", "CCC", "DDD"])
 
     def test_holding_value_mutation_turns_manifest_red(self) -> None:
         changed_runs = deepcopy(self.runs)
