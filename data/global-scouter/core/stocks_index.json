@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-11T16:12:58.102545",
+  "generated_at": "2026-10-11T21:12:10.875863",
   "source_date": "2026-10-09",
   "count": 1064,
   "stocks": {
@@ -80,6 +80,14 @@
         "action": "multiply_historical_per_share_by_five_and_recompute_derived_values",
         "source_date": "2026-10-09",
         "source_sha256": "e6a7c806a836bc5606a5c369aaf4fa7bd6c15882b8972071878f2f9aadd427da",
+        "admission": {
+          "witness_fingerprint": "19aed04b357225f4660315570aac0b7391da75495f1800e613fd382ff332e741",
+          "validated_workbooks": {
+            "2026-09-25": "1aab3d207a42fb9e1136fb910a6124b4f557540c5ce2329cc2bba832f6cd3ea4",
+            "2026-10-02": "b5b8803b0e9664dfdfc4767788d701d36ca313fd62fa6dfc6522bff4627b6c36",
+            "2026-10-09": "e6a7c806a836bc5606a5c369aaf4fa7bd6c15882b8972071878f2f9aadd427da"
+          }
+        },
         "share_ratio": 5,
         "affected_fields": [
           "dividend.div_yield",
@@ -1193,6 +1201,17 @@
         "source_date": "2026-10-09",
         "share_ratio": 1500,
         "source_sha256": "e6a7c806a836bc5606a5c369aaf4fa7bd6c15882b8972071878f2f9aadd427da",
+        "admission": {
+          "witness_fingerprint": "05c6a08d6584f518275426614246c90043688bead18a835d7cb3c53abf84218a",
+          "validated_workbooks": {
+            "2026-09-04": "2952c907fdf62f3f8e994d8c83bca5cb5e76a50b583d0774296134408f08b11b",
+            "2026-09-11": "4493e47bc86f703bedb16df9dbe35e84767b05f96c641f22283b679c0b77db95",
+            "2026-09-18": "7027ea2049e6d5486903a64ca009a6b82fe7f3f8ca81b85c1adf043c17ac2f08",
+            "2026-09-25": "1aab3d207a42fb9e1136fb910a6124b4f557540c5ce2329cc2bba832f6cd3ea4",
+            "2026-10-02": "b5b8803b0e9664dfdfc4767788d701d36ca313fd62fa6dfc6522bff4627b6c36",
+            "2026-10-09": "e6a7c806a836bc5606a5c369aaf4fa7bd6c15882b8972071878f2f9aadd427da"
+          }
+        },
         "affected_fields": [
           "eps_consensus.BRK.A.fy_plus_1",
           "eps_consensus.BRK.A.fy_plus_2",
@@ -10181,7 +10200,7 @@
       "r12": -0.7890039840637451,
       "data_quality": {
         "code": "forward_multiples_on_pre_event_estimates",
-        "detector": "price_reset_confirmed_by_second_source_with_unchanged_per_share_estimates",
+        "detector": "price_changed_share_basis_and_per_share_estimates_did_not_follow",
         "action": "withhold_forward_multiples_keep_price_estimates_and_raw",
         "source_date": "2026-10-09",
         "source_sha256": "e6a7c806a836bc5606a5c369aaf4fa7bd6c15882b8972071878f2f9aadd427da",
@@ -10197,18 +10216,33 @@
           "dividend_estimates.div_yield"
         ],
         "withheld_fields": {
-          "index.per_fwd": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "index.pbr_fwd": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "index.div_yield_fwd": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "valuation_estimates.per": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "valuation_estimates.pbr": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "valuation_estimates.pcr": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "valuation_estimates.psr": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "valuation_estimates.peg": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company.",
-          "dividend_estimates.div_yield": "The price follows the 2026-10-01 corporate action; the per-share estimates under it do not, so the ratio describes neither company."
+          "index.per_fwd": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "index.pbr_fwd": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "index.div_yield_fwd": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "valuation_estimates.per": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "valuation_estimates.pbr": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "valuation_estimates.pcr": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "valuation_estimates.psr": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "valuation_estimates.peg": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis.",
+          "dividend_estimates.div_yield": "The price follows a change of share basis first seen in the 2026-10-09 workbook; the per-share estimates under it do not, so the ratio describes neither basis."
         },
         "raw_preserved": true,
         "provenance": {
+          "basis_event": {
+            "first_seen": "2026-10-09",
+            "price_before": 77.65,
+            "price_after": 13.24,
+            "market_cap_before": 7952.98,
+            "market_cap_after": 8833.68,
+            "eps_fy1_before": 3.76,
+            "prior_published": {
+              "source_date": "2026-10-02",
+              "revision": "b48511ae0ce53393cbd1a7c1bab23d790a23f1bc",
+              "detail_sha256": "530f5835848bdc268ae1acd42bca5890a23876a8951df70bc06f52b1312a8cdb"
+            },
+            "share_basis_ratio": 6.51426238836587
+          },
+          "basis_tolerance": 0.3,
           "workbook_evidence": {
             "price": 13.24,
             "market_cap": 8833.68,
@@ -10217,32 +10251,9 @@
               "fy2": 4.16,
               "fy3": 4.56
             },
-            "per_fy1_equals_price_over_eps_fy1": true
-          },
-          "prior_published": {
-            "source_date": "2026-10-02",
-            "price": 77.65,
-            "market_cap": 7952.98,
-            "per_fwd": 19.032,
-            "eps_fy1": 3.76
-          },
-          "second_source": {
-            "file": "data/yf/finance/CTVA.json",
-            "fetched_at": "2026-10-10T02:30:24Z",
-            "quote_as_of": "2026-10-09T20:03:06Z",
-            "current_price": 13.24,
-            "history_close": {
-              "date": "2026-10-09",
-              "close": 13.24
-            },
-            "market_cap": 8833675264,
-            "shares_outstanding": 667196000,
-            "forward_eps": 1.14452,
-            "history_event": {
-              "date": "2026-10-01",
-              "stock_splits": 6.665
-            },
-            "use": "Evidence only; no value from this file enters the payload."
+            "eps_fy1_ratio_to_pre_event_estimate": 1.0,
+            "per_fy1_equals_price_over_eps_fy1": true,
+            "carried_from_last_publication": false
           },
           "original_source_values": {
             "index.per_fwd": 3.237163814180929,
