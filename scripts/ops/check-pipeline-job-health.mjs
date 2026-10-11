@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
-import { EXTERNAL_CLOCK_CRONS, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
+import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockSlot } from "../../ops/a1-lanes/external-clock.mjs";
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
@@ -720,6 +720,41 @@ export function needsMissedWindowReverification(row) {
   return row?.missed_schedule_window_hours != null;
 }
 
+export function evaluateExternalClock(workflow, runs, { now = Date.now() } = {}) {
+  const cron = EXTERNAL_CLOCK_CRONS[workflow.file];
+  if (!cron || !workflow.crons?.includes(cron)) {
+    return { file: workflow.file, status: "unknown", message: "External clock declaration does not match the workflow." };
+  }
+  const marked = runs.map((run) => ({ run, slot: externalClockSlot(workflow, run) }))
+    .filter(({ slot, run }) => Number.isFinite(slot) && slot <= now
+      && Date.parse(run.created_at || run.run_started_at) <= now)
+    .sort((a, b) => b.slot - a.slot);
+  const latest = marked[0];
+  const since = latest?.slot ?? Date.parse(EXTERNAL_CLOCK_ADMITTED_AT[workflow.file]);
+  const missed = declaredMissedSlotCount(cron, since, now);
+  return {
+    file: workflow.file,
+    status: missed === null ? "unknown" : missed >= 3 ? "alarm" : "ok",
+    missed_clock_slot_count: missed,
+    last_marked_slot: latest ? new Date(latest.slot).toISOString() : null,
+    last_marked_run_id: latest?.run.id ?? null,
+    last_marked_run_url: latest?.run.html_url ?? null,
+    admitted_at: EXTERNAL_CLOCK_ADMITTED_AT[workflow.file],
+  };
+}
+
+export function aggregateExternalClockHealth(rows) {
+  const stale = rows.filter((row) => row.status === "alarm");
+  const unknown = rows.length === 0 || rows.some((row) => row.status === "unknown");
+  return {
+    file: "a1-external-clock",
+    label: "A1 external clock",
+    status: stale.length ? "alarm" : unknown ? "unknown" : "ok",
+    alarm_reasons: stale.length ? ["a1_clock_stale"] : [],
+    clock_workflows: rows,
+  };
+}
+
 export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeScheduledRuns = [] } = {}) {
   const countedRuns = runs.filter((run) => {
     if (run?.status && run.status !== "completed") return false;
@@ -893,6 +928,16 @@ export function buildIssueBody(alarms) {
     "",
   ];
   for (const alarm of alarms) {
+    if (alarm.alarm_reasons?.includes("a1_clock_stale")) {
+      lines.push("## A1 external clock (`a1-external-clock`)");
+      lines.push("- Alarm reasons: a1_clock_stale");
+      lines.push("- The A1 external clock created no marked run for at least three consecutive declared slots. GitHub schedule fallback does not clear this incident.");
+      for (const row of alarm.clock_workflows.filter((item) => item.status === "alarm")) {
+        lines.push(`- ${row.file}: ${row.missed_clock_slot_count} absent clock slots; last marked run: ${row.last_marked_run_id ?? "none since admission"}; slot: ${row.last_marked_slot ?? row.admitted_at}; URL: ${row.last_marked_run_url ?? "none"}`);
+      }
+      lines.push("- Check the A1 timer, VM availability and dispatch authentication.", "");
+      continue;
+    }
     if (Array.isArray(alarm.kpi_stopped_sets)) {
       lines.push("## Data stopped advancing");
       lines.push("- KPI status: stopped in two consecutive generations");
@@ -1107,6 +1152,7 @@ export async function main() {
   }
 
   const workflows = [];
+  const clockChecks = [];
   for (const workflow of policy.watched) {
     try {
       const batches = [];
@@ -1124,8 +1170,9 @@ export async function main() {
           file: workflow.file,
           branch,
           event,
-          status: workflow.scheduled_producer && (event === "schedule"
-            || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file])) ? null : "completed",
+          perPage: event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file] ? 100 : RUNS_PER_PAGE,
+          status: (workflow.scheduled_producer && event === "schedule")
+            || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file]) ? null : "completed",
         }));
       }
       const fetchInProgressScheduledRuns = async () => {
@@ -1143,7 +1190,7 @@ export async function main() {
         return mergeWorkflowRunBatches(activeBatches);
       };
       let activeScheduledRuns = await fetchInProgressScheduledRuns();
-      const runs = await annotateQueueEvictions({
+      let runs = await annotateQueueEvictions({
         workflow,
         runs: mergeWorkflowRunBatches(batches),
         fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
@@ -1160,19 +1207,24 @@ export async function main() {
             branch,
             event,
             perPage: 100,
-            status: workflow.scheduled_producer && (event === "schedule"
-              || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file])) ? null : "completed",
+            status: (workflow.scheduled_producer && event === "schedule")
+              || (event === "workflow_dispatch" && EXTERNAL_CLOCK_CRONS[workflow.file]) ? null : "completed",
           }));
         }
         activeScheduledRuns = await fetchInProgressScheduledRuns();
-        evaluated = evaluateWorkflow(workflow, await annotateQueueEvictions({
+        runs = await annotateQueueEvictions({
           workflow,
           runs: mergeWorkflowRunBatches([...batches, ...verifyBatches]),
           fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
-        }), { activeScheduledRuns });
+        });
+        evaluated = evaluateWorkflow(workflow, runs, { activeScheduledRuns });
       }
       workflows.push(evaluated);
+      if (EXTERNAL_CLOCK_CRONS[workflow.file]) clockChecks.push(evaluateExternalClock(workflow, runs));
     } catch (error) {
+      if (EXTERNAL_CLOCK_CRONS[workflow.file]) {
+        clockChecks.push({ file: workflow.file, status: "unknown", message: error.message });
+      }
       // A transient API failure must never itself alarm — report unknown, keep exit 0.
       workflows.push({
         file: workflow.file,
@@ -1185,7 +1237,20 @@ export async function main() {
     }
   }
 
-  const classifiedWorkflows = workflows;
+  // Self failure monitoring stays excluded. Its dispatch creation still proves
+  // the independent A1 clock is alive, without any recursive failure verdict.
+  for (const file of Object.keys(EXTERNAL_CLOCK_CRONS)) {
+    if (clockChecks.some((row) => row.file === file)) continue;
+    try {
+      const workflow = workflowMetadata(file, fs.readFileSync(path.join(WORKFLOWS_DIR, file), "utf8"));
+      const runs = await fetchWorkflowRuns({ token, owner, repo, file, branch,
+        event: "workflow_dispatch", perPage: 100, status: null });
+      clockChecks.push(evaluateExternalClock(workflow, runs));
+    } catch (error) {
+      clockChecks.push({ file, status: "unknown", message: error.message });
+    }
+  }
+  const classifiedWorkflows = [...workflows, aggregateExternalClockHealth(clockChecks)];
   const workflowAlarms = classifiedWorkflows.filter((w) => w.status === "alarm");
   const kpiAlarm = dataHealthKpi.status === "alarm"
     ? {

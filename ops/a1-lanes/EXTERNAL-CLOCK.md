@@ -31,7 +31,22 @@ produce `external-clock/a1/v1 <workflow> <slot>` in the Actions run title.
 The existing missed-slot detector admits only these bound titles at a declared
 minute. Human dispatch defaults stay unmarked. Queued producer runs prove
 creation; restore still requires completion or a running job under ten minutes.
-Per-run failure handling remains unchanged.
+Marked dispatches count as automatic executions for failure streaks, first-failure
+evidence, lost slots and recovery. Unmarked human failures remain excluded.
+
+The pipeline alarm separately measures marked-run creation for every clocked
+workflow, including its own dispatch creation (not its own job failures).
+Three consecutive declared slots without a marked run raise one `a1_clock_stale`
+incident for the A1 external clock. GitHub fallback successes do not clear it.
+Queued marked runs prove clock delivery. Admission timestamps prevent counting
+slots before installation; unreadable run history remains unknown.
+
+There is no reusable local-file failure channel: `check-a1-lane-health.mjs` reads
+the committed FDIC-only `a1-lane-status/v1` document, requires `lane_id=fdic_tier1`
+and a 96-hour cadence, and runs on GitHub. A local `OnFailure` file is neither
+that status nor remotely visible. Do not overwrite the FDIC status or add a new
+channel merely to attach `OnFailure`; inspect the service journal for immediate
+local failure details, while the independent run-history alarm covers silence.
 
 ## Credential and rebuild
 

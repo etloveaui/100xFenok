@@ -27,15 +27,19 @@ import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_MARKER, dueDispatches, dispatchDue
 import {
   MISSED_WINDOW_MULTIPLIER,
   MISSED_WINDOW_WORKFLOWS,
+  aggregateExternalClockHealth,
   annotateQueueEvictions,
+  buildIssueBody,
   cronIntervalHours,
   declaredMissedSlotCount,
   deriveWorkflowWatchPolicy,
   evaluateWorkflow,
+  evaluateExternalClock,
   mergeWorkflowRunBatches,
   missedSlotCount,
   needsMissedWindowReverification,
 } from "./check-pipeline-job-health.mjs";
+import { buildAlarmState } from "./emit-alarm-state.mjs";
 
 const HOUR = 3_600_000;
 const NOW = Date.parse("2026-08-21T01:30:00Z");
@@ -433,4 +437,43 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
   assert.equal(failed[0].outcome, "failed", "API failure must remain observable");
 }
 
-console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors plus registry producers, x${MISSED_WINDOW_MULTIPLIER} tolerance)`);
+{
+  const clocked = detector("fetch-yahoo-ticker.yml", "5 * * * *");
+  const marked = (file, slot, extra = {}) => ({ ...run(300, slot, { event: "workflow_dispatch" }),
+    created_at: slot, display_title: `${EXTERNAL_CLOCK_MARKER} ${file} ${slot}`, ...extra });
+  const old = marked(clocked.file, "2026-10-12T06:05:00.000Z");
+  const fallback = run(303, "2026-10-12T09:05:00Z");
+  const now = Date.parse("2026-10-12T09:30:00Z");
+  assert.equal(evaluateWorkflow(clocked, [fallback, old], { now }).status, "ok",
+    "successful GitHub fallback can leave the producer healthy");
+  const stale = evaluateExternalClock(clocked, [fallback, old], { now });
+  assert.equal(stale.status, "alarm", "fallback cannot conceal three missing A1 slots");
+  assert.equal(stale.missed_clock_slot_count, 3);
+  assert.equal(stale.last_marked_run_id, 300);
+  assert.equal(evaluateExternalClock(clocked, [old], { now: Date.parse("2026-10-12T08:30:00Z") }).status, "ok");
+  const second = detector("fetch-defillama.yml", "12 * * * *");
+  const otherStale = evaluateExternalClock(second,
+    [marked(second.file, "2026-10-12T06:12:00.000Z")], { now });
+  const incident = aggregateExternalClockHealth([stale, otherStale]);
+  assert.deepEqual(incident.alarm_reasons, ["a1_clock_stale"]);
+  const state = buildAlarmState({ health: { status: "alarm", workflows: [incident] } });
+  assert.equal(state.open_incident_count, 1, "multiple stale lanes produce one clock incident");
+  assert.equal(state.open_incidents[0].workflow, "a1-external-clock");
+  const body = buildIssueBody([incident]);
+  assert.match(body, /A1 external clock/);
+  assert.match(body, /last marked run: 300/);
+  assert.match(body, /fetch-defillama.yml/);
+  const fresh = marked(clocked.file, "2026-10-12T09:05:00.000Z", { status: "queued", conclusion: null });
+  const cleared = evaluateExternalClock(clocked, [fresh, old], { now });
+  assert.equal(cleared.status, "ok", "run creation is the clock's outcome, even if queued");
+  assert.equal(aggregateExternalClockHealth([cleared]).status, "ok");
+  assert.equal(evaluateExternalClock(clocked, [{ ...fresh, display_title: "Human dispatch" }, old], { now }).status, "alarm");
+  assert.equal(evaluateExternalClock(clocked, [], { now: Date.parse("2026-10-11T03:59:00Z") }).missed_clock_slot_count, 0,
+    "a new installation cannot miss pre-admission slots");
+  assert.equal(evaluateExternalClock(clocked, [], { now: Date.parse("2026-10-11T06:10:00Z") }).status, "alarm",
+    "never creating a marked run also fires after three declared slots");
+  assert.equal(aggregateExternalClockHealth([{ file: clocked.file, status: "unknown" }]).status, "unknown",
+    "unreadable clock evidence must not clear an incident");
+}
+
+console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors plus registry producers, x${MISSED_WINDOW_MULTIPLIER} tolerance; A1 clock fire/recovery)`);
