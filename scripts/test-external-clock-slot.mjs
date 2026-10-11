@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { admissionDecision, scheduledSlot, checkAdmission, sourceWasClockNoop } from "./check-external-clock-slot.mjs";
-import { EXTERNAL_CLOCK_CRONS, externalClockCrons, dueDispatches } from "../ops/a1-lanes/external-clock.mjs";
+import { EXTERNAL_CLOCK_CRONS, externalClockCrons, dueDispatches, workerBudgetJobs } from "../ops/a1-lanes/external-clock.mjs";
 import { deriveWorkflowWatchPolicy, evaluateExternalClock, evaluateWorkflow } from "./ops/check-pipeline-job-health.mjs";
 
 const file = "fetch-fred-macro.yml";
@@ -32,7 +32,27 @@ assert.throws(() => admissionDecision({ ...base, eventName: "workflow_dispatch",
 assert.throws(() => admissionDecision({ ...base, eventName: "workflow_dispatch",
   event: { inputs: { ...marker, external_clock_slot: "2026-10-13T08:00:00.000Z" } } }), /Invalid/);
 assert.equal(admissionDecision({ ...base, file: "worker-request-budget-alarm.yml",
-  event: { schedule: "17 2,14 * * *" } }).reason, "github-only-schedule");
+  event: { schedule: "0 5 * * *" } }).reason, "github-only-schedule");
+
+for (const [cron, stamp, expected] of [
+  ["7 * * * *", "2026-10-12T02:07:00.000Z", { requests: true, telemetry: false }],
+  ["17 2,14 * * *", "2026-10-12T02:17:00.000Z", { requests: false, telemetry: true }],
+  ["17 2,14 * * *", "2026-10-12T14:17:00.000Z", { requests: false, telemetry: true }],
+]) {
+  const budgetFile = "worker-request-budget-alarm.yml";
+  assert.ok(dueDispatches(new Date(stamp)).some((row) => row.file === budgetFile));
+  assert.deepEqual(workerBudgetJobs("schedule", { schedule: cron }), expected);
+  const inputs = { external_clock: "a1-v1", external_clock_slot: stamp };
+  assert.deepEqual(workerBudgetJobs("workflow_dispatch", { inputs }), expected);
+  const proof = { ...success, created_at: stamp, display_title: `external-clock/a1/v1 ${budgetFile} ${stamp}` };
+  assert.equal(admissionDecision({ ...base, file: budgetFile,
+    currentRun: { ...currentRun, created_at: new Date(Date.parse(stamp) + 30 * 60_000).toISOString() },
+    event: { schedule: cron }, runs: [proof] }).skip, true,
+    "the delayed GitHub budget job skips only the same successful external slot");
+}
+assert.deepEqual(workerBudgetJobs("workflow_dispatch", { inputs: {} }), { requests: true, telemetry: true });
+assert.deepEqual(workerBudgetJobs("workflow_dispatch", { inputs: { external_clock: "a1-v1", external_clock_slot: "invalid" } }),
+  { requests: false, telemetry: false });
 
 for (const cron of ["30 2 * * *", "30 9 * * *"]) {
   const multiFile = "update-manifest.yml";
@@ -83,6 +103,12 @@ try {
   const brokenMarker = spawnSync(process.execPath, [cli, file], {
     env: { ...env, GITHUB_EVENT_NAME: "workflow_dispatch" }, encoding: "utf8" });
   assert.notEqual(brokenMarker.status, 0, "unmeasurable marked admission must be visible as failure");
+  fs.writeFileSync(eventPath, JSON.stringify({ inputs: {} }));
+  fs.writeFileSync(outputPath, "");
+  const manualBudget = spawnSync(process.execPath, [cli, "worker-request-budget-alarm.yml"], {
+    env: { ...env, GITHUB_EVENT_NAME: "workflow_dispatch" }, encoding: "utf8" });
+  assert.equal(manualBudget.status, 0);
+  assert.equal(fs.readFileSync(outputPath, "utf8"), "skip=false\ncheck_budget=true\ncheck_telemetry=true\n");
 } finally {
   fs.rmSync(fixture, { recursive: true, force: true });
 }

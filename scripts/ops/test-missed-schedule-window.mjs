@@ -386,8 +386,8 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     "marked budget dispatch satisfies the hourly slot");
   assert.equal(externalClockSlot({ ...budget, crons: ["17 2,14 * * *"] }, budgetRun), null,
     "hourly budget dispatch cannot satisfy the telemetry schedule");
-  assert.equal(externalClockSlot(budget, marked(budget.file, "2026-08-21T02:17:00.000Z")), null,
-    "a telemetry minute is not an admitted external slot");
+  assert.equal(externalClockSlot(budget, marked(budget.file, "2026-08-21T02:17:00.000Z")), Date.parse("2026-08-21T02:17:00.000Z"),
+    "the telemetry clock has the same marked-slot evidence as the hourly budget");
   assert.deepEqual(dueDispatches(new Date("2026-08-21T01:07:00Z")).map(({ file }) => file),
     ["pins-autosync.yml", budget.file]);
   const restore = detector("retention-restore.yml", RESTORE_CRON);
