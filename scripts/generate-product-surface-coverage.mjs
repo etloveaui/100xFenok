@@ -408,6 +408,13 @@ if (
 }
 const marketFactsCoreComplete = marketFactsSourceDiagnostics.core_price_source_complete === true;
 const stockDetailSourceAsOf = marketFactsCoreSourceAsOf;
+// These three surfaces consume the same selected-price core. Keep its existing
+// seven-session product window distinct from the six-session Yahoo inventory.
+function marketFactsPriceFreshness(label) {
+  return freshness(label, marketFactsCoreSourceAsOf, 7, {
+    calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE,
+  });
+}
 // StockAnalysis publishes quote-level dates, but no aggregate publication date.
 // Legacy aggregate stamps were collection dates promoted into source_as_of.
 const marketEventsSourceAsOf = null;
@@ -585,7 +592,7 @@ const surfaces = [
       check("한글 공시", counts.edgarByTicker > 0 ? "partial" : "unavailable", `${counts.edgarByTicker.toLocaleString("ko-KR")}개 by-ticker`, { count: counts.edgarByTicker, reason: "요약 보유 티커만 표시" }),
       check("이벤트 보강", stockSurfaces.surfaceCount > 0 ? "ready" : "pending", `${stockSurfaces.surfaceCount}개 화면 연결`, { count: stockSurfaces.surfaceCount }),
       marketFactsCompletenessCheck(),
-      freshness("가격 원천 기준일", stockDetailSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      marketFactsPriceFreshness("가격 원천 기준일"),
       familySourceCheck("yahoo_batch_quote_history", "야후 원천 신선도"),
       freshness("공시 원천 기준일", null, 14, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
@@ -605,7 +612,7 @@ const surfaces = [
       familySourceCheck("fred_yardeni", "Yardeni 원천 신선도", yardeniSourceAsOf),
       familySourceCheck("yahoo_batch_quote_history", "야후 원천 신선도"),
       marketFactsCompletenessCheck("시장 데이터 원천 완전성"),
-      freshness("시장 데이터 기준일", marketFactsCoreSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      marketFactsPriceFreshness("시장 데이터 기준일"),
     ],
     "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
     { as_of: marketFactsAsOf, ...sourceStamp(productStampEvidence.market_valuation.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.market_valuation },
@@ -637,7 +644,7 @@ const surfaces = [
       check("기관 보유", counts.sec13fJson > 0 ? "ready" : "pending", `${counts.sec13fJson.toLocaleString("ko-KR")}개 13F JSON`, { count: counts.sec13fJson }),
       familySourceCheck("yahoo_batch_quote_history", "야후 원천 신선도"),
       marketFactsCompletenessCheck("섹터 가격 원천 완전성"),
-      freshness("섹터 데이터 기준일", sectorsSourceAsOf, 14, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      marketFactsPriceFreshness("섹터 데이터 기준일"),
     ],
     "섹터 화면은 섹터 ETF 흐름, 산업 분류, 기관 보유를 한 책임 화면으로 묶는다.",
     { as_of: latestDate(eventSurfaceAsOf, marketFactsAsOf), ...sourceStamp(productStampEvidence.sectors.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.sectors },
