@@ -37,9 +37,9 @@ export const FRESHNESS_CLASSES = Object.freeze({
 });
 
 export const FAMILY_POLICY = Object.freeze({
-  earnings_overview: Object.freeze({
-    cadence: "quarterly", releaseLagDays: 45, supplier: "automated", calendar: "calendar",
-    label: "SEC reported earnings quarter",
+  briefing: Object.freeze({
+    cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading",
+    label: "Morning brief after the US market session",
   }),
   benchmarks: Object.freeze({
     cadence: "weekly",
