@@ -5,6 +5,33 @@ export const FAMILY_HEALTH_SCHEMA = "family-health/1";
 export const HEALTH_REFRESH_MS = 24 * 60 * 60 * 1000;
 export const healthKey = (family = ETF_FAMILY) => `health/${family}.json`;
 
+// Selection state records the publication decision. Source freshness is a
+// present-time observation and must never mutate that immutable decision.
+export function sourceFreshness(sourceAsOf, now, policy) {
+  const age = Date.parse(now) - Date.parse(sourceAsOf);
+  if (!sourceAsOf || !Number.isFinite(age) || age < 0) return "unknown";
+  if (age <= policy.fresh_ttl_hours * 3600_000) return "fresh";
+  return age <= policy.emergency_lkg_ttl_days * 86400_000 ? "stale" : "expired";
+}
+
+export function summarizeSourceHealth(members, now, policy) {
+  const rows = members.map(row => ({ ...row,
+    source_freshness: sourceFreshness(row.source_as_of, now, policy) }));
+  const counts = { fresh: 0, stale: 0, expired: 0, unknown: 0 };
+  for (const row of rows) counts[row.source_freshness] += 1;
+  const dated = rows.filter(row => row.source_freshness !== "unknown")
+    .sort((a, b) => Date.parse(a.source_as_of) - Date.parse(b.source_as_of) || a.member.localeCompare(b.member));
+  const ratio = rows.length ? counts.fresh / rows.length : 0;
+  return { observed_at: now, policy: { fresh_ttl_hours: policy.fresh_ttl_hours,
+    emergency_lkg_ttl_days: policy.emergency_lkg_ttl_days },
+    status: !rows.length ? "unknown" : ratio >= 0.95 ? "fresh" : ratio >= 0.8 ? "degraded" : "stopped",
+    reason: !rows.length ? "members_unavailable" : ratio >= 0.95 ? null : "member_ratio_low",
+    total_members: rows.length, fresh_members: counts.fresh, counts,
+    oldest_source_date: dated[0]?.source_as_of ?? null,
+    oldest_source_member: dated[0]?.member ?? null,
+    newest_source_date: dated.at(-1)?.source_as_of ?? null };
+}
+
 export function validateFamilyHealth(record, family = ETF_FAMILY) {
   if (record?.schema_version !== FAMILY_HEALTH_SCHEMA || record.family !== family
     || !Number.isFinite(Date.parse(record.observed_at))
