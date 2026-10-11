@@ -780,7 +780,9 @@ export default function RegimeClient() {
       pulses: signalPulseList,
       tone: strongestTone(signalPulseList),
       ready: feedReady.computed,
-      asOf: latestDatedSourceDate(signalPulseList.map((pulse) => pulse.asOf)),
+      // The four signals refresh on different cadences (banking health is
+      // quarterly), so this axis prints its oldest input date, not the newest.
+      asOf: oldestDatedSourceDate(signalPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "macro",

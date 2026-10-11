@@ -133,6 +133,7 @@ interface RawActivitySurveys {
 }
 interface RawComputedSignal {
   overallStatus?: string;
+  as_of?: string | null;
   metrics?: Record<string, unknown> | null;
   buy_active?: number | boolean | null;
   warn_active?: number | boolean | null;
@@ -733,7 +734,9 @@ function buildSignalPulses(signals: RawComputedSignals | null): MarketSignalPuls
         ...def,
         status,
         statusLabel: statusLabel(status),
-        asOf: signals?.as_of ?? null,
+        // Each signal carries its own data date; the document-level as_of is
+        // only the day the signals were computed.
+        asOf: signals?.signals?.[def.id]?.as_of ?? null,
         tone: statusTone(status),
       };
     })
