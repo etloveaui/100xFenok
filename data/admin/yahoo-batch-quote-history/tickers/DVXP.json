@@ -49,18 +49,26 @@
     "quote_as_of": "2026-08-26T20:00:00Z",
     "source_as_of": "2026-08-26T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
-  "stale": {
-    "age_business_days": 26,
-    "classified_at": "2026-10-04T17:02:58Z",
-    "expected_resolution": "next_yahoo_acquisition",
-    "max_business_days": 6,
-    "message": "DVXP holds LKG because Yahoo source date 2026-08-26T20:00:00Z is 26 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
-    "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-26T20:00:00Z"
+  "terminal": {
+    "artifact_generated_at": null,
+    "artifact_path": null,
+    "classified_at": "2026-10-11T03:20:01Z",
+    "evidence": [
+      {
+        "alias_target": null,
+        "effective_date": "2026-08-27",
+        "reason": "WEBs SEC liquidation supplement; trading halted after 2026-08-26",
+        "source": "verified_public_lifecycle",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1580843/000121390026090266/ea0302118-01_497.htm",
+        "symbol": "DVXP",
+        "terminal": true
+      }
+    ],
+    "evidence_sha256": null
   },
   "ticker": "DVXP",
-  "updated_at": "2026-10-10T02:27:23Z"
+  "updated_at": "2026-10-11T03:20:01Z"
 }
