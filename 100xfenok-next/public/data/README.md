@@ -18,7 +18,7 @@
 | computed/ | 6,569 | Generated | Cross-source computed signals and RIM input payloads |
 | [calendar/](calendar/README.md) | 2 | Daily / on edit | BujaBot USD Google Calendar |
 | `damodaran/` | source-only; no public payload | Yearly + ERP interim | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,084 | On-demand | Global Scouter Tool |
+| [global-scouter/](global-scouter/README.md) | 1,082 | On-demand | Global Scouter Tool |
 | `indices/` | source-only; no public payload | Manual | Various |
 | `macro/` | public subset; source catalog owns metadata | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
 | `sec-13f/` | public subset; source catalog owns metadata | Quarterly | SEC EDGAR |
@@ -66,8 +66,8 @@
 - 13 indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (22) + Economic Indicators (1,080 records) + raw preservation files (9)
-- **v2.4.0**: 2026-10-04 weekly refresh (2026-10-02 source); downstream screener artifacts use the existing hosted rebuild path; 1,080 indicators
+- 1,064 stock profiles + ETFs (22) + Economic Indicators (1,081 records) + raw preservation files (9)
+- **v2.4.0**: 2026-10-11 weekly refresh (2026-10-09 source); downstream screener artifacts use the existing hosted rebuild path; 1,081 indicators
 - v2.3.0: Raw source-sheet preservation + FY+1~FY+3 forward/revision detail extensions
 - v2.2.0: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json

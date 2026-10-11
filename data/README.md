@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-10-06
+> **Last Updated**: 2026-10-11
 > **Scope**: Canonical source tree (`data/`) — **42,090 tracked JSON payload files**
 > **Public projection**: `100xfenok-next/public/data/` — **11,007 tracked JSON payload files**, an intentionally curated subset
 > **Catalog contract**: This file owns the source catalog. Update the relevant folder README with payload changes and record material changes in `docs/CHANGELOG.md`.
@@ -18,7 +18,7 @@
 | computed/ | 6,569 | Generated | Cross-source computed signals and RIM input payloads |
 | [calendar/](calendar/README.md) | 2 | Daily / on edit | BujaBot USD Google Calendar |
 | [damodaran/](damodaran/README.md) | 7 | Yearly + ERP interim | NYU Stern (Damodaran) |
-| [global-scouter/](global-scouter/README.md) | 1,084 | On-demand | Global Scouter Tool |
+| [global-scouter/](global-scouter/README.md) | 1,082 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 10 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
 | [sec-13f/](sec-13f/README.md) | 82 | Quarterly | SEC EDGAR |
@@ -66,8 +66,8 @@
 - 13 indicators
 
 ### Stock Screening (global-scouter/)
-- 1,066 stock profiles + ETFs (22) + Economic Indicators (1,080 records) + raw preservation files (9)
-- **v2.4.0**: 2026-10-04 weekly refresh (2026-10-02 source); downstream screener artifacts use the existing hosted rebuild path; 1,080 indicators
+- 1,064 stock profiles + ETFs (22) + Economic Indicators (1,081 records) + raw preservation files (9)
+- **v2.4.0**: 2026-10-11 weekly refresh (2026-10-09 source); downstream screener artifacts use the existing hosted rebuild path; 1,081 indicators
 - v2.3.0: Raw source-sheet preservation + FY+1~FY+3 forward/revision detail extensions
 - v2.2.0: Extended fields (eps_consensus, growth_consensus, per_bands, fiscal_month)
 - v2.1.0: Added etfs/index.json, indicators/economic.json
