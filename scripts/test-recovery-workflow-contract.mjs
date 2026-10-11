@@ -6,9 +6,9 @@
 //     SlickCharts History recovery workflow with types [completed].
 //  2. deploy-worker.yml recovery-gate job grants contents: read + actions: read.
 //  3. deploy-worker.yml has the check-then-start race re-check step.
-//  4. both recovery gate call sites (deploy-worker + update-manifest) name only
-//     the surviving slickcharts-history.yml — retired lanes must not reappear.
-//  5. update-manifest.yml dispatch step is gated on the recovery-gate output.
+//  4. both deploy-worker recovery checks retain the surviving SlickCharts lane.
+//  5. X7 coalesces manifest data publication into the daily deploy; the removed
+//     manifest dispatch cannot supersede a pending code deploy.
 //  6. slickcharts-history.yml keeps actions: write (commits + fetches).
 
 import assert from "node:assert/strict";
@@ -61,19 +61,10 @@ check("deploy-worker has the check-then-start race re-check step", () => {
   assert.match(deployYml, /Re-check recovery gate \(check-then-start race\)/);
   assert.match(deployYml, /DEPLOY_DEFERRED=true/);
 });
-check("update-manifest recovery gate names only the surviving slickcharts-history.yml", () => {
-  const args = recoveryWorkflowArgs(manifestYml);
-  assert.ok(args.length >= 1, "update-manifest carries the recovery-workflows argument");
-  for (const arg of args) {
-    assert.equal(arg, "slickcharts-history.yml", "retired recovery lanes must not reappear in the gate");
-  }
-});
-check("update-manifest dispatch step is gated on recovery-gate output", () => {
-  assert.match(manifestYml, /steps\.recovery-gate\.outputs\.skip\s*!=\s*'true'/);
-});
-check("update-manifest guard step maps proceed-uncertain to a warning", () => {
-  assert.match(manifestYml, /proceed-uncertain/);
-  assert.match(manifestYml, /::warning::/);
+check("data-only manifest publication coalesces into the daily deploy", () => {
+  assert.doesNotMatch(manifestYml, /--workflow deploy-worker\.yml/);
+  assert.match(deployYml, /cron: '30 3 \* \* \*'/);
+  assert.doesNotMatch(deployYml.split("  schedule:")[0], /^\s+- '100xfenok-next\/public\/data\/\*\*'/m);
 });
 check("slickcharts-history keeps actions: write", () => {
   assert.match(historyYml, /actions:\s*write/);

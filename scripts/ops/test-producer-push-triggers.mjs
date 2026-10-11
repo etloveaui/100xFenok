@@ -58,8 +58,6 @@ function pushPathBlock(source) {
 const PRODUCER_PATH_PUSH_FILTER_REASONS = Object.freeze({
   "fetch-fdic.yml":
     "ALIVE, A1 service push. Run 36850851085 on 2026-10-01 was a push from f8fd1cd24b3, committed by runtime-proof-worker after the existing A1 oneshot succeeded. The external Git credential triggered publication and computed-signals without an app build. Exact canonical/status paths are intentional; failed A1 receipts fail before publication. GitHub collection remains manual fallback after the A1 timer cutover",
-  "deploy-worker.yml":
-    "ALIVE, human-push convenience. 1,318 push runs; the newest 100 are all actor etloveaui, most recently 'fix(ui): use defined Edge score token' on 2026-08-20. A person changing the site expects a redeploy, and producer commits reach it only through Update Manifest, never through this filter",
   "update-manifest.yml":
     "ALIVE, human-push convenience. 2,372 push runs, the newest being this session's own SEC 13F re-pin on 2026-08-21. Thirteen of the newest hundred carry producer-shaped 'data:' messages but every one was pushed by a person; a GITHUB_TOKEN push cannot start a workflow, so a run existing IS the proof it was human",
   "validate-workflows.yml":

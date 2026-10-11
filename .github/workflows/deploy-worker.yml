@@ -2,8 +2,8 @@
 #
 # Triggers:
 #   - push to main affecting source/UI/legacy paths -> immediate deploy
-#     (generic nested data is excluded, but app-served /data assets are
-#     re-included so Worker bundles do not lag behind Pages)
+#     (all data-only changes coalesce into the daily catch-up; live enrolled
+#     families still publish independently through the data plane)
 #   - daily schedule -> picks up bot-authored data refreshes into the bundle
 #   - workflow_dispatch -> manual deploy
 #
@@ -38,8 +38,6 @@ on:
       - 'admin/**'
       - 'posts/**'
       - '!**/data/**'
-      - '100xfenok-next/public/data/**'
-      - '!100xfenok-next/public/data/earnings-overview/**'
       - '.github/workflows/deploy-worker.yml'
   schedule:
     - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
@@ -70,6 +68,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/check-recovery-deploy-gate.mjs
 
       - name: Recovery deploy gate (skip data-serving deploys while SlickCharts recovery is in flight)
         id: gate
@@ -77,6 +78,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          # A catch-up must not replace a pending code deploy in the single
+          # pending slot. A later code push can still replace queued catch-up.
+          if [ "${{ github.event_name }}" != "push" ]; then
+            for status in queued requested waiting pending; do
+              count="$(gh run list --workflow deploy-worker.yml --branch main --event push --status "$status" --limit 1 --json databaseId --jq 'length')"
+              if [ "$count" -gt 0 ]; then
+                echo "skip=true" >> "$GITHUB_OUTPUT"
+                echo "::notice::Code deploy pending; data catch-up remains on the next daily slot or intervening code deploy."
+                exit 0
+              fi
+            done
+          fi
           guard="$(node scripts/check-recovery-deploy-gate.mjs \
             --mode push \
             --event-name "${{ github.event_name }}" \
@@ -106,6 +119,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 80
+    permissions:
+      contents: read
+      actions: write  # Replace this workflow's one current build-cache entry.
     concurrency:
       group: workers-100xfenok-main-deploy
       cancel-in-progress: false
@@ -123,6 +139,12 @@ jobs:
         with:
           fetch-depth: 0
           filter: blob:none
+          # Fail fast before fetching/materializing the 72k-file data tree.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /100xfenok-next/
+            !/100xfenok-next/public/data/
+            /data/catalog/macro-series.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -131,20 +153,36 @@ jobs:
           cache: npm
           cache-dependency-path: 100xfenok-next/package-lock.json
 
-      - name: Restore Next build cache
-        uses: actions/cache@v4
+      - name: Install dependencies
+        working-directory: 100xfenok-next
+        run: npm ci
+
+      - name: Typecheck before data materialization and OpenNext
+        working-directory: 100xfenok-next
+        run: |
+          set -euo pipefail
+          npm run build:version
+          mkdir -p public/data/catalog
+          cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
+          NEXT_BUILD_TARGET=cloudflare npx --no-install next typegen
+          npm run typecheck
+
+      - name: Materialize build inputs after typecheck
+        run: |
+          # All canonical data and public fallbacks remain: the live plane can
+          # fall through to ASSETS. Only non-runtime root docs/ops are omitted.
+          git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
+
+      - name: Restore current Next build cache
+        uses: actions/cache/restore@v4
+        id: next-cache
         with:
           path: |
             100xfenok-next/.next/cache
             100xfenok-next/.open-next/cache
-          key: next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-${{ github.sha }}
+          key: next-build-current-${{ runner.os }}-${{ hashFiles('100xfenok-next/package-lock.json') }}
           restore-keys: |
             next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-
-            next-build-
-
-      - name: Install dependencies
-        working-directory: 100xfenok-next
-        run: npm ci
 
       - name: Verify admin static asset source boundary
         run: |
@@ -517,3 +555,53 @@ jobs:
           QA_ADMIN_SESSION_COOKIE: ${{ secrets.QA_ADMIN_SESSION_COOKIE }}
           QA_ROUTE_IFRAME_ALLOW_REMOTE: "1"
         run: node scripts/check-route-iframe-contract.mjs --base-url https://100xfenok.etloveaui.workers.dev --scope admin
+
+      # Cache objects are immutable. The deploy job is serialized, so replace
+      # only our current key after every deploy smoke passes. Never touch npm
+      # or another workflow's cache. A cache failure cannot revoke a live green.
+      - name: Retire previous current Next cache
+        if: success() && env.DEPLOY_DEFERRED != 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CACHE_KEY: next-build-current-${{ runner.os }}-${{ hashFiles('100xfenok-next/package-lock.json') }}
+        run: |
+          set -euo pipefail
+          gh cache list --ref refs/heads/main --key "$CACHE_KEY" --limit 100 --json id,key > "$RUNNER_TEMP/next-cache-ids.json"
+          jq -r --arg key "$CACHE_KEY" '.[] | select(.key == $key) | .id' "$RUNNER_TEMP/next-cache-ids.json" > "$RUNNER_TEMP/next-cache-ids"
+          while IFS= read -r cache_id; do
+            gh cache delete "$cache_id"
+          done < "$RUNNER_TEMP/next-cache-ids"
+
+      - name: Save current Next build cache
+        id: save-next-cache
+        if: success() && env.DEPLOY_DEFERRED != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            100xfenok-next/.next/cache
+            100xfenok-next/.open-next/cache
+          key: next-build-current-${{ runner.os }}-${{ hashFiles('100xfenok-next/package-lock.json') }}
+
+      - name: Retire superseded Next build caches
+        if: success() && env.DEPLOY_DEFERRED != 'true' && steps.save-next-cache.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CACHE_KEY: next-build-current-${{ runner.os }}-${{ hashFiles('100xfenok-next/package-lock.json') }}
+        run: |
+          set -euo pipefail
+          gh cache list --ref refs/heads/main --key next-build- --limit 100 --json id,key,sizeInBytes > "$RUNNER_TEMP/next-cache-list.json"
+          # A save action can warn without failing. Confirm the replacement
+          # exists before deleting any old cache; all other prefixes survive.
+          if jq -e --arg key "$CACHE_KEY" 'any(.[]; .key == $key)' "$RUNNER_TEMP/next-cache-list.json" > /dev/null; then
+            jq -r --arg key "$CACHE_KEY" '.[] | select((.key | startswith("next-build-")) and .key != $key) | .id' "$RUNNER_TEMP/next-cache-list.json" > "$RUNNER_TEMP/old-next-cache-ids"
+            while IFS= read -r cache_id; do
+              gh cache delete "$cache_id"
+            done < "$RUNNER_TEMP/old-next-cache-ids"
+          else
+            echo "::warning::Current Next cache was not saved; retaining old caches."
+          fi

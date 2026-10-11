@@ -19,4 +19,16 @@ const bundleBudgetStart = buildDeployJob.indexOf("      - name: Verify Worker bu
 assert.ok(bundleBudgetStart > buildStart,
   "bundle budget requires completed build output and must remain immediately after the build");
 
+const quality = fs.readFileSync(new URL("../.github/workflows/app-quality.yml", import.meta.url), "utf8");
+const recoveryJob = workflow.split("  recovery-gate:\n")[1].split("  build-deploy:\n")[0];
+assert.match(recoveryJob, /sparse-checkout: \/scripts\/check-recovery-deploy-gate\.mjs/);
+assert.ok(buildDeployJob.indexOf("npm run typecheck") < buildDeployJob.indexOf("git sparse-checkout set"),
+  "type errors must stop before the large data checkout and materialization");
+assert.match(quality, /push:\n    branches: \[main\]/);
+assert.match(quality, /run: npm test/);
+assert.doesNotMatch(workflow, /key: next-build-.*github\.sha/,
+  "each commit must not allocate another 400 MB cache");
+assert.ok(buildDeployJob.indexOf("Save current Next build cache") > buildDeployJob.indexOf("Deploy to Cloudflare Workers"));
+assert.match(workflow, /check-deploy-source-fence\.mjs/);
+assert.match(workflow, /write-deploy-provenance\.mjs/);
 console.log("test-deploy-worker-efficiency: ok");
