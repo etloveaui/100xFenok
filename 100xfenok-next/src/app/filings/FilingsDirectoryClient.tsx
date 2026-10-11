@@ -47,7 +47,8 @@ export default function FilingsDirectoryClient() {
     <header>
       <h1 className="text-xl font-bold">공시 한글 요약</h1>
       <p className="mt-2 text-sm text-slate-600">종목을 고르면 공시 목록, 한글 요약과 SEC 원문을 확인할 수 있습니다.</p>
-      {directory ? <p className="mt-2 text-sm text-slate-500">{directory.tickers.length}개 종목 · 목록 갱신 {directory.updated}</p> : null}
+      {directory ? <p className="mt-2 text-sm text-slate-500">{directory.tickers.length}개 종목 · 공시 목록 갱신 {directory.updated}</p> : null}
+      {directory ? <p className="mt-1 text-sm text-slate-500">이 날짜는 공시 목록을 갱신한 날이며 한글 요약을 쓴 날이 아닙니다. 한글 요약은 일부 공시에만 있고, 종목을 열면 요약 건수와 요약 준비 전 공시를 확인할 수 있습니다.</p> : null}
     </header>
     <label className="block text-sm font-semibold" htmlFor="filings-ticker-search">종목 검색
       <input id="filings-ticker-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)}
