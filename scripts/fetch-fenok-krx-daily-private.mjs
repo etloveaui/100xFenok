@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
+import { isBusinessDay } from "./lib/market-calendar.mjs";
 
 import {
   LaneLkgStore,
@@ -263,10 +264,8 @@ function addDaysBasDd(basDd, deltaDays) {
   return `${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, "0")}${String(date.getUTCDate()).padStart(2, "0")}`;
 }
 
-function isWeekdayBasDd(basDd) {
-  const date = new Date(Date.UTC(Number(basDd.slice(0, 4)), Number(basDd.slice(4, 6)) - 1, Number(basDd.slice(6, 8))));
-  const day = date.getUTCDay();
-  return day !== 0 && day !== 6;
+function isKrxSessionBasDd(basDd) {
+  return isBusinessDay(isoDate(basDd), "krx_market");
 }
 
 function seoulCivilDate(now = new Date()) {
@@ -281,7 +280,7 @@ function seoulCivilDate(now = new Date()) {
 
 function latestKstWeekday(now = new Date()) {
   let cursor = seoulCivilDate(now).replaceAll("-", "");
-  while (!isWeekdayBasDd(cursor)) cursor = addDaysBasDd(cursor, -1);
+  while (!isKrxSessionBasDd(cursor)) cursor = addDaysBasDd(cursor, -1);
   return cursor;
 }
 
@@ -291,7 +290,7 @@ function generateWeekdayDates(endDate, days) {
   const dates = [];
   let cursor = normalizedEnd;
   while (dates.length < days) {
-    if (isWeekdayBasDd(cursor)) dates.push(cursor);
+    if (isKrxSessionBasDd(cursor)) dates.push(cursor);
     cursor = addDaysBasDd(cursor, -1);
   }
   return dates.reverse();
@@ -759,14 +758,15 @@ function shortErrorMessage(error) {
 }
 
 function buildConfig(rawArgs) {
-  const endDate = normalizeBasDd(rawArgs.endDate || latestKstWeekday(), "end-date");
+  const requestedEndDate = normalizeBasDd(rawArgs.endDate || latestKstWeekday(), "end-date");
+  const dates = generateWeekdayDates(requestedEndDate, rawArgs.days);
+  const endDate = dates.at(-1);
   const runId = rawArgs.runId || `krx_daily_${endDate}`;
   const outputRoot = resolveRepoPath(rawArgs.outputRoot || path.join(DEFAULT_OUTPUT_PARENT, runId));
   const bridgeIndexPath = resolveRepoPath(rawArgs.bridgeIndex || BRIDGE_INDEX_DEFAULT);
   const publicBridgeHistoryPath = resolveRepoPath(rawArgs.publicBridgeHistory || PUBLIC_BRIDGE_HISTORY_DEFAULT);
   const publicIndexClosesPath = resolveRepoPath(rawArgs.publicIndexCloses || PUBLIC_INDEX_CLOSES_DEFAULT);
   const publicKosdaqMarketCapPath = resolveRepoPath(rawArgs.publicKosdaqMarketCap || PUBLIC_KOSDAQ_MARKET_CAP_DEFAULT);
-  const dates = generateWeekdayDates(endDate, rawArgs.days);
   const endpoints = endpointList();
   const estimatedCalls = dates.length * endpoints.length;
   const requestBudget = {
@@ -1511,7 +1511,7 @@ function buildManifest(config, startedAt) {
       dates: config.dates.map(isoDate),
       date_count: config.dates.length,
       planned_full_trading_day_count: FULL_TARGET_TRADING_DAYS,
-      trading_day_generation_note: "Generated as weekdays only; exchange holiday calendar is not applied by this runner.",
+      trading_day_generation_note: "Generated from the shared krx_market session calendar, excluding weekends and exchange holidays.",
     },
     endpoint_count: config.endpoints.length,
     attempted_call_count: config.estimatedCalls,

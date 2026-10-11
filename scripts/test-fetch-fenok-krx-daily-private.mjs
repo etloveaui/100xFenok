@@ -63,6 +63,10 @@ for (const [eventName, runAttempt] of [["workflow_dispatch", 1], ["schedule", 2]
 
 
 assert.deepEqual(generateWeekdayDates("20260629", 3), ["20260625", "20260626", "20260629"]);
+assert.deepEqual(generateWeekdayDates("20260928", 3), ["20260922", "20260923", "20260928"]);
+assert.deepEqual(generateWeekdayDates("20261012", 3), ["20261007", "20261008", "20261012"]);
+assert.deepEqual(generateWeekdayDates("20261005", 1), ["20261002"]);
+assert.equal(buildConfig(parseArgs(["--end-date", "20260925", "--days", "1"])).endDate, "20260923");
 assert.equal(endpointClass("stk_bydd_trd"), "daily-history");
 assert.equal(endpointClass("stk_isu_base_info"), "snapshot");
 assert.equal(endpointClass("sri_bond_info"), "snapshot");

@@ -186,7 +186,10 @@ jobs:
           WORST_EXIT_CODE=0
           trap 'rm -f "$FINAL_CANDIDATE_OUTPUT" "${CANDIDATE_OUTPUT:-}"' EXIT
           for offset in $(seq 0 "$WALKBACK_DAYS"); do
-            CANDIDATE="$(date -u -d "${BASE_ISO} -${offset} day" +%Y%m%d)"
+            CANDIDATE="$(node --input-type=module -e '
+              import { walkbackBusinessDays } from "./scripts/lib/market-calendar.mjs";
+              process.stdout.write(walkbackBusinessDays(process.argv[1], Number(process.argv[2]), "krx_market").replaceAll("-", ""));
+            ' "$BASE_ISO" "$offset")"
             RUN_ID="krx_daily_${CANDIDATE}"
             CANDIDATE_OUTPUT="$(mktemp)"
             echo "Trying KRX basDd=${CANDIDATE} (offset=${offset}/${WALKBACK_DAYS})"
