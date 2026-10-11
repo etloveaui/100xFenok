@@ -43,8 +43,8 @@ export declare const FAMILY_POLICY: Readonly<Record<string, FamilyPolicy>>;
 export declare const FRED_BANKING_FILE_POLICY: Readonly<Record<string, FamilyPolicy>>;
 
 export declare function todayKST(now?: Date): string;
-export declare function policyToday(now: string | Date, policy: FamilyPolicy | null): string;
-export declare function dateOnly(value: unknown): string | null;
+export declare function policyToday(now: string | Date, policy: Pick<FamilyPolicy, "calendar"> | null): string;
+export declare function dateOnly(value: unknown, policy?: Pick<FamilyPolicy, "calendar"> | null): string | null;
 export declare function ageInDays(asOf: string, today: string): number;
 export declare function ageInTradingDays(asOf: string, today: string): number;
 export declare function sourceAgeAnchor(asOf: string, policy: FamilyPolicy): string | null;

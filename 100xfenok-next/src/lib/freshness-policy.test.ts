@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { FAMILY_POLICY, dateOnly, freshnessAgeOverride, freshnessMessage, freshnessRailState, freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "./freshness-policy.mjs";
+import type { FamilyPolicy } from "./freshness-policy.mjs";
 
 import { dateOnly as kstDateOnly, daysUntilKstDate, isStaleAsOf } from "./data-state";
 
@@ -226,12 +227,12 @@ test("lane-registry drift guard: matching ids keep the same cadence kind", () =>
 
 
 test("timestamp days follow the policy zone; civil dates never shift", () => {
-  const us = { cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading" };
-  const kr = { ...us, calendar: "kr_trading" };
+  const us = { cadence: "daily", releaseLagDays: 0, supplier: "automated", calendar: "us_trading" } satisfies FamilyPolicy;
+  const kr = { ...us, calendar: "kr_trading" } satisfies FamilyPolicy;
   assert.equal(dateOnly("2026-10-06T02:30:00Z", us), "2026-10-05");
   assert.equal(dateOnly("2026-10-05T16:30:00Z", kr), "2026-10-06");
   assert.equal(dateOnly("2026-10-06T02:30:00+09:00"), "2026-10-05");
-  for (const policy of [us, kr, { calendar: "calendar" }]) {
+  for (const policy of [us, kr, { calendar: "calendar" } as const]) {
     assert.equal(dateOnly("2026-10-05", policy), "2026-10-05");
     for (const invalid of ["2026-02-30T00:00:00Z", "2026-10-05garbage", "2026-10-05T00:00:00", "2026-10-05T25:00:00Z"]) {
       assert.equal(dateOnly(invalid, policy), null);
