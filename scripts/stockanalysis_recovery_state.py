@@ -47,6 +47,32 @@ class StockAnalysisRecoveryStateError(RuntimeError):
     """Fail-closed reconciliation error for an expected recovery state."""
 
 
+def failure_class(error: str | None) -> str:
+    text = str(error or "").lower()
+    if "svelte_contract_drift:" in text:
+        return "provider_contract_drift"
+    if "404" in text:
+        return "provider_not_found"
+    if "selected yahoo etf immutable source is invalid" in text:
+        return "fallback_source_invalid"
+    if "regress" in text or "loses canonical" in text:
+        return "candidate_regression"
+    if "invalid holding" in text:
+        return "holdings_invalid"
+    return "other"
+
+
+def failure_counter(state: dict) -> tuple[int, bool]:
+    count = state.get("failure_count")
+    if isinstance(count, int) and not isinstance(count, bool) and count > 0:
+        return count, state.get("failure_count_is_lower_bound") is True
+    # Legacy rows predate the counter. The recorded failure proves at least one
+    # attempt; do not invent the missing history or report it as zero failures.
+    if state.get("retry") is True and state.get("latest_failure"):
+        return 1, True
+    return 0, False
+
+
 def _sha256(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -590,7 +616,8 @@ class StockAnalysisRecoveryStateStore:
         existing = _read_json(self._state_path(kind, entity)) or {}
         # Slim only an entity being touched; existing payload files stay intact.
         keys = {"schema_version", "artifact_kind", "entity", "resolution_state",
-                "retry", "current", "lkg", "updated_at", "latest_failure", "failure_count", "etf_lifecycle"}
+                "retry", "current", "lkg", "updated_at", "latest_failure", "failure_count",
+                "failure_count_is_lower_bound", "etf_lifecycle"}
         state = {key: value for key, value in existing.items() if key in keys}
         failure = state.get("latest_failure")
         if isinstance(failure, dict):
@@ -827,7 +854,8 @@ class StockAnalysisRecoveryStateStore:
             "schema_version": STATE_SCHEMA, "artifact_kind": kind, "entity": entity,
             "resolution_state": "lkg_primary" if lkg else "unavailable", "retry": True,
             "latest_failure": failure, "updated_at": observed_at,
-            "failure_count": int(state.get("failure_count") or 0) + 1,
+            "failure_count": failure_counter(state)[0] + 1,
+            "failure_count_is_lower_bound": failure_counter(state)[1],
         })
         self._results[(kind, entity)] = {"artifact_kind": kind, "entity": entity,
             "error": failure["error"], "data_loss": data_loss}
@@ -866,6 +894,7 @@ class StockAnalysisRecoveryStateStore:
             "failure_count": 0,
         })
         state.pop("latest_failure", None)
+        state.pop("failure_count_is_lower_bound", None)
         if kind == "etf" and state.get("etf_lifecycle"):
             state["etf_lifecycle"].update(status="live", method="valid_provider_detail", attempts=[],
                                            returned_at=state["updated_at"])
@@ -889,6 +918,7 @@ class StockAnalysisRecoveryStateStore:
         counts_by_kind = {kind: dict(counts) for kind in ARTIFACT_KINDS}
         retry_artifacts = []
         degraded_details = []
+        retry_groups = {}
         for kind in ARTIFACT_KINDS:
             for path in sorted((self.root / "states" / kind).glob("*.json")):
                 state = _read_json(path)
@@ -905,16 +935,22 @@ class StockAnalysisRecoveryStateStore:
                     counts_by_kind[kind]["retry"] += 1
                     retry_artifacts.append({"artifact_kind": kind, "entity": entity})
                     failure, lkg = state.get("latest_failure") or {}, state.get("lkg") or {}
+                    category = failure_class(failure.get("error"))
+                    retry_groups.setdefault(category, []).append({"artifact_kind": kind, "entity": entity})
                     degraded_details.append({"artifact_kind": kind, "entity": entity,
                         "resolution_state": resolution, "source_as_of": lkg.get("source_as_of"),
                         "failure_observed_at": failure.get("observed_at"), "error": failure.get("error"),
-                        "failure_count": state.get("failure_count", 0), "data_loss": failure.get("data_loss") is True})
+                        "failure_class": category,
+                        "failure_count": failure_counter(state)[0],
+                        "failure_count_is_lower_bound": failure_counter(state)[1],
+                        "data_loss": failure.get("data_loss") is True})
         errors = [row for row in self._results.values() if "error" in row]
         counts["failed"] = len(errors)
         index = {"schema_version": INDEX_SCHEMA,
             "generated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
             "counts": counts, "counts_by_kind": counts_by_kind, "retry_artifacts": retry_artifacts,
             "degraded_details": degraded_details,
+            "retry_groups": retry_groups,
             "current_results": {"failed": len(errors), "errors": errors}}
         for suffix, kinds in (("tickers", {"stock", "financial"}), ("etfs", {"etf"}),
                               ("surfaces", {"surface"}), ("universes", {"universe"})):
