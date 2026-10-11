@@ -4,7 +4,7 @@ python watch.py [--dry-run] [--state-dir DIR] [--tag TEXT] [--now ISO]
 
 It tells the owner when 100x data collection breaks or a watcher stops: one Korean line per state CHANGE through AA's
 ops-alert route (briefing.alert.ops_send, Gateway class ops_alert). Four reads per run on etloveaui/100xFenok, at
-most 6 GitHub API calls:
+most 7 GitHub API calls:
 
   issues  open issues whose title ends with "alarm" (every alarm workflow titles its issue so; none sets a label)
   alarm   completion time of the newest successful `check` job of pipeline-failure-alarm.yml (the job that judges
