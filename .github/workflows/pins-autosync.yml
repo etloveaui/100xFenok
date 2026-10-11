@@ -1,7 +1,8 @@
 # Pins Autosync — bounded self-healing for the generated projection pins.
 #
 # Regenerate the remaining registry, lane-dashboard and detection projections.
-# The lane shares the global writer queue and stages its direct registry policy.
+# Regeneration uses the lane policy outside the writer queue; only a prepared
+# difference enters its short commit job.
 
 name: Pins Autosync
 run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 pins-autosync.yml {0}', inputs.external_clock_slot) || github.workflow }}
@@ -25,11 +26,6 @@ on:
 
 permissions:
   contents: write
-
-concurrency:
-  group: fenok-data-writer-refs/heads/main
-  cancel-in-progress: false
-  queue: max
 
 jobs:
   clock-admission:
@@ -58,7 +54,15 @@ jobs:
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    permissions:
+      contents: read
+    timeout-minutes: 24
+    outputs:
+      changed: ${{ steps.candidate.outputs.changed }}
+    concurrency:
+      group: pins-prepare
+      cancel-in-progress: false
+      queue: max
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,8 +72,8 @@ jobs:
       - name: Start from latest main
         run: |
           set -euo pipefail
-          git fetch origin main
-          git checkout -B main origin/main
+          timeout 90s git fetch --depth=1 origin +main:refs/remotes/origin/main
+          timeout 30s git checkout -B main origin/main
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -79,37 +83,76 @@ jobs:
       - name: Regenerate pins
         run: npm --prefix 100xfenok-next run regen:pins
 
-      - name: Stage refreshed pins
-        run: scripts/stage-lane-manifest.sh --workflow .github/workflows/pins-autosync.yml --stage success_if_exists
+      - name: Prepare immutable lane candidate
+        id: candidate
+        run: |
+          set -euo pipefail
+          mkdir -p lane-commit-transfer
+          candidate_outcome=success
+          scripts/stage-lane-manifest.sh --workflow .github/workflows/pins-autosync.yml --stage success_if_exists
+          node scripts/prepare-lane-commit.mjs prepare pins-autosync.yml lane-commit-transfer/candidate.json "$candidate_outcome"
 
-      - name: Commit refreshed pins
+      - name: Upload lane candidate
+        if: ${{ always() && steps.candidate.outcome == 'success' && steps.candidate.outputs.changed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pins-commit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: lane-commit-transfer/candidate.json
+          if-no-files-found: error
+          retention-days: 1
+
+  commit-pins:
+    needs: [clock-admission, pins-autosync]
+    if: ${{ always() && !cancelled() && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && needs.pins-autosync.outputs.changed == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    permissions:
+      contents: write
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    outputs:
+      status: ${{ steps.commit.outputs.status }}
+    steps:
+      - name: Checkout writer helpers
+        timeout-minutes: 2
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/prepare-lane-commit.mjs
+            /scripts/lib/lane-registry.mjs
+            /scripts/lib/slickcharts-composite-recovery.mjs
+            /scripts/lib/json-canonical.mjs
+            /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
+      - name: Download current-run candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: pins-commit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: lane-commit-transfer
+      - name: Commit and push
+        id: commit
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          if git diff --cached --quiet; then
-            if git diff --quiet; then
-              echo 'pins autosync: nothing to refresh'
+          for attempt in 1 2 3; do
+            timeout 60s git fetch --filter=blob:none --depth=1 origin +main:refs/remotes/origin/main
+            timeout 30s git checkout -B main origin/main
+            node scripts/prepare-lane-commit.mjs apply pins-autosync.yml lane-commit-transfer/candidate.json
+            if git diff --cached --quiet; then exit 0; fi
+            timeout 30s git commit -m 'chore(pins): autosync generated projections [skip ci]'
+            if timeout 60s git push origin HEAD:main; then
+              echo 'status=published' >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            echo 'pins autosync: regenerated files were not staged via the lane manifest' >&2
-            exit 1
-          fi
-          git commit -m "chore(pins): autosync generated projections [skip ci]"
-          for attempt in $(seq 1 5); do
-            git fetch origin main
-            if git rebase origin/main; then
-              if git push origin HEAD:main; then
-                echo "pins autosync pushed $(git rev-parse HEAD)"
-                exit 0
-              fi
-              git rebase --abort >/dev/null 2>&1 || true
-            else
-              git rebase --abort >/dev/null 2>&1 || true
-            fi
-            echo "pins autosync Git push race on attempt ${attempt}; retrying" >&2
-            sleep 3
+            echo "Git push race on attempt ${attempt}; refreshing main and rechecking candidate"
+            sleep 2
           done
-          echo 'pins autosync Git push failed after bounded retries' >&2
+          echo '::error::lane commit push failed after bounded retries'
           exit 1
