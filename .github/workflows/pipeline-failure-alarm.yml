@@ -54,6 +54,7 @@ jobs:
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Serialize only the short detector/reporting critical section. The state
     # persistence job below has its own global writer lock, so a long writer
     # queue cannot delay the next alarm check.
