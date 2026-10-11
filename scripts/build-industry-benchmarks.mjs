@@ -26,7 +26,8 @@ const load = (p) => JSON.parse(fs.readFileSync(p, "utf8"));
 const round2 = (x) => (typeof x === "number" ? Math.round(x * 100) / 100 : null);
 const round4 = (x) => (typeof x === "number" ? Math.round(x * 10000) / 10000 : null);
 
-const metrics = load(METRICS).industries ?? {};
+const metricsDocument = load(METRICS);
+const metrics = metricsDocument.industries ?? {};
 const industries = load(INDUSTRIES).industries ?? {};
 const map = load(MAP);
 
@@ -60,6 +61,7 @@ const payload = {
   schema_version: "industry-benchmarks/v1",
   generated_at: new Date().toISOString(),
   source: "damodaran industry_metrics + industries margins",
+  source_date: metricsDocument.metadata?.source_date?.trim() || null,
   yf_industry_map: cleanMap,
   industries: out,
 };
