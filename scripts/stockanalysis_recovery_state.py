@@ -49,6 +49,8 @@ class StockAnalysisRecoveryStateError(RuntimeError):
 
 def failure_class(error: str | None) -> str:
     text = str(error or "").lower()
+    if "provider_ticker_redirect:" in text:
+        return "provider_ticker_redirect"
     if "svelte_contract_drift:" in text:
         return "provider_contract_drift"
     if "404" in text:

@@ -1542,34 +1542,55 @@ def fetch_svelte_detail(
         raise ValueError(f"svelte_contract_unknown_surface: {surface}")
     path = contract["path"].format(ticker=ticker.lower())
     payload = fetch_json(path, timeout)
-    if allow_unavailable and surface == "holdings":
-        identity_confirmed = False
-        for node in reversed(payload.get("nodes") or []):
-            data = node.get("data") if isinstance(node, dict) else None
-            if isinstance(data, list) and data:
-                decoded = decode_svelte_data(data)
-                if decoded == {}:
-                    return path, {}
-                info = decoded.get("info") if isinstance(decoded, dict) else None
-                if (
-                    isinstance(info, dict)
-                    and str(info.get("type") or "").lower() == "etf"
-                    and clean_symbol(str(info.get("ticker") or "")) == clean_symbol(ticker)
-                ):
-                    identity_confirmed = True
-        if identity_confirmed:
+    if payload.get("type") == "redirect":
+        target = re.fullmatch(r"/etf/([A-Za-z0-9._-]+)/?", str(payload.get("location") or ""))
+        if target and clean_symbol(target.group(1)) != clean_symbol(ticker):
+            raise ValueError(f"provider_ticker_redirect:{ticker}:{clean_symbol(target.group(1))}")
+        raise ValueError(f"svelte_contract_drift:{surface}:unexpected_redirect")
+    provider_info = None
+    for node in payload.get("nodes") or []:
+        data = node.get("data") if isinstance(node, dict) else None
+        if isinstance(data, list) and data:
+            decoded = decode_svelte_data(data)
+            info = decoded.get("info") if isinstance(decoded, dict) else None
+            if isinstance(info, dict) and str(info.get("type") or "").lower() == "etf":
+                if clean_symbol(str(info.get("ticker") or "")) != clean_symbol(ticker):
+                    raise ValueError(f"svelte_contract_drift:{surface}:ticker_mismatch")
+                provider_info = info
+    # SvelteKit can return HTTP 200 with an endpoint error inside a node.
+    # Preserve the provider status instead of calling a declared 404 schema drift.
+    for node in payload.get("nodes") or []:
+        status = node.get("status") if isinstance(node, dict) and node.get("type") == "error" else None
+        if isinstance(status, int) and not isinstance(status, bool) and 400 <= status <= 599:
+            if status == 404 and surface == "holdings" and allow_unavailable and provider_info:
+                return path, {}
+            raise urllib.error.HTTPError(f"{BASE_URL}{path}", status, "Svelte endpoint error", {}, None)
+    try:
+        decoded = validate_svelte_detail_contract(payload, surface)
+    except ValueError as exc:
+        if (allow_unavailable and surface == "holdings" and provider_info
+                and str(exc) == "svelte_contract_drift:holdings:missing_required:holdings"):
             return path, {}
-    return path, validate_svelte_detail_contract(payload, surface)
+        raise
+    if surface == "overview" and provider_info:
+        features = provider_info.get("features")
+        available = features.get("holdings") if isinstance(features, dict) else None
+        if isinstance(available, bool):
+            decoded = {**decoded, "provider_holdings_available": available}
+    return path, decoded
 
 
 def overview_declares_holdings_unavailable(overview: dict) -> bool:
+    if overview.get("provider_holdings_available") is False:
+        return True
     if overview.get("holdings") not in (None, 0):
         return False
     table = overview.get("holdingsTable")
     return table is None or (
         isinstance(table, dict)
         and table.get("count") in (None, 0)
-        and (table.get("holdings") is None or table.get("holdings") == [])
+        and (table.get("holdings") is None or table.get("holdings") == []
+             or (type(table.get("holdings")) is int and table["holdings"] == 0))
     )
 
 

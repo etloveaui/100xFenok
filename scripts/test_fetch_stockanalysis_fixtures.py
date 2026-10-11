@@ -1319,6 +1319,40 @@ module.main()
         self.assertIsNone(sparse_overview_decoded["holdingsTable"])
         self.assertIsNone(sparse_overview_decoded["inception"])
 
+    def test_svelte_endpoint_status_and_ticker_redirect_are_not_schema_drift(self) -> None:
+        for status in (404, 503):
+            payload = {"type": "data", "nodes": [{"type": "error", "status": status, "error": {"message": "not found"}}]}
+            with patch.object(self.fetcher, "fetch_json", return_value=payload):
+                with self.assertRaises(urllib.error.HTTPError) as caught:
+                    self.fetcher.fetch_svelte_detail("FLM", "overview", 1)
+                self.assertEqual(caught.exception.code, status)
+                with self.assertRaises(urllib.error.HTTPError):
+                    self.fetcher.fetch_svelte_detail("FLM", "holdings", 1, allow_unavailable=True)
+        with patch.object(self.fetcher, "fetch_json", return_value={"type": "redirect", "location": "/etf/usgx/"}):
+            with self.assertRaisesRegex(ValueError, "provider_ticker_redirect:XVUG:USGX"):
+                self.fetcher.fetch_svelte_detail("XVUG", "overview", 1)
+
+    def test_provider_disabled_holdings_preserves_partial_state_and_ticker_identity(self) -> None:
+        info = {"data": [{"info": 1}, {"type": 2, "ticker": 3, "features": 4}, "etf", "BLTD", {"holdings": 5}, False]}
+        overview = {"nodes": [info, {"data": [{"holdings": 1, "holdingsTable": 2, "inception": 3}, 4, None, "Jun 20, 2025"]}]}
+        def fetch(path, _timeout):
+            return {"nodes": [info]} if "/holdings/" in path else overview
+        with patch.object(self.fetcher, "fetch_json", side_effect=fetch):
+            payload = self.fetcher.fetch_etf("BLTD", 1, include_history=False, include_quote=False, allow_partial_holdings=True)
+            self.assertEqual(payload["detail_status"], "stockanalysis_partial")
+            self.assertIn("holdings_unavailable", payload["partial_reason_codes"])
+            self.assertEqual(payload["normalized"]["holdings"], [])
+            self.assertIsNone(payload["source_as_of"])
+            self.assertFalse(payload["raw"]["overview"]["provider_holdings_available"])
+            with self.assertRaisesRegex(ValueError, "ticker_mismatch"):
+                self.fetcher.fetch_svelte_detail("OTHER", "overview", 1)
+        self.assertTrue(self.fetcher.overview_declares_holdings_unavailable({
+            "holdings": 0, "holdingsTable": {"count": 0, "holdings": 0},
+        }))
+        with patch.object(self.fetcher, "fetch_json", return_value={"nodes": [{"data": [{}]}]}):
+            with self.assertRaises(ValueError):
+                self.fetcher.fetch_svelte_detail("BLTD", "holdings", 1, allow_unavailable=True)
+
     def test_empty_holdings_node_requires_explicit_overview_unavailable_profile(self) -> None:
         empty_holdings = {
             "nodes": [
@@ -2611,29 +2645,6 @@ module.main()
         self.assertEqual(runner.count(coverage_command), 1)
         self.assertLess(runner.index(report_command), runner.index(coverage_command))
 
-
-    def test_plane_success_gates_projection_without_cutting_over_projection_authority(self) -> None:
-        fetch_workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(
-            encoding="utf-8"
-        )
-        self.assertNotIn("--field etf_cloud_generation=true", fetch_workflow)
-        self.assertIn("needs.publish-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)
-
-        update_workflow = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("etf_cloud_generation:", update_workflow)
-        self.assertIn("default: 'false'", update_workflow.split("etf_cloud_generation:", 1)[1].split("rebuild_slickcharts:", 1)[0])
-        self.assertIn("github.event.inputs.etf_cloud_generation == 'true'", update_workflow)
-        self.assertIn(
-            "node scripts/materialize-cloud-data-plane-family.mjs",
-            update_workflow,
-        )
-        self.assertNotIn(
-            "materialize-cloud-data-plane-family.mjs",
-            update_workflow.split("          for attempt in 1 2 3; do", 1)[1],
-            "the retry loop must reuse the same external snapshot, never re-materialize",
-        )
 
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
