@@ -28,6 +28,8 @@
 // mistaken for a future publication (issue #90).
 
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-config.mjs";
+import { matchesDayWeekday } from "../lib/schedule-day-weekday.mjs";
 import { performance } from "node:perf_hooks";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -90,14 +92,10 @@ export const PATH_SOURCE_AGE_DAYS = Object.freeze({
 // value, not a claim that the source is fresh.
 export const SOURCE_AGE_UNBOUNDED_FAMILIES = Object.freeze(["computed-signals"]);
 const SOURCE_AGE_UNBOUNDED_FAMILY_SET = new Set(SOURCE_AGE_UNBOUNDED_FAMILIES);
-// Each limit is set to the family's own declared cadence plus the grace this
-// file already used elsewhere - 40 days for a monthly producer, matching
-// slickcharts-monthly, and 10 for a weekly one, matching the fred-yardeni and
-// slickcharts-weekly heartbeats. They are deliberately NOT set to whatever
-// would make today's measurement pass: damodaran is 10.7 days old against its
-// 10-day limit and stays red, because its 2026-08-15 run genuinely reported no
-// data change to publish and that staleness is real.
-export const FAMILY_SOURCE_AGE_DAYS = Object.freeze({
+// Preserve the deployed limits when a derived cadence would tighten them.
+// These are migration floors, not the schedule authority: a wider declared
+// schedule automatically widens either axis without a second table edit.
+const SOURCE_AGE_MIGRATION_FLOORS = Object.freeze({
   "fred-yardeni": 14,
   "slickcharts-monthly": 40,
   "slickcharts-history": 40,
@@ -111,17 +109,99 @@ export const FAMILY_SOURCE_AGE_DAYS = Object.freeze({
 
 // ---- Axis 2: immutable publication-heartbeat policy (days) ----
 // Family override, then default. No exact-path overrides exist on this axis.
-export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze({
+const PUBLISHED_AGE_MIGRATION_FLOORS = Object.freeze({
   "fred-yardeni": 10,
   "slickcharts-weekly": 10,
   "slickcharts-monthly": 40,
   // Both are monthly producers whose source axis was already relaxed while this
   // axis was left at the 7-day default, which no monthly cadence can satisfy.
   "slickcharts-history": 40,
-  // Quarterly advancement-only publication: 91-day cycle + 19-day release slack.
-  // A1 lane health separately checks the collector at 96h cadence + 12h grace.
-  "fdic-tier1": 110,
 });
+
+// Bound each schedule by its largest interval plus declared grace across the
+// calendar's known holiday years and the adjoining years. This is independent
+// of today's payload age. UTC cron slots use the declared calendar for holidays
+// and business-day grace, matching the detector's day/weekday semantics.
+export function scheduleLimitDays(schedule, calendars = DETECTION_CALENDARS) {
+  const calendar = calendars.calendars.find((row) => row.id === schedule.calendar_id);
+  if (!calendar) throw new Error(`missing schedule calendar: ${schedule.id}`);
+  const fields = schedule.cron.split(" ");
+  if (fields.length !== 5) throw new Error(`invalid schedule: ${schedule.id}`);
+  function expand(raw, min, max) {
+    const values = new Set();
+    for (const token of raw.split(",")) {
+      if (!/^(?:\*|\d+(?:-\d+)?)(?:\/\d+)?$/.test(token)) throw new Error(`invalid cron field: ${raw}`);
+      const [base, stepText] = token.split("/");
+      const step = Number(stepText ?? 1);
+      const [lo, hi] = base === "*" ? [min, max] : base.includes("-") ? base.split("-").map(Number) : [Number(base), Number(base)];
+      if (!Number.isInteger(step) || step < 1 || lo < min || hi > max || lo > hi) throw new Error(`invalid cron range: ${raw}`);
+      for (let value = lo; value <= hi; value += step) values.add(value);
+    }
+    return [...values].sort((a, b) => a - b);
+  }
+  const [minutes, hours, days, months, weekdays] = fields.map((field, i) => expand(field, [0,0,1,1,0][i], [59,23,31,12,6][i]));
+  const holidayYears = calendar.holidays.map((date) => Number(date.slice(0, 4)));
+  // All current schedules recur within a month; a leap-year cycle also covers
+  // calendars with no listed holidays without consulting the wall clock.
+  const firstYear = holidayYears.length ? Math.min(...holidayYears) - 1 : 2024;
+  const lastYear = holidayYears.length ? Math.max(...holidayYears) + 1 : 2027;
+  const formatter = new Intl.DateTimeFormat("en-CA", { timeZone: calendar.timezone });
+  const holidays = new Set(calendar.holidays);
+  const dayMs = 86_400_000;
+  let previous = null, maximum = 0;
+  for (let day = Date.UTC(firstYear, 0, 1); day < Date.UTC(lastYear + 1, 0, 1); day += dayMs) {
+    const date = new Date(day);
+    if (!months.includes(date.getUTCMonth() + 1)) continue;
+    for (const hour of hours) for (const minute of minutes) {
+      const epoch = day + hour * 3_600_000 + minute * 60_000;
+      if (!matchesDayWeekday({ dayMatch: days.includes(date.getUTCDate()), weekdayMatch: weekdays.includes(date.getUTCDay()),
+        dayWildcard: fields[2] === "*", weekdayWildcard: fields[4] === "*", dayWeekdayMode: schedule.day_weekday_mode,
+        isHoliday: holidays.has(formatter.format(new Date(epoch))) })) continue;
+      let graceDays;
+      if (schedule.grace.unit === "hours") graceDays = schedule.grace.value / 24;
+      else if (schedule.grace.unit === "calendar_days") graceDays = schedule.grace.value;
+      else if (schedule.grace.unit === "business_days") {
+        let remaining = schedule.grace.value;
+        graceDays = 0;
+        while (remaining > 0 && graceDays < 400) {
+          graceDays++;
+          const civil = formatter.format(new Date(epoch + graceDays * dayMs));
+          const weekday = new Date(`${civil}T12:00:00Z`).getUTCDay();
+          if (!calendar.weekend_days.includes(weekday) && !holidays.has(civil)) remaining--;
+        }
+        if (remaining) throw new Error(`unbounded grace: ${schedule.id}`);
+      } else throw new Error(`unsupported schedule grace: ${schedule.id}`);
+      if (previous !== null) maximum = Math.max(maximum, (epoch - previous) / dayMs + graceDays);
+      previous = epoch;
+    }
+  }
+  if (maximum <= 0) throw new Error(`no recurring schedule: ${schedule.id}`);
+  return Math.ceil(maximum);
+}
+
+const scheduleLimitCache = new Map();
+export const FAMILY_SCHEDULE_LIMITS = Object.freeze(Object.fromEntries(
+  [...new Set([...ENROLLED_PATHS.values(), ...ENROLLED_PREFIXES.map((row) => row.family)])].map((family) => {
+    const members = DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((lane) => lane.producer_members.filter((member) =>
+      lane.id === family.replaceAll("-", "_") || member.artifact_contracts.some((artifact) => ENROLLED_PATHS.get(`/${artifact.path}`) === family)));
+    const schedules = [...new Set(members.flatMap((member) => member.schedule.map((cron) => {
+      const matches = DETECTION_CALENDARS.schedules.filter((row) => row.cron === cron && row.calendar_id === member.cadence_calendar);
+      if (matches.length !== 1) throw new Error(`${family}: missing or ambiguous schedule ${cron}`);
+      return matches[0];
+    })))];
+    const limits = schedules.map((schedule) => {
+      if (!scheduleLimitCache.has(schedule.id)) scheduleLimitCache.set(schedule.id, scheduleLimitDays(schedule));
+      return scheduleLimitCache.get(schedule.id);
+    });
+    return [family, Object.freeze({ schedule_ids: Object.freeze(schedules.map((row) => row.id)), days: limits.length ? Math.max(...limits) : null })];
+  }),
+));
+export const FAMILY_SOURCE_AGE_DAYS = Object.freeze(Object.fromEntries(Object.entries(FAMILY_SCHEDULE_LIMITS)
+  .map(([family, row]) => [family, Math.max(DEFAULT_MAX_SOURCE_AGE_DAYS, SOURCE_AGE_MIGRATION_FLOORS[family] ?? 0, row.days ?? 0)])));
+export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze(Object.fromEntries(Object.entries(FAMILY_SCHEDULE_LIMITS)
+  .map(([family, row]) => [family, family === "fdic-tier1" ? 110 : Math.max(DEFAULT_MAX_PUBLISHED_AGE_DAYS, PUBLISHED_AGE_MIGRATION_FLOORS[family] ?? 0, row.days ?? 0)])));
+// FDIC is the sole publication override: advancement-only quarterly output,
+// 91-day cycle + 19-day release slack; its collector has separate cadence checks.
 
 export function resolveSourceAgeDays({ path, family }) {
   if (SOURCE_AGE_UNBOUNDED_FAMILY_SET.has(family)) return null;
