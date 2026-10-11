@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,086 on disk (1,084 payload files + README/schema)
+> **Files**: 1,084 on disk (1,082 payload files + README/schema)
 > **Release**: v2.4.0 | **Schema**: v2.3.0
 
 ---
@@ -11,7 +11,7 @@
 
 Stock screening, ETF benchmarks, economic indicators, and source-sheet raw tables exported from Global Scouter tool.
 
-### Berkshire source correction (validated 2026-09-04, 2026-09-11, 2026-09-18, 2026-09-25 and 2026-10-02 snapshots)
+### Berkshire source correction (validated 2026-09-04, 2026-09-11, 2026-09-18, 2026-09-25, 2026-10-02 and 2026-10-09 snapshots)
 
 Structured Berkshire B history normalizes duplicated A-class EPS, BPS, CPS and SPS
 using the official 1:1,500 economic share ratio. Historical price multiples and
@@ -27,10 +27,10 @@ For both Berkshire classes, each validated snapshot's latest consensus observati
 the detail sheet's explicit 2026, 2027 and 2028 annual estimate columns. This
 replaces the summary sheet's misplaced actual/forecast values; it does not turn
 historical earnings into a forecast. Correction provenance accompanies the
-structured data. The override is bounded to the five exact source fingerprints and
+structured data. The override is bounded to the six exact source fingerprints and
 validated source evidence; it must not silently normalize a future supplier release.
 
-### TSM ADS and PER basis (validated September 25 and October 2 sources)
+### TSM ADS and PER basis (validated September 25, October 2 and October 9 sources)
 
 Historical TSM EPS/BPS/CPS/SPS and dividends are expressed per common share in
 this source, while its quoted prices are per ADS. One ADS represents five common
@@ -39,14 +39,39 @@ Structured history is normalized by five; multiples, yields and affected EPS
 growth are recalculated. The already-correct 2026–2028 ADS estimates, company
 statements and raw layers remain unchanged. The mixed-basis forward interpolation
 curve and undefined historical PEG are withheld with original-value provenance.
-This correction is admitted only for the validated September 25 and October 2 workbook hashes.
-The October 2 annual ADS EPS estimates remain 17.02, 22.17 and 28.04;
-correction provenance retains that snapshot's raw warning values.
+This correction is admitted only for the validated September 25, October 2 and October 9 workbook hashes.
+The October 9 annual ADS EPS estimates are 17.04, 22.30 and 28.56;
+correction provenance retains each snapshot's raw warning values.
 
 PER-band current means explicit FY0. Source-derived bands use S_Valuation column
 P and retain the separate F aggregate as source_current. Calculated bands use the
 latest fiscal slot only; absent or non-positive FY0 produces null. Source band
 ranges may include estimates, and their position is not a current fair-value claim.
+
+### Split and corporate-action corrections (2026-10-09 source)
+
+Four corrections are bound to this workbook and to named tickers. Each restores
+a value from evidence or withholds it; raw layers are unchanged, and
+`data_quality` in the affected file records what changed and why.
+
+- **8035.T, 8316.T, 8766.T: weekly revenue columns.** The source divided the
+  whole lower weekly block by the split ratio, including revenue consensus and
+  its change. Those two columns return to the observation published a week
+  earlier wherever source value x split ratio equals it. The newest row
+  (2025-08-22) had no earlier publication and is null. Prices and EPS in the
+  block carry the source's split adjustment.
+- **APH: weekly history.** The source block now holds only its newest 53 weeks,
+  none in the exported range. The 239 previously published rows (2021-01-22 to
+  2025-08-15) are carried forward unchanged, on the pre-split basis they were
+  published with.
+- **285A.T, 8035.T, 8316.T, 8766.T: six-week EPS average.** The split falls
+  inside the six weekly points, so `eps_consensus.fy_plus_1` to `fy_plus_3`
+  average the pre-split points on the post-split basis. The dated weekly points
+  are the source's own values.
+- **CTVA: forward multiples.** Price and market cap follow the 2026-10-01
+  corporate action; the per-share estimates do not. Forward PER, PBR, PCR, PSR,
+  PEG and dividend yield are null in the index and the detail. Price, estimates
+  and history are unchanged.
 
 ## Structure
 
@@ -61,14 +86,14 @@ global-scouter/
 │   ├── slick_index.json     # Slick-style score index
 │   └── revision_movers.json # Weekly revision movers
 ├── stocks/
-│   └── detail/              # Individual stock profiles (1,066 files)
+│   └── detail/              # Individual stock profiles (1,064 files)
 │       ├── AAPL.json
 │       ├── MSFT.json
 │       └── ...
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,080 records)
+│   └── economic.json        # Economic indicators (1,081 records)
 ├── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -85,14 +110,14 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 7 |
-| stocks/detail/ | 1,066 |
+| stocks/detail/ | 1,064 |
 | etfs/ | 1 |
 | indicators/ | 1 |
 | raw/ | 9 |
 | schema.json + README.md | 2 |
-| **Total on disk** | 1,086 |
+| **Total on disk** | 1,084 |
 
-The payload total excludes this README and `schema.json`: 1,084 files.
+The payload total excludes this README and `schema.json`: 1,082 files.
 
 ## Schema
 
@@ -147,12 +172,12 @@ The payload total excludes this README and `schema.json`: 1,084 files.
 
 | Field | Coverage | Description |
 |-------|----------|-------------|
-| `fiscal_month` | 100% (1,066) | Fiscal year end month (Jan, Dec, etc.) |
-| `eps_consensus` | 100% (1,066) | EPS estimates FY+1/+2/+3 plus 6-week raw points |
-| `growth_consensus` | 100% (1,066) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
-| `per_bands` | 98.2% (1,047) | PER/PBR bands with FY-4~FY+3 values where available |
-| `*_estimates` | 100% (1,066) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
-| `weekly_revision_history` | 100% (1,066) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
+| `fiscal_month` | 100% (1,064) | Fiscal year end month (Jan, Dec, etc.) |
+| `eps_consensus` | 100% (1,064) | EPS estimates FY+1/+2/+3 plus 6-week raw points |
+| `growth_consensus` | 100% (1,064) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
+| `per_bands` | 98.2% (1,045) | PER/PBR bands with FY-4~FY+3 values where available |
+| `*_estimates` | 100% (1,064) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
+| `weekly_revision_history` | 100% (1,064) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
 
 ### raw/ (v2.3.0)
 
@@ -165,14 +190,14 @@ series exists, and never restores a rejected value from raw consensus.
 
 | File | Count | Description |
 |------|-------|-------------|
-| `raw/companies_a_company.json` | 1,066 | A_Company 52-column raw table |
-| `raw/company_master_m_company.json` | 5,757 | M_Company master universe table |
-| `raw/eps_consensus_t_eps_c.json` | 1,066 | T_EPS C weekly consensus raw table |
-| `raw/growth_consensus_t_growth_c.json` | 1,066 | T_Growth C raw table |
+| `raw/companies_a_company.json` | 1,064 | A_Company 52-column raw table |
+| `raw/company_master_m_company.json` | 5,740 | M_Company master universe table |
+| `raw/eps_consensus_t_eps_c.json` | 1,064 | T_EPS C weekly consensus raw table |
+| `raw/growth_consensus_t_growth_c.json` | 1,064 | T_Growth C raw table |
 | `raw/valuation_s_valuation.json` | 46 | S_Valuation PER/PBR/growth raw rows |
 | `raw/etfs_m_etfs.json` | 22 | M_ETFs raw table |
-| `raw/etfs_a_etfs.json` | 303 | A_ETFs 160-column raw table |
-| `raw/workbook_inventory.json` | 1,350 sheets | Workbook sheet inventory and categories |
+| `raw/etfs_a_etfs.json` | 358 | A_ETFs 160-column raw table |
+| `raw/workbook_inventory.json` | 1,351 sheets | Workbook sheet inventory and categories |
 
 ### etfs/index.json (v2.1.0)
 
@@ -237,6 +262,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.4.0 | 2026-10-11 | Weekly refresh (2026-10-09 source): 1,064 stocks (-2: QRVO and WBD left the source), 1,081 economic observations, 22 ETFs and 1,045 PER-band profiles. Berkshire and TSM unit corrections admitted for this workbook. Split-related source defects restored from evidence or withheld: weekly revenue columns (8035.T, 8316.T, 8766.T), carried-forward weekly history (APH), split-aware six-week EPS averages (285A.T, 8035.T, 8316.T, 8766.T) and CTVA forward multiples. Derived indexes follow the existing hosted refresh chain. |
 | 2.4.0 | 2026-10-04 | October 2 weekly export: 1,066 stocks, 1,080 indicators; independently validated Berkshire/TSM corrections, preserved raw sources and forecasts |
 | 2.4.0 | 2026-09-27 | Weekly refresh (2026-09-25 source): 1,066 stocks, 1,079 economic observations, 22 ETFs and 1,047 PER-band profiles. Validated Berkshire and TSM share-unit corrections preserve raw source and normal forecasts; band current now uses FY0. Existing hosted derivation and publication paths own final site propagation. |
 | 2.4.0 | 2026-09-20 | Weekly refresh (2026-09-18 source): 1,066 stocks with the same canonical ticker set, 1,078 economic observations, 22 ETFs and 1,047 PER-band profiles. The recurring Berkshire B historical unit anomaly is normalized only for the exact validated workbook fingerprint; raw source values remain preserved. Derived indexes follow the existing hosted refresh chain. |
@@ -279,4 +305,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-10-04*
+*Last Updated: 2026-10-11*

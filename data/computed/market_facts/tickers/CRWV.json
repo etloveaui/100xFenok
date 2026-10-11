@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "CRWV",
   "asset_type": "stock",
-  "generated_at": "2026-10-10T03:17:10Z",
+  "generated_at": "2026-10-11T07:40:14Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -192,6 +192,61 @@
       ],
       "candidate_count": 1
     },
+    "beta": {
+      "value": 3.2594497294533626,
+      "source": "derived.daily_1y_beta",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-10T02:45:08Z",
+      "confidence": "derived",
+      "unit": "ratio",
+      "provenance": {
+        "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+        "benchmark": "SPY",
+        "currency_scope": "USD listings",
+        "window_days": 365,
+        "minimum_bars": 200,
+        "paired_returns": 251,
+        "window_start": "2025-10-09",
+        "window_end": "2026-10-09",
+        "instrument_history_source": "yf.history_1y",
+        "instrument_source_file": "yf/finance/CRWV.json",
+        "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+        "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+        "benchmark_fetched_at": "2026-10-10T02:53:53Z"
+      },
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
+      ],
+      "candidates": [
+        {
+          "value": 3.2594497294533626,
+          "source": "derived.daily_1y_beta",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-10T02:45:08Z",
+          "confidence": "derived",
+          "unit": "ratio",
+          "provenance": {
+            "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+            "benchmark": "SPY",
+            "currency_scope": "USD listings",
+            "window_days": 365,
+            "minimum_bars": 200,
+            "paired_returns": 251,
+            "window_start": "2025-10-09",
+            "window_end": "2026-10-09",
+            "instrument_history_source": "yf.history_1y",
+            "instrument_source_file": "yf/finance/CRWV.json",
+            "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+            "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+            "benchmark_fetched_at": "2026-10-10T02:53:53Z"
+          }
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
       "value": -7.899462184203472,
       "source": "yf.history_1y",
@@ -374,7 +429,8 @@
       "beta": [
         "yf",
         "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
       ],
       "expense_ratio": [
         "yf",
