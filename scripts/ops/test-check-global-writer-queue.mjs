@@ -50,7 +50,7 @@ assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"][0], {
 }, "StockAnalysis observes only its writer-owning publish job");
 assert.deepEqual(policy.job_level_targets["pipeline-failure-alarm.yml"][0], {
   job_name: "persist-alarm-state",
-  eligibility_predecessors: ["check"],
+  eligibility_predecessors: ["clock-admission", "check"],
   parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
   candidate_statuses: ["queued", "waiting", "pending"],
 }, "the alarm observes only its dependent global-writer persistence job");

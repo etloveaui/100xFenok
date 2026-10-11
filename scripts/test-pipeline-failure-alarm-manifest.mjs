@@ -190,6 +190,10 @@ function jobOf(model, workflow, name) {
 // a legitimate design choice; being unobservable is not, so a log-only step must
 // say so on the record.
 const LOG_ONLY_TOLERANT_STEPS = Object.freeze({
+  "deploy-worker.yml::Retire previous current Next cache":
+    "X7 maintenance after successful live smokes; deletion failure is visible in the step log and only prevents replacing an immutable build cache, so it cannot revoke live deployment acceptance",
+  "deploy-worker.yml::Retire superseded Next build caches":
+    "X7 maintenance only after the current cache was saved; failed cleanup retains older main Next caches without changing served data, the current cache or npm caches; run 38125640550 verified 23 old entries removed",
   "qa-visual.yml::visual":
     "manual snapshot comparison may differ from the owner-selected baseline; automatic build and deployment checks remain separate",
   "slickcharts-symbols.yml::Check slickcharts-symbols cloud acceptance":
@@ -284,11 +288,12 @@ function assertPipelineTopology(model) {
     "detector/reporting job must keep only its dedicated short lock",
   );
   assert.doesNotMatch(check.raw, /fenok-data-writer-refs\/heads\/main/, "detector/reporting job must stay outside the data-writer queue");
-  assert.match(
-    persist.raw,
-    /needs: check[\s\S]*if: \$\{\{ needs\.check\.result == 'success' \}\}/,
-    "state persistence must depend on successful detection/reporting",
-  );
+  const persistNeeds = /^    needs: (.+)$/m.exec(persist.raw)?.[1]
+    .replace(/[\[\]]/g, "").split(",").map((value) => value.trim()) ?? [];
+  const persistIf = /^    if: (.+)$/m.exec(persist.raw)?.[1] ?? "";
+  assert.ok(persistNeeds.includes("check")
+    && /needs\.check\.result == 'success'/.test(persistIf) && !persistIf.includes("||"),
+    "state persistence must depend on successful detection/reporting");
   assert.match(
     persist.raw,
     /concurrency:\s*\n\s+group: fenok-data-writer-refs\/heads\/main\s*\n\s+cancel-in-progress: false\s*\n\s+queue: max/,
@@ -405,7 +410,7 @@ for (const conditional of STEP_CONTRACTS.filter((contract) => contract.condition
 expectStepMutation({ workflow: "pipeline", job: "persist-alarm-state", name: "Commit alarm state", patch: { bestEffort: false },
   pattern: /best-effort contract drifted/, message: "alarm-state Git persistence must remain best-effort" });
 expectJobMutation({ workflow: "pipeline", job: "persist-alarm-state",
-  patch: { raw: workflows.pipeline.jobs.find((job) => job.name === "persist-alarm-state").raw.replace("needs: check", "needs: other") },
+  patch: { raw: workflows.pipeline.jobs.find((job) => job.name === "persist-alarm-state").raw.replace("needs: [clock-admission, check]", "needs: [clock-admission, other]") },
   pattern: /state persistence must depend on successful detection\/reporting/,
   message: "failed reporting must skip alarm-state persistence" });
 expectJobMutation({ workflow: "pipeline", job: "persist-alarm-state",
