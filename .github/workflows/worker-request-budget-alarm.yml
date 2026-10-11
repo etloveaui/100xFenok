@@ -38,6 +38,8 @@ jobs:
       actions: read
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
+      check_budget: ${{ steps.slot.outputs.check_budget }}
+      check_telemetry: ${{ steps.slot.outputs.check_telemetry }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +56,7 @@ jobs:
 
   check:
     needs: clock-admission
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '7 * * * *') }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && needs.clock-admission.outputs.check_budget == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
@@ -124,7 +126,7 @@ jobs:
 
   data-supply-analytics:
     needs: clock-admission
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && ((github.event_name == 'workflow_dispatch' && inputs.external_clock == '') || github.event.schedule == '17 2,14 * * *') }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && needs.clock-admission.outputs.check_telemetry == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production

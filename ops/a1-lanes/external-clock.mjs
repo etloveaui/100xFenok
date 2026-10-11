@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+const WORKER_BUDGET_CRONS = Object.freeze({ requests: "7 * * * *", telemetry: "17 2,14 * * *" });
+
 export const EXTERNAL_CLOCK_CRONS = Object.freeze({
   "deploy-worker.yml": ["49 * * * *", "30 3 * * *"],
   "fetch-fred-macro.yml": "0 8 * * *",
@@ -26,7 +28,7 @@ export const EXTERNAL_CLOCK_CRONS = Object.freeze({
   "pins-autosync.yml": "7,37 * * * *",
   "pipeline-failure-alarm.yml": "23 * * * *",
   "retention-restore.yml": "4,19,34,49 * * * *",
-  "worker-request-budget-alarm.yml": "7 * * * *",
+  "worker-request-budget-alarm.yml": Object.values(WORKER_BUDGET_CRONS),
   "fetch-treasury-tga.yml": "0 */6 * * *",
   "data-plane-serving-probe.yml": "41 */6 * * *",
   "fetch-fenok-news-tone.yml": "43 6,14,22 * * *",
@@ -70,6 +72,18 @@ export function clockCronMatches(cron, slot) {
   return clockFieldMatches(minute, slot.getUTCMinutes())
     && clockFieldMatches(hour, slot.getUTCHours())
     && clockFieldMatches(dow, slot.getUTCDay());
+}
+
+// Both clocks select the same declared job. Ordinary manual dispatch retains
+// the existing behavior of checking both budgets; delayed marked runs retain
+// their original slot rather than borrowing the runner's current hour.
+export function workerBudgetJobs(eventName, event = {}) {
+  const marked = eventName === "workflow_dispatch" && event.inputs?.external_clock === "a1-v1";
+  if (eventName === "workflow_dispatch" && !marked) return { requests: true, telemetry: true };
+  const slot = marked ? new Date(event.inputs.external_clock_slot) : null;
+  return Object.fromEntries(Object.entries(WORKER_BUDGET_CRONS).map(([job, cron]) => [job,
+    marked ? Number.isFinite(slot.getTime()) && clockCronMatches(cron, slot)
+      : eventName === "schedule" && event.schedule === cron]));
 }
 
 export function dueDispatches(now = new Date()) {

@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { externalClockCrons, externalClockSlot, clockCronMatches } from "../ops/a1-lanes/external-clock.mjs";
+import { externalClockCrons, externalClockSlot, clockCronMatches, workerBudgetJobs } from "../ops/a1-lanes/external-clock.mjs";
 
 export function scheduledSlot(cron, createdAt) {
   const slot = new Date(createdAt);
@@ -95,6 +95,10 @@ function main() {
     result = { skip: false, reason: "evidence-unavailable" };
   }
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `skip=${result.skip}\n`);
+  if (file === "worker-request-budget-alarm.yml") {
+    const jobs = workerBudgetJobs(eventName, event);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `check_budget=${jobs.requests}\ncheck_telemetry=${jobs.telemetry}\n`);
+  }
   console.log(JSON.stringify(result));
 }
 
