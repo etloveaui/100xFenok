@@ -39,6 +39,7 @@ export const DEFAULT_DRAIN_CAP_SECONDS = 600;
 const DRAIN_POLL_SECONDS = 15;
 const GH_CALL_MIN_TIMEOUT_MS = 5_000;
 const PUBLISH_INVOCATION = /node\s+scripts\/publish-cloud-data-generation\.mjs/;
+const PUBLISH_IMPORT = /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["'](?:\.\/)?scripts\/publish-cloud-data-generation\.mjs["']/;
 const SCRIPT_MENTION = /publish-cloud-data-generation\.mjs/;
 const REFERENCE_ONLY_LINE = /^\s*(-\s*)?['"]?scripts\/publish-cloud-data-generation\.mjs['"]?\s*:?\s*(#.*)?$/;
 
@@ -50,7 +51,7 @@ function fail(code, detail) {
 
 // --- pure helpers (exported for the retention safety suite) -------------------
 
-// Derive the pause set from the workflow directory. A file that actually invokes the
+// Derive the pause set from the workflow directory. A file that invokes or imports the
 // publish script is a publisher; a file that only MENTIONS the path in a reference list
 // (e.g. a `paths:` trigger entry) is classified as reference-only; any other mention is
 // an unclassified publishing invocation and fails the inventory closed.
@@ -64,7 +65,7 @@ export function derivePublisherWorkflows({ workflowsDir, readFileImpl = fs.readF
     if (!SCRIPT_MENTION.test(text)) continue;
     const nameMatch = text.match(/^name:\s*(.+)$/m);
     const name = nameMatch ? nameMatch[1].trim() : file;
-    if (PUBLISH_INVOCATION.test(text)) { publishers.push({ file, name }); continue; }
+    if (PUBLISH_INVOCATION.test(text) || PUBLISH_IMPORT.test(text)) { publishers.push({ file, name }); continue; }
     const lines = text.split("\n").filter((line) => SCRIPT_MENTION.test(line));
     if (lines.every((line) => REFERENCE_ONLY_LINE.test(line) || line.trimStart().startsWith("#"))) {
       referenceOnly.push({ file, name });

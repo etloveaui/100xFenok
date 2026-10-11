@@ -873,8 +873,19 @@ try {
         "name: Unclassified\njobs:\n  x:\n    steps:\n      - run: cp scripts/publish-cloud-data-generation.mjs /tmp/\n",
       );
       fs.writeFileSync(path.join(wfRoot, "unrelated.yml"), "name: Unrelated\non: workflow_dispatch\n");
+      for (const [kind, invocation] of [
+        ["static", 'import { runPublisherCli } from "./scripts/publish-cloud-data-generation.mjs"; await runPublisherCli();'],
+        ["dynamic", 'const { runPublisherCli } = await import("./scripts/publish-cloud-data-generation.mjs"); await runPublisherCli();'],
+      ]) {
+        fs.writeFileSync(path.join(wfRoot, `publisher-${kind}.yml`),
+          `name: Publisher ${kind}\njobs:\n  x:\n    steps:\n      - run: |\n          node --input-type=module -e '${invocation}'\n`);
+      }
       const derived = derivePublisherWorkflows({ workflowsDir: wfRoot });
-      assert.deepEqual(derived.publishers, [{ file: "publisher-a.yml", name: "Publisher A" }]);
+      assert.deepEqual(derived.publishers, [
+        { file: "publisher-a.yml", name: "Publisher A" },
+        { file: "publisher-dynamic.yml", name: "Publisher dynamic" },
+        { file: "publisher-static.yml", name: "Publisher static" },
+      ]);
       assert.deepEqual(derived.referenceOnly.map((row) => row.file), ["mentions-only.yml"]);
       assert.deepEqual(derived.unclassified.map((row) => row.file), ["unclassified.yml"], "an unclassified invocation must be detected");
 
