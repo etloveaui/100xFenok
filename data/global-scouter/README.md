@@ -27,8 +27,10 @@ For both Berkshire classes, each validated snapshot's latest consensus observati
 the detail sheet's explicit 2026, 2027 and 2028 annual estimate columns. This
 replaces the summary sheet's misplaced actual/forecast values; it does not turn
 historical earnings into a forecast. Correction provenance accompanies the
-structured data. The override is bounded to the six exact source fingerprints and
-validated source evidence; it must not silently normalize a future supplier release.
+structured data. The override is admitted by a fingerprint of the cells it rests on
+(the duplicated Class A/B per-share history and both annual price rows), validated on
+the six snapshots above and recorded in `data_quality.admission`; a release whose
+cells differ is not normalized until they are validated.
 
 ### TSM ADS and PER basis (validated September 25, October 2 and October 9 sources)
 
@@ -39,7 +41,9 @@ Structured history is normalized by five; multiples, yields and affected EPS
 growth are recalculated. The already-correct 2026–2028 ADS estimates, company
 statements and raw layers remain unchanged. The mixed-basis forward interpolation
 curve and undefined historical PEG are withheld with original-value provenance.
-This correction is admitted only for the validated September 25, October 2 and October 9 workbook hashes.
+This correction is admitted by a fingerprint of its witness cells (TSM's identity and its
+five-to-one statement, per-share, price and market-cap history), validated on the
+September 25, October 2 and October 9 workbooks and recorded in `data_quality.admission`.
 The October 9 annual ADS EPS estimates are 17.04, 22.30 and 28.56;
 correction provenance retains each snapshot's raw warning values.
 
@@ -48,30 +52,51 @@ P and retain the separate F aggregate as source_current. Calculated bands use th
 latest fiscal slot only; absent or non-positive FY0 produces null. Source band
 ranges may include estimates, and their position is not a current fair-value claim.
 
-### Split and corporate-action corrections (2026-10-09 source)
+### Split and corporate-action corrections
 
-Four corrections are bound to this workbook and to named tickers. Each restores
-a value from evidence or withholds it; raw layers are unchanged, and
-`data_quality` in the affected file records what changed and why.
+Four corrections apply to any stock that passes their evidence test; none names
+a ticker or a workbook. Each restores a value from evidence or withholds it; raw
+layers are unchanged, and `data_quality` in the affected file records what
+changed and why. A stock's split comes from the workbook's own split calendar,
+or from its last published correction once the calendar has dropped the event.
 
-- **8035.T, 8316.T, 8766.T: weekly revenue columns.** The source divided the
-  whole lower weekly block by the split ratio, including revenue consensus and
-  its change. Those two columns return to the observation published a week
-  earlier wherever source value x split ratio equals it. The newest row
-  (2025-08-22) had no earlier publication and is null. Prices and EPS in the
-  block carry the source's split adjustment.
-- **APH: weekly history.** The source block now holds only its newest 53 weeks,
-  none in the exported range. The 239 previously published rows (2021-01-22 to
-  2025-08-15) are carried forward unchanged, on the pre-split basis they were
-  published with.
-- **285A.T, 8035.T, 8316.T, 8766.T: six-week EPS average.** The split falls
-  inside the six weekly points, so `eps_consensus.fy_plus_1` to `fy_plus_3`
-  average the pre-split points on the post-split basis. The dated weekly points
-  are the source's own values.
-- **CTVA: forward multiples.** Price and market cap follow the 2026-10-01
-  corporate action; the per-share estimates do not. Forward PER, PBR, PCR, PSR,
-  PEG and dividend yield are null in the index and the detail. Price, estimates
-  and history are unchanged.
+- **Weekly revenue columns (2026-10-09: 8035.T, 8316.T, 8766.T).** The source
+  divided a block of older weekly rows by the split ratio, including revenue
+  consensus and its change. Inside that block (through 2025-09-26) the two
+  columns return to the observation published a week earlier wherever source
+  value x split ratio equals it; the six rows with no earlier publication
+  (2025-08-22 to 2025-09-26) are null. Newer rows are the source's undivided
+  values. Prices and EPS carry the source's split adjustment.
+- **Truncated weekly history (2026-10-09: APH).** The source block holds only
+  its newest 53 weeks (2025-10-10 to 2026-10-09). The 239 previously published
+  rows (2021-01-22 to 2025-08-15) are carried forward unchanged behind them, on
+  the pre-split basis they were published with; the weeks between the two
+  parts were never published.
+- **Six-week EPS average (2026-10-09: 285A.T, 8035.T, 8316.T, 8766.T).** The
+  split falls inside the six weekly points, so `eps_consensus.fy_plus_1` to
+  `fy_plus_3` average the pre-split points on the post-split basis. The dated
+  weekly points are the source's own values.
+- **Forward multiples (2026-10-09: CTVA).** The price changed share basis
+  against the last publication while the per-share estimates did not follow.
+  Forward PER, PBR, PCR, PSR, PEG and dividend yield are null in the index and
+  the detail until the estimates follow. Price, estimates and history are
+  unchanged.
+
+### History rows and consensus fiscal years
+
+`weekly_revision_history.weekly_consensus_revision` starts at the newest week
+and `price_history` at the running month (up to 300 weekly and 322 monthly
+rows). The running month has a close but no high or low yet; both are null
+with a `reason`. Until the 2026-10-09 re-release these two tables ended at
+2025-08-22 and 2021-07.
+
+`eps_consensus` FY+1 to FY+3 follow the fiscal years of the stock's own annual
+estimates. When a fiscal year has just closed and the source's weekly table
+still shows that year first, each series is taken by fiscal year, so its
+weekly points and one-week change belong to one year. A year the weekly table
+does not carry yet has a single dated observation and no one-week change.
+`data_quality` (`consensus_table_fiscal_year_lag`) lists the years and each
+series' source (2026-10-09: 6594.T, 9983.T, ACN, AZO, CHKP, COST, CPRT, JBL, MU).
 
 ## Structure
 
@@ -177,7 +202,7 @@ The payload total excludes this README and `schema.json`: 1,082 files.
 | `growth_consensus` | 100% (1,064) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
 | `per_bands` | 98.2% (1,045) | PER/PBR bands with FY-4~FY+3 values where available |
 | `*_estimates` | 100% (1,064) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
-| `weekly_revision_history` | 100% (1,064) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
+| `weekly_revision_history` | 100% (1,064) | Individual-sheet revision and price histories, newest week and running month first; empty for source-sheet-missing placeholders |
 
 ### raw/ (v2.3.0)
 
@@ -262,6 +287,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.4.0 | 2026-10-11 | Re-release of the 2026-10-09 source with converter fixes, same counts: weekly history now starts at the newest week and monthly prices at the running month (they ended at 2025-08-22 and 2021-07); FY+1 to FY+3 consensus follow fiscal-year labels for nine stocks whose weekly table lagged (6594.T, 9983.T, ACN, AZO, CHKP, COST, CPRT, JBL, MU); the Berkshire and TSM corrections are admitted by witness-cell fingerprint and the split and corporate-action corrections apply by evidence test. Every previously published history row is unchanged. |
 | 2.4.0 | 2026-10-11 | Weekly refresh (2026-10-09 source): 1,064 stocks (-2: QRVO and WBD left the source), 1,081 economic observations, 22 ETFs and 1,045 PER-band profiles. Berkshire and TSM unit corrections admitted for this workbook. Split-related source defects restored from evidence or withheld: weekly revenue columns (8035.T, 8316.T, 8766.T), carried-forward weekly history (APH), split-aware six-week EPS averages (285A.T, 8035.T, 8316.T, 8766.T) and CTVA forward multiples. Derived indexes follow the existing hosted refresh chain. |
 | 2.4.0 | 2026-10-04 | October 2 weekly export: 1,066 stocks, 1,080 indicators; independently validated Berkshire/TSM corrections, preserved raw sources and forecasts |
 | 2.4.0 | 2026-09-27 | Weekly refresh (2026-09-25 source): 1,066 stocks, 1,079 economic observations, 22 ETFs and 1,047 PER-band profiles. Validated Berkshire and TSM share-unit corrections preserve raw source and normal forecasts; band current now uses FY0. Existing hosted derivation and publication paths own final site propagation. |
