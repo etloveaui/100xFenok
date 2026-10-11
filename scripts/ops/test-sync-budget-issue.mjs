@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { syncBudgetIssue } from "./sync-budget-issue.mjs";
-import { parseWorkerUsage } from "./check-worker-request-budget.mjs";
+import { parseWorkerUsage, queryWorkerUsage } from "./check-worker-request-budget.mjs";
+import { alarmLivenessIncident } from "./check-alarm-liveness.mjs";
 import { parseAnalyticsResult } from "./check-data-supply-etf-telemetry-budget.mjs";
 
 const title = "100xFenok Worker request budget alarm";
@@ -80,12 +81,49 @@ test("a failed body update cannot be followed by a misleading closure", () => {
 });
 
 test("missing and nonnumeric Worker measurements cannot masquerade as zero usage", () => {
-  for (const account of [{}, { day: [], hour: null }, { day: [null], hour: [] },
-    { day: [{ sum: { requests: "unreadable" } }], hour: [] }, { day: [{ sum: { requests: -1 } }], hour: [] }]) {
+  const zero = [{ sum: { requests: 0 } }];
+  for (const account of [{}, { day: [], hour: null }, { day: [], hour: [] },
+    { day: zero, hour: [] }, { day: [], hour: zero }, { day: [null], hour: zero },
+    { day: [{ sum: { requests: "unreadable" } }], hour: zero }, { day: [{ sum: { requests: -1 } }], hour: zero }]) {
     assert.throws(() => parseWorkerUsage(account));
   }
-  assert.equal(parseWorkerUsage({ day: [], hour: [] }).todayRequests, 0);
-  assert.equal(parseWorkerUsage({ day: [{ sum: { requests: 12 } }], hour: [] }).todayRequests, 12);
+  assert.equal(parseWorkerUsage({ day: zero, hour: zero }).todayRequests, 0);
+  assert.equal(parseWorkerUsage({ day: [{ sum: { requests: 12 } }], hour: zero }).todayRequests, 12);
+});
+
+test("Worker quota query includes all scripts in the selected account", async () => {
+  const originalFetch = globalThis.fetch;
+  let request;
+  globalThis.fetch = async (_url, options) => {
+    request = JSON.parse(options.body);
+    return { ok: true, json: async () => ({ data: { viewer: { accounts: [{
+      day: [{ sum: { requests: 49000 } }, { sum: { requests: 2000 } }],
+      hour: [{ sum: { requests: 700 } }],
+    }] } } }) };
+  };
+  try {
+    const now = new Date("2026-10-11T14:00:00Z");
+    const usage = await queryWorkerUsage({ token: "test", accountId: "account", dayStart: now, hourStart: now, now });
+    assert.equal(usage.todayRequests, 51000);
+    assert.equal(usage.lastHourRequests, 700);
+    assert.equal(request.variables.accountTag, "account");
+    assert.equal(Object.hasOwn(request.variables, "scriptName"), false);
+    assert.doesNotMatch(request.query, /scriptName/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("independent observer creates stale or unreadable incidents and closes only after recovery", () => {
+  const observer = (status) => alarmLivenessIncident({ status, reason: status === "live" ? null : "probe reason", missed_slots: 6, age_hours: 6 });
+  for (const status of ["stale", "unreadable"]) {
+    const mock = runner();
+    assert.equal(syncBudgetIssue(observer(status), mock), "created");
+    assert.equal(writes(mock)[0][1], "create");
+    const open = runner([issue(93, { title: observer(status).issueTitle })]);
+    assert.equal(syncBudgetIssue(observer(status), open), "updated");
+    assert.equal(writes(open).some((args) => args[1] === "close"), false);
+  }
+  const recovered = runner([issue(93, { title: observer("live").issueTitle })]);
+  assert.equal(syncBudgetIssue(observer("live"), recovered), "closed");
 });
 
 test("missing and nonnumeric telemetry measurements cannot close a budget incident", () => {

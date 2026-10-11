@@ -3,7 +3,6 @@ import { pathToFileURL } from "node:url";
 
 const GRAPHQL_ENDPOINT = "https://api.cloudflare.com/client/v4/graphql";
 const REST_ENDPOINT = "https://api.cloudflare.com/client/v4";
-const DEFAULT_SCRIPT_NAME = "100xfenok";
 const DEFAULT_DAILY_THRESHOLD = 50_000;
 const DEFAULT_HOURLY_THRESHOLD = 20_000;
 const CONFIG_EXIT = 78;
@@ -117,7 +116,8 @@ function sumRequests(rows) {
 }
 
 export function parseWorkerUsage(account) {
-  if (!Array.isArray(account?.day) || !Array.isArray(account?.hour)) {
+  if (!Array.isArray(account?.day) || !account.day.length
+    || !Array.isArray(account?.hour) || !account.hour.length) {
     throw new Error("Cloudflare Worker usage rows are missing; usage is unknown.");
   }
   const dayRows = account.day;
@@ -131,11 +131,10 @@ export function parseWorkerUsage(account) {
   };
 }
 
-async function queryWorkerUsage({ token, accountId, scriptName, dayStart, hourStart, now }) {
+export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, now }) {
   const query = `
     query WorkerRequestBudget(
       $accountTag: string,
-      $scriptName: string,
       $dayStart: string,
       $hourStart: string,
       $end: string
@@ -145,7 +144,6 @@ async function queryWorkerUsage({ token, accountId, scriptName, dayStart, hourSt
           day: workersInvocationsAdaptive(
             limit: 10000,
             filter: {
-              scriptName: $scriptName,
               datetime_geq: $dayStart,
               datetime_leq: $end
             }
@@ -157,7 +155,6 @@ async function queryWorkerUsage({ token, accountId, scriptName, dayStart, hourSt
           hour: workersInvocationsAdaptive(
             limit: 10000,
             filter: {
-              scriptName: $scriptName,
               datetime_geq: $hourStart,
               datetime_leq: $end
             }
@@ -178,7 +175,6 @@ async function queryWorkerUsage({ token, accountId, scriptName, dayStart, hourSt
       query,
       variables: {
         accountTag: accountId,
-        scriptName,
         dayStart: toIso(dayStart),
         hourStart: toIso(hourStart),
         end: toIso(now),
@@ -210,7 +206,7 @@ function buildIssueBody(result) {
       "- If account auto-discovery is unavailable, set non-secret environment variable `CLOUDFLARE_ACCOUNT_ID` or `CLOUDFLARE_ACCOUNT_NAME`.",
       "",
       `Checked at UTC: ${result.checkedAtUtc}`,
-      `Script: ${result.scriptName}`,
+      "Scope: all Workers in the Cloudflare account",
     ].join("\n");
   }
 
@@ -218,7 +214,7 @@ function buildIssueBody(result) {
     return [
       "Worker request budget check passed.",
       "",
-      `Script: ${result.scriptName}`,
+      "Scope: all Workers in the Cloudflare account",
       `Checked at UTC: ${result.checkedAtUtc}`,
       `Today UTC requests: ${result.todayRequests} / ${result.dailyThreshold}`,
       `Last-hour requests: ${result.lastHourRequests} / ${result.hourlyThreshold}`,
@@ -228,7 +224,7 @@ function buildIssueBody(result) {
   return [
     "[alert] Worker request budget threshold crossed.",
     "",
-    `Script: ${result.scriptName}`,
+    "Scope: all Workers in the Cloudflare account",
     `Checked at UTC: ${result.checkedAtUtc}`,
     `UTC day window: ${result.dayStartUtc} -> ${result.checkedAtUtc}`,
     `Last hour window: ${result.hourStartUtc} -> ${result.checkedAtUtc}`,
@@ -242,7 +238,6 @@ function buildIssueBody(result) {
 }
 
 async function main() {
-  const scriptName = process.env.WORKER_SCRIPT_NAME || DEFAULT_SCRIPT_NAME;
   const dailyThreshold = envInt("DAILY_REQUEST_THRESHOLD", DEFAULT_DAILY_THRESHOLD);
   const hourlyThreshold = envInt("HOURLY_REQUEST_THRESHOLD", DEFAULT_HOURLY_THRESHOLD);
   const resultPath = process.env.WORKER_REQUEST_BUDGET_RESULT || "worker-request-budget-result.json";
@@ -258,7 +253,7 @@ async function main() {
     hourlyThreshold,
     hourStartUtc: toIso(hourStart),
     issueTitle: "100xFenok Worker request budget alarm",
-    scriptName,
+    scope: "account",
   };
 
   if (!token) {
@@ -280,7 +275,6 @@ async function main() {
       dayStart,
       hourStart,
       now,
-      scriptName,
       token,
     });
 
@@ -304,7 +298,7 @@ async function main() {
     console.log(
       [
         `status=${result.status}`,
-        `script=${scriptName}`,
+        "scope=account",
         `account=${account.name} (${result.accountIdMasked}, ${account.source})`,
         `todayUtc=${result.todayRequests}/${dailyThreshold}`,
         `lastHour=${result.lastHourRequests}/${hourlyThreshold}`,
