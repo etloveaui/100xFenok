@@ -12,6 +12,8 @@ import {
   summarizeDataSetFreshness,
 } from "./lib/fenok-data-health-freshness.mjs";
 
+import { readLaneAttempt } from "./build-lane-registry-projection.mjs";
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCHEMA_VERSION = "fenok-data-health-kpi/v4";
 const KPI_REL_PATH = "admin/fenok-data-health-kpi.json";
@@ -66,7 +68,25 @@ function servingLkg(lane, dataRoot) {
   return Object.values(state.items).some((item) => item?.resolution_state === "lkg_primary");
 }
 
-function buildSet(lane, floor, dataRoot, nowIso) {
+// Persist only observed acquisition transitions in the existing health record.
+// Repeated projection builds keep the same streak; a newer source resets it.
+export function advanceOutcomeState(row, previous) {
+  const attempt = row.latest_attempt;
+  const stamp = Date.parse(attempt?.observed_at);
+  const old = previous?.outcome_state;
+  const source = row.newest_source_date ?? null;
+  if (!Number.isFinite(stamp)) return null;
+  const oldStamp = Date.parse(old?.attempt_at);
+  const sameSource = source !== null && source === old?.source_as_of;
+  if (old && sameSource && Number.isFinite(oldStamp) && stamp <= oldStamp) return old;
+  const counter = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+  return { attempt_at: attempt.observed_at, source_as_of: source,
+    unchanged_source_attempts: sameSource ? counter(old?.unchanged_source_attempts) + 1 : 1,
+    consecutive_retained: attempt.outcome === "retained"
+      ? sameSource ? counter(old?.consecutive_retained) + 1 : 1 : 0 };
+}
+
+function buildSet(lane, floor, dataRoot, nowIso, previous) {
   const freshness = summarizeDataSetFreshness(lane, floor, nowIso, DETECTION_CALENDARS, dataRoot);
   const row = {
     set: lane.id,
@@ -83,6 +103,8 @@ function buildSet(lane, floor, dataRoot, nowIso) {
     row.fresh_members = freshness.fresh_members;
     row.total_members = freshness.total_members;
   }
+  row.latest_attempt = readLaneAttempt(lane, { repoRoot: path.dirname(dataRoot) });
+  row.outcome_state = advanceOutcomeState(row, previous);
   const lkg = servingLkg(lane, dataRoot);
   if (lkg !== null) row.serving_lkg = lkg;
   return row;
@@ -96,9 +118,11 @@ export function buildKpiDocuments(nowIso = resolveNow(), {
   // The public root is an output boundary, never an alternate source of facts.
   void publicDataRoot;
   const rows = readDetectionFloorRows(dataRoot);
+  const previous = readOptionalJson(path.join(dataRoot, KPI_REL_PATH));
+  const priorSets = new Map((Array.isArray(previous?.sets) ? previous.sets : []).map(row => [row.set, row]));
   const sets = LANE_REGISTRY.lanes
     .filter((lane) => lane.lane_class === "detection_floor" && !HEALTH_SET_EXCLUSIONS.has(lane.id))
-    .map((lane) => buildSet(lane, rows.get(lane.id), dataRoot, nowIso));
+    .map((lane) => buildSet(lane, rows.get(lane.id), dataRoot, nowIso, priorSets.get(lane.id)));
   const rootDoc = { schema_version: SCHEMA_VERSION, generated_at: nowIso, sets };
   // Paths are public-safe before projection, so both mirrors carry one contract.
   const publicDoc = structuredClone(rootDoc);

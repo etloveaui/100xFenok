@@ -107,6 +107,31 @@ import {
     generation("2026-09-28T10:21:42Z", {}),
   ]).status, "unknown", "malformed generations stay unknown");
 
+  const outcomeGeneration = (at, state, extra = {}) => ({ generated_at: at, sets: [{
+    set: "gdelt_news_tone", status: state, newest_source_date: "2026-09-20",
+    latest_attempt: { observed_at: at, outcome: "retained" }, ...extra,
+  }] });
+  const retained = [outcomeGeneration("2026-09-28T11:30:00Z", "delayed"),
+    outcomeGeneration("2026-09-28T10:20:00Z", "delayed")];
+  const retainedAlarm = classifySnapshot(retained);
+  assert.equal(retainedAlarm.status, "alarm");
+  assert.deepEqual(retainedAlarm.outcome_alarms[0].reasons, ["source_not_advancing", "retained_streak"]);
+  const sameAttempt = structuredClone(retained);
+  sameAttempt[0].sets[0].latest_attempt = sameAttempt[1].sets[0].latest_attempt;
+  assert.equal(classifySnapshot(sameAttempt).status, "ok", "KPI rebuilds are not distinct retained attempts");
+  const alreadyRetained = structuredClone(sameAttempt);
+  alreadyRetained[0].sets[0].outcome_state = { attempt_at: alreadyRetained[0].sets[0].latest_attempt.observed_at,
+    source_as_of: alreadyRetained[0].sets[0].newest_source_date, consecutive_retained: 2, unchanged_source_attempts: 2 };
+  assert.equal(classifySnapshot(alreadyRetained).status, "alarm", "a projection-only refresh cannot close an observed retained streak");
+  const quarterly = structuredClone(retained);
+  quarterly.forEach(snapshot => { snapshot.sets[0].status = "fresh"; });
+  assert.equal(classifySnapshot(quarterly).status, "ok", "in-bound quarterly source may remain unchanged");
+  const lowMembers = structuredClone(sameAttempt);
+  lowMembers.forEach(snapshot => Object.assign(snapshot.sets[0], { fresh_members: 85, total_members: 100 }));
+  assert.deepEqual(classifySnapshot(lowMembers).outcome_alarms[0].reasons, ["member_ratio_low"]);
+  lowMembers[0].sets.push({ set: "unobserved_lane", status: "unknown" });
+  assert.equal(classifySnapshot(lowMembers).status, "alarm", "one unknown lane must not hide known unhealthy data");
+
   const kpiBody = buildIssueBody([{
     label: "Data stopped advancing",
     kpi_stopped_sets: ["stockanalysis_etf_detail"],

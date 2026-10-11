@@ -9,7 +9,7 @@ import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, e
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
-const VALID_KPI_STATUSES = new Set(["fresh", "delayed", "stopped"]);
+const VALID_KPI_STATUSES = new Set(["fresh", "delayed", "stopped", "unknown"]);
 const RUNS_PER_PAGE = 15;
 const FAST_CADENCE_FAILURE_STREAK_THRESHOLD = 2;
 const SLOW_CADENCE_FAILURE_STREAK_THRESHOLD = 1;
@@ -470,6 +470,40 @@ function kpiGenerationStatuses(generation) {
   return statuses;
 }
 
+// Outcome incidents require an existing source-bound breach. An unchanged
+// quarterly value while still in bound is healthy; retained copies alone do
+// not manufacture an outage. Rebuilt KPI envelopes are not new attempts.
+function sourceOutcomeAlarms(latest, previous) {
+  const prior = new Map(previous.sets.map(row => [row.set, row]));
+  const breached = row => ["delayed", "stopped"].includes(row?.status);
+  const lowRatio = row => Number.isSafeInteger(row?.total_members) && row.total_members > 0
+    && Number.isSafeInteger(row.fresh_members) && row.fresh_members >= 0
+    && row.fresh_members * 100 < row.total_members * 95;
+  return latest.sets.flatMap(row => {
+    const old = prior.get(row.set);
+    if (!breached(row) || !breached(old)) return [];
+    const reasons = [];
+    if (lowRatio(row) && lowRatio(old)) reasons.push("member_ratio_low");
+    const stamp = Date.parse(row.latest_attempt?.observed_at), oldStamp = Date.parse(old.latest_attempt?.observed_at);
+    const realCycle = Number.isFinite(stamp) && Number.isFinite(oldStamp) && stamp > oldStamp
+      && stamp <= Date.parse(latest.generated_at) && oldStamp <= Date.parse(previous.generated_at);
+    const source = Date.parse(row.newest_source_date), oldSource = Date.parse(old.newest_source_date);
+    const tracked = Number.isFinite(stamp) && stamp <= Date.parse(latest.generated_at)
+      && row.outcome_state?.attempt_at === row.latest_attempt?.observed_at
+      && row.outcome_state?.source_as_of === row.newest_source_date;
+    const unchanged = tracked && row.outcome_state.unchanged_source_attempts >= 2;
+    const retained = tracked && row.outcome_state.consecutive_retained >= 2;
+    if ((realCycle || unchanged) && row.date_basis !== "collected" && old.date_basis !== "collected"
+      && Number.isFinite(source) && source === oldSource) reasons.push("source_not_advancing");
+    if (retained || (realCycle && row.latest_attempt.outcome === "retained" && old.latest_attempt.outcome === "retained")) {
+      reasons.push("retained_streak");
+    }
+    return reasons.length ? [{ set: row.set, reasons, source_as_of: row.newest_source_date ?? null,
+      fresh_members: row.fresh_members ?? null, total_members: row.total_members ?? null,
+      latest_attempt_at: row.latest_attempt?.observed_at ?? null }] : [];
+  }).sort((a, b) => a.set.localeCompare(b.set));
+}
+
 /** Check generation liveness on its producer's clock, then compare data status. */
 export function classifyKpiGenerationStoppage(generations, { now = Date.now(), crons } = {}) {
   const latest = Array.isArray(generations) ? generations[0] : null;
@@ -506,9 +540,12 @@ export function classifyKpiGenerationStoppage(generations, { now = Date.now(), c
     .filter(([set, status]) => status === "stopped" && previousStatuses.get(set) === "stopped")
     .map(([set]) => set)
     .sort();
+  const outcomes = sourceOutcomeAlarms(latest, previous);
   return {
-    status: stopped_sets.length > 0 ? "alarm" : "ok",
+    status: stopped_sets.length || outcomes.length ? "alarm"
+      : [...latestStatuses.values()].includes("unknown") ? "unknown" : "ok",
     stopped_sets,
+    ...(outcomes.length ? { outcome_alarms: outcomes } : {}),
     latest_generated_at: latest.generated_at,
     previous_generated_at: previous.generated_at,
   };
@@ -966,8 +1003,14 @@ export function buildIssueBody(alarms) {
         lines.push("- KPI status: generation stopped advancing; its previous green status cannot establish current health");
         lines.push(`- Missed producer slots: ${alarm.missed_generation_slots}; age: ${alarm.age_hours}h`);
       } else {
-        lines.push("- KPI status: stopped in two consecutive generations");
-        lines.push(`- Data sets: ${alarm.kpi_stopped_sets.join(", ")}`);
+        if (alarm.kpi_stopped_sets.length) {
+          lines.push("- KPI status: stopped in two consecutive generations");
+          lines.push(`- Data sets: ${alarm.kpi_stopped_sets.join(", ")}`);
+        }
+        for (const row of alarm.kpi_outcome_alarms || []) {
+          lines.push(`- ${row.set}: ${row.reasons.join(", ")}; source ${row.source_as_of ?? "unknown"}`);
+          if (row.total_members !== null) lines.push(`  - Members inside bound: ${row.fresh_members}/${row.total_members}`);
+        }
       }
       lines.push(`- Latest KPI generation: ${alarm.latest_generated_at ?? "unknown"}`);
       lines.push(`- Previous KPI generation: ${alarm.previous_generated_at ?? "unknown"}`);
@@ -1295,6 +1338,7 @@ export async function main() {
         label: "Data stopped advancing",
         kpi_stopped_sets: dataHealthKpi.stopped_sets,
         kpi_reason: dataHealthKpi.reason,
+        kpi_outcome_alarms: dataHealthKpi.outcome_alarms,
         age_hours: dataHealthKpi.age_hours,
         missed_generation_slots: dataHealthKpi.missed_generation_slots,
         latest_generated_at: dataHealthKpi.latest_generated_at,
