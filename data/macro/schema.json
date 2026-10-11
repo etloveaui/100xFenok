@@ -49,7 +49,7 @@
           "dataset": "\"macro_activity_surveys\"",
           "frequency": "\"monthly\"",
           "coverage": "Per-dataset record count, date range, latest date/release date, latest values",
-          "update_policy": "Append by dataset/date, preserve existing non-empty values, report source revisions"
+          "update_policy": "Append by dataset/date; the newest owner workbook is authoritative for existing dates: a differing source value replaces the stored value and is logged, an empty source cell never erases a stored value, and a revision beyond the sanity bound is held for review"
         },
         "datasets.{dataset_id}": {
           "dataset": "oecd_cli | pmi_manufacturing | pmi_services | ism_manufacturing | ism_services",

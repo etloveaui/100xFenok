@@ -33,4 +33,4 @@
 - Latest FDIC Tier1 refresh: 2026-03-31, average Tier 1 capital ratio 13.3%, 4,352 banks
 - `activity-surveys.json` keeps empty source columns in `empty_source_series` but exposes only series with numeric observations
 - Latest activity survey refresh: 945 total records; OECD CLI and manufacturing/services PMI/ISM components through 2026-09
-- ISM `point_change` scale: rows through 2026-08 hold hundredths of a point (for example `-0.01` for a 1.0 point fall, from the older `% Point Change` workbook column); the 2026-09 row comes from the new `Point Change` column and holds points (`-0.1`). History is preserved as published, so compare `point_change` only within the same scale or derive the change from `headline`
+- ISM `point_change` is in points throughout (converter 1.1.0): the older history stored in hundredths of a point (`-0.01` for a one-point fall) was normalised to points, and each month's value agrees with the change of the stored `headline` within 0.05. The newest owner workbook is authoritative for existing dates; replaced values are logged in the converter revision report, and revisions beyond the sanity bound are held for review
