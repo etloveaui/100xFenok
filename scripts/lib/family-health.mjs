@@ -1,4 +1,4 @@
-import rotation from "../etf_detail_rotation_policy.json" with { type: "json" };
+import rotation from "./etf-detail-rotation-policy.json" with { type: "json" };
 
 // One family record. Source freshness is deliberately unevaluated until the
 // shared calendar model supplies it; byte parity is not a freshness verdict.
