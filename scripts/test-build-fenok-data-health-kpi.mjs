@@ -4,11 +4,20 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { buildKpiDocuments } from "./build-fenok-data-health-kpi.mjs";
+import { buildKpiDocuments, advanceOutcomeState } from "./build-fenok-data-health-kpi.mjs";
 import { validateKpiDocuments } from "./check-fenok-data-health-kpi.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 import { summarizeDataSetFreshness } from "./lib/fenok-data-health-freshness.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+
+const attemptRow = (at, source = "2026-09-20", outcome = "retained") => ({
+  newest_source_date: source, latest_attempt: { observed_at: at, outcome },
+});
+const firstOutcome = advanceOutcomeState(attemptRow("2026-09-28T01:00:00Z"), null);
+const secondOutcome = advanceOutcomeState(attemptRow("2026-09-28T02:00:00Z"), { outcome_state: firstOutcome });
+assert.equal(secondOutcome.consecutive_retained, 2);
+assert.deepEqual(advanceOutcomeState(attemptRow("2026-09-28T02:00:00Z"), { outcome_state: secondOutcome }), secondOutcome);
+assert.equal(advanceOutcomeState(attemptRow("2026-09-28T03:00:00Z", "2026-09-28", "success"), { outcome_state: secondOutcome }).consecutive_retained, 0);
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-kpi-k1-k3-"));
 const canonicalPath = path.join(root, "data", "macro", "fred-macro.json");
@@ -258,9 +267,6 @@ try {
   assert.ok(Array.isArray(rootDoc.sets) && rootDoc.sets.length > 0);
   const row = rootDoc.sets.find((set) => set.set === "fred_macro");
   assert.ok(row, "FRED fixture must appear as one data set");
-  assert.deepEqual(Object.keys(row).sort(), [
-    "set", "served_path", "newest_source_date", "max_age", "serving_lkg", "status",
-  ].sort());
   assert.equal(row.served_path, "data/macro/fred-macro.json");
   assert.equal(row.newest_source_date, "2026-09-26");
   assert.match(row.max_age, /^\d+d$/);

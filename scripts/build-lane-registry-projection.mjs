@@ -569,11 +569,18 @@ function buildScheduleState(lane, context, attempt) {
   };
 }
 
+// The KPI and board read the same actual attempt evidence. Generated envelope
+// clocks never become collection attempts.
+export function readLaneAttempt(lane, context = {}) {
+  const normalized = { ...context, repoRoot: context.repoRoot || REPO_ROOT };
+  return normalizeAttempt(latestAttempt(readAttemptRows(lane, normalized, recoveryStoreFor(lane, normalized))));
+}
+
 export function buildControlRoomState(lane, context = {}) {
   const normalizedContext = createProjectionContext(context);
   const kpiLane = kpiLaneFor(lane, normalizedContext);
   const store = recoveryStoreFor(lane, normalizedContext);
-  const attempt = normalizeAttempt(latestAttempt(readAttemptRows(lane, normalizedContext, store)));
+  const attempt = readLaneAttempt(lane, normalizedContext);
   const state = {
     schedule: buildScheduleState(lane, normalizedContext, attempt),
     latest_attempt: attempt,
