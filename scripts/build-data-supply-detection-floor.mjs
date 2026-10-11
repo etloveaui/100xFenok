@@ -14,7 +14,7 @@ import {
 import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 import { freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "../100xfenok-next/src/lib/freshness-policy.mjs";
-import { KRX_MARKET_HOLIDAYS_2026 } from "./lib/market-calendar.mjs";
+import { KRX_MARKET_HOLIDAYS } from "./lib/market-calendar.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -642,7 +642,7 @@ function calendarById(calendars, id) {
   // KRX source age uses the canonical market calendar. The detector JSON
   // continues to own workflow schedules and never copies these holidays.
   if (id === "kr_trading") return {
-    id, timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: KRX_MARKET_HOLIDAYS_2026,
+    id, timezone: "Asia/Seoul", weekend_days: [0, 6], holidays: KRX_MARKET_HOLIDAYS,
   };
   const row = calendars.calendars.find((candidate) => candidate.id === id);
   if (!row) fail("calendar_error", `calendar ${id} is missing`);

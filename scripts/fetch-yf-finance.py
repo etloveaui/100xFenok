@@ -937,15 +937,15 @@ def chart_quote_session_dates(ticker, quote_as_of):
         raise ValueError("chart quote market is unsupported")
     session_date = _parse_utc(quote_as_of).astimezone(ZoneInfo(market[2])).date().isoformat()
     script = r"""
-import {isBusinessDay, calendar_version} from './scripts/lib/market-calendar.mjs';
+import {isBusinessDay, calendar_covers} from './scripts/lib/market-calendar.mjs';
 let raw = ''; for await (const chunk of process.stdin) raw += chunk;
 const {date, market} = JSON.parse(raw);
-const year = calendar_version.match(/-(\d{4})$/)?.[1];
-if (!year || !date.startsWith(year + '-') || !isBusinessDay(date, market)) throw new Error('quote session is outside the verified calendar');
+const covered = (day) => day >= calendar_covers.from && day <= calendar_covers.through;
+if (!covered(date) || !isBusinessDay(date, market)) throw new Error('quote session is outside the verified calendar');
 let prior = date;
 do {prior = new Date(Date.parse(prior + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);}
-while (prior.startsWith(year + '-') && !isBusinessDay(prior, market));
-if (!prior.startsWith(year + '-')) throw new Error('previous session is outside the verified calendar');
+while (covered(prior) && !isBusinessDay(prior, market));
+if (!covered(prior)) throw new Error('previous session is outside the verified calendar');
 process.stdout.write(JSON.stringify([date, prior]));
 """
     result = subprocess.run(["node", "--input-type=module", "-e", script], cwd=ROOT,

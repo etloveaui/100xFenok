@@ -5,13 +5,17 @@
  * wall-clock-hour age helpers so the builder and the checker share one exact
  * definition of "how stale is this source date".
  *
- * Phase A scope: fixed 2026 holiday lists are sufficient. The business-day
+ * Phase A scope: fixed 2026-2027 holiday lists are sufficient. The business-day
  * logic duplicated in fetch-fenok-occ-options-volume.mjs / build-fenok-flow-proxies.mjs
  * is not migrated in this wave (opportunistic per contract §5). Thresholds and
  * holiday lists are tunable constants.
  */
 
-export const calendar_version = "market-calendar/v1-2026";
+export const calendar_version = "market-calendar/v1-2026-2027";
+
+// First and last calendar day the holiday lists below cover. Readers that must
+// not guess a session outside the verified lists check against this range.
+export const calendar_covers = Object.freeze({ from: "2026-01-01", through: "2027-12-31" });
 
 // US equity market full-day closures, 2026 (observed dates).
 export const US_MARKET_HOLIDAYS_2026 = Object.freeze([
@@ -27,6 +31,23 @@ export const US_MARKET_HOLIDAYS_2026 = Object.freeze([
   "2026-12-25", // Christmas Day
 ]);
 
+// US equity market full-day closures, 2027 (observed dates), from NYSE's
+// published holiday schedule. New Year's Day 2028 falls on a Saturday and is
+// not observed, so 2027-12-31 is a session. Early close at 1:00 p.m. ET:
+// 2027-11-26.
+export const US_MARKET_HOLIDAYS_2027 = Object.freeze([
+  "2027-01-01", // New Year's Day
+  "2027-01-18", // Martin Luther King Jr. Day
+  "2027-02-15", // Washington's Birthday
+  "2027-03-26", // Good Friday
+  "2027-05-31", // Memorial Day
+  "2027-06-18", // Juneteenth (observed, Jun 19 is Saturday)
+  "2027-07-05", // Independence Day (observed, Jul 4 is Sunday)
+  "2027-09-06", // Labor Day
+  "2027-11-25", // Thanksgiving Day
+  "2027-12-24", // Christmas Day (observed, Dec 25 is Saturday)
+]);
+
 // KRX full-day closures, 2026 (includes substitute holidays).
 export const KRX_MARKET_HOLIDAYS_2026 = Object.freeze([
   "2026-01-01", // New Year's Day
@@ -38,6 +59,7 @@ export const KRX_MARKET_HOLIDAYS_2026 = Object.freeze([
   "2026-05-05", // Children's Day
   "2026-05-25", // Buddha's Birthday (substitute, May 24 is Sunday)
   "2026-06-03", // Nationwide local election (NEC schedule; KRX election-day closure)
+  "2026-07-17", // Constitution Day (public holiday again from 2026)
   "2026-08-17", // Liberation Day (substitute, Aug 15 is Saturday)
   "2026-09-24", // Chuseok holiday
   "2026-09-25", // Chuseok
@@ -48,9 +70,37 @@ export const KRX_MARKET_HOLIDAYS_2026 = Object.freeze([
   "2026-12-31", // Year-end market closure
 ]);
 
+// KRX weekday closures, 2027. PROVISIONAL: KRX has not yet published its 2027
+// market holiday notice. Dates are the statutory public holidays and substitute
+// holidays in the 2027 calendar data of the Korea Astronomy and Space Science
+// Institute (announced 2026-06-29), plus the exchange's standing year-end
+// closing day. No nationwide election is scheduled for 2027.
+export const KRX_MARKET_HOLIDAYS_2027 = Object.freeze([
+  "2027-01-01", // New Year's Day
+  "2027-02-08", // Seollal holiday (Seollal is Sunday Feb 7)
+  "2027-02-09", // Seollal (substitute)
+  "2027-03-01", // Independence Movement Day
+  "2027-05-03", // Labour Day (substitute, May 1 is Saturday)
+  "2027-05-05", // Children's Day
+  "2027-05-13", // Buddha's Birthday
+  "2027-07-19", // Constitution Day (substitute, Jul 17 is Saturday)
+  "2027-08-16", // Liberation Day (substitute, Aug 15 is Sunday)
+  "2027-09-14", // Chuseok holiday
+  "2027-09-15", // Chuseok
+  "2027-09-16", // Chuseok holiday
+  "2027-10-04", // National Foundation Day (substitute, Oct 3 is Sunday)
+  "2027-10-11", // Hangeul Day (substitute, Oct 9 is Saturday)
+  "2027-12-27", // Christmas Day (substitute, Dec 25 is Saturday)
+  "2027-12-31", // Year-end market closure
+]);
+
+// Every listed year, for readers that need the whole calendar.
+export const US_MARKET_HOLIDAYS = Object.freeze([...US_MARKET_HOLIDAYS_2026, ...US_MARKET_HOLIDAYS_2027]);
+export const KRX_MARKET_HOLIDAYS = Object.freeze([...KRX_MARKET_HOLIDAYS_2026, ...KRX_MARKET_HOLIDAYS_2027]);
+
 const HOLIDAYS = {
-  us_market: new Set(US_MARKET_HOLIDAYS_2026),
-  krx_market: new Set(KRX_MARKET_HOLIDAYS_2026),
+  us_market: new Set(US_MARKET_HOLIDAYS),
+  krx_market: new Set(KRX_MARKET_HOLIDAYS),
 };
 
 export function isoDateOf(value) {
