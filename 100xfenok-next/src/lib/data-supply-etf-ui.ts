@@ -1,4 +1,5 @@
 export type EtfResolutionState = "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
+export type EtfSourceFreshness = "fresh" | "stale" | "expired" | "unknown";
 
 export interface EtfDataSupply {
   security_lifecycle?: {
@@ -20,6 +21,8 @@ export interface EtfDataSupply {
   reason_code: string | null;
   recovery_transition: "unavailable" | null;
   projection_digest: string;
+  /** The server's reading of the source age on this request. Absent in payloads from before that field. */
+  source_freshness?: EtfSourceFreshness;
 }
 
 export type EtfApiResult<T> =
@@ -158,6 +161,16 @@ export function parseEtfDataSupply(value: unknown): EtfDataSupply | null {
   return record as unknown as EtfDataSupply;
 }
 
+// resolution_state is frozen when a selection is made, so a selection can keep
+// a "fresh" state long after its source aged. source_freshness is the server's
+// current reading. Only "stale" and "expired" change the wording; "fresh",
+// "unknown", an absent field or any other value leave it as it was.
+function agedSourceWording(value: unknown): { label: string; reason: string } | null {
+  if (value === "stale") return { label: "오래된 자료", reason: "자료 기준일이 정상 갱신 기간을 넘겼습니다." };
+  if (value === "expired") return { label: "기한이 지난 자료", reason: "자료 기준일이 허용 기한을 넘겼습니다." };
+  return null;
+}
+
 export function getEtfDataSupplyPresentation(dataSupply: EtfDataSupply | null): EtfDataSupplyPresentation {
   if (dataSupply?.security_lifecycle) {
     const lifecycle = dataSupply.security_lifecycle;
@@ -173,13 +186,25 @@ export function getEtfDataSupplyPresentation(dataSupply: EtfDataSupply | null): 
       degraded: true,
     };
   }
+  const aged = agedSourceWording(dataSupply?.source_freshness);
+  if (dataSupply?.resolution_state === "fresh_primary" && aged) {
+    return {
+      label: aged.label,
+      description: `${aged.reason} 받은 값은 기준일과 함께 그대로 표시합니다.`,
+      sourceDate: dataSupply.source_as_of,
+      ageDays: dataSupply.source_age_days,
+      degraded: true,
+    };
+  }
   if (!dataSupply || dataSupply.resolution_state === "fresh_primary") {
     return { label: null, description: null, sourceDate: dataSupply?.source_as_of ?? null, ageDays: dataSupply?.source_age_days ?? null, degraded: false };
   }
   if (dataSupply.resolution_state === "fresh_fallback") {
     return {
-      label: "보조 공급원 최신값",
-      description: "주 공급원 대신 검증된 보조 공급원의 최신값을 표시합니다.",
+      label: aged ? `보조 공급원 · ${aged.label}` : "보조 공급원 최신값",
+      description: aged
+        ? `주 공급원 대신 검증된 보조 공급원의 값을 표시합니다. ${aged.reason}`
+        : "주 공급원 대신 검증된 보조 공급원의 최신값을 표시합니다.",
       sourceDate: dataSupply.source_as_of,
       ageDays: dataSupply.source_age_days,
       degraded: true,
@@ -195,8 +220,8 @@ export function getEtfDataSupplyPresentation(dataSupply: EtfDataSupply | null): 
     };
   }
   return {
-    label: "마지막 확인값",
-    description: "현재 공급원이 지연되어 마지막으로 검증된 값을 원래 기준일과 함께 표시합니다.",
+    label: aged ? `마지막 확인값 · ${aged.label}` : "마지막 확인값",
+    description: `현재 공급원이 지연되어 마지막으로 검증된 값을 원래 기준일과 함께 표시합니다.${aged ? ` ${aged.reason}` : ""}`,
     sourceDate: dataSupply.source_as_of,
     ageDays: dataSupply.source_age_days,
     degraded: true,
