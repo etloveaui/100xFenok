@@ -161,19 +161,20 @@ for (const { file, family, source } of SOURCE_WORKFLOWS) {
   assert.ok(!source.includes("stage-lane-manifest.sh"), "coordinator must not stage lane files in YAML");
   assert.ok(!source.includes("- name: Commit"), "coordinator must have no Commit step");
   assert.ok(source.includes("environment: production"), "coordinator must run in the production environment for plane secrets");
-  assertMinimalWriterPermissions(source, "coordinate-computed-signals.yml");
+  assert.match(source, /permissions:\n  contents: read\n/, "plane-only coordinator requires read-only Git permissions");
+  assert.doesNotMatch(source, /contents: write|fenok-data-writer-refs\/heads\/main/, "plane-only coordinator must leave the Git writer group");
+  assert.match(source, /group: computed-signals-publish\n  cancel-in-progress: false\n  queue: max/, "family publication remains serialized without cancellations");
 }
 
-// All seven computed-signals workflows share Update Manifest's exact global
-// writer queue. This eliminates source/UM Git races by construction;
+// All six source writers share Update Manifest's exact global writer queue.
+// The plane-only coordinator uses its own family lock;
 // queue max retains every completion and cancel false preserves in-flight work.
 {
   const updateManifestSource = readWorkflow("update-manifest.yml");
   const queued = [
     ...SOURCE_WORKFLOWS.map(({ file, source }) => ({ file, source })),
-    { file: "coordinate-computed-signals.yml", source: readWorkflow("coordinate-computed-signals.yml") },
   ];
-  assert.equal(queued.length, 7);
+  assert.equal(queued.length, 6);
   for (const { file, source } of [{ file: "update-manifest.yml", source: updateManifestSource }, ...queued]) {
     const groups = [...source.matchAll(/^\s+group:\s*(.+)$/gm)].map((match) => match[1].trim()).filter((group) => group === GLOBAL_WRITER_GROUP);
     assert.deepEqual(groups, [GLOBAL_WRITER_GROUP], `${file} must declare exactly the shared global writer group`);

@@ -31,13 +31,11 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  # Deliberately share Update Manifest's global writer queue with all six
-  # sources. Acquisition commits, this outcome commit, and UM's expensive
-  # projection commit therefore cannot advance main underneath one another.
-  group: fenok-data-writer-refs/heads/main
+  # Plane-only publication never holds the Git writer queue.
+  group: computed-signals-publish
   cancel-in-progress: false
   queue: max
 
@@ -74,9 +72,10 @@ jobs:
     # The cloud data plane's credentials live in the production environment
     # (same secret surface as the source publishers).
     environment: production
-    timeout-minutes: 60
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
+        timeout-minutes: 2
         uses: actions/checkout@v4
         with:
           filter: blob:none
@@ -95,8 +94,8 @@ jobs:
         # The triggering run's SHA may be older than the tip; the exporter
         # must rebuild from the newest committed sources on origin/main.
         run: |
-          git fetch --depth=1 origin +main:refs/remotes/origin/main
-          git checkout -B main origin/main
+          timeout 60s git fetch --depth=1 origin +main:refs/remotes/origin/main
+          timeout 30s git checkout -B main origin/main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
