@@ -64,6 +64,8 @@ import {
 // stopped generation is not yet a K3 incident; unreadable history is unknown,
 // never a healthy result that can clear an open issue.
 {
+  const classifySnapshot = (generations) => classifyKpiGenerationStoppage(generations,
+    { now: Date.parse("2026-09-28T11:40:00Z") });
   const generation = (generated_at, rows) => ({
     generated_at,
     sets: Object.entries(rows).map(([set, status]) => ({ set, status })),
@@ -78,29 +80,29 @@ import {
     stockanalysis_etf_detail: "stopped",
     sentiment: "delayed",
   });
-  assert.deepEqual(classifyKpiGenerationStoppage([current, previous]), {
+  assert.deepEqual(classifySnapshot([current, previous]), {
     status: "alarm",
     stopped_sets: ["stockanalysis_etf_detail"],
     latest_generated_at: current.generated_at,
     previous_generated_at: previous.generated_at,
   });
   assert.equal(
-    classifyKpiGenerationStoppage([
+    classifySnapshot([
       generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
       generation("2026-09-28T10:21:42Z", { stockanalysis_etf_detail: "fresh" }),
     ]).status,
     "ok",
     "the set pages only when it is stopped in both latest generations",
   );
-  const oneStopped = classifyKpiGenerationStoppage([
+  const oneStopped = classifySnapshot([
     generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
     generation("2026-09-28T10:21:42Z", { stockanalysis_etf_detail: "delayed" }),
   ]);
   assert.equal(oneStopped.status, "ok", "one stopped generation does not page");
   assert.deepEqual(oneStopped.stopped_sets, []);
-  assert.equal(classifyKpiGenerationStoppage([current]).status, "unknown", "one snapshot cannot clear or page");
-  assert.equal(classifyKpiGenerationStoppage([previous, current]).status, "unknown", "out-of-order generations stay unknown");
-  assert.equal(classifyKpiGenerationStoppage([
+  assert.equal(classifySnapshot([current]).status, "unknown", "one snapshot cannot clear or page");
+  assert.equal(classifySnapshot([previous, current]).status, "unknown", "out-of-order generations stay unknown");
+  assert.equal(classifySnapshot([
     generation("2026-09-28T11:34:19Z", { stockanalysis_etf_detail: "stopped" }),
     generation("2026-09-28T10:21:42Z", {}),
   ]).status, "unknown", "malformed generations stay unknown");
@@ -897,3 +899,30 @@ assert.match(
 }
 
 console.log("check-pipeline-job-health tests passed");
+
+// A frozen green KPI is an incident once two actual producer slots expire.
+{
+  const generation = (stamp) => ({ generated_at: stamp, sets: [{ set: "fred_macro", status: "fresh" }] });
+  const generations = [generation("2026-10-10T09:40:00Z"), generation("2026-10-10T02:40:00Z")];
+  const crons = ["30 2 * * *", "30 9 * * *"];
+  assert.equal(classifyKpiGenerationStoppage(generations,
+    { now: Date.parse("2026-10-11T03:45:00Z"), crons }).status, "ok", "one missed declared slot is tolerated");
+  assert.equal(classifyKpiGenerationStoppage(generations,
+    { now: Date.parse("2026-10-11T10:29:00Z"), crons }).status, "ok", "the current build retains its execution allowance");
+  const frozen = classifyKpiGenerationStoppage(generations, { now: Date.parse("2026-10-11T10:30:00Z"), crons });
+  assert.equal(frozen.status, "alarm");
+  assert.equal(frozen.reason, "kpi_generation_stale");
+  assert.equal(frozen.missed_generation_slots, 2);
+  assert.equal(classifyKpiGenerationStoppage([generations[0]],
+    { now: Date.parse("2026-10-11T10:30:00Z"), crons }).status, "alarm", "missing prior history cannot hide a frozen latest generation");
+  assert.equal(classifyKpiGenerationStoppage(generations,
+    { now: Date.parse("2026-10-11T04:01:00Z"), crons: ["0 * * * *"] }).status, "alarm", "the bound follows a changed producer cadence");
+  assert.equal(classifyKpiGenerationStoppage(generations,
+    { now: Date.parse("2026-10-10T01:00:00Z"), crons }).status, "unknown", "future generations cannot clear health");
+  const fresh = [generation("2026-10-11T10:31:00Z"), generations[0]];
+  assert.equal(classifyKpiGenerationStoppage(fresh,
+    { now: Date.parse("2026-10-11T10:32:00Z"), crons }).status, "ok");
+  assert.match(buildIssueBody([{ kpi_stopped_sets: [], kpi_reason: frozen.reason,
+    latest_generated_at: frozen.latest_generated_at, missed_generation_slots: 2, age_hours: frozen.age_hours }]),
+    /generation stopped advancing/);
+}

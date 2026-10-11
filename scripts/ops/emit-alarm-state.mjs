@@ -33,8 +33,8 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
   const kpiAlarm = dataHealthKpi?.status === "alarm"
     ? {
         workflow: "data-health-kpi",
-        label: "Data stopped advancing",
-        alarm_reasons: ["data_stopped_two_generations"],
+        label: dataHealthKpi.reason === "kpi_generation_stale" ? "Data health KPI stopped advancing" : "Data stopped advancing",
+        alarm_reasons: [dataHealthKpi.reason === "kpi_generation_stale" ? "kpi_generation_stale" : "data_stopped_two_generations"],
         stopped_sets: Array.isArray(dataHealthKpi.stopped_sets)
           ? [...new Set(dataHealthKpi.stopped_sets.filter((set) => typeof set === "string"))].sort()
           : [],

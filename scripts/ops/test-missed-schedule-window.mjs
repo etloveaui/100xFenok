@@ -26,7 +26,6 @@ import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_MARKER, dueDispatches, dispatchDue
 
 import {
   MISSED_WINDOW_MULTIPLIER,
-  MISSED_WINDOW_WORKFLOWS,
   aggregateExternalClockHealth,
   annotateQueueEvictions,
   buildIssueBody,
@@ -66,17 +65,12 @@ assert.equal(cronIntervalHours("15 10 * * *"), 24);
 assert.equal(cronIntervalHours("0 9 1 * *"), 24 * 31);
 assert.equal(cronIntervalHours("not a cron"), null);
 
-// The scope list must name only real detectors and must not be empty.
-assert.ok(MISSED_WINDOW_WORKFLOWS.size > 0, "an empty scope protects nothing");
-for (const file of MISSED_WINDOW_WORKFLOWS) {
-  assert.match(file, /^[a-z0-9-]+\.yml$/, `${file} is not a workflow file name`);
-}
-assert.ok(
-  !MISSED_WINDOW_WORKFLOWS.has("update-manifest.yml") && MISSED_WINDOW_WORKFLOWS.has("deploy-worker.yml"),
-  "reconciliation uses exact clock slots; deploy remains a detector",
-);
-assert.ok(MISSED_WINDOW_WORKFLOWS.has("retention-restore.yml"), "the restore watchdog owns a schedule to monitor");
-assert.ok(!MISSED_WINDOW_WORKFLOWS.has("retention-sweep.yml"), "the owner-controlled sweep campaign stays exempt");
+// Coverage follows declared calendars, including workflows added after this test.
+const missedWindowFiles = deriveWorkflowWatchPolicy().watched
+  .filter((row) => row.crons.length && row.file !== "retention-sweep.yml").map((row) => row.file);
+assert.ok(missedWindowFiles.includes("update-manifest.yml"));
+assert.ok(missedWindowFiles.includes("retention-restore.yml"));
+assert.ok(missedWindowFiles.includes("deploy-worker.yml"));
 
 // Slots are counted, not elapsed multiples. This is the regression that matters:
 // an elapsed-multiple rule passed its own unit test and still missed the real
@@ -97,15 +91,15 @@ assert.equal(missedSlotCount("23 * * * *", earlyRun, halfHour), 0);
 assert.equal(declaredMissedSlotCount("23 * * * *", earlyRun, halfHour), 1);
 const legacyEarly = evaluateWorkflow(detector("data-plane-serving-probe.yml", "23 * * * *"),
   [run(41, "2026-08-21T00:00:00Z")], { now: halfHour });
-assert.equal(legacyEarly.missed_schedule_slot_count, 0, "existing detectors keep the legacy counter");
+assert.equal(legacyEarly.missed_schedule_slot_count, 1, "observers count actual scheduled instants");
 const reorderedStarts = evaluateWorkflow(detector("data-plane-serving-probe.yml", "23 * * * *"),
   [run(43, "2026-08-21T00:00:00Z"), run(42, "2026-08-21T01:00:00Z")], { now: NOW });
-assert.equal(reorderedStarts.missed_schedule_slot_count, 1, "existing detectors keep the newest-counted-run anchor even when queue delays reorder start times");
+assert.equal(reorderedStarts.missed_schedule_slot_count, 2, "existing detectors keep the newest-counted-run anchor even when queue delays reorder start times");
 
 
 {
   // One missed slot is tolerated: GitHub drops scheduled runs routinely.
-  const file = [...MISSED_WINDOW_WORKFLOWS][0];
+  const file = missedWindowFiles[0];
   const started = "2026-08-21T00:30:00Z";
   const result = evaluateWorkflow(detector(file, "11 * * * *"), [run(2, started)], { now: NOW });
   assert.equal(result.latest_run_started_at, started);
@@ -127,9 +121,9 @@ assert.equal(reorderedStarts.missed_schedule_slot_count, 1, "existing detectors 
 }
 
 {
-  // A workflow outside the detector scope never gets this reason, however late.
+  // A workflow without its own schedule has no invented expectation.
   const result = evaluateWorkflow(
-    detector("coordinate-computed-signals.yml", "11 * * * *"),
+    { ...detector("coordinate-computed-signals.yml", "11 * * * *"), crons: [] },
     [run(2, new Date(NOW - 400 * HOUR).toISOString())],
     { now: NOW },
   );
@@ -138,7 +132,7 @@ assert.equal(reorderedStarts.missed_schedule_slot_count, 1, "existing detectors 
 
 {
   // No cron means no expectation to measure against.
-  const file = [...MISSED_WINDOW_WORKFLOWS][0];
+  const file = missedWindowFiles[0];
   const result = evaluateWorkflow(
     { ...detector(file, "11 * * * *"), crons: [] },
     [run(2, new Date(NOW - 400 * HOUR).toISOString())],
@@ -251,7 +245,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     { now: STALE_PROBE_NOW },
   );
   assert.equal(result.latest_run_started_at, "2026-08-19T07:24:30Z");
-  assert.equal(result.missed_schedule_slot_count, 105, "existing serving-probe counting stays unchanged");
+  assert.equal(result.missed_schedule_slot_count, 104, "the actual six-hour UTC slots determine the count");
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
   assert.equal(
     needsMissedWindowReverification(result),
@@ -289,7 +283,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     agreeing,
     { now: STALE_PROBE_NOW },
   );
-  assert.equal(result.missed_schedule_slot_count, 105);
+  assert.equal(result.missed_schedule_slot_count, 104);
   assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
 }
 
@@ -500,7 +494,7 @@ const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "fai
     "unreadable clock evidence must not clear an incident");
 }
 
-console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors plus registry producers, x${MISSED_WINDOW_MULTIPLIER} tolerance; A1 clock fire/recovery)`);
+console.log(`missed schedule window: ok (${missedWindowFiles.length} declared workflow calendars, x${MISSED_WINDOW_MULTIPLIER} tolerance; A1 clock fire/recovery)`);
 
 // X7b: hourly marked no-op/yield runs still prove clock creation. Neither a
 // daily GitHub fallback nor human dispatch can conceal absent hourly markers.
@@ -516,4 +510,20 @@ console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detecto
   assert.equal(evaluateExternalClock(workflow, [fallback, marked], { now: Date.parse("2026-10-12T09:50:00Z") }).status, "alarm");
   assert.equal(evaluateWorkflow(workflow, [marked], { now: Date.parse("2026-10-12T08:50:00Z") }).alarming, true);
   assert.equal(dueDispatches(new Date(slot)).filter((row) => row.file === workflow.file).length, 1);
+}
+
+// New detectors need no hand-maintained scope list, and all declared crons count.
+{
+  const workflow = { ...detector("new-observer.yml", "7 * * * *"), crons: ["7 * * * *", "17 2,14 * * *"] };
+  const result = evaluateWorkflow(workflow, [run(1, "2026-10-11T13:08:00Z")],
+    { now: Date.parse("2026-10-11T14:18:00Z") });
+  assert.equal(result.missed_schedule_slot_count, 2);
+  assert.ok(result.alarm_reasons.includes("missed_schedule_window"));
+  const manual = evaluateWorkflow(workflow, [run(2, "2026-10-11T14:18:00Z", { event: "workflow_dispatch" }), run(1, "2026-10-11T13:08:00Z")],
+    { now: Date.parse("2026-10-11T14:19:00Z") });
+  assert.equal(manual.missed_schedule_slot_count, 2);
+  assert.equal(manual.recovery_pending_next_scheduled_run, true);
+  const unknown = evaluateWorkflow(workflow, [run(2, "2026-10-11T14:18:00Z", { event: "workflow_dispatch" })],
+    { now: Date.parse("2026-10-11T14:19:00Z") });
+  assert.equal(unknown.status, "unknown");
 }

@@ -470,17 +470,36 @@ function kpiGenerationStatuses(generation) {
   return statuses;
 }
 
-/** Compare the two newest committed KPI generations; unreadable history is unknown, never clear. */
-export function classifyKpiGenerationStoppage(generations) {
+/** Check generation liveness on its producer's clock, then compare data status. */
+export function classifyKpiGenerationStoppage(generations, { now = Date.now(), crons } = {}) {
+  const latest = Array.isArray(generations) ? generations[0] : null;
+  const latestTime = Date.parse(latest?.generated_at ?? "");
+  if (Number.isFinite(latestTime) && latestTime <= now) {
+    // Manifest has two guaranteed daily reconciliation slots, with a 60-minute
+    // job timeout. Pushes can refresh the KPI sooner but are not a guaranteed
+    // clock. Two elapsed producer slots (plus that execution allowance) catch
+    // a frozen green KPI without inventing an unsupported six-hour cadence.
+    const declaredCrons = crons ?? workflowMetadata("update-manifest.yml",
+      fs.readFileSync(path.join(WORKFLOWS_DIR, "update-manifest.yml"), "utf8")).crons;
+    const missed = declaredMissedSlotCount(declaredCrons, latestTime, now - 60 * 60_000);
+    if (missed === null) return { status: "unknown", reason: "kpi_generation_cadence_unreadable", stopped_sets: [] };
+    if (missed >= MISSED_WINDOW_MULTIPLIER) {
+      return {
+        status: "alarm", reason: "kpi_generation_stale", stopped_sets: [],
+        latest_generated_at: latest.generated_at,
+        age_hours: Number(((now - latestTime) / 3_600_000).toFixed(2)),
+        missed_generation_slots: missed,
+      };
+    }
+  }
   if (!Array.isArray(generations) || generations.length !== 2) {
     return { status: "unknown", reason: "two_kpi_generations_unavailable", stopped_sets: [] };
   }
-  const [latest, previous] = generations;
+  const previous = generations[1];
   const latestStatuses = kpiGenerationStatuses(latest);
   const previousStatuses = kpiGenerationStatuses(previous);
-  const latestTime = Date.parse(latest?.generated_at ?? "");
   const previousTime = Date.parse(previous?.generated_at ?? "");
-  if (!latestStatuses || !previousStatuses || latestTime <= previousTime) {
+  if (!latestStatuses || !previousStatuses || latestTime <= previousTime || latestTime > now) {
     return { status: "unknown", reason: "kpi_generation_history_invalid", stopped_sets: [] };
   }
   const stopped_sets = [...latestStatuses]
@@ -583,24 +602,8 @@ export function isQueueEvictedRun(jobs) {
   return jobs.every((job) => job?.conclusion === "cancelled" && (job?.steps?.length ?? 0) === 0);
 }
 
-// A slot that ran and produced nothing is already visible as a lost slot. A
-// slot that never became a run has no object to inspect in the completed-run
-// list, so these workflows also use their own cron to detect silence. The
-// restore watchdog additionally reads recent in-progress schedule runs so a
-// legitimate bounded execution is not mistaken for an absent trigger.
-//
-// Keep the legacy detector policy. Scheduled acquisition is additionally
-// derived from registry ownership by deriveWorkflowWatchPolicy; publishers and
-// owner-run/manual-only lanes do not acquire an invented clock.
-export const MISSED_WINDOW_WORKFLOWS = new Set([
-  "deploy-worker.yml", // X7b hourly catch-up now owns an explicit clock.
-  "data-plane-serving-probe.yml",
-  "check-sec13f-live-parity.yml",
-  "global-writer-queue-observer.yml",
-  "worker-request-budget-alarm.yml",
-  "retention-restore.yml",
-]);
-
+// Every watched workflow with a declared cron has a missed-slot check. The
+// retention campaign is measured separately by its verified cleanup outcome.
 // The restore watchdog is bounded to ten minutes and runs every fifteen. Only
 // an actually running scheduled job, younger than that timeout, is extra
 // liveness evidence; a queued run can wait indefinitely because job timeouts do
@@ -806,21 +809,18 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
 
   // The newest counted run's timestamp was previously computed and discarded.
   const latestStartedAt = latest?.run_started_at || latest?.created_at || null;
-  const intervals = (Array.isArray(workflow.crons) ? workflow.crons : [])
-    .map(cronIntervalHours)
-    .filter((value) => Number.isFinite(value) && value > 0);
-  // The most frequent schedule is the honest bound when a workflow has several.
-  const intervalHours = intervals.length > 0 ? Math.min(...intervals) : null;
+  const declarations = Array.isArray(workflow.crons) ? workflow.crons : [];
+  const monitorsSchedule = declarations.length > 0 && workflow.file !== "retention-sweep.yml";
   let missedWindowHours = null;
   let missedSlots = null;
   // X8 gives these reconciliation consumers their own explicit clock. Count
   // its declared slots, not arbitrary push-driven executions of the same job.
   const isScheduledProducer = workflow.scheduled_producer === true
     || ["build-stocks-analyzer.yml", "update-manifest.yml"].includes(workflow.file);
-  if ((MISSED_WINDOW_WORKFLOWS.has(workflow.file) || isScheduledProducer) && intervalHours !== null) {
+  if (monitorsSchedule) {
     const isRestoreWatchdog = MISSED_WINDOW_ACTIVE_RUN_WORKFLOWS.has(workflow.file);
-    // Existing detectors retain their newest-counted-run anchor, including
-    // queue-delayed execution order. Only restore observes schedule liveness.
+    // A non-producer observer may also run automatically on another event.
+    // Manual dispatch is excluded from counted runs and cannot reset its clock.
     let sinceMs = latestStartedAt ? Date.parse(latestStartedAt) : null;
     if (isScheduledProducer) {
       // Trigger liveness admits declared external slots, while unmarked manual
@@ -860,11 +860,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
         .filter((stamp) => Number.isFinite(stamp) && stamp <= now);
       if (external.length) sinceMs = Math.max(sinceMs ?? -Infinity, ...external);
     }
-    const tightestCron = (Array.isArray(workflow.crons) ? workflow.crons : [])
-      .find((cron) => cronIntervalHours(cron) === intervalHours) ?? null;
-    const countSlots = isRestoreWatchdog || isScheduledProducer ? declaredMissedSlotCount : missedSlotCount;
-    const declarations = isScheduledProducer ? workflow.crons : tightestCron;
-    missedSlots = declarations === null || sinceMs === null ? null : countSlots(declarations, sinceMs, now);
+    missedSlots = sinceMs === null ? null : declaredMissedSlotCount(declarations, sinceMs, now);
     if (Number.isFinite(missedSlots) && missedSlots >= MISSED_WINDOW_MULTIPLIER) {
       missedWindowHours = (now - sinceMs) / 3_600_000;
     }
@@ -903,11 +899,11 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     manual_recovery_run_url: recoveryPending ? newestManualSuccess.html_url ?? null : null,
   };
   if (workflow.events) base.events = workflow.events;
-  if (isScheduledProducer && missedSlots === null && !base.alarming) {
+  if (monitorsSchedule && missedSlots === null && !base.alarming) {
     return {
       ...base,
       status: "unknown",
-      message: "No usable scheduled-run or registry activation evidence; other events do not establish schedule liveness.",
+      message: "No usable run, cadence or registry activation evidence for schedule liveness.",
     };
   }
   if (countedRuns.length === 0 && !base.alarming) {
@@ -965,9 +961,14 @@ export function buildIssueBody(alarms) {
       continue;
     }
     if (Array.isArray(alarm.kpi_stopped_sets)) {
-      lines.push("## Data stopped advancing");
-      lines.push("- KPI status: stopped in two consecutive generations");
-      lines.push(`- Data sets: ${alarm.kpi_stopped_sets.join(", ")}`);
+      lines.push("## Data health KPI");
+      if (alarm.kpi_reason === "kpi_generation_stale") {
+        lines.push("- KPI status: generation stopped advancing; its previous green status cannot establish current health");
+        lines.push(`- Missed producer slots: ${alarm.missed_generation_slots}; age: ${alarm.age_hours}h`);
+      } else {
+        lines.push("- KPI status: stopped in two consecutive generations");
+        lines.push(`- Data sets: ${alarm.kpi_stopped_sets.join(", ")}`);
+      }
       lines.push(`- Latest KPI generation: ${alarm.latest_generated_at ?? "unknown"}`);
       lines.push(`- Previous KPI generation: ${alarm.previous_generated_at ?? "unknown"}`);
       lines.push("");
@@ -1293,6 +1294,9 @@ export async function main() {
     ? {
         label: "Data stopped advancing",
         kpi_stopped_sets: dataHealthKpi.stopped_sets,
+        kpi_reason: dataHealthKpi.reason,
+        age_hours: dataHealthKpi.age_hours,
+        missed_generation_slots: dataHealthKpi.missed_generation_slots,
         latest_generated_at: dataHealthKpi.latest_generated_at,
         previous_generated_at: dataHealthKpi.previous_generated_at,
       }
