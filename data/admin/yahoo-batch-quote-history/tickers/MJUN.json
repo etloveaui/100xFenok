@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-08-10T15:11:10Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MJUN.json",
-    "payload_sha256": "c01463010a89b9b0f6d65f04b735b101e648522b04d2bcad9a791b5159332150",
-    "quote_as_of": "2026-08-10T13:46:06Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-10-11T06:27:53Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/MJUN.json",
+    "payload_sha256": "f4ebc3742883a2c76e9114c8a0dd14369adc80f307a4057dbb0bfb833948957c",
+    "quote_as_of": "2026-07-28T14:14:48Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MJUN: quote_as_of",
     "failures": [],
-    "latency_ms": 561,
-    "observed_at": "2026-10-05T13:10:38Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MJUN: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T13:10:38Z"
+    "latency_ms": 522,
+    "observed_at": "2026-10-11T06:27:53Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:11:10Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-08-10T13:46:06Z",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:27:53Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "MJUN",
-  "updated_at": "2026-10-05T13:10:38Z"
+  "updated_at": "2026-10-11T06:27:53Z"
 }

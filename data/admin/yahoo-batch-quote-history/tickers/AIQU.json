@@ -1,11 +1,11 @@
 {
   "current": {
-    "fetched_at": "2026-10-05T05:33:09Z",
-    "history_as_of": "2026-10-02",
+    "fetched_at": "2026-10-11T06:12:44Z",
+    "history_as_of": "2026-10-09",
     "path": "data/yf/finance/AIQU.json",
-    "payload_sha256": "514d6075a280e1ef0253521d21cb399099adc43fd86c20a94f67bfea5c7db807",
-    "quote_as_of": "2026-10-02T19:46:53Z",
-    "source_as_of": "2026-10-02"
+    "payload_sha256": "a984963355b3a0d3c590afdcb0323a27e1d8be96b8ffead7fd93e7d4992adbed",
+    "quote_as_of": "2026-10-09T19:12:23Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -13,9 +13,40 @@
   "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 453,
-    "observed_at": "2026-10-05T05:33:09Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: AIQU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: AIQU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: AIQU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: AIQU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: AIQU: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: AIQU: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 518,
+    "observed_at": "2026-10-11T06:12:44Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,6 +56,13 @@
     "payload_sha256": "0dbfffd3cafaf079f95a917b293bfd637f37fcb828f8e7f293af0065ac575656",
     "quote_as_of": "2026-08-11T14:55:25Z",
     "source_as_of": "2026-08-11"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:12:44Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -39,5 +77,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "AIQU",
-  "updated_at": "2026-10-05T05:33:09Z"
+  "updated_at": "2026-10-11T06:12:44Z"
 }

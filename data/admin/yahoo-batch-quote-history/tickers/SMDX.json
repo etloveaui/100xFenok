@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:41:51Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SMDX.json",
-    "payload_sha256": "d80daa69338e2ee60c214b5d99b9d52ed8e82b92a4490477fadee9b201f1f9fb",
-    "quote_as_of": "2026-09-30T13:46:07Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T05:43:09Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/SMDX.json",
+    "payload_sha256": "bcbbe65e585ef36e54353f5383c1a1bab6d190641446412c9419aec40e3a936b",
+    "quote_as_of": "2026-09-29T14:19:00Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for SMDX: quote_as_of",
     "failures": [],
-    "latency_ms": 837,
-    "observed_at": "2026-10-04T17:49:55Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for SMDX: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-04T17:49:55Z"
+    "latency_ms": 625,
+    "observed_at": "2026-10-11T05:43:09Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:41:51Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:07Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T05:43:09Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-21T19:39:18Z"
   },
   "ticker": "SMDX",
-  "updated_at": "2026-10-04T17:49:55Z"
+  "updated_at": "2026-10-11T05:43:09Z"
 }

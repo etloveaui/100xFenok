@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:43:06Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XEML.json",
-    "payload_sha256": "fb0c6aca740e2ce96070eaae43c7c5e74b4f593e34a23b2722532d0a97a363af",
-    "quote_as_of": "2026-09-30T13:46:08Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T06:39:26Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/XEML.json",
+    "payload_sha256": "7a1e1e4635061f203416d88905a3f00ba3e2e0840aeca89cf1f7ca5eb4ddbdc2",
+    "quote_as_of": "2026-10-06T19:59:59Z",
+    "source_as_of": "2026-10-06T19:59:59Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for XEML: quote_as_of",
     "failures": [],
-    "latency_ms": 539,
-    "observed_at": "2026-10-05T05:57:21Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for XEML: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T05:57:21Z"
+    "latency_ms": 658,
+    "observed_at": "2026-10-11T06:39:26Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:43:06Z",
@@ -37,9 +26,16 @@
     "quote_as_of": "2026-09-30T13:46:08Z",
     "source_as_of": "2026-09-30"
   },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:39:26Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
   "recovered_at": "2026-09-28T06:30:00Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 12,
@@ -51,5 +47,5 @@
     "source_as_of": "2026-09-10T13:31:17Z"
   },
   "ticker": "XEML",
-  "updated_at": "2026-10-05T05:57:21Z"
+  "updated_at": "2026-10-11T06:39:26Z"
 }

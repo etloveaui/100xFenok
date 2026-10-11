@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-08-10T17:05:15Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MMAR.json",
-    "payload_sha256": "e8da1642dfcb21b1676706c539649cd2cf7a18d366f3ab3ad0404df5148b607c",
-    "quote_as_of": "2026-08-10T13:46:06Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-10-11T05:58:52Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/MMAR.json",
+    "payload_sha256": "a140d72ba11731f8402f8daffabeee1fa8819ac5697fbfb80b745febf9c0e317",
+    "quote_as_of": "2026-06-29T14:44:26Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MMAR: quote_as_of",
     "failures": [],
-    "latency_ms": 582,
-    "observed_at": "2026-10-05T13:10:39Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MMAR: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T13:10:39Z"
+    "latency_ms": 548,
+    "observed_at": "2026-10-11T05:58:52Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:05:15Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-08-10T13:46:06Z",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T05:58:52Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "MMAR",
-  "updated_at": "2026-10-05T13:10:39Z"
+  "updated_at": "2026-10-11T05:58:52Z"
 }

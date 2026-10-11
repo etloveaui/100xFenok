@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:39:50Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QJL.json",
-    "payload_sha256": "c9483cbaa05410c705e33eeaa1b115167e5715bd502219310f20bed02576f6dc",
-    "quote_as_of": "2026-09-30T13:46:07Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T06:31:59Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/QJL.json",
+    "payload_sha256": "7104230d1e1c50243f3fc5c53aea1006f4d5e0dbbe5c1fc20a4403496e3d147d",
+    "quote_as_of": "2026-09-16T19:58:30Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for QJL: quote_as_of",
     "failures": [],
-    "latency_ms": 521,
-    "observed_at": "2026-10-05T05:50:34Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for QJL: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T05:50:34Z"
+    "latency_ms": 674,
+    "observed_at": "2026-10-11T06:31:59Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:39:50Z",
@@ -37,9 +26,16 @@
     "quote_as_of": "2026-09-30T13:46:07Z",
     "source_as_of": "2026-09-30"
   },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:31:59Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
   "recovered_at": "2026-08-11T15:09:25Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -51,5 +47,5 @@
     "source_as_of": "2026-09-16T19:58:30Z"
   },
   "ticker": "QJL",
-  "updated_at": "2026-10-05T05:50:34Z"
+  "updated_at": "2026-10-11T06:31:59Z"
 }

@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-09-30T14:38:24Z",
-    "history_as_of": "2026-09-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MHIP.json",
-    "payload_sha256": "bb96939e3a0b32a5178227607f82b8602d076826ca82830cc7eda69f5e8b03c4",
-    "quote_as_of": "2026-09-30T13:46:05Z",
-    "source_as_of": "2026-09-30"
+    "fetched_at": "2026-10-11T06:27:47Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/MHIP.json",
+    "payload_sha256": "76bfbdee27c13fd737e34445084d354dc14072d67afa539683220c796b281436",
+    "quote_as_of": "2026-09-16T18:57:41Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MHIP: quote_as_of",
     "failures": [],
-    "latency_ms": 520,
-    "observed_at": "2026-10-05T05:46:40Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MHIP: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-05T05:46:40Z"
+    "latency_ms": 633,
+    "observed_at": "2026-10-11T06:27:47Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-09-30T14:38:24Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-09-30T13:46:05Z",
     "source_as_of": "2026-09-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-11T06:27:47Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-09-16T18:57:41Z"
   },
   "ticker": "MHIP",
-  "updated_at": "2026-10-05T05:46:40Z"
+  "updated_at": "2026-10-11T06:27:47Z"
 }
