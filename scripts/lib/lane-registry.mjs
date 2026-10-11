@@ -478,6 +478,10 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: { kind: "daily" },
+    // Promotion decision 2026-10-11 (B-366): retain shadow. The natural 25/25
+    // collection is proven, but the date-less artifact currently has no bounded
+    // collection-age verdict. Promote only after a separate collection-recency
+    // contract fires for stale/missing/future dates without inventing source dates.
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
