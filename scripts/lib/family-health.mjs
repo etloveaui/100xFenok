@@ -1,3 +1,5 @@
+import rotation from "../etf_detail_rotation_policy.json" with { type: "json" };
+
 // One family record. Source freshness is deliberately unevaluated until the
 // shared calendar model supplies it; byte parity is not a freshness verdict.
 export const ETF_FAMILY = "stockanalysis-etf-detail";
@@ -9,21 +11,53 @@ export const healthKey = (family = ETF_FAMILY) => `health/${family}.json`;
 // present-time observation and must never mutate that immutable decision.
 export function sourceFreshness(sourceAsOf, now, policy) {
   const age = Date.parse(now) - Date.parse(sourceAsOf);
-  if (!sourceAsOf || !Number.isFinite(age) || age < 0) return "unknown";
+  if (!sourceAsOf || !Number.isFinite(age) || age < 0
+    || !Number.isFinite(policy?.fresh_ttl_hours) || !Number.isFinite(policy?.emergency_lkg_ttl_days)) return "unknown";
   if (age <= policy.fresh_ttl_hours * 3600_000) return "fresh";
   return age <= policy.emergency_lkg_ttl_days * 86400_000 ? "stale" : "expired";
 }
 
+export function buildDetailRefreshCadence(universe, core) {
+  const records = universe?.records, coreTickers = core?.daily_refresh_universe?.tickers;
+  if (!Array.isArray(records) || !records.length || !Array.isArray(coreTickers)) return null;
+  const aums = new Map(records.filter(row => Number.isFinite(row?.aum) && row.aum > 0)
+    .map(row => [String(row.ticker ?? row.s ?? "").toUpperCase(), row.aum]));
+  const ranked = [...aums.keys()].sort((a, b) => aums.get(b) - aums.get(a) || (a < b ? -1 : a > b ? 1 : 0));
+  return { schema_version: rotation.schema_version, core_tickers: [...new Set(coreTickers)].sort(),
+    tier2_tickers: ranked.slice(0, rotation.tier2_size) };
+}
+
+export function detailSourcePolicy(ticker, cadence, emergencyDays) {
+  if (cadence?.schema_version !== rotation.schema_version
+    || !Array.isArray(cadence.core_tickers) || !Array.isArray(cadence.tier2_tickers)) return null;
+  const core = cadence.core_tickers.includes(ticker);
+  const interval = core ? rotation.core_interval_days : cadence.tier2_tickers.includes(ticker)
+    ? rotation.tier2_interval_days : rotation.tail_interval_days;
+  // Both core and general run on weekdays and Sunday. Allow one complete
+  // declared inter-run gap (2 days) for a delayed/missed attempt.
+  const weekdays = rotation.general_weekdays_utc;
+  const grace = Math.max(...weekdays.map((day, i) => ((weekdays[(i + 1) % weekdays.length] - day + 7) % 7) || 7));
+  return { interval_days: interval, grace_days: grace,
+    fresh_ttl_hours: (interval + grace) * 24,
+    emergency_lkg_ttl_days: Math.max(interval * rotation.expiry_interval_multiplier, emergencyDays, interval + grace) };
+}
+
 export function summarizeSourceHealth(members, now, policy) {
   const rows = members.map(row => ({ ...row,
-    source_freshness: sourceFreshness(row.source_as_of, now, policy) }));
+    source_freshness: sourceFreshness(row.source_as_of, now,
+      Object.hasOwn(row, "refresh_policy") ? row.refresh_policy : policy) }));
   const counts = { fresh: 0, stale: 0, expired: 0, unknown: 0 };
   for (const row of rows) counts[row.source_freshness] += 1;
   const dated = rows.filter(row => row.source_freshness !== "unknown")
     .sort((a, b) => Date.parse(a.source_as_of) - Date.parse(b.source_as_of) || a.member.localeCompare(b.member));
   const ratio = rows.length ? counts.fresh / rows.length : 0;
-  return { observed_at: now, policy: { fresh_ttl_hours: policy.fresh_ttl_hours,
-    emergency_lkg_ttl_days: policy.emergency_lkg_ttl_days },
+  const bounds = rows.map(row => row.refresh_policy).filter(Boolean);
+  return { observed_at: now, scope: "detail", policy: bounds.length ? {
+    basis: "member_rotation", interval_days: [...new Set(bounds.map(p => p.interval_days))].sort((a,b)=>a-b),
+    grace_days: [...new Set(bounds.map(p => p.grace_days))].sort((a,b)=>a-b),
+    fresh_bound_days: [...new Set(bounds.map(p => p.fresh_ttl_hours / 24))].sort((a,b)=>a-b),
+    expired_bound_days: [...new Set(bounds.map(p => p.emergency_lkg_ttl_days))].sort((a,b)=>a-b),
+  } : { fresh_ttl_hours: policy.fresh_ttl_hours, emergency_lkg_ttl_days: policy.emergency_lkg_ttl_days },
     status: !rows.length ? "unknown" : ratio >= 0.95 ? "fresh" : ratio >= 0.8 ? "degraded" : "stopped",
     reason: !rows.length ? "members_unavailable" : ratio >= 0.95 ? null : "member_ratio_low",
     total_members: rows.length, fresh_members: counts.fresh, counts,

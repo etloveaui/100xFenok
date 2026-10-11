@@ -24,7 +24,7 @@ from typing import Any, Callable, Mapping
 
 from data_supply_state import DataSupplyStateStore, canonical_sha256
 from yahoo_batch_state import verified_yahoo_terminal_evidence, _raw_payload_source_fields
-from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, terminal_evidence as etf_terminal_evidence
+from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, terminal_evidence as etf_terminal_evidence, detail_refresh_cadence
 
 
 DOMAIN = "etf_detail"
@@ -505,6 +505,14 @@ class PublicDataSupplyMaterializer:
         self._require_tracked(lifecycle_paths)
         required_paths.update(lifecycle_paths)
 
+        cadence = detail_refresh_cadence(self.repo_root)
+        if cadence is not None:
+            cadence_paths = {"data/stockanalysis/etf_universe.json", "data/admin/fenok-etf-core-daily-basket.json"}
+            for relative in cadence_paths:
+                self._regular_file(self.repo_root / relative, root=self.repo_root, label="detail cadence")
+            self._require_tracked(cadence_paths)
+            required_paths.update(cadence_paths)
+
         logical_index = {
             "schema_version": INDEX_SCHEMA,
             "domain": DOMAIN,
@@ -516,6 +524,7 @@ class PublicDataSupplyMaterializer:
             "selected_count": len(current_keys),
             "unavailable_count": len(tickers) - len(current_keys),
             "resolution_state_counts": state_counts,
+            "detail_refresh_cadence": cadence,
             "entries": entries,
         }
         index_sha = index_content_sha256(logical_index)

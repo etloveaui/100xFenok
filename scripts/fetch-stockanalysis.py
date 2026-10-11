@@ -51,7 +51,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
 from yahoo_batch_state import current_yahoo_universe_sources, verified_yahoo_terminal_evidence
-from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, membership as etf_membership, record_probe as record_etf_lifecycle_probe, ORPHAN_PROBE_LIMIT
+from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, membership as etf_membership, record_probe as record_etf_lifecycle_probe, ORPHAN_PROBE_LIMIT, ROTATION_POLICY
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from data_supply_resolver import _ETF_DETAIL_POLICY, _provider_object_path
 from stockanalysis_recovery_state import (
@@ -232,11 +232,11 @@ DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
-NATURAL_GENERAL_INCREMENTAL_LIMIT = 400
-NATURAL_GENERAL_TIER2_SIZE = 650
-NATURAL_GENERAL_TIER2_TARGET_DAYS = 7
-NATURAL_GENERAL_TIER3_TARGET_DAYS = 30
-NATURAL_GENERAL_RUNS_PER_WEEK = 6
+NATURAL_GENERAL_INCREMENTAL_LIMIT = ROTATION_POLICY["general_limit"]
+NATURAL_GENERAL_TIER2_SIZE = ROTATION_POLICY["tier2_size"]
+NATURAL_GENERAL_TIER2_TARGET_DAYS = ROTATION_POLICY["tier2_interval_days"]
+NATURAL_GENERAL_TIER3_TARGET_DAYS = ROTATION_POLICY["tail_interval_days"]
+NATURAL_GENERAL_RUNS_PER_WEEK = len(ROTATION_POLICY["general_weekdays_utc"])
 NATURAL_GENERAL_PENDING_RESERVE = 10
 NATURAL_GENERAL_MIN_SPARE_RATIO = 0.20
 # One bounded catch-up cohort, derived from existing source/attempt clocks.

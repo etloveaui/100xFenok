@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import policyRegistry from "../../generated/data-supply-policy-registry.json";
-import { sourceFreshness } from "../../../../scripts/lib/family-health.mjs";
+import { sourceFreshness, detailSourcePolicy } from "../../../../scripts/lib/family-health.mjs";
 import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
@@ -53,6 +53,7 @@ export interface EtfDataSupplyMetadata {
   selected_at: string | null;
   source_age_days: number | null;
   source_freshness?: "fresh" | "stale" | "expired" | "unknown";
+  source_freshness_scope?: "detail";
   reason_code: string | null;
   recovery_transition: "unavailable" | null;
   projection_digest: string;
@@ -314,7 +315,7 @@ async function parseIndex(
     else selectedEntries += 1;
   }
   if (selectedEntries !== selectedCount || unavailableEntries !== unavailableCount) return { kind: "invalid" } as const;
-  return { kind: "ok", entries, generatedAt: value.generated_at as string } as const;
+  return { kind: "ok", entries, generatedAt: value.generated_at as string, cadence: value.detail_refresh_cadence } as const;
 }
 
 type EnrollmentGuard = NonNullable<ReturnType<typeof parseGuard>>;
@@ -435,7 +436,6 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
       source_as_of: sourceAsOf,
       selected_at: resolutionState === "unavailable" ? null : entry.selected_at as string,
       source_age_days: sourceAgeDays(sourceAsOf, now),
-      source_freshness: sourceFreshness(sourceAsOf, now.toISOString(), DATA_SUPPLY_ETF_DETAIL_POLICY),
       reason_code: resolutionState === "unavailable" ? null : entry.reason_code as string,
       recovery_transition: resolutionState === "unavailable" ? "unavailable" : null,
       projection_digest: digest,
@@ -593,7 +593,9 @@ export async function resolveDataSupplyEtfDetail(
   return {
     kind: "selected",
     payload: payloadDocument.value,
-    dataSupply: parsed.metadata,
+    dataSupply: { ...parsed.metadata, source_freshness_scope: "detail",
+      source_freshness: sourceFreshness(parsed.metadata.source_as_of, dependencies.now().toISOString(),
+        detailSourcePolicy(ticker, parsedIndex.cadence, DATA_SUPPLY_ETF_DETAIL_POLICY.emergency_lkg_ttl_days)) },
     projectionDigest: guard.indexSha,
   };
 }
