@@ -163,6 +163,10 @@ def _call(client: anthropic.Anthropic, attempt: dict, system: str, user: str, ed
 
 
 AGY_BIN = Path.home() / ".local" / "bin" / "agy"
+
+
+class AgyTimeout(WriterError):
+    """AGY answered too slowly; the other AGY account is skipped so the edition still lands by 06:30."""
 AGY_INLINE_MAX = 90_000  # Linux caps one argv string at 128 KiB; longer prompts go through a file
 
 
@@ -177,7 +181,7 @@ def _call_agy(attempt: dict, system: str, user: str, edition: str) -> tuple[dict
             raise WriterError(f"second AGY home {home} missing")
         env.update(HOME=str(home), FENO_AGY2_REAL_HOME=str(Path.home()))
     prompt = f"{system}\n\n{user}\n\nReturn only the JSON object. Do not create, edit or delete any file."
-    timeout = attempt.get("timeout_s", 420)
+    timeout = attempt.get("timeout_s", 240)
     t0 = time.time()
     with tempfile.TemporaryDirectory(prefix="briefing-agy-") as work:
         if len(prompt) > AGY_INLINE_MAX:
@@ -186,11 +190,13 @@ def _call_agy(attempt: dict, system: str, user: str, edition: str) -> tuple[dict
         cmd = [str(AGY_BIN), "-p", prompt, "--model", attempt["model"], "--print-timeout", f"{timeout}s",
                "--dangerously-skip-permissions"]
         try:
-            proc = subprocess.run(cmd, cwd=work, env=env, capture_output=True, text=True, timeout=timeout + 60)
+            proc = subprocess.run(cmd, cwd=work, env=env, capture_output=True, text=True, timeout=timeout + 30)
         except subprocess.TimeoutExpired:
-            raise WriterError(f"{attempt['engine']} timed out after {timeout + 60} s") from None
+            raise AgyTimeout(f"{attempt['engine']} timed out after {timeout + 30} s") from None
     secs = round(time.time() - t0, 1)
     text = proc.stdout.strip()
+    if proc.returncode != 0 and secs >= timeout - 5:
+        raise AgyTimeout(f"{attempt['engine']} hit its {timeout} s print timeout")
     if proc.returncode != 0 or not text:
         raise WriterError(f"{attempt['engine']} exit {proc.returncode}: {(text or proc.stderr).strip()[:200]}")
     served = re.sub(r"-(low|medium|high)$", "", attempt["model"])
@@ -206,12 +212,19 @@ def write(edition: str, session: str, today: str, prev: str, cards: list, pack: 
     system, user = system_prompt(), user_message(edition, session, today, prev, cards, pack)
     clients: dict[str, anthropic.Anthropic] = {}
     failures = []
+    agy_slow = False
     for attempt in W["attempts"]:
         engine = attempt.get("engine", "api")
         label = f"{engine}:{attempt['model']}"
         try:
             if engine in ("agy", "agy2"):
-                raw, meta = _call_agy(attempt, system, user, edition)
+                if agy_slow:
+                    raise WriterError("skipped: an earlier AGY attempt timed out")
+                try:
+                    raw, meta = _call_agy(attempt, system, user, edition)
+                except AgyTimeout:
+                    agy_slow = True
+                    raise
             else:
                 key_env = attempt.get("key_env", W["api_key_env"])
                 if not os.environ.get(key_env):

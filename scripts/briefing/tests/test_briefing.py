@@ -193,6 +193,8 @@ class WriterEngineOrderTests(unittest.TestCase):
 
         def fake_agy(attempt, system, user, edition):
             calls.append(f"{attempt['engine']}:{attempt['model']}")
+            if f"slow:{attempt['engine']}" in fail:
+                raise writer.AgyTimeout("timed out")
             if attempt["engine"] in fail:
                 raise writer.WriterError("quota reached")
             return {"ok": True}, {"model": attempt["engine"], "served_by": "claude-opus-5-5", "usd": 0.0}
@@ -230,3 +232,8 @@ class WriterEngineOrderTests(unittest.TestCase):
                                        "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY": "k2"})
         self.assertEqual(calls[-1], "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY:claude-opus-5-5")
         self.assertEqual(meta["key_env"], "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY")
+
+    def test_agy_timeout_skips_the_other_account(self):
+        calls, meta = self._run({"slow:agy"}, {"ANTHROPIC_PLAN_CREDIT_API_KEY": "k1"})
+        self.assertEqual(calls, ["agy:claude-opus-5-5-medium", "ANTHROPIC_PLAN_CREDIT_API_KEY:claude-opus-5-5"])
+        self.assertIn("skipped", meta["failures"][1]["error"])
