@@ -10,9 +10,9 @@
 import fs from "node:fs";
 import { dateOnly } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 import path from "node:path";
-import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
-import { readEtfSourceHealth } from "./lib/fenok-data-health-freshness.mjs";
+import { readEtfSourceHealth, readDetectionFloorRows, summarizeDataSetFreshness, DETECTION_CALENDARS } from "./lib/fenok-data-health-freshness.mjs";
 import {
   PRODUCT_SURFACE_DATELESS_REASON,
   PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
@@ -349,17 +349,22 @@ const yardneyAsOf = latestDate(
   yardneyModel?.meta?.last_update?.last_public_date,
   yardneyModel?.meta?.generated_at,
 );
-function requiredCalendarSourceAgeLimit(laneId) {
-  const lanes = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((lane) => lane.id === laneId);
-  const policy = lanes[0]?.freshness;
-  if (lanes.length !== 1 || policy?.unit !== "calendar_days" || policy.calendar !== "utc"
-    || !Number.isInteger(policy.max_staleness) || policy.max_staleness < 1) {
-    throw new Error(`${laneId}: required calendar-day source-age declaration is missing or invalid`);
+const sourceFloorRows = readDetectionFloorRows(DATA_ROOT);
+const familyHealth = new Map();
+function familySourceCheck(laneId, label, sourceAsOf = null) {
+  if (!familyHealth.has(laneId)) {
+    const lane = LANE_REGISTRY.lanes.find((row) => row.id === laneId);
+    const floor = sourceAsOf ? { artifact: { source_as_of: sourceAsOf } } : sourceFloorRows.get(laneId);
+    familyHealth.set(laneId, lane
+      ? summarizeDataSetFreshness(lane, floor, generatedAt, DETECTION_CALENDARS, DATA_ROOT).source_health : null);
   }
-  return policy.max_staleness;
+  const health = familyHealth.get(laneId);
+  const hasSource = health && (!health.date_basis || health.date_basis === "source");
+  return check(label, !hasSource || health.status === "unknown" ? "pending"
+    : health.status === "fresh" ? "ready" : "stale",
+  hasSource ? `${health.fresh_members} / ${health.total_members}개 기준 이내` : "원천 기준일 확인 대기",
+  { source_health: health, as_of: hasSource ? health.oldest_source_date : null });
 }
-const yardeniMaxAgeDays = requiredCalendarSourceAgeLimit("fred_yardeni");
-const globalScouterMaxAgeDays = requiredCalendarSourceAgeLimit("global_scouter");
 // Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
 // carry genuine nested source dates get a real stamp; the rest stay null until
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).
@@ -581,7 +586,7 @@ const surfaces = [
       check("이벤트 보강", stockSurfaces.surfaceCount > 0 ? "ready" : "pending", `${stockSurfaces.surfaceCount}개 화면 연결`, { count: stockSurfaces.surfaceCount }),
       marketFactsCompletenessCheck(),
       freshness("가격 원천 기준일", stockDetailSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
-      freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      familySourceCheck("yahoo_batch_quote_history", "야후 원천 신선도"),
       freshness("공시 원천 기준일", null, 14, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "가격, 기본 분석, 공시, 기관 데이터를 같은 화면에서 연결한다. 재무 검산·한글 공시는 커버리지 제한을 명시한다.",
@@ -597,8 +602,8 @@ const surfaces = [
       check("거시·심리", counts.dataUsageRootJson > 0 ? "ready" : "pending", `${counts.dataUsageRootJson.toLocaleString("ko-KR")}개 루트 JSON`, { count: counts.dataUsageRootJson }),
       check("시장 구조", exists("computed/market_structure_index.json") ? "ready" : "pending", "시장 구조 인덱스"),
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
-      freshness("Yardeni 기준일", yardeniSourceAsOf, yardeniMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
-      freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      familySourceCheck("fred_yardeni", "Yardeni 원천 신선도", yardeniSourceAsOf),
+      familySourceCheck("yahoo_batch_quote_history", "야후 원천 신선도"),
       marketFactsCompletenessCheck("시장 데이터 원천 완전성"),
       freshness("시장 데이터 기준일", marketFactsCoreSourceAsOf, 7, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
@@ -630,7 +635,7 @@ const surfaces = [
       check("섹터 흐름", exists("benchmarks/summaries.json") ? "ready" : "pending", "섹터 모멘텀"),
       check("산업 세분화", sectorSurfaces.surfaceCount > 0 ? "ready" : "pending", `${sectorSurfaces.surfaceCount}개 항목 · ${sectorSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: sectorSurfaces.surfaceCount, rows: sectorSurfaces.rowCount }),
       check("기관 보유", counts.sec13fJson > 0 ? "ready" : "pending", `${counts.sec13fJson.toLocaleString("ko-KR")}개 13F JSON`, { count: counts.sec13fJson }),
-      freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      familySourceCheck("yahoo_batch_quote_history", "야후 원천 신선도"),
       marketFactsCompletenessCheck("섹터 가격 원천 완전성"),
       freshness("섹터 데이터 기준일", sectorsSourceAsOf, 14, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
@@ -663,7 +668,7 @@ const surfaces = [
     [
       check("기본 종목 테이블", exists("global-scouter/core/stocks_analyzer.json") ? "ready" : "unavailable", "stocks_analyzer"),
       check("상세 패널", counts.globalScouterDetails > 0 ? "ready" : "pending", `${counts.globalScouterDetails.toLocaleString("ko-KR")}개 상세`, { count: counts.globalScouterDetails }),
-      freshness("스크리너 기준일", screenerSourceAsOf, globalScouterMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      familySourceCheck("global_scouter", "스크리너 원천 신선도", screenerSourceAsOf),
     ],
     "스크리너는 종목 발견 화면이며 필드 사용 감사와 함께 미사용 데이터를 줄여간다.",
     { as_of: screenerAsOf, ...sourceStamp(productStampEvidence.screener.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.screener },

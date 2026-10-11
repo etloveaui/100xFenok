@@ -15,7 +15,7 @@ import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 import { freshnessVerdict, policyToday, resolveSourcePolicy, sourceAgeAnchor } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 import { KRX_MARKET_HOLIDAYS } from "./lib/market-calendar.mjs";
-import { readEtfSourceHealth } from "./lib/fenok-data-health-freshness.mjs";
+import { summarizeDataSetFreshness } from "./lib/fenok-data-health-freshness.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1575,8 +1575,10 @@ export function buildDetectionReport({
     };
     if (lane.monitoring_mode === "composite") laneRow.members = members;
     if (lane.id === "fred_banking") laneRow.source_artifacts = firstMember.source_artifacts;
-    if (["stockanalysis_etf_detail", "yahoo_etf_fallback"].includes(lane.id)) {
-      laneRow.source_health = readEtfSourceHealth(path.join(artifactRoot, "data"), now, lane.id === "yahoo_etf_fallback");
+    const sourceLane = LANE_REGISTRY.lanes.find((row) => row.id === lane.id);
+    if (sourceLane) {
+      laneRow.source_health = summarizeDataSetFreshness(sourceLane, laneRow, now, calendars,
+        path.join(artifactRoot, "data")).source_health;
     }
     return laneRow;
   });
