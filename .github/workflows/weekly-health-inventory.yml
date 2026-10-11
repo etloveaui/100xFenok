@@ -1,0 +1,36 @@
+name: Weekly Health Inventory
+
+on:
+  schedule:
+    - cron: '15 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: weekly-health-inventory
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows
+            scripts
+            ops/a1-lanes
+            100xfenok-next/src/lib
+            data
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Read the four inventories and report changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ops/weekly-health-inventory.mjs --publish
