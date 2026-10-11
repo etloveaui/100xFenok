@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
           filter: blob:none
@@ -49,8 +49,9 @@ jobs:
             100xfenok-next/src/lib
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Test Feno Yardeni builder

@@ -39,7 +39,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -60,7 +60,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -73,9 +73,10 @@ jobs:
             100xfenok-next/src/app/api/data
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          package-manager-cache: false
+          node-version: '22'
 
       - name: Test TGA producer contracts
         run: node scripts/test-fetch-treasury-tga.mjs

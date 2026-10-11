@@ -25,7 +25,7 @@ jobs:
     outputs:
       prepared: ${{ steps.prepare.outputs.prepared }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -34,8 +34,9 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
       - name: Check daily refresh admission
         id: admission
@@ -79,7 +80,7 @@ jobs:
       cancel-in-progress: false
       queue: max
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         timeout-minutes: 2
         with:
           filter: blob:none

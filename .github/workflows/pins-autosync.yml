@@ -37,7 +37,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -65,7 +65,7 @@ jobs:
       queue: max
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
@@ -76,8 +76,9 @@ jobs:
           timeout 30s git checkout -B main origin/main
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
+          package-manager-cache: false
           node-version: '22'
 
       - name: Regenerate pins
@@ -117,7 +118,7 @@ jobs:
     steps:
       - name: Checkout writer helpers
         timeout-minutes: 2
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 1

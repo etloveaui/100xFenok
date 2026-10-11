@@ -49,7 +49,7 @@ jobs:
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -76,7 +76,7 @@ jobs:
     steps:
       - name: Checkout repository
         timeout-minutes: 2
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -98,9 +98,10 @@ jobs:
           timeout 30s git checkout -B main origin/main
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          package-manager-cache: false
+          node-version: '22'
 
       - name: Export computed signals from committed sources
         id: export_signals
