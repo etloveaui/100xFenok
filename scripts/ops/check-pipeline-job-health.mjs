@@ -769,16 +769,9 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
   const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
-  // A lost scheduled slot means "this refresh never happened". Any strictly
-  // newer successful run of the same workflow — workflow_dispatch included —
-  // is proof the refresh has since happened, so the slot stops paging. Without
-  // this, one evicted monthly slot pages hourly until the NEXT natural slot
-  // (the 2026-08-01 storm left OECD paging toward September 1 past five
-  // dispatch recoveries). Unmarked dispatches stay excluded from streak/alarm
-  // counting above; they participate only as recovery evidence, the same
-  // admission rule the promotion gate adopted in 1f3fc3518f. Run ids are
-  // monotonic, so "newer" is an id comparison.
-  const newestSuccessId = runs.reduce((max, run) => {
+  // Only the next admitted automatic cycle proves the scheduled lane recovered.
+  // An unmarked manual success is useful evidence, but remains pending below.
+  const newestSuccessId = countedRuns.reduce((max, run) => {
     if (run?.conclusion !== "success") return max;
     const id = Number(run?.id);
     return Number.isFinite(id) && id > max ? id : max;
@@ -792,12 +785,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   const lostScheduledSlotRunUrls = lostScheduledSlots
     .map((run) => run?.html_url)
     .filter(Boolean);
-  // The same recovery rule applies to a failure streak: on a slow-cadence
-  // lane the streak can otherwise only break at the NEXT natural slot, so a
-  // producer fixed and proven by dispatch keeps paging for weeks. The newest
-  // run the streak counted is the first failure-class, non-transparent run
-  // from the top; a success minted after it means the producer ran clean
-  // more recently than it last failed.
+  // Run ids order the automatic success against the latest counted failure.
   const newestStreakFailure = countedRuns.find((run) =>
     run?.queue_evicted !== true
       && !TRANSPARENT_CONCLUSIONS.has(run?.conclusion)
@@ -882,6 +870,18 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   }
   if (missedWindowHours !== null) alarmReasons.push("missed_schedule_window");
 
+  const newestManualSuccess = runs.filter((run) => run?.event === "workflow_dispatch"
+    && (!run.status || run.status === "completed") && run.conclusion === "success"
+    && externalClockSlot(workflow, run) === null && Number.isFinite(Number(run.id)))
+    .reduce((latestRun, run) => !latestRun || Number(run.id) > Number(latestRun.id) ? run : latestRun, null);
+  const incidentIds = [
+    ...(alarmReasons.includes("failure_streak") ? [newestStreakFailure?.id] : []),
+    ...lostScheduledSlots.map((run) => run.id),
+    ...(missedWindowHours !== null ? [latest?.id] : []),
+  ].map(Number).filter(Number.isFinite);
+  const recoveryPending = alarmReasons.length > 0 && newestManualSuccess !== null
+    && incidentIds.length > 0 && Number(newestManualSuccess.id) > Math.max(...incidentIds);
+
   const base = {
     file: workflow.file,
     label: workflow.label,
@@ -898,6 +898,8 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     resolved_lost_schedule_slot_count: resolvedLostSlotCount,
     lost_schedule_slot_run_urls: lostScheduledSlotRunUrls,
     failure_streak_recovered: streakRecovered,
+    recovery_pending_next_scheduled_run: recoveryPending,
+    manual_recovery_run_url: recoveryPending ? newestManualSuccess.html_url ?? null : null,
   };
   if (workflow.events) base.events = workflow.events;
   if (isScheduledProducer && missedSlots === null && !base.alarming) {
@@ -973,6 +975,10 @@ export function buildIssueBody(alarms) {
     lines.push(`## ${alarm.label} (\`${alarm.file}\`)`);
     const reasons = Array.isArray(alarm.alarm_reasons) ? alarm.alarm_reasons : [];
     lines.push(`- Alarm reasons: ${reasons.join(", ") || "unknown"}`);
+    if (alarm.recovery_pending_next_scheduled_run) {
+      lines.push("- Recovery pending next scheduled run: the manual success has not yet proved automatic recovery.");
+      if (alarm.manual_recovery_run_url) lines.push(`- Manual recovery run URL: ${alarm.manual_recovery_run_url}`);
+    }
     if (reasons.includes("lost_schedule_slot")) {
       lines.push(`- Lost scheduled slots: ${alarm.lost_schedule_slot_count ?? 0}`);
       for (const url of alarm.lost_schedule_slot_run_urls ?? []) {
