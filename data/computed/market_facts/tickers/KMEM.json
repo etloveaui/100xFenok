@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "KMEM",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T07:14:07Z",
+  "generated_at": "2026-10-12T12:07:18Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 18.95,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T06:08:42Z",
+      "fetched_at": "2026-10-12T11:35:55Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,18 +34,25 @@
           "value": 18.95,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T06:08:42Z",
+          "fetched_at": "2026-10-12T11:35:55Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 18.95,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 19.07,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T06:08:42Z",
+      "fetched_at": "2026-10-12T11:35:55Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -57,18 +64,25 @@
           "value": 19.07,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T06:08:42Z",
+          "fetched_at": "2026-10-12T11:35:55Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 19.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.119999,
-      "source": "yf",
+      "value": -0.12,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T06:08:42Z",
+      "fetched_at": "2026-10-12T11:35:53Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,22 +91,29 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.12,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.119999,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T06:08:42Z",
+          "fetched_at": "2026-10-12T11:35:55Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.629255,
-      "source": "yf",
+      "value": -0.63,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T06:08:42Z",
+      "fetched_at": "2026-10-12T11:35:53Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
+          "value": -0.63,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.629255,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T06:08:42Z",
+          "fetched_at": "2026-10-12T11:35:55Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 28080000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:53Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 28080000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.65,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:53Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.65,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 9.054,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -7.10784,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:53Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 9.054,
+          "value": -7.10784,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -7.10784,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,236 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -0.026378264310203143,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:53Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -0.026378264310203143,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:53Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 14,
+    "holdings_updated": "Oct 8, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "B.0 06.10.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 41.2,
+        "shares": 11900000,
+        "raw": {
+          "no": 1,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 06.10.27",
+          "as": "41.20%",
+          "sh": "11,900,000"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!KRX/000660",
+        "name": "SK hynix Inc.",
+        "weight_pct": 21.55,
+        "shares": 4818,
+        "raw": {
+          "no": 2,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "21.55%",
+          "sh": "4,818"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "B.0 12.24.26",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 17.65,
+        "shares": 5000000,
+        "raw": {
+          "no": 3,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 12.24.26",
+          "as": "17.65%",
+          "sh": "5,000,000"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Dram 12/18/2026 55 C",
+        "weight_pct": 11.18,
+        "shares": 2360,
+        "raw": {
+          "no": 4,
+          "n": "Dram 12/18/2026 55 C",
+          "as": "11.18%",
+          "sh": "2,360"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!KRX/005930",
+        "name": "Samsung Electronics Co., Ltd.",
+        "weight_pct": 6.92,
+        "shares": 9928,
+        "raw": {
+          "no": 5,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "6.92%",
+          "sh": "9,928"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "B.0 03.18.27",
+        "name": "United States Treasury Bills 0%",
+        "weight_pct": 5.24,
+        "shares": 1500000,
+        "raw": {
+          "no": 6,
+          "n": "United States Treasury Bills 0%",
+          "s": "B.0 03.18.27",
+          "as": "5.24%",
+          "sh": "1,500,000"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Mu 12/18/2026 930 C",
+        "weight_pct": 3.75,
+        "shares": 40,
+        "raw": {
+          "no": 7,
+          "n": "Mu 12/18/2026 930 C",
+          "as": "3.75%",
+          "sh": "40"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 3.11,
+        "shares": 10691323851,
+        "raw": {
+          "no": 8,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "3.11%",
+          "sh": "10,691,323,851"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "Sndk 12/18/2026 1570 C",
+        "weight_pct": 2.43,
+        "shares": 16,
+        "raw": {
+          "no": 9,
+          "n": "Sndk 12/18/2026 1570 C",
+          "as": "2.43%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!MUTF/FIGXX",
+        "name": "Fidelity Inv MM Government I",
+        "weight_pct": 0.29,
+        "shares": 81431,
+        "raw": {
+          "no": 10,
+          "n": "Fidelity Inv MM Government I",
+          "s": "!mutf/FIGXX",
+          "as": "0.29%",
+          "sh": "81,431"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "Cash Offset",
+        "weight_pct": -0.54,
+        "shares": 150461,
+        "raw": {
+          "no": 11,
+          "n": "Cash Offset",
+          "as": "-0.54%",
+          "sh": "150,461"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "Mu 12/18/2026 930 P",
+        "weight_pct": -2.05,
+        "shares": 40,
+        "raw": {
+          "no": 12,
+          "n": "Mu 12/18/2026 930 P",
+          "as": "-2.05%",
+          "sh": "40"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "Sndk 12/18/2026 1570 P",
+        "weight_pct": -2.13,
+        "shares": 16,
+        "raw": {
+          "no": 13,
+          "n": "Sndk 12/18/2026 1570 P",
+          "as": "-2.13%",
+          "sh": "16"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Dram 12/18/2026 55 P",
+        "weight_pct": -8.62,
+        "shares": 2360,
+        "raw": {
+          "no": 14,
+          "n": "Dram 12/18/2026 55 P",
+          "as": "-8.62%",
+          "sh": "2,360"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +454,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/KMEM.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/KMEM.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

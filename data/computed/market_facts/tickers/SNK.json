@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SNK",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
+  "generated_at": "2026-10-12T12:07:18Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 11.97,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T06:05:43Z",
+      "fetched_at": "2026-10-12T11:37:20Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,18 +34,25 @@
           "value": 11.97,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T06:05:43Z",
+          "fetched_at": "2026-10-12T11:37:20Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 11.97,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 12.28,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T06:05:43Z",
+      "fetched_at": "2026-10-12T11:37:20Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -57,18 +64,25 @@
           "value": 12.28,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T06:05:43Z",
+          "fetched_at": "2026-10-12T11:37:20Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 12.28,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.309999,
-      "source": "yf",
+      "value": -0.31,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T06:05:43Z",
+      "fetched_at": "2026-10-12T11:37:19Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,22 +91,29 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.31,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.309999,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T06:05:43Z",
+          "fetched_at": "2026-10-12T11:37:20Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -2.52443,
-      "source": "yf",
+      "value": -2.52,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T06:05:43Z",
+      "fetched_at": "2026-10-12T11:37:19Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
+          "value": -2.52,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
+          "confidence": "observed"
+        },
+        {
           "value": -2.52443,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T06:05:43Z",
+          "fetched_at": "2026-10-12T11:37:20Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 60980000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:37:19Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 60980000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 2.2,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:37:19Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 2.2,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -17.42381,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -17.3913,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:37:19Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": -17.42381,
+          "value": -17.3913,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -17.3913,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,116 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -50.92250922509225,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:37:19Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -50.92250922509225,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:19Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 5,
+    "holdings_updated": "Oct 9, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Short Spcx Trs Clear Street",
+        "weight_pct": 225.41,
+        "shares": 133973194,
+        "raw": {
+          "no": 1,
+          "n": "Short Spcx Trs Clear Street",
+          "as": "225.41%",
+          "sh": "133,973,194"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Cash & Cash Equivalents",
+        "weight_pct": 130.41,
+        "shares": 77510000,
+        "raw": {
+          "no": 2,
+          "n": "Cash & Cash Equivalents",
+          "as": "130.41%",
+          "sh": "77,510,000"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Cash",
+        "weight_pct": 14.02,
+        "shares": 0,
+        "raw": {
+          "no": 3,
+          "n": "Cash",
+          "as": "14.02%",
+          "sh": 0
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Us Dollars",
+        "weight_pct": -69.87,
+        "shares": 41528263,
+        "raw": {
+          "no": 4,
+          "n": "Us Dollars",
+          "as": "-69.87%",
+          "sh": "41,528,263"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Short Spcx Trs Clear Street",
+        "weight_pct": -199.96,
+        "shares": 731070,
+        "raw": {
+          "no": 5,
+          "n": "Short Spcx Trs Clear Street",
+          "as": "-199.96%",
+          "sh": "731,070"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +334,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/SNK.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/SNK.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

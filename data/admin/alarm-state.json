@@ -1,43 +1,20 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-12T08:24:26.695Z",
+  "generated_at": "2026-10-12T16:34:11.490Z",
   "status": "open",
   "open_incident_count": 1,
   "open_incidents": [
     {
-      "workflow": "data-health-kpi",
-      "label": "Data stopped advancing",
+      "workflow": "build-stocks-analyzer.yml",
+      "label": "Build Stocks Analyzer",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38210986001,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38210986001",
       "alarm_reasons": [
-        "data_stopped_two_generations",
-        "member_ratio_low"
+        "failure_streak"
       ],
-      "outcome_alarms": [
-        {
-          "set": "stockanalysis_etf_detail",
-          "reasons": [
-            "member_ratio_low"
-          ],
-          "source_as_of": "2026-10-09",
-          "fresh_members": 5075,
-          "total_members": 5808,
-          "latest_attempt_at": "2026-10-12T02:28:47Z"
-        },
-        {
-          "set": "yahoo_etf_fallback",
-          "reasons": [
-            "member_ratio_low"
-          ],
-          "source_as_of": "2026-10-09",
-          "fresh_members": 108,
-          "total_members": 191,
-          "latest_attempt_at": "2026-07-28T01:07:08Z"
-        }
-      ],
-      "stopped_sets": [
-        "yahoo_etf_fallback"
-      ],
-      "latest_generated_at": "2026-10-12T08:14:26.092Z",
-      "previous_generated_at": "2026-10-12T07:42:22.840Z"
+      "lost_schedule_slot_count": 0
     }
   ],
   "watched_workflows": [
@@ -406,12 +383,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38223228061",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38223228061",
-    "observed_at": "2026-10-12T08:24:26.695Z",
-    "event": "workflow_dispatch",
+    "run_id": "38278154716",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38278154716",
+    "observed_at": "2026-10-12T16:34:11.490Z",
+    "event": "workflow_run",
     "workflows": [
-      "data-health-kpi"
+      "build-stocks-analyzer.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
