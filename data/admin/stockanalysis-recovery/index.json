@@ -1,6 +1,6 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-12T17:23:55Z",
+  "generated_at": "2026-10-12T18:44:08Z",
   "counts": {
     "tracked": 1020,
     "fresh": 908,
@@ -802,10 +802,10 @@
       "entity": "DFAC",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-09-30T15:54:54Z",
-      "failure_observed_at": "2026-10-12T17:23:55Z",
-      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y",
-      "failure_class": "candidate_regression",
-      "failure_count": 2,
+      "failure_observed_at": "2026-10-12T17:36:26Z",
+      "error": "ValueError: StockAnalysis ETF monthly_1y history dates are invalid",
+      "failure_class": "other",
+      "failure_count": 3,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -814,10 +814,10 @@
       "entity": "DFAS",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-09-30T15:40:41Z",
-      "failure_observed_at": "2026-10-12T17:23:55Z",
-      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y",
-      "failure_class": "candidate_regression",
-      "failure_count": 2,
+      "failure_observed_at": "2026-10-12T17:36:26Z",
+      "error": "ValueError: StockAnalysis ETF monthly_1y history dates are invalid",
+      "failure_class": "other",
+      "failure_count": 3,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1858,14 +1858,6 @@
       },
       {
         "artifact_kind": "etf",
-        "entity": "DFAC"
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "DFAS"
-      },
-      {
-        "artifact_kind": "etf",
         "entity": "DRUP"
       },
       {
@@ -2293,6 +2285,16 @@
         "entity": "VYLD"
       }
     ],
+    "other": [
+      {
+        "artifact_kind": "etf",
+        "entity": "DFAC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DFAS"
+      }
+    ],
     "fallback_source_invalid": [
       {
         "artifact_kind": "etf",
@@ -2305,7 +2307,7 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-12T17:23:55Z",
+    "observed_at": "2026-10-12T17:36:26Z",
     "attempted": 2,
     "successes": 0,
     "failed": 2,
@@ -2313,19 +2315,19 @@
       {
         "artifact_kind": "etf",
         "entity": "DFAS",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y",
+        "error": "ValueError: StockAnalysis ETF monthly_1y history dates are invalid",
         "data_loss": false
       },
       {
         "artifact_kind": "etf",
         "entity": "DFAC",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y",
+        "error": "ValueError: StockAnalysis ETF monthly_1y history dates are invalid",
         "data_loss": false
       }
     ],
     "by_kind": {
       "etf": {
-        "observed_at": "2026-10-12T17:23:55Z",
+        "observed_at": "2026-10-12T17:36:26Z",
         "attempted": 2,
         "successes": 0,
         "failed": 2
