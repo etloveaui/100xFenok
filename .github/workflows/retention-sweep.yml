@@ -58,6 +58,15 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          # Retention reads payloads from R2, not the multi-GB Git data tree.
+          sparse-checkout: |
+            /.github/workflows/
+            /scripts/
+            /100xfenok-next/scripts/cloud-data-plane/
+            /100xfenok-next/src/lib/freshness-policy.mjs
+            /100xfenok-next/src/lib/market-calendar.mjs
       - uses: actions/setup-node@v7
         with:
           package-manager-cache: false
