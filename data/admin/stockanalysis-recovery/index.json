@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-12T18:44:08Z",
+  "generated_at": "2026-10-12T21:24:00Z",
   "counts": {
     "tracked": 1020,
     "fresh": 908,
     "lkg": 98,
     "unavailable": 14,
     "retry": 112,
-    "failed": 2
+    "failed": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -2307,30 +2307,23 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-12T17:36:26Z",
-    "attempted": 2,
-    "successes": 0,
-    "failed": 2,
-    "errors": [
-      {
-        "artifact_kind": "etf",
-        "entity": "DFAS",
-        "error": "ValueError: StockAnalysis ETF monthly_1y history dates are invalid",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "DFAC",
-        "error": "ValueError: StockAnalysis ETF monthly_1y history dates are invalid",
-        "data_loss": false
-      }
-    ],
+    "observed_at": "2026-10-12T21:24:00Z",
+    "attempted": 16,
+    "successes": 16,
+    "failed": 0,
+    "errors": [],
     "by_kind": {
-      "etf": {
-        "observed_at": "2026-10-12T17:36:26Z",
-        "attempted": 2,
-        "successes": 0,
-        "failed": 2
+      "stock": {
+        "observed_at": "2026-10-12T21:24:00Z",
+        "attempted": 8,
+        "successes": 8,
+        "failed": 0
+      },
+      "financial": {
+        "observed_at": "2026-10-12T21:24:00Z",
+        "attempted": 8,
+        "successes": 8,
+        "failed": 0
       }
     }
   },
