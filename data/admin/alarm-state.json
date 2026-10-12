@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-12T09:24:26.335Z",
+  "generated_at": "2026-10-12T10:13:51.900Z",
   "status": "open",
   "open_incident_count": 1,
   "open_incidents": [
@@ -9,18 +9,20 @@
       "label": "Data stopped advancing",
       "alarm_reasons": [
         "data_stopped_two_generations",
-        "member_ratio_low"
+        "member_ratio_low",
+        "source_not_advancing"
       ],
       "outcome_alarms": [
         {
           "set": "stockanalysis_etf_detail",
           "reasons": [
-            "member_ratio_low"
+            "member_ratio_low",
+            "source_not_advancing"
           ],
           "source_as_of": "2026-10-09",
-          "fresh_members": 5075,
+          "fresh_members": 5472,
           "total_members": 5808,
-          "latest_attempt_at": "2026-10-12T02:28:47Z"
+          "latest_attempt_at": "2026-10-12T08:12:34Z"
         },
         {
           "set": "yahoo_etf_fallback",
@@ -36,8 +38,8 @@
       "stopped_sets": [
         "yahoo_etf_fallback"
       ],
-      "latest_generated_at": "2026-10-12T09:14:24.326Z",
-      "previous_generated_at": "2026-10-12T08:14:26.092Z"
+      "latest_generated_at": "2026-10-12T10:08:08.586Z",
+      "previous_generated_at": "2026-10-12T09:14:24.326Z"
     }
   ],
   "watched_workflows": [
@@ -406,10 +408,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38229532695",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38229532695",
-    "observed_at": "2026-10-12T09:24:26.335Z",
-    "event": "workflow_dispatch",
+    "run_id": "38234851752",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38234851752",
+    "observed_at": "2026-10-12T10:13:51.900Z",
+    "event": "workflow_run",
     "workflows": [
       "data-health-kpi"
     ],
