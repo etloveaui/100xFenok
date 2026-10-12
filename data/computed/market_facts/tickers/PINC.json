@@ -1,0 +1,763 @@
+{
+  "schema_version": "market-facts/v1",
+  "ticker": "PINC",
+  "asset_type": "etf",
+  "generated_at": "2026-10-12T04:38:12Z",
+  "source_as_of": "2026-10-09",
+  "source_as_of_scope": "selected_price_fact",
+  "source_as_of_reason": null,
+  "identity": {
+    "name": "PINC",
+    "exchange": null,
+    "currency": null,
+    "sector": null,
+    "industry": null,
+    "fund_family": null,
+    "category": null
+  },
+  "facts": {
+    "price": {
+      "value": 49.1548,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:15Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 49.1548,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:15Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 49.1548,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "previous_close": {
+      "value": 49.145,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:15Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 49.145,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:15Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 49.15,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "change": {
+      "value": 0,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.00979996,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "change_pct": {
+      "value": 0.01,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.01,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.0199409,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:15Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "total_assets": {
+      "value": 25800000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 25800000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 1.64,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 1.64,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.39,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.39,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1m": {
+      "value": -0.97476,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "candidates": [
+        {
+          "value": -0.97476,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -0.97476,
+          "source": "stockanalysis.etf_screener.performance",
+          "as_of": null,
+          "fetched_at": "2026-10-12T02:29:58Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -0.34556803766201993,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T02:39:14Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -0.34556803766201993,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T02:39:14Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    }
+  },
+  "etf": {
+    "holdings_count": 115,
+    "holdings_updated": "Oct 8, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Usd/Eur Fwd 20261022 00187",
+        "weight_pct": 11.25,
+        "shares": 2896040,
+        "raw": {
+          "no": 1,
+          "n": "Usd/Eur Fwd 20261022 00187",
+          "as": "11.25%",
+          "sh": "2,896,040"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Prudential Govt Money Mkt Fd",
+        "weight_pct": 4.05,
+        "shares": 1043369,
+        "raw": {
+          "no": 2,
+          "n": "Prudential Govt Money Mkt Fd",
+          "as": "4.05%",
+          "sh": "1,043,369"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "FIOS.5A A",
+        "name": "Sona Fios Clo V Designated Activity Co. 3.864%",
+        "weight_pct": 3.26,
+        "shares": 750000,
+        "raw": {
+          "no": 3,
+          "n": "Sona Fios Clo V Designated Activity Co. 3.864%",
+          "s": "FIOS.5A A",
+          "as": "3.26%",
+          "sh": "750,000"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "T.4.125 05.31.31",
+        "name": "United States Treasury Notes 4.125%",
+        "weight_pct": 3.01,
+        "shares": 805000,
+        "raw": {
+          "no": 4,
+          "n": "United States Treasury Notes 4.125%",
+          "s": "T.4.125 05.31.31",
+          "as": "3.01%",
+          "sh": "805,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "OHACP.2024-17A B1",
+        "name": "OHA Credit Partners XVII Ltd. 5.37921%",
+        "weight_pct": 2.92,
+        "shares": 750000,
+        "raw": {
+          "no": 5,
+          "n": "OHA Credit Partners XVII Ltd. 5.37921%",
+          "s": "OHACP.2024-17A B1",
+          "as": "2.92%",
+          "sh": "750,000"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "KKR.2025-57A B",
+        "name": "Kkr Clo Ltd 5.45292%",
+        "weight_pct": 2.92,
+        "shares": 750000,
+        "raw": {
+          "no": 6,
+          "n": "Kkr Clo Ltd 5.45292%",
+          "s": "KKR.2025-57A B",
+          "as": "2.92%",
+          "sh": "750,000"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Eur/Usd Fwd 20261022 00187",
+        "weight_pct": 2.22,
+        "shares": 510750,
+        "raw": {
+          "no": 7,
+          "n": "Eur/Usd Fwd 20261022 00187",
+          "as": "2.22%",
+          "sh": "510,750"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "ARBR.5A CR",
+        "name": "Arbour CLO V Designated Activity Co. 5.097%",
+        "weight_pct": 2.19,
+        "shares": 500000,
+        "raw": {
+          "no": 8,
+          "n": "Arbour CLO V Designated Activity Co. 5.097%",
+          "s": "ARBR.5A CR",
+          "as": "2.19%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "AWPT.2018-3A CR3",
+        "name": "Elevation CLO 2021-15 Ltd. 5.81015%",
+        "weight_pct": 1.95,
+        "shares": 500000,
+        "raw": {
+          "no": 9,
+          "n": "Elevation CLO 2021-15 Ltd. 5.81015%",
+          "s": "AWPT.2018-3A CR3",
+          "as": "1.95%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "CBAMR.2017-3A BR2",
+        "name": "CBAMR 2017-3 LTD 5.31676%",
+        "weight_pct": 1.95,
+        "shares": 500000,
+        "raw": {
+          "no": 10,
+          "n": "CBAMR 2017-3 LTD 5.31676%",
+          "s": "CBAMR.2017-3A BR2",
+          "as": "1.95%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "ROCKT.2024-1A BR",
+        "name": "ROCKFORD TOWER CLO 2024-1 LTD 5.42212%",
+        "weight_pct": 1.94,
+        "shares": 500000,
+        "raw": {
+          "no": 11,
+          "n": "ROCKFORD TOWER CLO 2024-1 LTD 5.42212%",
+          "s": "ROCKT.2024-1A BR",
+          "as": "1.94%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "ARES.2024-71A BR",
+        "name": "Ares Lv Clo Ltd / Ares Lv Clo Llc 5.36729%",
+        "weight_pct": 1.94,
+        "shares": 500000,
+        "raw": {
+          "no": 12,
+          "n": "Ares Lv Clo Ltd / Ares Lv Clo Llc 5.36729%",
+          "s": "ARES.2024-71A BR",
+          "as": "1.94%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "CIFC.2017-3A BR2",
+        "name": "CIFC FUNDING 2017-III LTD",
+        "weight_pct": 1.94,
+        "shares": 500000,
+        "raw": {
+          "no": 13,
+          "n": "CIFC FUNDING 2017-III LTD",
+          "s": "CIFC.2017-3A BR2",
+          "as": "1.94%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "CIFC.2024-1A BR",
+        "name": "CIFC FUNDING 2024-I LTD 5.27921%",
+        "weight_pct": 1.94,
+        "shares": 500000,
+        "raw": {
+          "no": 14,
+          "n": "CIFC FUNDING 2024-I LTD 5.27921%",
+          "s": "CIFC.2024-1A BR",
+          "as": "1.94%",
+          "sh": "500,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "AESOP.2021-2A D",
+        "name": "Avis Budget Rental Car Funding AESOP LLC 4.08%",
+        "weight_pct": 1.61,
+        "shares": 416667,
+        "raw": {
+          "no": 15,
+          "n": "Avis Budget Rental Car Funding AESOP LLC 4.08%",
+          "s": "AESOP.2021-2A D",
+          "as": "1.61%",
+          "sh": "416,667"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "VERUS.2024-9 A1",
+        "name": "VERUS SECURITIZATION TR 2024-9 5.438%",
+        "weight_pct": 1.27,
+        "shares": 330960,
+        "raw": {
+          "no": 16,
+          "n": "VERUS SECURITIZATION TR 2024-9 5.438%",
+          "s": "VERUS.2024-9 A1",
+          "as": "1.27%",
+          "sh": "330,960"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "BRAVO.2026-NQM9 A3",
+        "name": "BRAVO RESIDENTIAL FUNDING TRUST 2026-NQM9",
+        "weight_pct": 1.17,
+        "shares": 300000,
+        "raw": {
+          "no": 17,
+          "n": "BRAVO RESIDENTIAL FUNDING TRUST 2026-NQM9",
+          "s": "BRAVO.2026-NQM9 A3",
+          "as": "1.17%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "SAN.2026-NQM6 A1",
+        "name": "SANTANDER MORTGAGE ASSET RECEIVABLE TRUST 2026-NQM6 5.75%",
+        "weight_pct": 1.14,
+        "shares": 298238,
+        "raw": {
+          "no": 18,
+          "n": "SANTANDER MORTGAGE ASSET RECEIVABLE TRUST 2026-NQM6 5.75%",
+          "s": "SAN.2026-NQM6 A1",
+          "as": "1.14%",
+          "sh": "298,238"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "EFMT.2026-NQM6 M1",
+        "name": "EFMT 2026-NQM1 6.17%",
+        "weight_pct": 1.13,
+        "shares": 300000,
+        "raw": {
+          "no": 19,
+          "n": "EFMT 2026-NQM1 6.17%",
+          "s": "EFMT.2026-NQM6 M1",
+          "as": "1.13%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "BRAVO.2026-NQM5 M1",
+        "name": "BRAVO RESIDENTIAL FUNDING TRUST 2026-NQM5 5.96%",
+        "weight_pct": 1.12,
+        "shares": 300000,
+        "raw": {
+          "no": 20,
+          "n": "BRAVO RESIDENTIAL FUNDING TRUST 2026-NQM5 5.96%",
+          "s": "BRAVO.2026-NQM5 M1",
+          "as": "1.12%",
+          "sh": "300,000"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "HOMES.2026-NQM4 A3",
+        "name": "HOMES 2025-NQM3 TRUST 5.807%",
+        "weight_pct": 1.1,
+        "shares": 288457,
+        "raw": {
+          "no": 21,
+          "n": "HOMES 2025-NQM3 TRUST 5.807%",
+          "s": "HOMES.2026-NQM4 A3",
+          "as": "1.10%",
+          "sh": "288,457"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "SPIRE.2026-3 A1",
+        "name": "ASPIRE MORTGAGE TRUST 2026-3 5.459%",
+        "weight_pct": 1.1,
+        "shares": 289023,
+        "raw": {
+          "no": 22,
+          "n": "ASPIRE MORTGAGE TRUST 2026-3 5.459%",
+          "s": "SPIRE.2026-3 A1",
+          "as": "1.10%",
+          "sh": "289,023"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "FIGX.2026-PF1 C",
+        "name": "FIG SIX TRUST 2026-PF1 6.155%",
+        "weight_pct": 1.09,
+        "shares": 287676,
+        "raw": {
+          "no": 23,
+          "n": "FIG SIX TRUST 2026-PF1 6.155%",
+          "s": "FIGX.2026-PF1 C",
+          "as": "1.09%",
+          "sh": "287,676"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "SHCLO.4A C",
+        "name": "Signal Harmonic CLO IV Designated Activity Co. 4.672%",
+        "weight_pct": 1.09,
+        "shares": 250000,
+        "raw": {
+          "no": 24,
+          "n": "Signal Harmonic CLO IV Designated Activity Co. 4.672%",
+          "s": "SHCLO.4A C",
+          "as": "1.09%",
+          "sh": "250,000"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CONTE.14A A",
+        "name": "Contego CLO XIV Designated Activity Company 3.731%",
+        "weight_pct": 1.09,
+        "shares": 250000,
+        "raw": {
+          "no": 25,
+          "n": "Contego CLO XIV Designated Activity Company 3.731%",
+          "s": "CONTE.14A A",
+          "as": "1.09%",
+          "sh": "250,000"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "yahoo_funds_data_available": false
+  },
+  "financials": null,
+  "sources": {
+    "yf": false,
+    "yf_quote": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
+    "stockanalysis_etf_catalog": true,
+    "slickcharts": false
+  },
+  "source_files": {
+    "yf": null,
+    "yf_quote": "yf/finance/PINC.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/PINC.json",
+    "stockanalysis_yf_fallback": null,
+    "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
+    "slickcharts": null
+  },
+  "resolver": {
+    "version": "market-facts-resolver/v1",
+    "detail_authority": "data_supply:fresh_primary",
+    "field_source_policy": {
+      "price": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "previous_close": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "change_pct": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "market_cap": [
+        "yf",
+        "stockanalysis.overview",
+        "slickcharts"
+      ],
+      "total_assets": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "trailing_pe": [
+        "yf",
+        "slickcharts"
+      ],
+      "forward_pe": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "dividend_yield": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "beta": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
+      ],
+      "expense_ratio": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "return_1m": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_3m": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "return_ytd": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "return_1y": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "return_3y_avg": [
+        "yf",
+        "stockanalysis.detail.history"
+      ],
+      "return_5y_avg": [
+        "yf",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_10y_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ],
+      "return_max_avg": [
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance"
+      ]
+    },
+    "principle": "Preserve all non-null overlapping source candidates while exposing the selected value at facts.{field}.value."
+  }
+}

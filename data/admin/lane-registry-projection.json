@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-10-12T03:45:04.623Z",
+  "generated_at": "2026-10-12T04:42:25.053Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 36,
@@ -47,7 +47,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fred-macro.yml",
           "class": null
         },
@@ -104,7 +104,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fred-banking.yml",
           "class": null
         },
@@ -161,7 +161,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fred-yardeni.yml",
           "class": null
         },
@@ -215,7 +215,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fdic.yml",
           "class": null
         },
@@ -274,7 +274,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-treasury-tga.yml",
           "class": null
         },
@@ -309,9 +309,9 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-12T03:12:00.000Z",
-          "next_expected_slot": "2026-10-12T04:12:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-12T04:12:00.000Z",
+          "next_expected_slot": "2026-10-12T05:12:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
           "observed_at": "2026-10-12T03:12:18.972Z",
@@ -331,7 +331,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-defillama.yml",
           "class": null
         },
@@ -388,7 +388,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-stockanalysis.yml",
           "class": null
         },
@@ -425,11 +425,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-11T23:20:00.000Z",
           "next_expected_slot": "2026-10-12T21:20:00.000Z",
-          "status": "unobserved"
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": null,
-          "outcome": "unobserved",
+          "observed_at": "2026-10-12T02:28:47Z",
+          "outcome": "success",
           "failure_class": null
         },
         "source": {
@@ -439,13 +439,13 @@
           "sla": null
         },
         "recovery": {
-          "state": "unavailable",
+          "state": "fresh_primary",
           "retry_count": 0,
           "recovered_at": null,
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-stockanalysis.yml",
           "class": null
         },
@@ -457,7 +457,6 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
-            "attempt",
             "source"
           ]
         }
@@ -485,11 +484,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-11T23:20:00.000Z",
           "next_expected_slot": "2026-10-12T21:20:00.000Z",
-          "status": "unobserved"
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": null,
-          "outcome": "unobserved",
+          "observed_at": "2026-10-12T02:28:47Z",
+          "outcome": "partial",
           "failure_class": null
         },
         "source": {
@@ -500,12 +499,12 @@
         },
         "recovery": {
           "state": "retained_lkg",
-          "retry_count": 183,
+          "retry_count": 195,
           "recovered_at": null,
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-stockanalysis.yml",
           "class": null
         },
@@ -515,10 +514,8 @@
           "depth": null
         },
         "coverage": {
-          "status": "not_covered",
-          "missing": [
-            "attempt"
-          ]
+          "status": "covered",
+          "missing": []
         }
       }
     },
@@ -564,7 +561,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-stockanalysis.yml",
           "class": null
         },
@@ -621,7 +618,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "refresh-earnings-overview.yml",
           "class": null
         },
@@ -660,11 +657,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-11T23:20:00.000Z",
           "next_expected_slot": "2026-10-12T21:20:00.000Z",
-          "status": "unobserved"
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": null,
-          "outcome": "unobserved",
+          "observed_at": "2026-10-12T02:28:47Z",
+          "outcome": "success",
           "failure_class": null
         },
         "source": {
@@ -674,13 +671,13 @@
           "sla": null
         },
         "recovery": {
-          "state": "unavailable",
+          "state": "fresh_primary",
           "retry_count": 0,
           "recovered_at": null,
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-stockanalysis.yml",
           "class": null
         },
@@ -692,7 +689,6 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
-            "attempt",
             "source"
           ]
         }
@@ -718,12 +714,12 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-12T03:05:00.000Z",
-          "next_expected_slot": "2026-10-12T04:05:00.000Z",
-          "status": "overdue"
+          "latest_expected_slot": "2026-10-12T04:05:00.000Z",
+          "next_expected_slot": "2026-10-12T05:05:00.000Z",
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-12T02:05:23.616Z",
+          "observed_at": "2026-10-12T04:05:20.570Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -740,7 +736,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-yahoo-ticker.yml",
           "class": null
         },
@@ -797,7 +793,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-sentiment.yml",
           "class": null
         },
@@ -851,7 +847,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-nasdaq-giw-sox.yml",
           "class": null
         },
@@ -910,7 +906,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-us-indices-daily.yml",
           "class": null
         },
@@ -967,7 +963,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-oecd-cli.yml",
           "class": null
         },
@@ -1024,7 +1020,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fenok-edge-krx-daily.yml",
           "class": null
         },
@@ -1081,7 +1077,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "slickcharts-daily.yml",
           "class": null
         },
@@ -1138,7 +1134,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-edgar-filings.yml",
           "class": null
         },
@@ -1197,7 +1193,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "a1-sec-13f",
           "class": null
         },
@@ -1251,7 +1247,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1309,7 +1305,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1367,7 +1363,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1425,7 +1421,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1481,7 +1477,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1537,7 +1533,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1593,7 +1589,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": null,
           "class": null
         },
@@ -1650,7 +1646,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-damodaran-shadow.yml",
           "class": null
         },
@@ -1707,7 +1703,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fenok-edge-daily.yml",
           "class": null
         },
@@ -1764,7 +1760,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-finra-ats-weekly.yml",
           "class": null
         },
@@ -1821,7 +1817,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fenok-edge-daily.yml",
           "class": null
         },
@@ -1878,7 +1874,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fenok-private-options.yml",
           "class": null
         },
@@ -1935,7 +1931,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fenok-apewisdom.yml",
           "class": null
         },
@@ -1992,7 +1988,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-fenok-news-tone.yml",
           "class": null
         },
@@ -2049,7 +2045,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "clear",
+          "status": "unknown",
           "workflow": "fetch-yf-finance.yml",
           "class": null
         },
