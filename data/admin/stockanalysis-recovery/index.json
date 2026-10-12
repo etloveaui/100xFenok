@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-12T10:06:08Z",
+  "generated_at": "2026-10-12T10:47:02Z",
   "counts": {
     "tracked": 1020,
-    "fresh": 824,
-    "lkg": 182,
+    "fresh": 825,
+    "lkg": 181,
     "unavailable": 14,
-    "retry": 196,
-    "failed": 1
+    "retry": 195,
+    "failed": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 902,
-      "fresh": 706,
-      "lkg": 182,
+      "fresh": 707,
+      "lkg": 181,
       "unavailable": 14,
-      "retry": 196
+      "retry": 195
     },
     "surface": {
       "tracked": 25,
@@ -702,10 +702,6 @@
     {
       "artifact_kind": "etf",
       "entity": "TLDR"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "TQQQ"
     },
     {
       "artifact_kind": "etf",
@@ -2803,18 +2799,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "TQQQ",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-07-16T20:00:00Z",
-      "failure_observed_at": "2026-10-12T10:06:08Z",
-      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-      "failure_class": "candidate_regression",
-      "failure_count": 1,
-      "failure_count_is_lower_bound": false,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "TSLO",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
@@ -3573,10 +3557,6 @@
       {
         "artifact_kind": "etf",
         "entity": "RLY"
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "TQQQ"
       }
     ],
     "provider_ticker_redirect": [
@@ -3985,24 +3965,17 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-12T10:06:08Z",
-    "attempted": 4,
-    "successes": 3,
-    "failed": 1,
-    "errors": [
-      {
-        "artifact_kind": "etf",
-        "entity": "TQQQ",
-        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-        "data_loss": false
-      }
-    ],
+    "observed_at": "2026-10-12T10:47:02Z",
+    "attempted": 1,
+    "successes": 1,
+    "failed": 0,
+    "errors": [],
     "by_kind": {
       "etf": {
-        "observed_at": "2026-10-12T10:06:08Z",
-        "attempted": 4,
-        "successes": 3,
-        "failed": 1
+        "observed_at": "2026-10-12T10:47:02Z",
+        "attempted": 1,
+        "successes": 1,
+        "failed": 0
       }
     }
   },
@@ -4172,7 +4145,6 @@
     "TCAN",
     "TGLR",
     "TLDR",
-    "TQQQ",
     "TSLO",
     "TSYW",
     "UCIB",
