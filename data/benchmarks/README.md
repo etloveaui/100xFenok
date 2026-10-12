@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-10-02 (16+ years, 875 data points per index)
+> **Period**: 2010-01-01 ~ 2026-10-09 (16+ years, 876 data points per index)
 > **Version**: 3.8.0
-> **Last Update**: 2026-10-06
+> **Last Update**: 2026-10-12
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-10-12 | Weekly data update (2026-10-09 source): 32,475 records (+38), 2010-01-01 ~ 2026-10-09, 38 sections, 876 data points per index (kosdaq_150 875, hang_seng_tech 615, star50 325); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-10-06 | Weekly data update (2026-10-02 source): 32,437 records (+38), 2010-01-01 ~ 2026-10-02, 38 sections, 875 data points per index (kosdaq_150 874, hang_seng_tech 614, star50 324); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-09-28 | Weekly data update (2026-09-25 source): 32,399 records (+38), 2010-01-01 ~ 2026-09-25, 38 sections, 874 data points per index (kosdaq_150 873, hang_seng_tech 613, star50 323); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-09-22 | Weekly data update (2026-09-18 source): 32,361 records (+38), 2010-01-01 ~ 2026-09-20, 38 sections, 873 data points per index (kosdaq_150 872, hang_seng_tech 612, star50 322); source summaries 2,404 values + 66 nulls |
