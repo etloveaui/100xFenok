@@ -1,11 +1,11 @@
 {
   "current": {
-    "fetched_at": "2026-10-06T06:31:15Z",
-    "history_as_of": "2026-10-02",
+    "fetched_at": "2026-10-12T04:33:37Z",
+    "history_as_of": "2026-10-09",
     "path": "data/yf/finance/MGIN.json",
-    "payload_sha256": "d98db06760e73f2106ad4463be0d72cb3a5445e22942bbd0e97b881b8ec43836",
+    "payload_sha256": "4e197279511d2ca2421afc46eb48142d8a176666084df2ef7955670a64978c78",
     "quote_as_of": "2026-10-01T18:44:12Z",
-    "source_as_of": "2026-10-01T18:44:12Z"
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -14,13 +14,30 @@
   "last_result": {
     "attempts_used": 1,
     "failures": [],
-    "latency_ms": 419,
-    "observed_at": "2026-10-06T06:31:15Z",
+    "latency_ms": 683,
+    "observed_at": "2026-10-12T04:33:37Z",
     "outcome": "fresh"
+  },
+  "lkg": {
+    "fetched_at": "2026-10-06T06:31:15Z",
+    "history_as_of": "2026-10-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MGIN.json",
+    "payload_sha256": "d98db06760e73f2106ad4463be0d72cb3a5445e22942bbd0e97b881b8ec43836",
+    "quote_as_of": "2026-10-01T18:44:12Z",
+    "source_as_of": "2026-10-01T18:44:12Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-12T04:32:29Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "MGIN holds LKG because Yahoo source date 2026-10-01T18:44:12Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-10-01T18:44:12Z"
+  },
   "ticker": "MGIN",
-  "updated_at": "2026-10-06T06:31:15Z"
+  "updated_at": "2026-10-12T04:33:37Z"
 }
