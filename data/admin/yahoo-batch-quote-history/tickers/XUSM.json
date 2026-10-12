@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-11T06:40:24Z",
     "history_as_of": "2026-10-09",
-    "path": "data/yf/finance/XUSM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XUSM.json",
     "payload_sha256": "b31c3fbf45027c2658db1f9fb0a0c2a26ee546b5e03a8cb021f8ef2dfdf153b0",
     "quote_as_of": "2026-10-09T20:00:00Z",
     "source_as_of": "2026-10-09"
@@ -10,9 +10,10 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for XUSM: quote_as_of",
     "failures": [
       {
         "attempt": 1,
@@ -45,9 +46,58 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 656,
-    "observed_at": "2026-10-11T06:40:24Z",
-    "outcome": "fresh"
+    "latency_ms": 684,
+    "observed_at": "2026-10-12T05:02:20Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for XUSM: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: XUSM: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-12T05:02:20Z"
+  },
+  "lkg": {
+    "fetched_at": "2026-10-11T06:40:24Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XUSM.json",
+    "payload_sha256": "b31c3fbf45027c2658db1f9fb0a0c2a26ee546b5e03a8cb021f8ef2dfdf153b0",
+    "quote_as_of": "2026-10-09T20:00:00Z",
+    "source_as_of": "2026-10-09"
   },
   "provider_lifecycle": {
     "last_attempt_at": "2026-10-11T06:40:24Z",
@@ -56,9 +106,9 @@
     "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "XUSM",
-  "updated_at": "2026-10-11T06:40:24Z"
+  "updated_at": "2026-10-12T05:02:20Z"
 }
