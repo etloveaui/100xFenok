@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "ABNG",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-12T02:28:47Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "58881081c083ef9faad4eacec896777593f4df8de50c25d553358e63e569766c",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-12T02:28:47Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/ABNG.json",
+    "payload_sha256": "58881081c083ef9faad4eacec896777593f4df8de50c25d553358e63e569766c",
+    "source_as_of": "2026-07-17T20:00:00Z",
+    "fetched_at": "2026-07-20T00:59:39Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/ABNG.json",
+    "payload_sha256": "58881081c083ef9faad4eacec896777593f4df8de50c25d553358e63e569766c",
+    "source_as_of": "2026-07-17T20:00:00Z",
+    "fetched_at": "2026-07-20T00:59:39Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-12T02:28:47Z",
+    "last_probe_at": "2026-10-12T02:28:47Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-07-17",
+    "status": "unresolved",
+    "attempts": []
+  }
+}

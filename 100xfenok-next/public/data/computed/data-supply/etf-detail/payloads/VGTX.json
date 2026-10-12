@@ -1,0 +1,1853 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "VGTX",
+  "source_as_of": "2026-10-09T20:00:00Z",
+  "fetched_at": "2026-10-12T02:39:40Z",
+  "endpoints": {
+    "holdings": "/etf/vgtx/holdings/__data.json",
+    "overview": "/etf/vgtx/__data.json",
+    "quote": "/api/quotes/e/VGTX",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/VGTX/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/VGTX/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/VGTX/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/VGTX/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/VGTX/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/VGTX/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "expenseRatio": "0.00%",
+      "sharesOut": "20,001"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 25.2087,
+      "pd": 25.21,
+      "c": 0,
+      "cp": 0,
+      "cdr": 0,
+      "cl": 0,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 0,
+      "u": "Oct 9, 2026, 4:00 PM EDT",
+      "td": "2026-10-09",
+      "ts": 1791576000000,
+      "h52": null,
+      "l52": null,
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Oct 12, 2026, 2:39 AM EDT",
+      "es": null,
+      "etd": null,
+      "days": 2,
+      "exp": 1791792900000,
+      "symbol": "vgtx",
+      "uid": "VGTX"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "VGTX",
+        "lastChecked": 1791769882234,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "expenseRatio": "0.00%",
+      "peRatio": null,
+      "sharesOut": "20,001",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": null,
+      "chart": {
+        "expiration": 1791811800000,
+        "data": [
+          {
+            "t": 1791538200
+          },
+          {
+            "t": 1791538260
+          },
+          {
+            "c": 25.26,
+            "o": 25.22,
+            "t": 1791538320
+          },
+          {
+            "c": 25.17,
+            "t": 1791538380
+          },
+          {
+            "c": 25.26,
+            "t": 1791538440
+          },
+          {
+            "c": null,
+            "t": 1791538500
+          },
+          {
+            "c": 25.14,
+            "t": 1791538560
+          },
+          {
+            "c": 25.14,
+            "t": 1791538620
+          },
+          {
+            "c": 25.16,
+            "t": 1791538680
+          },
+          {
+            "c": null,
+            "t": 1791538740
+          },
+          {
+            "c": 25.18,
+            "t": 1791538800
+          },
+          {
+            "c": 25.11,
+            "t": 1791538860
+          },
+          {
+            "c": 25.02,
+            "t": 1791538920
+          },
+          {
+            "c": 25.1,
+            "t": 1791538980
+          },
+          {
+            "c": null,
+            "t": 1791539040
+          },
+          {
+            "c": null,
+            "t": 1791539100
+          },
+          {
+            "c": 25.04,
+            "t": 1791539160
+          },
+          {
+            "c": null,
+            "t": 1791539220
+          },
+          {
+            "c": null,
+            "t": 1791539280
+          },
+          {
+            "c": 25.05,
+            "t": 1791539340
+          },
+          {
+            "c": null,
+            "t": 1791539400
+          },
+          {
+            "c": null,
+            "t": 1791539460
+          },
+          {
+            "c": null,
+            "t": 1791539520
+          },
+          {
+            "c": null,
+            "t": 1791539580
+          },
+          {
+            "c": 25.04,
+            "t": 1791539640
+          },
+          {
+            "c": null,
+            "t": 1791539700
+          },
+          {
+            "c": null,
+            "t": 1791539760
+          },
+          {
+            "c": null,
+            "t": 1791539820
+          },
+          {
+            "c": 25.06,
+            "t": 1791539880
+          },
+          {
+            "c": null,
+            "t": 1791539940
+          },
+          {
+            "c": null,
+            "t": 1791540000
+          },
+          {
+            "c": null,
+            "t": 1791540060
+          },
+          {
+            "c": null,
+            "t": 1791540120
+          },
+          {
+            "c": null,
+            "t": 1791540180
+          },
+          {
+            "c": null,
+            "t": 1791540240
+          },
+          {
+            "c": null,
+            "t": 1791540300
+          },
+          {
+            "c": null,
+            "t": 1791540360
+          },
+          {
+            "c": null,
+            "t": 1791540420
+          },
+          {
+            "c": null,
+            "t": 1791540480
+          },
+          {
+            "c": null,
+            "t": 1791540540
+          },
+          {
+            "c": null,
+            "t": 1791540600
+          },
+          {
+            "c": null,
+            "t": 1791540660
+          },
+          {
+            "c": 25.05,
+            "t": 1791540720
+          },
+          {
+            "c": null,
+            "t": 1791540780
+          },
+          {
+            "c": null,
+            "t": 1791540840
+          },
+          {
+            "c": null,
+            "t": 1791540900
+          },
+          {
+            "c": null,
+            "t": 1791540960
+          },
+          {
+            "c": null,
+            "t": 1791541020
+          },
+          {
+            "c": null,
+            "t": 1791541080
+          },
+          {
+            "c": null,
+            "t": 1791541140
+          },
+          {
+            "c": null,
+            "t": 1791541200
+          },
+          {
+            "c": 25.09,
+            "t": 1791541260
+          },
+          {
+            "c": null,
+            "t": 1791541320
+          },
+          {
+            "c": 25.09,
+            "t": 1791541380
+          },
+          {
+            "c": null,
+            "t": 1791541440
+          },
+          {
+            "c": null,
+            "t": 1791541500
+          },
+          {
+            "c": 25.07,
+            "t": 1791541560
+          },
+          {
+            "c": null,
+            "t": 1791541620
+          },
+          {
+            "c": null,
+            "t": 1791541680
+          },
+          {
+            "c": null,
+            "t": 1791541740
+          },
+          {
+            "c": null,
+            "t": 1791541800
+          },
+          {
+            "c": null,
+            "t": 1791541860
+          },
+          {
+            "c": null,
+            "t": 1791541920
+          },
+          {
+            "c": null,
+            "t": 1791541980
+          },
+          {
+            "c": null,
+            "t": 1791542040
+          },
+          {
+            "c": null,
+            "t": 1791542100
+          },
+          {
+            "c": 25.13,
+            "t": 1791542160
+          },
+          {
+            "c": null,
+            "t": 1791542220
+          },
+          {
+            "c": null,
+            "t": 1791542280
+          },
+          {
+            "c": null,
+            "t": 1791542340
+          },
+          {
+            "c": null,
+            "t": 1791542400
+          },
+          {
+            "c": null,
+            "t": 1791542460
+          },
+          {
+            "c": null,
+            "t": 1791542520
+          },
+          {
+            "c": null,
+            "t": 1791542580
+          },
+          {
+            "c": 25.09,
+            "t": 1791542640
+          },
+          {
+            "c": null,
+            "t": 1791542700
+          },
+          {
+            "c": null,
+            "t": 1791542760
+          },
+          {
+            "c": null,
+            "t": 1791542820
+          },
+          {
+            "c": null,
+            "t": 1791542880
+          },
+          {
+            "c": null,
+            "t": 1791542940
+          },
+          {
+            "c": null,
+            "t": 1791543000
+          },
+          {
+            "c": null,
+            "t": 1791543060
+          },
+          {
+            "c": null,
+            "t": 1791543120
+          },
+          {
+            "c": null,
+            "t": 1791543180
+          },
+          {
+            "c": null,
+            "t": 1791543240
+          },
+          {
+            "c": null,
+            "t": 1791543300
+          },
+          {
+            "c": 25.11,
+            "t": 1791543360
+          },
+          {
+            "c": 25.15,
+            "t": 1791543420
+          },
+          {
+            "c": null,
+            "t": 1791543480
+          },
+          {
+            "c": null,
+            "t": 1791543540
+          },
+          {
+            "c": null,
+            "t": 1791543600
+          },
+          {
+            "c": null,
+            "t": 1791543660
+          },
+          {
+            "c": null,
+            "t": 1791543720
+          },
+          {
+            "c": null,
+            "t": 1791543780
+          },
+          {
+            "c": 25.128,
+            "t": 1791543840
+          },
+          {
+            "c": null,
+            "t": 1791543900
+          },
+          {
+            "c": null,
+            "t": 1791543960
+          },
+          {
+            "c": null,
+            "t": 1791544020
+          },
+          {
+            "c": null,
+            "t": 1791544080
+          },
+          {
+            "c": null,
+            "t": 1791544140
+          },
+          {
+            "c": null,
+            "t": 1791544200
+          },
+          {
+            "c": null,
+            "t": 1791544260
+          },
+          {
+            "c": null,
+            "t": 1791544320
+          },
+          {
+            "c": null,
+            "t": 1791544380
+          },
+          {
+            "c": null,
+            "t": 1791544440
+          },
+          {
+            "c": null,
+            "t": 1791544500
+          },
+          {
+            "c": null,
+            "t": 1791544560
+          },
+          {
+            "c": null,
+            "t": 1791544620
+          },
+          {
+            "c": null,
+            "t": 1791544680
+          },
+          {
+            "c": null,
+            "t": 1791544740
+          },
+          {
+            "c": null,
+            "t": 1791544800
+          },
+          {
+            "c": null,
+            "t": 1791544860
+          },
+          {
+            "c": null,
+            "t": 1791544920
+          },
+          {
+            "c": null,
+            "t": 1791544980
+          },
+          {
+            "c": null,
+            "t": 1791545040
+          },
+          {
+            "c": null,
+            "t": 1791545100
+          },
+          {
+            "c": null,
+            "t": 1791545160
+          },
+          {
+            "c": null,
+            "t": 1791545220
+          },
+          {
+            "c": null,
+            "t": 1791545280
+          },
+          {
+            "c": null,
+            "t": 1791545340
+          },
+          {
+            "c": null,
+            "t": 1791545400
+          },
+          {
+            "c": null,
+            "t": 1791545460
+          },
+          {
+            "c": null,
+            "t": 1791545520
+          },
+          {
+            "c": null,
+            "t": 1791545580
+          },
+          {
+            "c": null,
+            "t": 1791545640
+          },
+          {
+            "c": null,
+            "t": 1791545700
+          },
+          {
+            "c": null,
+            "t": 1791545760
+          },
+          {
+            "c": null,
+            "t": 1791545820
+          },
+          {
+            "c": null,
+            "t": 1791545880
+          },
+          {
+            "c": null,
+            "t": 1791545940
+          },
+          {
+            "c": null,
+            "t": 1791546000
+          },
+          {
+            "c": null,
+            "t": 1791546060
+          },
+          {
+            "c": null,
+            "t": 1791546120
+          },
+          {
+            "c": null,
+            "t": 1791546180
+          },
+          {
+            "c": null,
+            "t": 1791546240
+          },
+          {
+            "c": null,
+            "t": 1791546300
+          },
+          {
+            "c": null,
+            "t": 1791546360
+          },
+          {
+            "c": null,
+            "t": 1791546420
+          },
+          {
+            "c": 25.11,
+            "t": 1791546480
+          },
+          {
+            "c": 25.11,
+            "t": 1791546540
+          },
+          {
+            "c": null,
+            "t": 1791546600
+          },
+          {
+            "c": null,
+            "t": 1791546660
+          },
+          {
+            "c": null,
+            "t": 1791546720
+          },
+          {
+            "c": null,
+            "t": 1791546780
+          },
+          {
+            "c": null,
+            "t": 1791546840
+          },
+          {
+            "c": null,
+            "t": 1791546900
+          },
+          {
+            "c": null,
+            "t": 1791546960
+          },
+          {
+            "c": null,
+            "t": 1791547020
+          },
+          {
+            "c": null,
+            "t": 1791547080
+          },
+          {
+            "c": null,
+            "t": 1791547140
+          },
+          {
+            "c": null,
+            "t": 1791547200
+          },
+          {
+            "c": null,
+            "t": 1791547260
+          },
+          {
+            "c": null,
+            "t": 1791547320
+          },
+          {
+            "c": null,
+            "t": 1791547380
+          },
+          {
+            "c": null,
+            "t": 1791547440
+          },
+          {
+            "c": 25.13,
+            "t": 1791547500
+          },
+          {
+            "c": null,
+            "t": 1791547560
+          },
+          {
+            "c": null,
+            "t": 1791547620
+          },
+          {
+            "c": null,
+            "t": 1791547680
+          },
+          {
+            "c": null,
+            "t": 1791547740
+          },
+          {
+            "c": null,
+            "t": 1791547800
+          },
+          {
+            "c": null,
+            "t": 1791547860
+          },
+          {
+            "c": null,
+            "t": 1791547920
+          },
+          {
+            "c": null,
+            "t": 1791547980
+          },
+          {
+            "c": null,
+            "t": 1791548040
+          },
+          {
+            "c": null,
+            "t": 1791548100
+          },
+          {
+            "c": null,
+            "t": 1791548160
+          },
+          {
+            "c": null,
+            "t": 1791548220
+          },
+          {
+            "c": null,
+            "t": 1791548280
+          },
+          {
+            "c": null,
+            "t": 1791548340
+          },
+          {
+            "c": null,
+            "t": 1791548400
+          },
+          {
+            "c": null,
+            "t": 1791548460
+          },
+          {
+            "c": null,
+            "t": 1791548520
+          },
+          {
+            "c": null,
+            "t": 1791548580
+          },
+          {
+            "c": null,
+            "t": 1791548640
+          },
+          {
+            "c": null,
+            "t": 1791548700
+          },
+          {
+            "c": null,
+            "t": 1791548760
+          },
+          {
+            "c": null,
+            "t": 1791548820
+          },
+          {
+            "c": null,
+            "t": 1791548880
+          },
+          {
+            "c": null,
+            "t": 1791548940
+          },
+          {
+            "c": null,
+            "t": 1791549000
+          },
+          {
+            "c": null,
+            "t": 1791549060
+          },
+          {
+            "c": null,
+            "t": 1791549120
+          },
+          {
+            "c": null,
+            "t": 1791549180
+          },
+          {
+            "c": null,
+            "t": 1791549240
+          },
+          {
+            "c": null,
+            "t": 1791549300
+          },
+          {
+            "c": null,
+            "t": 1791549360
+          },
+          {
+            "c": null,
+            "t": 1791549420
+          },
+          {
+            "c": null,
+            "t": 1791549480
+          },
+          {
+            "c": null,
+            "t": 1791549540
+          },
+          {
+            "c": null,
+            "t": 1791549600
+          },
+          {
+            "c": null,
+            "t": 1791549660
+          },
+          {
+            "c": null,
+            "t": 1791549720
+          },
+          {
+            "c": null,
+            "t": 1791549780
+          },
+          {
+            "c": null,
+            "t": 1791549840
+          },
+          {
+            "c": null,
+            "t": 1791549900
+          },
+          {
+            "c": null,
+            "t": 1791549960
+          },
+          {
+            "c": null,
+            "t": 1791550020
+          },
+          {
+            "c": null,
+            "t": 1791550080
+          },
+          {
+            "c": null,
+            "t": 1791550140
+          },
+          {
+            "c": null,
+            "t": 1791550200
+          },
+          {
+            "c": null,
+            "t": 1791550260
+          },
+          {
+            "c": null,
+            "t": 1791550320
+          },
+          {
+            "c": null,
+            "t": 1791550380
+          },
+          {
+            "c": null,
+            "t": 1791550440
+          },
+          {
+            "c": null,
+            "t": 1791550500
+          },
+          {
+            "c": null,
+            "t": 1791550560
+          },
+          {
+            "c": null,
+            "t": 1791550620
+          },
+          {
+            "c": null,
+            "t": 1791550680
+          },
+          {
+            "c": null,
+            "t": 1791550740
+          },
+          {
+            "c": null,
+            "t": 1791550800
+          },
+          {
+            "c": null,
+            "t": 1791550860
+          },
+          {
+            "c": null,
+            "t": 1791550920
+          },
+          {
+            "c": null,
+            "t": 1791550980
+          },
+          {
+            "c": null,
+            "t": 1791551040
+          },
+          {
+            "c": null,
+            "t": 1791551100
+          },
+          {
+            "c": null,
+            "t": 1791551160
+          },
+          {
+            "c": null,
+            "t": 1791551220
+          },
+          {
+            "c": null,
+            "t": 1791551280
+          },
+          {
+            "c": null,
+            "t": 1791551340
+          },
+          {
+            "c": null,
+            "t": 1791551400
+          },
+          {
+            "c": null,
+            "t": 1791551460
+          },
+          {
+            "c": null,
+            "t": 1791551520
+          },
+          {
+            "c": null,
+            "t": 1791551580
+          },
+          {
+            "c": null,
+            "t": 1791551640
+          },
+          {
+            "c": null,
+            "t": 1791551700
+          },
+          {
+            "c": null,
+            "t": 1791551760
+          },
+          {
+            "c": null,
+            "t": 1791551820
+          },
+          {
+            "c": null,
+            "t": 1791551880
+          },
+          {
+            "c": null,
+            "t": 1791551940
+          },
+          {
+            "c": null,
+            "t": 1791552000
+          },
+          {
+            "c": null,
+            "t": 1791552060
+          },
+          {
+            "c": null,
+            "t": 1791552120
+          },
+          {
+            "c": 25.17,
+            "t": 1791552180
+          },
+          {
+            "c": null,
+            "t": 1791552240
+          },
+          {
+            "c": null,
+            "t": 1791552300
+          },
+          {
+            "c": null,
+            "t": 1791552360
+          },
+          {
+            "c": 25.17,
+            "t": 1791552420
+          },
+          {
+            "c": null,
+            "t": 1791552480
+          },
+          {
+            "c": null,
+            "t": 1791552540
+          },
+          {
+            "c": null,
+            "t": 1791552600
+          },
+          {
+            "c": null,
+            "t": 1791552660
+          },
+          {
+            "c": null,
+            "t": 1791552720
+          },
+          {
+            "c": null,
+            "t": 1791552780
+          },
+          {
+            "c": null,
+            "t": 1791552840
+          },
+          {
+            "c": null,
+            "t": 1791552900
+          },
+          {
+            "c": null,
+            "t": 1791552960
+          },
+          {
+            "c": null,
+            "t": 1791553020
+          },
+          {
+            "c": null,
+            "t": 1791553080
+          },
+          {
+            "c": null,
+            "t": 1791553140
+          },
+          {
+            "c": null,
+            "t": 1791553200
+          },
+          {
+            "c": null,
+            "t": 1791553260
+          },
+          {
+            "c": null,
+            "t": 1791553320
+          },
+          {
+            "c": null,
+            "t": 1791553380
+          },
+          {
+            "c": null,
+            "t": 1791553440
+          },
+          {
+            "c": null,
+            "t": 1791553500
+          },
+          {
+            "c": null,
+            "t": 1791553560
+          },
+          {
+            "c": null,
+            "t": 1791553620
+          },
+          {
+            "c": null,
+            "t": 1791553680
+          },
+          {
+            "c": null,
+            "t": 1791553740
+          },
+          {
+            "c": null,
+            "t": 1791553800
+          },
+          {
+            "c": null,
+            "t": 1791553860
+          },
+          {
+            "c": null,
+            "t": 1791553920
+          },
+          {
+            "c": null,
+            "t": 1791553980
+          },
+          {
+            "c": null,
+            "t": 1791554040
+          },
+          {
+            "c": null,
+            "t": 1791554100
+          },
+          {
+            "c": null,
+            "t": 1791554160
+          },
+          {
+            "c": null,
+            "t": 1791554220
+          },
+          {
+            "c": null,
+            "t": 1791554280
+          },
+          {
+            "c": null,
+            "t": 1791554340
+          },
+          {
+            "c": null,
+            "t": 1791554400
+          },
+          {
+            "c": null,
+            "t": 1791554460
+          },
+          {
+            "c": null,
+            "t": 1791554520
+          },
+          {
+            "c": null,
+            "t": 1791554580
+          },
+          {
+            "c": null,
+            "t": 1791554640
+          },
+          {
+            "c": null,
+            "t": 1791554700
+          },
+          {
+            "c": null,
+            "t": 1791554760
+          },
+          {
+            "c": null,
+            "t": 1791554820
+          },
+          {
+            "c": null,
+            "t": 1791554880
+          },
+          {
+            "c": null,
+            "t": 1791554940
+          },
+          {
+            "c": null,
+            "t": 1791555000
+          },
+          {
+            "c": null,
+            "t": 1791555060
+          },
+          {
+            "c": null,
+            "t": 1791555120
+          },
+          {
+            "c": null,
+            "t": 1791555180
+          },
+          {
+            "c": null,
+            "t": 1791555240
+          },
+          {
+            "c": null,
+            "t": 1791555300
+          },
+          {
+            "c": null,
+            "t": 1791555360
+          },
+          {
+            "c": null,
+            "t": 1791555420
+          },
+          {
+            "c": null,
+            "t": 1791555480
+          },
+          {
+            "c": null,
+            "t": 1791555540
+          },
+          {
+            "c": null,
+            "t": 1791555600
+          },
+          {
+            "c": null,
+            "t": 1791555660
+          },
+          {
+            "c": null,
+            "t": 1791555720
+          },
+          {
+            "c": null,
+            "t": 1791555780
+          },
+          {
+            "c": null,
+            "t": 1791555840
+          },
+          {
+            "c": null,
+            "t": 1791555900
+          },
+          {
+            "c": null,
+            "t": 1791555960
+          },
+          {
+            "c": null,
+            "t": 1791556020
+          },
+          {
+            "c": null,
+            "t": 1791556080
+          },
+          {
+            "c": null,
+            "t": 1791556140
+          },
+          {
+            "c": null,
+            "t": 1791556200
+          },
+          {
+            "c": null,
+            "t": 1791556260
+          },
+          {
+            "c": null,
+            "t": 1791556320
+          },
+          {
+            "c": null,
+            "t": 1791556380
+          },
+          {
+            "c": null,
+            "t": 1791556440
+          },
+          {
+            "c": null,
+            "t": 1791556500
+          },
+          {
+            "c": null,
+            "t": 1791556560
+          },
+          {
+            "c": null,
+            "t": 1791556620
+          },
+          {
+            "c": null,
+            "t": 1791556680
+          },
+          {
+            "c": null,
+            "t": 1791556740
+          },
+          {
+            "c": 25.21,
+            "t": 1791556800
+          },
+          {
+            "c": null,
+            "t": 1791556860
+          },
+          {
+            "c": null,
+            "t": 1791556920
+          },
+          {
+            "c": null,
+            "t": 1791556980
+          },
+          {
+            "c": null,
+            "t": 1791557040
+          },
+          {
+            "c": null,
+            "t": 1791557100
+          },
+          {
+            "c": null,
+            "t": 1791557160
+          },
+          {
+            "c": null,
+            "t": 1791557220
+          },
+          {
+            "c": null,
+            "t": 1791557280
+          },
+          {
+            "c": null,
+            "t": 1791557340
+          },
+          {
+            "c": null,
+            "t": 1791557400
+          },
+          {
+            "c": null,
+            "t": 1791557460
+          },
+          {
+            "c": null,
+            "t": 1791557520
+          },
+          {
+            "c": null,
+            "t": 1791557580
+          },
+          {
+            "c": null,
+            "t": 1791557640
+          },
+          {
+            "c": null,
+            "t": 1791557700
+          },
+          {
+            "c": null,
+            "t": 1791557760
+          },
+          {
+            "c": null,
+            "t": 1791557820
+          },
+          {
+            "c": null,
+            "t": 1791557880
+          },
+          {
+            "c": null,
+            "t": 1791557940
+          },
+          {
+            "c": null,
+            "t": 1791558000
+          },
+          {
+            "c": null,
+            "t": 1791558060
+          },
+          {
+            "c": null,
+            "t": 1791558120
+          },
+          {
+            "c": null,
+            "t": 1791558180
+          },
+          {
+            "c": null,
+            "t": 1791558240
+          },
+          {
+            "c": null,
+            "t": 1791558300
+          },
+          {
+            "c": null,
+            "t": 1791558360
+          },
+          {
+            "c": null,
+            "t": 1791558420
+          },
+          {
+            "c": null,
+            "t": 1791558480
+          },
+          {
+            "c": null,
+            "t": 1791558540
+          },
+          {
+            "c": 25.23,
+            "t": 1791558600
+          },
+          {
+            "c": null,
+            "t": 1791558660
+          },
+          {
+            "c": null,
+            "t": 1791558720
+          },
+          {
+            "c": null,
+            "t": 1791558780
+          },
+          {
+            "c": null,
+            "t": 1791558840
+          },
+          {
+            "c": null,
+            "t": 1791558900
+          },
+          {
+            "c": null,
+            "t": 1791558960
+          },
+          {
+            "c": null,
+            "t": 1791559020
+          },
+          {
+            "c": null,
+            "t": 1791559080
+          },
+          {
+            "c": null,
+            "t": 1791559140
+          },
+          {
+            "c": null,
+            "t": 1791559200
+          },
+          {
+            "c": null,
+            "t": 1791559260
+          },
+          {
+            "c": null,
+            "t": 1791559320
+          },
+          {
+            "c": null,
+            "t": 1791559380
+          },
+          {
+            "c": null,
+            "t": 1791559440
+          },
+          {
+            "c": null,
+            "t": 1791559500
+          },
+          {
+            "c": null,
+            "t": 1791559560
+          },
+          {
+            "c": null,
+            "t": 1791559620
+          },
+          {
+            "c": null,
+            "t": 1791559680
+          },
+          {
+            "c": null,
+            "t": 1791559740
+          },
+          {
+            "c": null,
+            "t": 1791559800
+          },
+          {
+            "c": null,
+            "t": 1791559860
+          },
+          {
+            "c": null,
+            "t": 1791559920
+          },
+          {
+            "c": null,
+            "t": 1791559980
+          },
+          {
+            "c": null,
+            "t": 1791560040
+          },
+          {
+            "c": null,
+            "t": 1791560100
+          },
+          {
+            "c": null,
+            "t": 1791560160
+          },
+          {
+            "c": null,
+            "t": 1791560220
+          },
+          {
+            "c": null,
+            "t": 1791560280
+          },
+          {
+            "c": null,
+            "t": 1791560340
+          },
+          {
+            "c": 25.21,
+            "t": 1791560400
+          },
+          {
+            "t": 1791560459
+          },
+          {
+            "t": 1791560519
+          },
+          {
+            "t": 1791560579
+          },
+          {
+            "t": 1791560639
+          },
+          {
+            "t": 1791560699
+          },
+          {
+            "t": 1791560759
+          },
+          {
+            "t": 1791560819
+          },
+          {
+            "t": 1791560879
+          },
+          {
+            "t": 1791560939
+          },
+          {
+            "t": 1791560999
+          },
+          {
+            "t": 1791561059
+          },
+          {
+            "t": 1791561119
+          },
+          {
+            "t": 1791561179
+          },
+          {
+            "t": 1791561239
+          },
+          {
+            "t": 1791561299
+          },
+          {
+            "t": 1791561359
+          },
+          {
+            "t": 1791561419
+          },
+          {
+            "t": 1791561479
+          },
+          {
+            "t": 1791561539
+          },
+          {
+            "t": 1791561599
+          },
+          {
+            "t": 1791561600
+          }
+        ]
+      },
+      "description": "An actively managed ETF seeking capital appreciation and current income. It invests primarily in U.S. information technology company equities and related ETFs, alongside options strategies intended to generate income and manage risk.",
+      "infoTable": [
+        [
+          "Stock Exchange",
+          "NYSE Arca"
+        ],
+        [
+          "Ticker Symbol",
+          "VGTX"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1791771951673",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20261009391637/en/XFUNDS-Launches-VGTX-to-Pair-Technology-Stocks-with-Options-Based-Income/",
+            "img": "https://cdn.snapi.dev/images/v1/o/r/b/press14-3966626.jpg",
+            "title": "XFUNDS Launches VGTX to Pair Technology Stocks with Options-Based Income",
+            "text": "ATLANTA--(BUSINESS WIRE)---- $VGTX #ETFs--XFUNDS, a leading provider of actively managed ETFs, today announced the launch of the XFUNDS Technology Income ETF (VGTX). VGTX is an actively managed ETF th...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Oct 9, 2026, 9:00 AM EDT",
+            "ago": "2 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": null,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": null
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 25.2087,
+      "pd": 25.21,
+      "c": 0,
+      "cp": 0,
+      "cdr": 0,
+      "cl": 0,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 0,
+      "u": "Oct 9, 2026, 4:00 PM EDT",
+      "td": "2026-10-09",
+      "ts": 1791576000000,
+      "h52": null,
+      "l52": null,
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Oct 12, 2026, 2:39 AM EDT",
+      "es": null,
+      "etd": null,
+      "days": 2,
+      "exp": 1791792900000,
+      "symbol": "vgtx",
+      "uid": "VGTX"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [],
+      "weekly_1y": [],
+      "monthly_1y": [],
+      "weekly_3y": [],
+      "monthly_3y": [],
+      "monthly_5y": []
+    },
+    "history_endpoint_errors": {
+      "daily_1y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/VGTX/history?range=1Y&period=Daily"
+      },
+      "weekly_1y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/VGTX/history?range=1Y&period=Weekly"
+      },
+      "monthly_1y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/VGTX/history?range=1Y&period=Monthly"
+      },
+      "weekly_3y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/VGTX/history?range=3Y&period=Weekly"
+      },
+      "monthly_3y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/VGTX/history?range=3Y&period=Monthly"
+      },
+      "monthly_5y": {
+        "status": "unavailable",
+        "reason_code": "http_400",
+        "path": "/api/symbol/e/VGTX/history?range=5Y&period=Monthly"
+      }
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_daily_1y_http_400",
+    "history_monthly_1y_http_400",
+    "history_monthly_3y_http_400",
+    "history_monthly_5y_http_400",
+    "history_weekly_1y_http_400",
+    "history_weekly_3y_http_400"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "BCHI",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-12T02:28:47Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "539783f4f432f13204262bd46517b4febfb2ca0f7467ce9effa90502a2b292d3",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-12T02:28:47Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BCHI.json",
+    "payload_sha256": "539783f4f432f13204262bd46517b4febfb2ca0f7467ce9effa90502a2b292d3",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:08:10Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BCHI.json",
+    "payload_sha256": "539783f4f432f13204262bd46517b4febfb2ca0f7467ce9effa90502a2b292d3",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:08:10Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-12T02:28:47Z",
+    "last_probe_at": "2026-10-12T02:28:47Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-06-18",
+    "status": "unresolved",
+    "attempts": []
+  }
+}

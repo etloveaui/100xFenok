@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-11T12:08:48Z",
+  "generated_at": "2026-10-12T02:28:47Z",
   "counts": {
-    "tracked": 1005,
-    "fresh": 822,
-    "lkg": 173,
-    "unavailable": 10,
-    "retry": 183,
-    "failed": 0
+    "tracked": 1020,
+    "fresh": 825,
+    "lkg": 181,
+    "unavailable": 14,
+    "retry": 195,
+    "failed": 19
   },
   "counts_by_kind": {
     "stock": {
@@ -25,11 +25,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 887,
-      "fresh": 704,
-      "lkg": 173,
-      "unavailable": 10,
-      "retry": 183
+      "tracked": 902,
+      "fresh": 707,
+      "lkg": 181,
+      "unavailable": 14,
+      "retry": 195
     },
     "surface": {
       "tracked": 25,
@@ -57,7 +57,19 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "AAUM"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "ABNG"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "ABXB"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "ADFI"
     },
     {
       "artifact_kind": "etf",
@@ -65,7 +77,15 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "AEMS"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "AETH"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AGRH"
     },
     {
       "artifact_kind": "etf",
@@ -82,6 +102,10 @@
     {
       "artifact_kind": "etf",
       "entity": "AMZG"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AOTS"
     },
     {
       "artifact_kind": "etf",
@@ -105,6 +129,10 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "AXPG"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "AXTL"
     },
     {
@@ -121,7 +149,15 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "BCHI"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "BEC"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "BEDZ"
     },
     {
       "artifact_kind": "etf",
@@ -289,10 +325,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "DZZ"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "EJUN"
     },
     {
@@ -302,6 +334,10 @@
     {
       "artifact_kind": "etf",
       "entity": "ERUS"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "ESUM"
     },
     {
       "artifact_kind": "etf",
@@ -357,6 +393,10 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "FXL"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "GCC"
     },
     {
@@ -365,23 +405,11 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "GLDI"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "GOOL"
     },
     {
       "artifact_kind": "etf",
-      "entity": "GRN"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "GTOH"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "HDLB"
     },
     {
       "artifact_kind": "etf",
@@ -393,6 +421,14 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "HYGD"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HYGU"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "HYGW"
     },
     {
@@ -401,15 +437,15 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "IAUM"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "IBGM"
     },
     {
       "artifact_kind": "etf",
       "entity": "IDJL"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "IFED"
     },
     {
       "artifact_kind": "etf",
@@ -470,6 +506,14 @@
     {
       "artifact_kind": "etf",
       "entity": "LIMI"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LQDD"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LQDU"
     },
     {
       "artifact_kind": "etf",
@@ -606,6 +650,10 @@
     {
       "artifact_kind": "etf",
       "entity": "RCLY"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "RLY"
     },
     {
       "artifact_kind": "etf",
@@ -788,7 +836,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -798,7 +848,33 @@
       "source_as_of": "2026-07-10T00:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AAUM",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "ValueError: provider_ticker_redirect:AAUM:REAI",
+      "failure_class": "provider_ticker_redirect",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "ABNG",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-07-17T20:00:00Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -808,7 +884,21 @@
       "source_as_of": "2026-10-02T00:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: official holdings CSV has an invalid holding",
+      "failure_class": "holdings_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "ADFI",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-07-21T20:00:00Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -818,17 +908,45 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AEMS",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
       "artifact_kind": "etf",
       "entity": "AETH",
       "resolution_state": "lkg_primary",
-      "source_as_of": "2026-07-08T00:00:00Z",
-      "failure_observed_at": "2026-10-08T03:04:13Z",
-      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "source_as_of": "2026-09-25T13:46:01Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 2,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AGRH",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-07-21T20:00:00Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -838,7 +956,9 @@
       "source_as_of": "2026-07-10T00:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -848,7 +968,9 @@
       "source_as_of": "2026-09-18T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -858,7 +980,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-28T03:35:31Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -868,7 +992,21 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AOTS",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -878,7 +1016,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -888,7 +1028,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -898,7 +1040,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -908,7 +1052,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -918,7 +1064,21 @@
       "source_as_of": "2026-10-04T00:00:00Z",
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "AXPG",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -928,7 +1088,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -938,7 +1100,9 @@
       "source_as_of": "2026-09-30T14:58:58Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -948,7 +1112,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -958,7 +1124,21 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "BCHI",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -968,7 +1148,21 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "BEDZ",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -978,7 +1172,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -988,7 +1184,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -998,7 +1196,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1008,7 +1208,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1018,7 +1220,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1028,7 +1232,9 @@
       "source_as_of": "2026-09-30T14:49:12Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1038,7 +1244,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1048,7 +1256,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1058,7 +1268,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1068,7 +1280,9 @@
       "source_as_of": "2026-09-25T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1078,7 +1292,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1088,7 +1304,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1098,7 +1316,9 @@
       "source_as_of": "2026-09-30T14:38:29Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1108,7 +1328,9 @@
       "source_as_of": "2026-09-30T14:39:35Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1118,7 +1340,9 @@
       "source_as_of": "2026-09-30T15:00:31Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1128,7 +1352,9 @@
       "source_as_of": "2026-09-30T19:19:21Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1138,7 +1364,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1148,7 +1376,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-03T02:26:30Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1158,7 +1388,9 @@
       "source_as_of": "2026-09-30T16:04:22Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1168,7 +1400,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1178,7 +1412,9 @@
       "source_as_of": "2026-09-30T14:32:07Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1188,7 +1424,9 @@
       "source_as_of": "2026-09-30T19:20:26Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1198,7 +1436,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1208,7 +1448,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1218,7 +1460,9 @@
       "source_as_of": "2026-09-30T19:24:04Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1228,7 +1472,9 @@
       "source_as_of": "2026-09-30T19:14:17Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1238,7 +1484,9 @@
       "source_as_of": "2026-07-09T00:00:00Z",
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1248,7 +1496,9 @@
       "source_as_of": "2026-09-30T16:27:13Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1258,7 +1508,9 @@
       "source_as_of": "2026-09-30T18:40:10Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1268,7 +1520,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1278,7 +1532,9 @@
       "source_as_of": "2026-07-16T00:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1288,7 +1544,9 @@
       "source_as_of": "2026-07-10T00:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1298,7 +1556,9 @@
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1308,7 +1568,9 @@
       "source_as_of": "2026-07-16T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1318,7 +1580,9 @@
       "source_as_of": "2026-07-16T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1328,7 +1592,9 @@
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1338,7 +1604,9 @@
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1348,7 +1616,9 @@
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1358,7 +1628,9 @@
       "source_as_of": "2026-07-13T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1368,7 +1640,9 @@
       "source_as_of": "2026-07-16T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1378,17 +1652,9 @@
       "source_as_of": "2026-07-08T00:00:00Z",
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "DZZ",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-11-01T00:00:00Z",
-      "failure_observed_at": "2026-09-24T17:20:16Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1398,7 +1664,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1408,7 +1676,9 @@
       "source_as_of": "2026-09-30T14:33:25Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1416,9 +1686,23 @@
       "entity": "ERUS",
       "resolution_state": "unavailable",
       "source_as_of": null,
-      "failure_observed_at": "2026-09-24T15:04:33Z",
-      "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
-      "failure_count": 0,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+      "failure_class": "provider_not_found",
+      "failure_count": 2,
+      "failure_count_is_lower_bound": true,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "ESUM",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2025-10-27T00:00:00Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1428,7 +1712,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1438,7 +1724,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1448,7 +1736,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1458,7 +1748,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1468,7 +1760,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T17:20:16Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1478,7 +1772,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1488,7 +1784,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1498,7 +1796,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1508,7 +1808,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1518,7 +1820,9 @@
       "source_as_of": "2026-09-30T19:26:43Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1528,7 +1832,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T15:04:33Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_required:holdings,holdingsTable,inception",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1538,7 +1844,9 @@
       "source_as_of": "2026-09-30T18:56:35Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1548,7 +1856,21 @@
       "source_as_of": "2026-09-30T18:46:09Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "FXL",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T14:50:50Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.dividendYield",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1558,7 +1880,9 @@
       "source_as_of": "2026-09-30T19:21:27Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1568,17 +1892,9 @@
       "source_as_of": "2026-09-30T19:15:19Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "GLDI",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-11-01T00:00:00Z",
-      "failure_observed_at": "2026-09-24T17:20:16Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1588,17 +1904,9 @@
       "source_as_of": "2026-09-30T19:16:41Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "GRN",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-11-01T00:00:00Z",
-      "failure_observed_at": "2026-09-24T17:20:16Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1608,17 +1916,9 @@
       "source_as_of": "2026-09-30T18:40:43Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "HDLB",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-10-31T00:00:00Z",
-      "failure_observed_at": "2026-09-24T17:20:16Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1628,7 +1928,9 @@
       "source_as_of": "2026-09-30T17:52:14Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1638,7 +1940,33 @@
       "source_as_of": "2026-09-30T19:40:43Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HYGD",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HYGU",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1648,7 +1976,9 @@
       "source_as_of": "2026-09-30T14:48:47Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1658,7 +1988,21 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IAUM",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2025-10-31T00:00:00Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1668,7 +2012,9 @@
       "source_as_of": "2026-09-30T14:39:05Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1678,17 +2024,9 @@
       "source_as_of": "2026-09-30T14:32:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "IFED",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-10-31T00:00:00Z",
-      "failure_observed_at": "2026-09-25T05:33:15Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1698,7 +2036,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1708,7 +2048,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:33:15Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1718,7 +2060,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:33:15Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1728,7 +2072,9 @@
       "source_as_of": "2025-11-01T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:33:15Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1738,7 +2084,9 @@
       "source_as_of": "2026-09-30T14:33:02Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1748,7 +2096,9 @@
       "source_as_of": "2026-09-30T19:34:50Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1758,7 +2108,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1768,7 +2120,9 @@
       "source_as_of": "2026-09-30T14:46:38Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1778,7 +2132,9 @@
       "source_as_of": "2026-09-30T14:28:17Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1788,7 +2144,9 @@
       "source_as_of": "2026-09-30T17:35:40Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1798,7 +2156,9 @@
       "source_as_of": "2026-09-30T19:21:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1808,7 +2168,9 @@
       "source_as_of": "2026-09-30T18:49:44Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1818,7 +2180,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1828,7 +2192,9 @@
       "source_as_of": "2025-10-27T00:00:00Z",
       "failure_observed_at": "2026-09-27T22:45:40Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1838,7 +2204,33 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LQDD",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LQDU",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1848,7 +2240,9 @@
       "source_as_of": "2026-09-30T14:58:13Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1858,7 +2252,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 4,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1868,7 +2264,9 @@
       "source_as_of": "2026-08-11T20:00:00Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1878,7 +2276,9 @@
       "source_as_of": "2026-09-30T19:37:12Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1888,7 +2288,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1898,7 +2300,9 @@
       "source_as_of": "2026-09-30T19:20:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1908,7 +2312,9 @@
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1918,7 +2324,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1928,7 +2336,9 @@
       "source_as_of": "2025-11-01T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1938,7 +2348,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1948,7 +2360,9 @@
       "source_as_of": "2026-09-24T20:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1958,7 +2372,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1968,7 +2384,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1978,7 +2396,9 @@
       "source_as_of": "2026-09-30T19:19:43Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -1988,7 +2408,9 @@
       "source_as_of": "2025-10-27T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -1998,7 +2420,9 @@
       "source_as_of": "2025-11-01T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2008,7 +2432,9 @@
       "source_as_of": "2026-09-30T17:32:39Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2018,7 +2444,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T16:48:32Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2028,7 +2456,9 @@
       "source_as_of": "2026-09-30T19:08:49Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2038,7 +2468,9 @@
       "source_as_of": "2026-09-30T19:33:08Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2048,7 +2480,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2058,7 +2492,9 @@
       "source_as_of": "2026-10-04T00:00:00Z",
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: StockAnalysis ETF candidate would regress the canonical source date",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2068,7 +2504,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T16:48:32Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2078,7 +2516,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2088,7 +2528,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2098,7 +2540,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2108,7 +2552,9 @@
       "source_as_of": "2026-09-30T17:51:28Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2118,7 +2564,9 @@
       "source_as_of": "2026-09-30T14:28:25Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2128,7 +2576,9 @@
       "source_as_of": "2025-10-27T00:00:00Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2138,7 +2588,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-04T15:26:04Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 3,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2148,7 +2600,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-04T15:26:04Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 3,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2158,7 +2612,9 @@
       "source_as_of": "2026-09-30T19:47:30Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2168,7 +2624,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-04T15:26:04Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 3,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2178,7 +2636,21 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-04T15:26:04Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 3,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "RLY",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-09T20:00:00Z",
+      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2188,7 +2660,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-04T15:26:04Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 3,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2198,7 +2672,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2208,7 +2684,9 @@
       "source_as_of": "2026-09-30T14:28:22Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2218,7 +2696,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2228,7 +2708,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2238,7 +2720,9 @@
       "source_as_of": "2026-09-30T19:36:27Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2248,7 +2732,9 @@
       "source_as_of": "2026-09-30T19:46:41Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2258,7 +2744,9 @@
       "source_as_of": "2026-09-30T19:47:15Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2268,7 +2756,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2278,7 +2768,9 @@
       "source_as_of": "2026-09-30T19:22:28Z",
       "failure_observed_at": "2026-10-09T03:12:10Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2288,7 +2780,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2298,7 +2792,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 4,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2308,7 +2804,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-09-24T16:48:32Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
-      "failure_count": 0,
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2318,7 +2816,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 4,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2328,7 +2828,9 @@
       "source_as_of": "2025-10-26T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2338,7 +2840,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2348,7 +2852,9 @@
       "source_as_of": "2026-09-30T19:37:31Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2358,7 +2864,9 @@
       "source_as_of": "2026-09-30T19:33:59Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2368,7 +2876,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2378,7 +2888,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2388,7 +2900,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2398,7 +2912,9 @@
       "source_as_of": "2025-11-01T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2408,7 +2924,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2418,7 +2936,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2428,7 +2948,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2438,7 +2960,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2448,7 +2972,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2458,7 +2984,9 @@
       "source_as_of": null,
       "failure_observed_at": "2026-10-05T02:05:23Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2468,7 +2996,9 @@
       "source_as_of": "2026-07-14T00:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2478,7 +3008,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2488,7 +3020,9 @@
       "source_as_of": "2026-09-30T19:21:47Z",
       "failure_observed_at": "2026-10-08T03:04:13Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2498,7 +3032,9 @@
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2508,7 +3044,9 @@
       "source_as_of": "2026-09-30T00:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2518,7 +3056,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2528,7 +3068,9 @@
       "source_as_of": "2025-10-27T00:00:00Z",
       "failure_observed_at": "2026-09-25T05:55:35Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2538,7 +3080,9 @@
       "source_as_of": "2025-10-31T00:00:00Z",
       "failure_observed_at": "2026-09-27T22:45:40Z",
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_count": 0,
+      "failure_class": "provider_contract_drift",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": true,
       "data_loss": false
     },
     {
@@ -2548,7 +3092,9 @@
       "source_as_of": "2026-09-24T20:00:00Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2558,7 +3104,9 @@
       "source_as_of": "2026-09-30T19:19:30Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2568,7 +3116,9 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2578,7 +3128,9 @@
       "source_as_of": "2026-09-30T19:33:20Z",
       "failure_observed_at": "2026-10-10T02:51:36Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2588,7 +3140,9 @@
       "source_as_of": "2026-07-14T00:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2598,7 +3152,9 @@
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: svelte_contract_drift:overview:missing_nodes",
+      "failure_class": "provider_contract_drift",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     },
     {
@@ -2608,35 +3164,978 @@
       "source_as_of": "2026-09-30T20:00:00Z",
       "failure_observed_at": "2026-10-07T02:46:44Z",
       "error": "ValueError: selected Yahoo ETF immutable source is invalid",
+      "failure_class": "fallback_source_invalid",
       "failure_count": 1,
+      "failure_count_is_lower_bound": false,
       "data_loss": false
     }
   ],
+  "retry_groups": {
+    "fallback_source_invalid": [
+      {
+        "artifact_kind": "etf",
+        "entity": "AAPE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ADIU"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AMZG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "APDB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "APHG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ARKE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ARMY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AXTL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BBB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BBUL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BCEM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BEC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BGEG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BGIA"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BNDY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BRCE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BREE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BRIE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BROL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CBOY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CBTY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CBXY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CHNL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CJUL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "COMD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CRDD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CTJL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DDSQ"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DDX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DLMY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DQJN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "EMJL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ETHT"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FNG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FPAA"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FUSD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GCC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GFSG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GOOL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GTOH"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HJLY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HPEL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IBGM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IDJL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "INYY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "JADB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "JBLG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "JELM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "JUDB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "JULC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "KEYG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "KMEM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LASC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LCTO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MBCE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "METG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MMID"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MTSG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "NUIF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "OCDB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ONTX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PQX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PQXV"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PUL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "QJL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "QQJL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RAM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SCJL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SMTG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SNK"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SPAX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TCAN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UFOX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UMAL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "USDU"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "USFR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VCHY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VIAG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VOXP"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "WAGN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "WAMA"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "WDIG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "WDRN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ZHOG"
+      }
+    ],
+    "candidate_regression": [
+      {
+        "artifact_kind": "etf",
+        "entity": "AAPX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AIOO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AKAF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AVNC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DRUP"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ESUM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FXL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IAUM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MGV"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PFRX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RLY"
+      }
+    ],
+    "provider_ticker_redirect": [
+      {
+        "artifact_kind": "etf",
+        "entity": "AAUM"
+      }
+    ],
+    "provider_not_found": [
+      {
+        "artifact_kind": "etf",
+        "entity": "ABNG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ADFI"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AEMS"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AETH"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AGRH"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AOTS"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AXPG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BCHI"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BEDZ"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BTR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "COIO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DEFI"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVIN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVRE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVUT"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXK"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXP"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXV"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DVXY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ERUS"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FEAT"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FIVY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FLHK"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYGD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYGU"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LIMI"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LQDD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LQDU"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MEME"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MSOO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "NVDO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PLOO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "QULL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SCDL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SMAP"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "SMCF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TGLR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TSLO"
+      }
+    ],
+    "holdings_invalid": [
+      {
+        "artifact_kind": "etf",
+        "entity": "ABXB"
+      }
+    ],
+    "provider_contract_drift": [
+      {
+        "artifact_kind": "etf",
+        "entity": "AMJB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BLST"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BLTD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BNDW"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BUCK"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CPAG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CPHY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CUSD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "EJUN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "EWCO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FIHD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FLFR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FLIY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FLM"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FOVL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYGW"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYSA"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IWDL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IWFL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IWML"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LGCF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LQDW"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LVIG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MAPP"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MGKX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MLPB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MLPR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MNRS"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MTUL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MVRL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "OPER"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RAAR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RAAY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RCLR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RCLY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RMHY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TBLL"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TLDR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TSYW"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UCIB"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UFIV"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "USML"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "USOI"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "USVN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTEN"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTHY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTRE"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTWO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "UTWY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VBX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VOOX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VXX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VXZ"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "VYLD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "XVO"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "XVUG"
+      }
+    ]
+  },
   "current_results": {
-    "failed": 0,
-    "errors": []
+    "observed_at": "2026-10-12T02:28:47Z",
+    "attempted": 64,
+    "successes": 45,
+    "failed": 19,
+    "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "RLY",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYGD",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HYGU",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LQDD",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LQDU",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FXL",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.dividendYield",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ERUS",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ESUM",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IAUM",
+        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AAUM",
+        "error": "ValueError: provider_ticker_redirect:AAUM:REAI",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ABNG",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ADFI",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AEMS",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AETH",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AGRH",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AOTS",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "AXPG",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BCHI",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "BEDZ",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      }
+    ],
+    "by_kind": {
+      "etf": {
+        "observed_at": "2026-10-12T02:28:47Z",
+        "attempted": 38,
+        "successes": 19,
+        "failed": 19
+      },
+      "surface": {
+        "observed_at": "2026-10-12T02:28:47Z",
+        "attempted": 25,
+        "successes": 25,
+        "failed": 0
+      },
+      "universe": {
+        "observed_at": "2026-10-12T02:28:47Z",
+        "attempted": 1,
+        "successes": 1,
+        "failed": 0
+      }
+    }
   },
   "degraded_tickers": [],
   "degraded_etfs": [
     "AAPE",
     "AAPX",
+    "AAUM",
+    "ABNG",
     "ABXB",
+    "ADFI",
     "ADIU",
+    "AEMS",
     "AETH",
+    "AGRH",
     "AIOO",
     "AKAF",
     "AMJB",
     "AMZG",
+    "AOTS",
     "APDB",
     "APHG",
     "ARKE",
     "ARMY",
     "AVNC",
+    "AXPG",
     "AXTL",
     "BBB",
     "BBUL",
     "BCEM",
+    "BCHI",
     "BEC",
+    "BEDZ",
     "BGEG",
     "BGIA",
     "BLST",
@@ -2678,10 +4177,10 @@
     "DVXP",
     "DVXV",
     "DVXY",
-    "DZZ",
     "EJUN",
     "EMJL",
     "ERUS",
+    "ESUM",
     "ETHT",
     "EWCO",
     "FEAT",
@@ -2695,20 +4194,20 @@
     "FOVL",
     "FPAA",
     "FUSD",
+    "FXL",
     "GCC",
     "GFSG",
-    "GLDI",
     "GOOL",
-    "GRN",
     "GTOH",
-    "HDLB",
     "HJLY",
     "HPEL",
+    "HYGD",
+    "HYGU",
     "HYGW",
     "HYSA",
+    "IAUM",
     "IBGM",
     "IDJL",
-    "IFED",
     "INYY",
     "IWDL",
     "IWFL",
@@ -2724,6 +4223,8 @@
     "LCTO",
     "LGCF",
     "LIMI",
+    "LQDD",
+    "LQDU",
     "LQDW",
     "LVIG",
     "MAPP",
@@ -2758,6 +4259,7 @@
     "RAM",
     "RCLR",
     "RCLY",
+    "RLY",
     "RMHY",
     "SCDL",
     "SCJL",
