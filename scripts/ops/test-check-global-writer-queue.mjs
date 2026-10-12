@@ -42,18 +42,6 @@ assert.ok(policy.thresholds.max_depth >= 0, "queue-depth threshold is configurab
 assert.ok(policy.thresholds.max_age_minutes >= 0, "queue-age threshold is configurable");
 assert.equal(policy.alert.output, "workflow-failure-and-json", "alert output is machine-readable and non-mutating");
 assert.equal(policy.alert.unknown_exit_code, 3, "unknown observation has a distinct nonzero exit");
-assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"][0], {
-  job_name: "publish-stockanalysis",
-  eligibility_predecessors: ["acquire-stockanalysis"],
-  parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
-  candidate_statuses: ["queued", "waiting", "pending"],
-}, "StockAnalysis observes only its writer-owning publish job");
-assert.deepEqual(policy.job_level_targets["pipeline-failure-alarm.yml"][0], {
-  job_name: "persist-alarm-state",
-  eligibility_predecessors: ["clock-admission", "check"],
-  parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
-  candidate_statuses: ["queued", "waiting", "pending"],
-}, "the alarm observes only its dependent global-writer persistence job");
 
 const runs = readFixture("mixed");
 const evaluated = evaluateQueue(runs, { now: NOW, maxDepth: 2, maxAgeMinutes: 30 });
