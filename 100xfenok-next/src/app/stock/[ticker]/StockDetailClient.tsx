@@ -785,12 +785,12 @@ function FinancialSnapshotRail({
   const metrics = [
     {
       label: "매출",
-      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["revenue"])), currency),
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["revenue", "revenueBank"])), currency),
       note: "최근 12개월",
     },
     {
       label: "영업이익",
-      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["operatingIncome"])), currency),
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["operatingIncome", "opinc"])), currency),
       note: "영업 체력",
     },
     {
@@ -1476,7 +1476,7 @@ function FinancialsHeroCp({
   const annual = financialCandidate?.statements?.annual ?? {};
   // financialCandidate is raw currency units (formatCompactMoney); revenueActual (detail.*) is
   // pre-scaled to millions (fmtLarge) — keep the two paired with their own formatter.
-  const ttmRevenueCandidate = firstFiniteValue(findFinancialRow(annual.income, ["revenue"]));
+  const ttmRevenueCandidate = firstFiniteValue(findFinancialRow(annual.income, ["revenue", "revenueBank"]));
   const ttmRevenueDetail = lastFinite(revenueActual);
   const ttmRevenueText = isFiniteNumber(ttmRevenueCandidate)
     ? formatCompactMoney(ttmRevenueCandidate, currency)
@@ -1626,7 +1626,7 @@ function FinancialsTilesCp({
   const annual = financialCandidate?.statements?.annual ?? {};
   // financialCandidate values are raw currency units (formatCompactMoney); detail.* series are
   // pre-scaled to millions (fmtLarge) — pick source and formatter together to avoid unit mismatch.
-  const opIncomeCandidate = firstFiniteValue(findFinancialRow(annual.income, ["operatingIncome"]));
+  const opIncomeCandidate = firstFiniteValue(findFinancialRow(annual.income, ["operatingIncome", "opinc"]));
   const opIncomeDetail = lastFinite(numberSeries(detail.income_statement?.operating_income));
   const opIncomeText = isFiniteNumber(opIncomeCandidate) ? formatCompactMoney(opIncomeCandidate, currency) : isFiniteNumber(opIncomeDetail) ? `$${fmtLarge(opIncomeDetail)}` : "—";
   const opMarginLast = lastFinite(numberSeries((detail.profitability as any)?.operating_margin));
@@ -3826,11 +3826,11 @@ function FinancialCandidatePanel({
   const metrics = [
     {
       label: "TTM 매출",
-      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["revenue"])), currency),
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["revenue", "revenueBank"])), currency),
     },
     {
       label: "TTM 순이익",
-      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["netIncome", "netincCompany"])), currency),
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(annual.income, ["netIncome", "netincCompany", "netinc"])), currency),
     },
     {
       label: "TTM FCF",
@@ -3842,7 +3842,7 @@ function FinancialCandidatePanel({
     },
     {
       label: "최근 분기 매출",
-      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(quarterly.income, ["revenue"])), currency),
+      value: formatCandidateMetric(firstFiniteValue(findFinancialRow(quarterly.income, ["revenue", "revenueBank"])), currency),
     },
     {
       label: "최근 분기 FCF",
