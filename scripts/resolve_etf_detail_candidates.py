@@ -298,9 +298,11 @@ def resolve_entities(
     recovery_only = set(recovery_only_entities)
     results: list[dict[str, Any]] = []
     for entity in requested:
-        if entity in recovery_only and not latest_rows.get(entity):
-            # A recovery-only failure may precede provider observation creation.
-            # Pending evidence without observation history must still fail closed.
+        if entity in recovery_only:
+            # A recovery-only failure has no changed pending provider candidate.
+            # Historical observations may still exist for one authority; they
+            # cannot prove the missing provider was attempted in this run.
+            # A pending pointer without observation history still fails closed.
             if not any((store.root / "providers").glob(f"*/{DOMAIN}/pending/{entity}.json")):
                 results.append({
                     "entity": entity,
@@ -310,7 +312,7 @@ def resolve_entities(
                     "transaction_id": None,
                     "committed": False,
                     "resolution_error": (
-                        "no recorded provider observations for recovery-only artifact "
+                        "no pending provider candidate for recovery-only artifact "
                         f"[entity={entity} decided_at={decided_at}]"
                     ),
                 })
