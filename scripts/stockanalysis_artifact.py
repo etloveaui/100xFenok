@@ -563,6 +563,10 @@ def stale_reason(repo: Path, manifest: dict) -> str | None:
     base = manifest["base_sha"]
     if run_git(repo, "cat-file", "-e", f"{base}^{{commit}}", check=False).returncode != 0:
         fail("artifact base commit is unavailable")
+    # A shallow base hides common ancestors reached through a later merge.
+    # Restore its graph before inspecting path history; do not relax the fence.
+    if run_git(repo, "rev-parse", "--is-shallow-repository").stdout.strip() == "true":
+        run_git(repo, "fetch", "--unshallow", "--filter=blob:none", "origin", base)
     if run_git(repo, "merge-base", "--is-ancestor", base, "HEAD", check=False).returncode != 0:
         fail("artifact base is not an ancestor of current main")
     newer = newer_publish_since_base(repo, base, (manifest["run_number"], manifest["run_attempt"]))

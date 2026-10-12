@@ -493,7 +493,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          # Path-history admission needs the complete commit graph.
+          fetch-depth: 0
+          filter: blob:none
 
       - name: Setup Python
         uses: actions/setup-python@v7
