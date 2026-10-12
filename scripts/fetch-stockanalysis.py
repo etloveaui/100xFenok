@@ -6593,7 +6593,7 @@ def preserve_yahoo_etf_history_coverage(
     finance_snapshot = path.read_bytes()
     existing = json.loads(finance_snapshot)
     if (not isinstance(existing, dict) or existing.get("schema_version") != "yf-finance/v2"
-            or existing.get("ticker") != ticker or existing.get("profile") not in {"daily", "etf"}
+            or existing.get("ticker") != ticker or existing.get("profile") not in {"daily", "etf", "full"}
             or not isinstance(existing.get("data"), dict)):
         raise ValueError("Yahoo ETF canonical provider identity mismatch")
     engine = load_yf_finance_module()
@@ -6683,8 +6683,8 @@ def preserve_yahoo_etf_history_coverage(
 def validated_yahoo_engine_finance_floor(ticker: str, existing: dict, candidate: dict) -> datetime:
     """Bind an existing owner-engine finance artifact to its raw Yahoo clocks."""
     engine_fields = {"schema_version", "ticker", "fetched_at", "profile", "data",
-                     "quote_as_of", "history_as_of", "source_as_of", "first_trade_date"}
-    if (set(existing) - engine_fields or existing.get("profile") not in {"daily", "etf"}
+                     "quote_as_of", "history_as_of", "source_as_of", "first_trade_date", "provenance"}
+    if (set(existing) - engine_fields or existing.get("profile") not in {"daily", "etf", "full"}
             or not isinstance(existing.get("data"), dict)):
         raise ValueError("Yahoo ETF canonical provider identity mismatch")
     info = existing["data"].get("info")
@@ -6699,6 +6699,10 @@ def validated_yahoo_engine_finance_floor(ticker: str, existing: dict, candidate:
     reconstructed = engine.decorate_finance_payload(
         ticker, existing["profile"], fetched_at, existing["data"]
     )
+    if "provenance" in existing:
+        if not engine.valid_illiquid_history(existing):
+            raise ValueError("Yahoo ETF canonical finance provenance disagrees with provider evidence")
+        reconstructed = engine.label_illiquid_history(reconstructed, existing)
     for key in ("quote_as_of", "history_as_of", "source_as_of", "first_trade_date"):
         if (existing.get(key) != reconstructed[key]
                 or reconstructed[key] is not None and key not in existing):
@@ -6715,7 +6719,9 @@ def validated_yahoo_engine_finance_floor(ticker: str, existing: dict, candidate:
             or candidate_info.get("quoteType") != "ETF"):
         raise ValueError("Yahoo ETF candidate provider identity mismatch")
     engine.validate_source_progression(existing, candidate)
-    return floor
+    # ETF detail uses the raw quote clock. Engine history and quote clocks
+    # are validated separately above; a history date cannot replace a quote.
+    return parse_iso_timestamp(yahoo_detail_source_timestamp(existing)) or floor
 
 
 def validate_yahoo_etf_candidate_raw_clocks(ticker: str, provider: dict) -> None:
@@ -6774,7 +6780,20 @@ def publish_yahoo_etf_fallback_pair(
             floor = parse_iso_timestamp(yahoo_detail_source_timestamp(existing))
             claimed_floor = parse_iso_timestamp(existing.get("source_as_of"))
             if claimed_floor != floor:
-                raise ValueError("Yahoo ETF canonical source stamp disagrees with provider evidence")
+                # Old detail serialization used the fetch clock. Replace it only
+                # with a raw-bound candidate that clears both retained clocks.
+                raw_info = ((existing.get("raw") or {}).get("yf") or {}).get("info") or {}
+                old_quote = (existing.get("normalized") or {}).get("quote") or {}
+                fetched_floor = parse_iso_timestamp(existing.get("fetched_at"))
+                if (finance or existing.get("source_provider") != "yahoo_finance"
+                        or existing.get("asset_type") != "etf"
+                        or raw_info.get("symbol") != ticker or raw_info.get("quoteType") != "ETF"
+                        or floor is None or claimed_floor is None
+                        or claimed_floor != fetched_floor
+                        or existing.get("source_as_of") != old_quote.get("u")
+                        or floor > claimed_floor or claimed_floor > parse_iso_timestamp(now_iso())):
+                    raise ValueError("Yahoo ETF canonical source stamp disagrees with provider evidence")
+                floor = max(floor, claimed_floor)
         if floor is not None and source < floor:
             raise ValueError("Yahoo ETF candidate would regress the canonical provider date")
     stages = {}

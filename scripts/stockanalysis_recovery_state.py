@@ -784,6 +784,17 @@ class StockAnalysisRecoveryStateStore:
         if kind == "etf" and prior:
             prior_path = self._lkg_path(kind, entity) if state.get("retry") is True else self.canonical_path(kind, entity)
             bound = self._valid_bytes(kind, entity, prior_path)
+            # Canonical refreshes can precede recovery-state publication. Rebind
+            # a valid current file; retained retry LKG remains immutable.
+            if (bound and state.get("retry") is not True
+                    and prior.get("path") == self._relative(prior_path)
+                    and _sha256(bound[0]) != prior.get("payload_sha256")):
+                self.reconcile_current_payload_sha256(kind, entity)
+                prior = self._load_state(kind, entity)["current"]
+            if bound:
+                canonical_before = _iso_timestamp(payload_source_fields(kind, bound[1]).get("source_as_of"))
+                if canonical_before is not None and (after is None or after < canonical_before):
+                    return False
             if (not bound or prior.get("path") != self._relative(prior_path)
                     or _sha256(bound[0]) != prior.get("payload_sha256")
                     or etf_detail_regression(payload, bound[1]) is not None):
