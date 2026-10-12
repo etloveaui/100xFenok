@@ -553,6 +553,9 @@ class DataSupplyStateStore:
         self._defer_maintenance = defer_maintenance
         self._generation_cache: dict[tuple[str, str], dict[str, Any]] = {}
         self._validated_immutable_refs: set[tuple[Path, str]] = set()
+        self._observation_history_cache: dict[
+            Path, tuple[tuple[int, int, int, int, int], dict[str, bytes]]
+        ] = {}
 
     def _now(self) -> dt.datetime:
         value = self._now_fn()
@@ -760,11 +763,28 @@ class DataSupplyStateStore:
         directory = self.root / "history" / category
         history = self._inside_root(directory / f"{day}.jsonl")
         with self._lock(directory / f".{day}.lock", shared=True):
+            cache_enabled = category == "observations" and self._defer_maintenance
             if not history.exists():
+                if cache_enabled:
+                    self._observation_history_cache.pop(history, None)
                 return False
+            if cache_enabled:
+                stat = history.stat()
+                signature = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+                cached = self._observation_history_cache.get(history)
+                if cached is not None and cached[0] == signature:
+                    event_id = record.get("event_id")
+                    content = cached[1].get(event_id) if isinstance(event_id, str) else None
+                    if content is None:
+                        return False
+                    if content != canonical_json_bytes(dict(record)):
+                        raise IntegrityError("history event ID is bound to different content")
+                    return True
+                self._observation_history_cache.pop(history, None)
             data = history.read_bytes()
             if data and not data.endswith(b"\n"):
                 raise IntegrityError(f"{category} history has an uncommitted tail")
+            indexed: dict[str, bytes] = {}
             for index, line in enumerate(data.splitlines(), start=1):
                 try:
                     parsed = json.loads(line.decode("utf-8"))
@@ -777,8 +797,22 @@ class DataSupplyStateStore:
                         _validate_decision(parsed)
                 except (UnicodeDecodeError, json.JSONDecodeError, SchemaError) as exc:
                     raise IntegrityError(f"corrupt {category} history at line {index}") from exc
-                if parsed.get("event_id") == record.get("event_id"):
+                if cache_enabled:
+                    event_id = parsed["event_id"]
+                    content = canonical_json_bytes(parsed)
+                    if event_id in indexed and indexed[event_id] != content:
+                        raise IntegrityError("history event ID is bound to different content")
+                    indexed[event_id] = content
+                elif parsed.get("event_id") == record.get("event_id"):
                     if canonical_json_bytes(parsed) != canonical_json_bytes(dict(record)):
+                        raise IntegrityError("history event ID is bound to different content")
+                    return True
+            if cache_enabled:
+                self._observation_history_cache[history] = (signature, indexed)
+                event_id = record.get("event_id")
+                content = indexed.get(event_id) if isinstance(event_id, str) else None
+                if content is not None:
+                    if content != canonical_json_bytes(dict(record)):
                         raise IntegrityError("history event ID is bound to different content")
                     return True
             return False
