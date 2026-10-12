@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "WAGN",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-08",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 14.98,
+      "value": 15.37,
       "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:29:14Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:04Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,21 +31,28 @@
       ],
       "candidates": [
         {
-          "value": 14.98,
+          "value": 15.37,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:29:14Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:04Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 15.37,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 15.06,
+      "value": 14.98,
       "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:29:14Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:04Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,21 +61,28 @@
       ],
       "candidates": [
         {
-          "value": 15.06,
+          "value": 14.98,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:29:14Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:04Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 14.98,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.0800009,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:29:14Z",
+      "value": 0.39,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:02Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,21 +92,28 @@
       ],
       "candidates": [
         {
-          "value": -0.0800009,
+          "value": 0.39,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.39,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:29:14Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:04Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.531214,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:29:14Z",
+      "value": 2.6,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:02Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
-          "value": -0.531214,
+          "value": 2.6,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 2.60347,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:29:14Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:04Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 285220000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:02Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 285220000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.9,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:02Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.9,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -3.90921,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -4.23676,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:02Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": -3.90921,
+          "value": -4.23676,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -4.23676,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,398 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 10.100286532951278,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:02Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 10.100286532951278,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:02Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 26,
+    "holdings_updated": "Oct 8, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "RYGYO.E.IS",
+        "name": "Reysas Gayrimenkul Yatirim Ortakligi AS",
+        "weight_pct": 14.33,
+        "shares": 43856465,
+        "raw": {
+          "no": 1,
+          "n": "Reysas Gayrimenkul Yatirim Ortakligi AS",
+          "s": "RYGYO.E.IS",
+          "as": "14.33%",
+          "sh": "43,856,465"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "RIG",
+        "name": "Transocean Ltd.",
+        "weight_pct": 8.02,
+        "shares": 4128872,
+        "raw": {
+          "no": 2,
+          "n": "Transocean Ltd.",
+          "s": "$RIG",
+          "as": "8.02%",
+          "sh": "4,128,872"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "HCC",
+        "name": "Warrior Met Coal, Inc.",
+        "weight_pct": 8.01,
+        "shares": 254389,
+        "raw": {
+          "no": 3,
+          "n": "Warrior Met Coal, Inc.",
+          "s": "$HCC",
+          "as": "8.01%",
+          "sh": "254,389"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!NSE/EDELWEISS",
+        "name": "Edelweiss Financial Services Limited",
+        "weight_pct": 6.74,
+        "shares": 14572000,
+        "raw": {
+          "no": 4,
+          "n": "Edelweiss Financial Services Limited",
+          "s": "!nse/EDELWEISS",
+          "as": "6.74%",
+          "sh": "14,572,000"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "TAVHL.E.IS",
+        "name": "TAV Havalimanlari Holding AS",
+        "weight_pct": 5.85,
+        "shares": 2978173,
+        "raw": {
+          "no": 5,
+          "n": "TAV Havalimanlari Holding AS",
+          "s": "TAVHL.E.IS",
+          "as": "5.85%",
+          "sh": "2,978,173"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "GMTAS.E.IS",
+        "name": "Gimat Magazacilik Sanayi ve Ticaret AS",
+        "weight_pct": 5.44,
+        "shares": 16569896,
+        "raw": {
+          "no": 6,
+          "n": "Gimat Magazacilik Sanayi ve Ticaret AS",
+          "s": "GMTAS.E.IS",
+          "as": "5.44%",
+          "sh": "16,569,896"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "DAC",
+        "name": "Danaos Corporation",
+        "weight_pct": 5.07,
+        "shares": 84911,
+        "raw": {
+          "no": 7,
+          "n": "Danaos Corporation",
+          "s": "$DAC",
+          "as": "5.07%",
+          "sh": "84,911"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "VAL",
+        "name": "Valaris Limited",
+        "weight_pct": 4.87,
+        "shares": 165637,
+        "raw": {
+          "no": 8,
+          "n": "Valaris Limited",
+          "s": "$VAL",
+          "as": "4.87%",
+          "sh": "165,637"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "NE",
+        "name": "Noble Corporation plc",
+        "weight_pct": 4.72,
+        "shares": 319529,
+        "raw": {
+          "no": 9,
+          "n": "Noble Corporation plc",
+          "s": "$NE",
+          "as": "4.72%",
+          "sh": "319,529"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "KSPI",
+        "name": "Joint Stock Company Kaspi.kz",
+        "weight_pct": 4.57,
+        "shares": 140578,
+        "raw": {
+          "no": 10,
+          "n": "Joint Stock Company Kaspi.kz",
+          "s": "$KSPI",
+          "as": "4.57%",
+          "sh": "140,578"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!OSL/ODL",
+        "name": "Odfjell Drilling Ltd.",
+        "weight_pct": 4.53,
+        "shares": 1254374,
+        "raw": {
+          "no": 11,
+          "n": "Odfjell Drilling Ltd.",
+          "s": "!osl/ODL",
+          "as": "4.53%",
+          "sh": "1,254,374"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!TSX/CSU",
+        "name": "Constellation Software Inc.",
+        "weight_pct": 4.12,
+        "shares": 5735,
+        "raw": {
+          "no": 12,
+          "n": "Constellation Software Inc.",
+          "s": "!tsx/CSU",
+          "as": "4.12%",
+          "sh": "5,735"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!TSXV/LMN",
+        "name": "Lumine Group Inc.",
+        "weight_pct": 3.96,
+        "shares": 746611,
+        "raw": {
+          "no": 13,
+          "n": "Lumine Group Inc.",
+          "s": "!tsxv/LMN",
+          "as": "3.96%",
+          "sh": "746,611"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "AMR",
+        "name": "Alpha Metallurgical Resources, Inc.",
+        "weight_pct": 3.94,
+        "shares": 64541,
+        "raw": {
+          "no": 14,
+          "n": "Alpha Metallurgical Resources, Inc.",
+          "s": "$AMR",
+          "as": "3.94%",
+          "sh": "64,541"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "TABGD.E.IS",
+        "name": "TAB Gida Sanayi ve Ticaret AS",
+        "weight_pct": 3.78,
+        "shares": 2368623,
+        "raw": {
+          "no": 15,
+          "n": "TAB Gida Sanayi ve Ticaret AS",
+          "s": "TABGD.E.IS",
+          "as": "3.78%",
+          "sh": "2,368,623"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!TSXV/TOI",
+        "name": "Topicus.com Inc.",
+        "weight_pct": 3.66,
+        "shares": 171736,
+        "raw": {
+          "no": 16,
+          "n": "Topicus.com Inc.",
+          "s": "!tsxv/TOI",
+          "as": "3.66%",
+          "sh": "171,736"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "RYSAS.E.IS",
+        "name": "Reysas Tasimacilik ve Lojistik Ticaret AS",
+        "weight_pct": 3.32,
+        "shares": 19461689,
+        "raw": {
+          "no": 17,
+          "n": "Reysas Tasimacilik ve Lojistik Ticaret AS",
+          "s": "RYSAS.E.IS",
+          "as": "3.32%",
+          "sh": "19,461,689"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!NSE/NUVAMA",
+        "name": "Nuvama Wealth Management Limited",
+        "weight_pct": 3.28,
+        "shares": 520520,
+        "raw": {
+          "no": 18,
+          "n": "Nuvama Wealth Management Limited",
+          "s": "!nse/NUVAMA",
+          "as": "3.28%",
+          "sh": "520,520"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!WSE/SGN",
+        "name": "Sygnity S.A.",
+        "weight_pct": 1.56,
+        "shares": 208732,
+        "raw": {
+          "no": 19,
+          "n": "Sygnity S.A.",
+          "s": "!wse/SGN",
+          "as": "1.56%",
+          "sh": "208,732"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "INDIAN RUPEE",
+        "weight_pct": 0.45,
+        "shares": 125079033,
+        "raw": {
+          "no": 20,
+          "n": "INDIAN RUPEE",
+          "as": "0.45%",
+          "sh": "125,079,033"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!OSL/OTL",
+        "name": "Odfjell Technology Ltd.",
+        "weight_pct": 0.1,
+        "shares": 45331,
+        "raw": {
+          "no": 21,
+          "n": "Odfjell Technology Ltd.",
+          "s": "!osl/OTL",
+          "as": "0.10%",
+          "sh": "45,331"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!MUTF/FXFXX",
+        "name": "First American Treasury Obligs X",
+        "weight_pct": 0.09,
+        "shares": 264545,
+        "raw": {
+          "no": 22,
+          "n": "First American Treasury Obligs X",
+          "s": "!mutf/FXFXX",
+          "as": "0.09%",
+          "sh": "264,545"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "US DOLLARS",
+        "weight_pct": 0.0,
+        "shares": 6272,
+        "raw": {
+          "no": 23,
+          "n": "US DOLLARS",
+          "as": "0.00%",
+          "sh": "6,272"
+        }
+      },
+      {
+        "rank": 24,
+        "name": "TURKISH LIRA",
+        "weight_pct": -0.0,
+        "shares": 58300,
+        "raw": {
+          "no": 24,
+          "n": "TURKISH LIRA",
+          "as": "-0.00%",
+          "sh": "58,300"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "CANADIAN DOLLAR",
+        "weight_pct": -0.0,
+        "shares": 3222,
+        "raw": {
+          "no": 25,
+          "n": "CANADIAN DOLLAR",
+          "as": "-0.00%",
+          "sh": "3,222"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +616,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/WAGN.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/WAGN.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
