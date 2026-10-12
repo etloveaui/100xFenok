@@ -283,19 +283,26 @@ def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: lis
         normalized_periods = normalized.get("history_periods")
         if not isinstance(raw_periods, dict) or not isinstance(normalized_periods, dict):
             return None
-        raw_daily = raw_periods.get("daily_1y")
-        if raw_daily != normalized_periods.get("daily_1y"):
+        if raw_periods.keys() != normalized_periods.keys():
             return None
+        for period, rows in raw_periods.items():
+            if not isinstance(period, str) or rows != normalized_periods[period]:
+                return None
+            period_bounds = _etf_history_dates(rows)
+            period_days = _etf_history_date_set(rows)
+            if period_bounds is None or period_days is None or period_bounds[1].date() > source_stamp.date():
+                return None
+            for row in rows:
+                if any(not isinstance(value, (int, float)) or isinstance(value, bool)
+                       or not math.isfinite(value) or (key in {"o", "h", "l", "c", "a"} and value <= 0)
+                       or (key == "v" and value < 0)
+                       for key, value in row.items() if key not in {"t", "date", "time"}):
+                    return None
+        raw_daily = raw_periods.get("daily_1y")
         dates = _etf_history_dates(raw_daily)
         date_set = _etf_history_date_set(raw_daily)
-        if dates is None or date_set is None or dates[1].date() > source_stamp.date():
+        if dates is None or date_set is None:
             return None
-        for row in raw_daily:
-            if any(not isinstance(value, (int, float)) or isinstance(value, bool)
-                   or not math.isfinite(value) or (key in {"o", "h", "l", "c", "a"} and value <= 0)
-                   or (key == "v" and value < 0)
-                   for key, value in row.items() if key not in {"t", "date", "time"}):
-                return None
         if (archive.get("history_first") != dates[0].date().isoformat()
                 or archive.get("history_last") != dates[1].date().isoformat()):
             return None
@@ -388,8 +395,39 @@ def archived_etf_history(payload: dict) -> set[str] | None:
     return all_dates
 
 
+def archived_etf_history_periods(payload: dict, provider: str | None = None) -> dict[str, set[str]] | None:
+    """Return verified dates by their original native period; Yahoo has only daily_1y."""
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    archives = normalized.get("history_archive")
+    if archives is None:
+        return {}
+    ticker = payload.get("ticker")
+    if not isinstance(archives, list) or not archives or not isinstance(ticker, str):
+        return None
+    periods: dict[str, set[str]] = {}
+    for index, archive in enumerate(archives):
+        if not isinstance(archive, dict):
+            return None
+        daily = _archive_record_dates(archive, ticker, archives[:index])
+        if daily is None:
+            return None
+        if provider is not None and archive.get("provider") != provider:
+            continue
+        if archive.get("provider") == "yahoo_finance":
+            periods.setdefault("daily_1y", set()).update(daily)
+            continue
+        source = json.loads(archive["source_payload"])
+        raw_periods = source["raw"]["history_periods"]
+        for period, rows in raw_periods.items():
+            days = _etf_history_date_set(rows)
+            if days is None:
+                return None
+            periods.setdefault(period, set()).update(days)
+    return periods
+
+
 def validate_etf_history_archive(payload: dict) -> bool:
-    """Keep native daily prices separate from bounded exact Yahoo records."""
+    """Keep native period prices separate from bounded exact Yahoo records."""
     normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
     raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
     normalized_periods = normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {}
@@ -400,6 +438,8 @@ def validate_etf_history_archive(payload: dict) -> bool:
         return False
     if archives is None:
         return True
+    if any(normalized_periods.get(period) != rows for period, rows in raw_periods.items()):
+        return False
     ticker = payload.get("ticker")
     if (not isinstance(ticker, str) or not _ENTITY_RE.fullmatch(ticker) or ticker != ticker.upper()
             or not isinstance(archives, list) or not archives or any(not isinstance(item, dict) for item in archives)):
@@ -516,6 +556,14 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
     previous_archive = archived_etf_history(baseline)
     if archive is None or previous_archive is None or not previous_archive <= archive:
         return "history_archive"
+    same_native = candidate.get("source") == baseline.get("source") == "stockanalysis"
+    provider = "stockanalysis" if same_native else None
+    archived_periods = archived_etf_history_periods(candidate, provider)
+    previous_periods = archived_etf_history_periods(baseline, provider)
+    if (archived_periods is None or previous_periods is None
+            or any(not days <= archived_periods.get(period, set())
+                   for period, days in previous_periods.items())):
+        return "history_archive"
     for period, rows in old_periods.items():
         old_dates = _etf_history_date_set(rows)
         if not old_dates:
@@ -528,7 +576,7 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
         advance = _iso_timestamp(max(new_dates)) - _iso_timestamp(max(old_dates))
         floor = _iso_timestamp(min(old_dates)) + advance
         retained = {day for day in old_dates if _iso_timestamp(day) >= floor}
-        available = new_dates | (archive if period == "daily_1y" else set())
+        available = new_dates | archived_periods.get(period, set())
         if not retained <= available:
             return f"history_periods.{period}"
     return None
