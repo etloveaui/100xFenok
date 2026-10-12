@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-10-12T01:17:16.414Z",
+  "generated_at": "2026-10-12T02:17:02.647Z",
   "source_as_of": "2026-10-07",
   "source_as_of_inputs": [
     {
@@ -41,7 +41,7 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-10-12T01:15:56.986Z",
+    "generated_at": "2026-10-12T02:15:44.100Z",
     "current_only": true,
     "total": 1187,
     "by_market": [
@@ -463,7 +463,7 @@
   },
   "expanded_stock_candidate_universe": {
     "source_file": "data/computed/market_facts/index.json",
-    "generated_at": "2026-10-12T01:14:24Z",
+    "generated_at": "2026-10-12T02:14:11Z",
     "collected_asset_total": 7071,
     "collected_stock_candidates": 1220,
     "scored_public_stock": 1187,
@@ -473,7 +473,7 @@
     "promotion_gate_readiness": {
       "evidence_origin": "admin_promotion_artifact_and_current_public_counts",
       "artifact_present": true,
-      "artifact_generated_at": "2026-10-12T01:15:03.785Z",
+      "artifact_generated_at": "2026-10-12T02:14:50.895Z",
       "source_gate": "s1_stock_promotion_candidates.joined_gate",
       "public_mutation_enabled_in_artifact": false,
       "joined_ready": true,
@@ -542,7 +542,7 @@
     "scored_public_etf": 4619,
     "public_done_claim_allowed": false,
     "evidence_based_readiness": {
-      "classification_as_of": "2026-10-12T01:16:23.722Z",
+      "classification_as_of": "2026-10-12T02:16:10.350Z",
       "public_ready": true,
       "daily_ready": false,
       "gated_ready": false,
@@ -574,21 +574,21 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:15:58.692Z",
+          "generated_at": "2026-10-12T02:15:45.817Z",
           "age_hours": 0.03,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:16:55.618Z",
+          "generated_at": "2026-10-12T02:16:41.933Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_scored_daily_1y_count_equation",
           "ok": true,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "scored_denominator_count": 4619,
           "exact_plan_scored_count": 4619,
           "complete_daily_1y": 3816,
@@ -604,7 +604,7 @@
         {
           "id": "etf_no_fetchable_daily_1y_gap",
           "ok": false,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "fetchable_daily_1y_gap": 15,
           "inception_limited_daily_1y_gap": 722,
           "terminal_limited_daily_1y_gap": 66,
@@ -616,10 +616,10 @@
         {
           "id": "etf_no_fetchable_required_history_gap",
           "ok": false,
-          "fetchable_required_history": 38,
+          "fetchable_required_history": 54,
           "missing_required_history": 75,
           "inception_limited_required_history": 17,
-          "terminal_limited_required_history": 20,
+          "terminal_limited_required_history": 4,
           "fetchable_rows": [
             {
               "ticker": "AMJB",
@@ -648,6 +648,58 @@
               "inception_date": null
             },
             {
+              "ticker": "BLST",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2025-06-20"
+            },
+            {
+              "ticker": "BLTD",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2025-06-20"
+            },
+            {
+              "ticker": "BNDW",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2018-09-04"
+            },
+            {
+              "ticker": "BUCK",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2022-10-27"
+            },
+            {
               "ticker": "COIO",
               "missing": [
                 "daily_1y"
@@ -661,85 +713,33 @@
               "inception_date": "2025-08-13"
             },
             {
+              "ticker": "CPAG",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2025-08-12"
+            },
+            {
+              "ticker": "DEFI",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2022-09-15"
+            },
+            {
               "ticker": "DVUT",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXB",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXC",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXE",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXF",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXK",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXP",
               "missing": [
                 "daily_1y"
               ],
@@ -761,21 +761,21 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:15:58.692Z",
+          "generated_at": "2026-10-12T02:15:45.817Z",
           "age_hours": 0.03,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:16:55.618Z",
+          "generated_at": "2026-10-12T02:16:41.933Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_scored_daily_1y_count_equation",
           "ok": true,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "scored_denominator_count": 4619,
           "exact_plan_scored_count": 4619,
           "complete_daily_1y": 3816,
@@ -791,7 +791,7 @@
         {
           "id": "etf_no_fetchable_daily_1y_gap",
           "ok": false,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "fetchable_daily_1y_gap": 15,
           "inception_limited_daily_1y_gap": 722,
           "terminal_limited_daily_1y_gap": 66,
@@ -805,21 +805,21 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:15:58.692Z",
+          "generated_at": "2026-10-12T02:15:45.817Z",
           "age_hours": 0.03,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:16:55.618Z",
+          "generated_at": "2026-10-12T02:16:41.933Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_scored_daily_1y_count_equation",
           "ok": true,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "scored_denominator_count": 4619,
           "exact_plan_scored_count": 4619,
           "complete_daily_1y": 3816,
@@ -835,7 +835,7 @@
         {
           "id": "etf_no_fetchable_daily_1y_gap",
           "ok": false,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "fetchable_daily_1y_gap": 15,
           "inception_limited_daily_1y_gap": 722,
           "terminal_limited_daily_1y_gap": 66,
@@ -859,21 +859,21 @@
         {
           "id": "etf_signal_summary_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:15:58.692Z",
+          "generated_at": "2026-10-12T02:15:45.817Z",
           "age_hours": 0.03,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
-          "generated_at": "2026-10-12T01:16:55.618Z",
+          "generated_at": "2026-10-12T02:16:41.933Z",
           "age_hours": 0.01,
           "max_age_hours": 48
         },
         {
           "id": "etf_scored_daily_1y_count_equation",
           "ok": true,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "scored_denominator_count": 4619,
           "exact_plan_scored_count": 4619,
           "complete_daily_1y": 3816,
@@ -889,7 +889,7 @@
         {
           "id": "etf_no_fetchable_daily_1y_gap",
           "ok": false,
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "fetchable_daily_1y_gap": 15,
           "inception_limited_daily_1y_gap": 722,
           "terminal_limited_daily_1y_gap": 66,
@@ -903,10 +903,10 @@
         {
           "id": "etf_no_fetchable_required_history_gap",
           "ok": false,
-          "fetchable_required_history": 38,
+          "fetchable_required_history": 54,
           "missing_required_history": 75,
           "inception_limited_required_history": 17,
-          "terminal_limited_required_history": 20,
+          "terminal_limited_required_history": 4,
           "fetchable_rows": [
             {
               "ticker": "AMJB",
@@ -935,6 +935,58 @@
               "inception_date": null
             },
             {
+              "ticker": "BLST",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2025-06-20"
+            },
+            {
+              "ticker": "BLTD",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2025-06-20"
+            },
+            {
+              "ticker": "BNDW",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2018-09-04"
+            },
+            {
+              "ticker": "BUCK",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2022-10-27"
+            },
+            {
               "ticker": "COIO",
               "missing": [
                 "daily_1y"
@@ -948,85 +1000,33 @@
               "inception_date": "2025-08-13"
             },
             {
+              "ticker": "CPAG",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2025-08-12"
+            },
+            {
+              "ticker": "DEFI",
+              "missing": [
+                "daily_1y"
+              ],
+              "fetchable_missing": [
+                "daily_1y"
+              ],
+              "inception_limited_missing": [],
+              "terminal_limited_missing": [],
+              "terminal_limit_source": null,
+              "inception_date": "2022-09-15"
+            },
+            {
               "ticker": "DVUT",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXB",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXC",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXE",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXF",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXK",
-              "missing": [
-                "daily_1y"
-              ],
-              "fetchable_missing": [
-                "daily_1y"
-              ],
-              "inception_limited_missing": [],
-              "terminal_limited_missing": [],
-              "terminal_limit_source": null,
-              "inception_date": "2025-07-22"
-            },
-            {
-              "ticker": "DVXP",
               "missing": [
                 "daily_1y"
               ],
@@ -1059,10 +1059,10 @@
         "scored_denominator_count": 4619,
         "exact_plan_scored_count": 4619,
         "complete_daily_1y": 3816,
-        "fetchable_required_history": 38,
+        "fetchable_required_history": 54,
         "missing_required_history": 75,
         "inception_limited_required_history": 17,
-        "terminal_limited_required_history": 20,
+        "terminal_limited_required_history": 4,
         "fetchable_daily_1y_gap": 15,
         "inception_limited_daily_1y_gap": 722,
         "terminal_limited_daily_1y_gap": 66,
@@ -1076,7 +1076,7 @@
       "evidence_based_readiness": {
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
-        "generated_at": "2026-10-12T01:16:55.878Z",
+        "generated_at": "2026-10-12T02:16:42.160Z",
         "generated_age_hours": 0.01,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
@@ -1657,7 +1657,7 @@
         "promotion_gate_readiness": {
           "evidence_origin": "admin_promotion_artifact_and_current_public_counts",
           "artifact_present": true,
-          "artifact_generated_at": "2026-10-12T01:15:03.785Z",
+          "artifact_generated_at": "2026-10-12T02:14:50.895Z",
           "source_gate": "s1_stock_promotion_candidates.joined_gate",
           "public_mutation_enabled_in_artifact": false,
           "joined_ready": true,
@@ -1733,7 +1733,7 @@
         },
         "caveat": "Full ETF DAILY/GATED is evaluated on the exact scored eligible denominator. Full-primary gaps remain diagnostic, and Core Daily Basket readiness is reported on its separate track.",
         "evidence_based_readiness": {
-          "classification_as_of": "2026-10-12T01:16:23.722Z",
+          "classification_as_of": "2026-10-12T02:16:10.350Z",
           "public_ready": true,
           "daily_ready": false,
           "gated_ready": false,
@@ -1765,21 +1765,21 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:15:58.692Z",
+              "generated_at": "2026-10-12T02:15:45.817Z",
               "age_hours": 0.03,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:16:55.618Z",
+              "generated_at": "2026-10-12T02:16:41.933Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_scored_daily_1y_count_equation",
               "ok": true,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "scored_denominator_count": 4619,
               "exact_plan_scored_count": 4619,
               "complete_daily_1y": 3816,
@@ -1795,7 +1795,7 @@
             {
               "id": "etf_no_fetchable_daily_1y_gap",
               "ok": false,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "fetchable_daily_1y_gap": 15,
               "inception_limited_daily_1y_gap": 722,
               "terminal_limited_daily_1y_gap": 66,
@@ -1807,10 +1807,10 @@
             {
               "id": "etf_no_fetchable_required_history_gap",
               "ok": false,
-              "fetchable_required_history": 38,
+              "fetchable_required_history": 54,
               "missing_required_history": 75,
               "inception_limited_required_history": 17,
-              "terminal_limited_required_history": 20,
+              "terminal_limited_required_history": 4,
               "fetchable_rows": [
                 {
                   "ticker": "AMJB",
@@ -1839,6 +1839,58 @@
                   "inception_date": null
                 },
                 {
+                  "ticker": "BLST",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2025-06-20"
+                },
+                {
+                  "ticker": "BLTD",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2025-06-20"
+                },
+                {
+                  "ticker": "BNDW",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2018-09-04"
+                },
+                {
+                  "ticker": "BUCK",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2022-10-27"
+                },
+                {
                   "ticker": "COIO",
                   "missing": [
                     "daily_1y"
@@ -1852,85 +1904,33 @@
                   "inception_date": "2025-08-13"
                 },
                 {
+                  "ticker": "CPAG",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2025-08-12"
+                },
+                {
+                  "ticker": "DEFI",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2022-09-15"
+                },
+                {
                   "ticker": "DVUT",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXB",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXC",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXE",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXF",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXK",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXP",
                   "missing": [
                     "daily_1y"
                   ],
@@ -1952,21 +1952,21 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:15:58.692Z",
+              "generated_at": "2026-10-12T02:15:45.817Z",
               "age_hours": 0.03,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:16:55.618Z",
+              "generated_at": "2026-10-12T02:16:41.933Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_scored_daily_1y_count_equation",
               "ok": true,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "scored_denominator_count": 4619,
               "exact_plan_scored_count": 4619,
               "complete_daily_1y": 3816,
@@ -1982,7 +1982,7 @@
             {
               "id": "etf_no_fetchable_daily_1y_gap",
               "ok": false,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "fetchable_daily_1y_gap": 15,
               "inception_limited_daily_1y_gap": 722,
               "terminal_limited_daily_1y_gap": 66,
@@ -1996,21 +1996,21 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:15:58.692Z",
+              "generated_at": "2026-10-12T02:15:45.817Z",
               "age_hours": 0.03,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:16:55.618Z",
+              "generated_at": "2026-10-12T02:16:41.933Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_scored_daily_1y_count_equation",
               "ok": true,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "scored_denominator_count": 4619,
               "exact_plan_scored_count": 4619,
               "complete_daily_1y": 3816,
@@ -2026,7 +2026,7 @@
             {
               "id": "etf_no_fetchable_daily_1y_gap",
               "ok": false,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "fetchable_daily_1y_gap": 15,
               "inception_limited_daily_1y_gap": 722,
               "terminal_limited_daily_1y_gap": 66,
@@ -2050,21 +2050,21 @@
             {
               "id": "etf_signal_summary_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:15:58.692Z",
+              "generated_at": "2026-10-12T02:15:45.817Z",
               "age_hours": 0.03,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
-              "generated_at": "2026-10-12T01:16:55.618Z",
+              "generated_at": "2026-10-12T02:16:41.933Z",
               "age_hours": 0.01,
               "max_age_hours": 48
             },
             {
               "id": "etf_scored_daily_1y_count_equation",
               "ok": true,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "scored_denominator_count": 4619,
               "exact_plan_scored_count": 4619,
               "complete_daily_1y": 3816,
@@ -2080,7 +2080,7 @@
             {
               "id": "etf_no_fetchable_daily_1y_gap",
               "ok": false,
-              "classification_as_of": "2026-10-12T01:16:23.722Z",
+              "classification_as_of": "2026-10-12T02:16:10.350Z",
               "fetchable_daily_1y_gap": 15,
               "inception_limited_daily_1y_gap": 722,
               "terminal_limited_daily_1y_gap": 66,
@@ -2094,10 +2094,10 @@
             {
               "id": "etf_no_fetchable_required_history_gap",
               "ok": false,
-              "fetchable_required_history": 38,
+              "fetchable_required_history": 54,
               "missing_required_history": 75,
               "inception_limited_required_history": 17,
-              "terminal_limited_required_history": 20,
+              "terminal_limited_required_history": 4,
               "fetchable_rows": [
                 {
                   "ticker": "AMJB",
@@ -2126,6 +2126,58 @@
                   "inception_date": null
                 },
                 {
+                  "ticker": "BLST",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2025-06-20"
+                },
+                {
+                  "ticker": "BLTD",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2025-06-20"
+                },
+                {
+                  "ticker": "BNDW",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2018-09-04"
+                },
+                {
+                  "ticker": "BUCK",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2022-10-27"
+                },
+                {
                   "ticker": "COIO",
                   "missing": [
                     "daily_1y"
@@ -2139,85 +2191,33 @@
                   "inception_date": "2025-08-13"
                 },
                 {
+                  "ticker": "CPAG",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2025-08-12"
+                },
+                {
+                  "ticker": "DEFI",
+                  "missing": [
+                    "daily_1y"
+                  ],
+                  "fetchable_missing": [
+                    "daily_1y"
+                  ],
+                  "inception_limited_missing": [],
+                  "terminal_limited_missing": [],
+                  "terminal_limit_source": null,
+                  "inception_date": "2022-09-15"
+                },
+                {
                   "ticker": "DVUT",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXB",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXC",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXE",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXF",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXK",
-                  "missing": [
-                    "daily_1y"
-                  ],
-                  "fetchable_missing": [
-                    "daily_1y"
-                  ],
-                  "inception_limited_missing": [],
-                  "terminal_limited_missing": [],
-                  "terminal_limit_source": null,
-                  "inception_date": "2025-07-22"
-                },
-                {
-                  "ticker": "DVXP",
                   "missing": [
                     "daily_1y"
                   ],
@@ -2250,10 +2250,10 @@
             "scored_denominator_count": 4619,
             "exact_plan_scored_count": 4619,
             "complete_daily_1y": 3816,
-            "fetchable_required_history": 38,
+            "fetchable_required_history": 54,
             "missing_required_history": 75,
             "inception_limited_required_history": 17,
-            "terminal_limited_required_history": 20,
+            "terminal_limited_required_history": 4,
             "fetchable_daily_1y_gap": 15,
             "inception_limited_daily_1y_gap": 722,
             "terminal_limited_daily_1y_gap": 66,
@@ -2282,7 +2282,7 @@
         "evidence_based_readiness": {
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
-          "generated_at": "2026-10-12T01:16:55.878Z",
+          "generated_at": "2026-10-12T02:16:42.160Z",
           "generated_age_hours": 0.01,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
@@ -2374,7 +2374,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-10-12T01:17:16.414Z"
+        "generated_at": "2026-10-12T02:17:02.647Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -2458,21 +2458,21 @@
       },
       {
         "id": "etf_signal_summary_freshness",
-        "generated_at": "2026-10-12T01:15:58.692Z",
+        "generated_at": "2026-10-12T02:15:45.817Z",
         "age_hours": 0.03,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
-        "generated_at": "2026-10-12T01:16:55.618Z",
+        "generated_at": "2026-10-12T02:16:41.933Z",
         "age_hours": 0.01,
         "max_age_hours": 48,
-        "fetchable_required_history": 38,
+        "fetchable_required_history": 54,
         "inception_limited_required_history": 17,
         "status": "blocked_fetchable_gap",
         "missing_required_history": 75,
-        "terminal_limited_required_history": 20,
+        "terminal_limited_required_history": 4,
         "fetchable_rows": [
           {
             "ticker": "AMJB",
@@ -2501,6 +2501,58 @@
             "inception_date": null
           },
           {
+            "ticker": "BLST",
+            "missing": [
+              "daily_1y"
+            ],
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "terminal_limited_missing": [],
+            "terminal_limit_source": null,
+            "inception_date": "2025-06-20"
+          },
+          {
+            "ticker": "BLTD",
+            "missing": [
+              "daily_1y"
+            ],
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "terminal_limited_missing": [],
+            "terminal_limit_source": null,
+            "inception_date": "2025-06-20"
+          },
+          {
+            "ticker": "BNDW",
+            "missing": [
+              "daily_1y"
+            ],
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "terminal_limited_missing": [],
+            "terminal_limit_source": null,
+            "inception_date": "2018-09-04"
+          },
+          {
+            "ticker": "BUCK",
+            "missing": [
+              "daily_1y"
+            ],
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "terminal_limited_missing": [],
+            "terminal_limit_source": null,
+            "inception_date": "2022-10-27"
+          },
+          {
             "ticker": "COIO",
             "missing": [
               "daily_1y"
@@ -2514,85 +2566,33 @@
             "inception_date": "2025-08-13"
           },
           {
+            "ticker": "CPAG",
+            "missing": [
+              "daily_1y"
+            ],
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "terminal_limited_missing": [],
+            "terminal_limit_source": null,
+            "inception_date": "2025-08-12"
+          },
+          {
+            "ticker": "DEFI",
+            "missing": [
+              "daily_1y"
+            ],
+            "fetchable_missing": [
+              "daily_1y"
+            ],
+            "inception_limited_missing": [],
+            "terminal_limited_missing": [],
+            "terminal_limit_source": null,
+            "inception_date": "2022-09-15"
+          },
+          {
             "ticker": "DVUT",
-            "missing": [
-              "daily_1y"
-            ],
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [],
-            "terminal_limit_source": null,
-            "inception_date": "2025-07-22"
-          },
-          {
-            "ticker": "DVXB",
-            "missing": [
-              "daily_1y"
-            ],
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [],
-            "terminal_limit_source": null,
-            "inception_date": "2025-07-22"
-          },
-          {
-            "ticker": "DVXC",
-            "missing": [
-              "daily_1y"
-            ],
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [],
-            "terminal_limit_source": null,
-            "inception_date": "2025-07-22"
-          },
-          {
-            "ticker": "DVXE",
-            "missing": [
-              "daily_1y"
-            ],
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [],
-            "terminal_limit_source": null,
-            "inception_date": "2025-07-22"
-          },
-          {
-            "ticker": "DVXF",
-            "missing": [
-              "daily_1y"
-            ],
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [],
-            "terminal_limit_source": null,
-            "inception_date": "2025-07-22"
-          },
-          {
-            "ticker": "DVXK",
-            "missing": [
-              "daily_1y"
-            ],
-            "fetchable_missing": [
-              "daily_1y"
-            ],
-            "inception_limited_missing": [],
-            "terminal_limited_missing": [],
-            "terminal_limit_source": null,
-            "inception_date": "2025-07-22"
-          },
-          {
-            "ticker": "DVXP",
             "missing": [
               "daily_1y"
             ],
@@ -2611,8 +2611,8 @@
       },
       {
         "id": "etf_daily_1y_gap",
-        "generated_at": "2026-10-12T01:16:55.618Z",
-        "classification_as_of": "2026-10-12T01:16:23.722Z",
+        "generated_at": "2026-10-12T02:16:41.933Z",
+        "classification_as_of": "2026-10-12T02:16:10.350Z",
         "fetchable_daily_1y_gap": 15,
         "inception_limited_daily_1y_gap": 722,
         "terminal_limited_daily_1y_gap": 66,
@@ -2624,7 +2624,7 @@
       },
       {
         "id": "etf_core_daily_basket",
-        "generated_at": "2026-10-12T01:16:55.878Z",
+        "generated_at": "2026-10-12T02:16:42.160Z",
         "age_hours": 0.01,
         "selected_count": 115,
         "fresh_selected_count": 115,
