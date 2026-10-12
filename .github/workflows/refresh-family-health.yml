@@ -1,6 +1,8 @@
 name: Refresh ETF Family Health
 
 on:
+  # Manual reconciliation refreshes the same record without natural-cycle credit.
+  workflow_dispatch: {}
   workflow_call:
     inputs:
       once_daily:
