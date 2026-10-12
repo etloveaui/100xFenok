@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "BRIE",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-07",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 30.19,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:00:41Z",
+      "value": 30.27,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 30.27,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed"
+        },
+        {
           "value": 30.19,
           "source": "yf",
           "as_of": "2026-10-07",
@@ -38,14 +45,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 30.56,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:00:41Z",
+      "value": 30.07,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 30.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed"
+        },
         {
           "value": 30.56,
           "source": "yf",
@@ -61,14 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.369999,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:00:41Z",
+      "value": 0.2,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.2,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.369999,
           "source": "yf",
@@ -85,14 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -1.21073,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:00:41Z",
+      "value": 0.67,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": 0.67,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed"
+        },
+        {
           "value": -1.21073,
           "source": "yf",
           "as_of": "2026-10-07",
@@ -109,14 +137,142 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 636050000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 636050000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 0.36,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.36,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": 1.09284823050093,
+      "source": "derived.daily_1y_beta",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
+      "confidence": "derived",
+      "unit": "ratio",
+      "provenance": {
+        "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+        "benchmark": "SPY",
+        "benchmark_ticker": "SPY",
+        "currency_scope": "USD listings",
+        "window_days": 365,
+        "minimum_bars": 200,
+        "paired_returns": 241,
+        "window_start": "2025-10-23",
+        "window_end": "2026-10-09",
+        "instrument_history_source": "stockanalysis.history_periods.daily_1y",
+        "instrument_source_file": "computed/data-supply/etf-detail/payloads/BRIE.json",
+        "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+        "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+        "benchmark_fetched_at": "2026-10-12T02:33:36Z"
+      },
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
+      ],
+      "candidates": [
+        {
+          "value": 1.09284823050093,
+          "source": "derived.daily_1y_beta",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "derived",
+          "unit": "ratio",
+          "provenance": {
+            "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+            "benchmark": "SPY",
+            "benchmark_ticker": "SPY",
+            "currency_scope": "USD listings",
+            "window_days": 365,
+            "minimum_bars": 200,
+            "paired_returns": 241,
+            "window_start": "2025-10-23",
+            "window_end": "2026-10-09",
+            "instrument_history_source": "stockanalysis.history_periods.daily_1y",
+            "instrument_source_file": "computed/data-supply/etf-detail/payloads/BRIE.json",
+            "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+            "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+            "benchmark_fetched_at": "2026-10-12T02:33:36Z"
+          }
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.34,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.34,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -0.86817,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -3.50653,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +283,15 @@
       ],
       "candidates": [
         {
-          "value": -0.86817,
+          "value": -3.50653,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -3.50653,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,13 +299,36 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 2.353657347749942,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 2.353657347749942,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 16.484,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": 14.368,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:59Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -153,7 +340,15 @@
       ],
       "candidates": [
         {
-          "value": 16.484,
+          "value": 14.368,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 14.368,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -161,24 +356,602 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 175,
+    "holdings_updated": "Oct 8, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "TSM",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 5.81,
+        "shares": 80559,
+        "raw": {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "5.81%",
+          "sh": "80,559"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!AMS/ASML",
+        "name": "ASML Holding N.V.",
+        "weight_pct": 2.96,
+        "shares": 10288,
+        "raw": {
+          "no": 2,
+          "n": "ASML Holding N.V.",
+          "s": "!ams/ASML",
+          "as": "2.96%",
+          "sh": "10,288"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "005935.KQ",
+        "name": "Samsung Electronics Co Ltd Pfd Registered Shs Non-Voting",
+        "weight_pct": 2.74,
+        "shares": 119816,
+        "raw": {
+          "no": 3,
+          "n": "Samsung Electronics Co Ltd Pfd Registered Shs Non-Voting",
+          "s": "005935.KQ",
+          "as": "2.74%",
+          "sh": "119,816"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!KRX/000660",
+        "name": "SK hynix Inc.",
+        "weight_pct": 2.14,
+        "shares": 10801,
+        "raw": {
+          "no": 4,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "2.14%",
+          "sh": "10,801"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!LON/RIO",
+        "name": "Rio Tinto Group",
+        "weight_pct": 1.75,
+        "shares": 119878,
+        "raw": {
+          "no": 5,
+          "n": "Rio Tinto Group",
+          "s": "!lon/RIO",
+          "as": "1.75%",
+          "sh": "119,878"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!SWX/NOVN",
+        "name": "Novartis AG",
+        "weight_pct": 1.7,
+        "shares": 76181,
+        "raw": {
+          "no": 6,
+          "n": "Novartis AG",
+          "s": "!swx/NOVN",
+          "as": "1.70%",
+          "sh": "76,181"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "BNP.18 06.22.23 000N",
+        "name": "ING GROEP NV COMMON STOCK EUR.01",
+        "weight_pct": 1.6,
+        "shares": 307513,
+        "raw": {
+          "no": 7,
+          "n": "ING GROEP NV COMMON STOCK EUR.01",
+          "s": "BNP.18 06.22.23 000N",
+          "as": "1.60%",
+          "sh": "307,513"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!TSX/TD",
+        "name": "The Toronto-Dominion Bank",
+        "weight_pct": 1.56,
+        "shares": 86982,
+        "raw": {
+          "no": 8,
+          "n": "The Toronto-Dominion Bank",
+          "s": "!tsx/TD",
+          "as": "1.56%",
+          "sh": "86,982"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "!EPA/BNP",
+        "name": "BNP Paribas SA",
+        "weight_pct": 1.48,
+        "shares": 94180,
+        "raw": {
+          "no": 9,
+          "n": "BNP Paribas SA",
+          "s": "!epa/BNP",
+          "as": "1.48%",
+          "sh": "94,180"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!BME/BBVA",
+        "name": "Banco Bilbao Vizcaya Argentaria, S.A.",
+        "weight_pct": 1.47,
+        "shares": 361337,
+        "raw": {
+          "no": 10,
+          "n": "Banco Bilbao Vizcaya Argentaria, S.A.",
+          "s": "!bme/BBVA",
+          "as": "1.47%",
+          "sh": "361,337"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!LON/BATS",
+        "name": "British American Tobacco p.l.c.",
+        "weight_pct": 1.41,
+        "shares": 163037,
+        "raw": {
+          "no": 11,
+          "n": "British American Tobacco p.l.c.",
+          "s": "!lon/BATS",
+          "as": "1.41%",
+          "sh": "163,037"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "UBS Group AG",
+        "weight_pct": 1.41,
+        "shares": 192055,
+        "raw": {
+          "no": 12,
+          "n": "UBS Group AG",
+          "as": "1.41%",
+          "sh": "192,055"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!LON/NWG",
+        "name": "NatWest Group plc",
+        "weight_pct": 1.41,
+        "shares": 1056354,
+        "raw": {
+          "no": 13,
+          "n": "NatWest Group plc",
+          "s": "!lon/NWG",
+          "as": "1.41%",
+          "sh": "1,056,354"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!TYO/8630",
+        "name": "Sompo Holdings, Inc.",
+        "weight_pct": 1.2,
+        "shares": 183743,
+        "raw": {
+          "no": 14,
+          "n": "Sompo Holdings, Inc.",
+          "s": "!tyo/8630",
+          "as": "1.20%",
+          "sh": "183,743"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!ETR/G1A",
+        "name": "GEA Group Aktiengesellschaft",
+        "weight_pct": 1.11,
+        "shares": 93323,
+        "raw": {
+          "no": 15,
+          "n": "GEA Group Aktiengesellschaft",
+          "s": "!etr/G1A",
+          "as": "1.11%",
+          "sh": "93,323"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!ISE/A5G",
+        "name": "AIB Group plc",
+        "weight_pct": 1.08,
+        "shares": 559420,
+        "raw": {
+          "no": 16,
+          "n": "AIB Group plc",
+          "s": "!ise/A5G",
+          "as": "1.08%",
+          "sh": "559,420"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!TPE/2317",
+        "name": "Hon Hai Precision Industry Co., Ltd.",
+        "weight_pct": 1.07,
+        "shares": 873065,
+        "raw": {
+          "no": 17,
+          "n": "Hon Hai Precision Industry Co., Ltd.",
+          "s": "!tpe/2317",
+          "as": "1.07%",
+          "sh": "873,065"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!HKG/0857",
+        "name": "PetroChina Company Limited",
+        "weight_pct": 1.04,
+        "shares": 5291077,
+        "raw": {
+          "no": 18,
+          "n": "PetroChina Company Limited",
+          "s": "!hkg/0857",
+          "as": "1.04%",
+          "sh": "5,291,077"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!HKG/1299",
+        "name": "AIA Group Limited",
+        "weight_pct": 1.03,
+        "shares": 744609,
+        "raw": {
+          "no": 19,
+          "n": "AIA Group Limited",
+          "s": "!hkg/1299",
+          "as": "1.03%",
+          "sh": "744,609"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!OTC/TCEHY",
+        "name": "Tencent Holdings Limited",
+        "weight_pct": 1.03,
+        "shares": 124116,
+        "raw": {
+          "no": 20,
+          "n": "Tencent Holdings Limited",
+          "s": "!otc/TCEHY",
+          "as": "1.03%",
+          "sh": "124,116"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!LON/BARC",
+        "name": "Barclays PLC",
+        "weight_pct": 1.03,
+        "shares": 1156006,
+        "raw": {
+          "no": 21,
+          "n": "Barclays PLC",
+          "s": "!lon/BARC",
+          "as": "1.03%",
+          "sh": "1,156,006"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!LON/TSCO",
+        "name": "Tesco PLC",
+        "weight_pct": 1.03,
+        "shares": 984206,
+        "raw": {
+          "no": 22,
+          "n": "Tesco PLC",
+          "s": "!lon/TSCO",
+          "as": "1.03%",
+          "sh": "984,206"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!HKG/0939",
+        "name": "China Construction Bank Corporation",
+        "weight_pct": 1.01,
+        "shares": 5193512,
+        "raw": {
+          "no": 23,
+          "n": "China Construction Bank Corporation",
+          "s": "!hkg/0939",
+          "as": "1.01%",
+          "sh": "5,193,512"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "!TYO/7269",
+        "name": "Suzuki Motor Corporation",
+        "weight_pct": 1.0,
+        "shares": 489857,
+        "raw": {
+          "no": 24,
+          "n": "Suzuki Motor Corporation",
+          "s": "!tyo/7269",
+          "as": "1.00%",
+          "sh": "489,857"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "!TSX/DOL",
+        "name": "Dollarama Inc.",
+        "weight_pct": 0.99,
+        "shares": 47594,
+        "raw": {
+          "no": 25,
+          "n": "Dollarama Inc.",
+          "s": "!tsx/DOL",
+          "as": "0.99%",
+          "sh": "47,594"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
-    "countries": null,
-    "classification": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 24.49
+      },
+      {
+        "n": "Financials",
+        "w": 21.09
+      },
+      {
+        "n": "Industrials",
+        "w": 13.16
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 7.47
+      },
+      {
+        "n": "Healthcare",
+        "w": 6.81
+      },
+      {
+        "n": "Materials",
+        "w": 6.27
+      },
+      {
+        "n": "Communication Services",
+        "w": 6.09
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 5.78
+      },
+      {
+        "n": "Energy",
+        "w": 4.46
+      },
+      {
+        "n": "Utilities",
+        "w": 3.19
+      },
+      {
+        "n": "Real Estate",
+        "w": 1.2
+      }
+    ],
+    "countries": [
+      {
+        "code": "JP",
+        "weight": 15.25,
+        "country": "Japan"
+      },
+      {
+        "code": "CA",
+        "weight": 9.92,
+        "country": "Canada"
+      },
+      {
+        "code": "TW",
+        "weight": 9.78,
+        "country": "Taiwan"
+      },
+      {
+        "code": "GB",
+        "weight": 9.64,
+        "country": "United Kingdom"
+      },
+      {
+        "code": "FR",
+        "weight": 7.79,
+        "country": "France"
+      },
+      {
+        "code": "KR",
+        "weight": 5.49,
+        "country": "South Korea"
+      },
+      {
+        "code": "NL",
+        "weight": 5.07,
+        "country": "Netherlands"
+      },
+      {
+        "code": "CN",
+        "weight": 4.5,
+        "country": "China"
+      },
+      {
+        "code": "DE",
+        "weight": 3.65,
+        "country": "Germany"
+      },
+      {
+        "code": "HK",
+        "weight": 2.88,
+        "country": "Hong Kong"
+      },
+      {
+        "code": "CH",
+        "weight": 2.86,
+        "country": "Switzerland"
+      },
+      {
+        "code": "AU",
+        "weight": 2.75,
+        "country": "Australia"
+      },
+      {
+        "code": "BR",
+        "weight": 2.64,
+        "country": "Brazil"
+      },
+      {
+        "code": "IT",
+        "weight": 1.71,
+        "country": "Italy"
+      },
+      {
+        "code": "ES",
+        "weight": 1.65,
+        "country": "Spain"
+      },
+      {
+        "code": "IN",
+        "weight": 1.51,
+        "country": "India"
+      },
+      {
+        "code": "IE",
+        "weight": 1.41,
+        "country": "Ireland"
+      },
+      {
+        "code": "SG",
+        "weight": 1.25,
+        "country": "Singapore"
+      },
+      {
+        "code": "KY",
+        "weight": 1.16,
+        "country": "Cayman Islands"
+      },
+      {
+        "code": "IL",
+        "weight": 0.99,
+        "country": "Israel"
+      },
+      {
+        "code": "ID",
+        "weight": 0.9,
+        "country": "Indonesia"
+      },
+      {
+        "code": "NZ",
+        "weight": 0.83,
+        "country": "New Zealand"
+      },
+      {
+        "code": "SE",
+        "weight": 0.77,
+        "country": "Sweden"
+      },
+      {
+        "code": "MX",
+        "weight": 0.75,
+        "country": "Mexico"
+      },
+      {
+        "code": "JE",
+        "weight": 0.66,
+        "country": "Jersey"
+      },
+      {
+        "code": "HU",
+        "weight": 0.63,
+        "country": "Hungary"
+      },
+      {
+        "code": "PE",
+        "weight": 0.57,
+        "country": "Peru"
+      },
+      {
+        "code": "ZA",
+        "weight": 0.54,
+        "country": "South Africa"
+      },
+      {
+        "code": "AT",
+        "weight": 0.5,
+        "country": "Austria"
+      },
+      {
+        "code": "PT",
+        "weight": 0.48,
+        "country": "Portugal"
+      },
+      {
+        "code": "PL",
+        "weight": 0.41,
+        "country": "Poland"
+      },
+      {
+        "code": "US",
+        "weight": 0.37,
+        "country": "United States"
+      },
+      {
+        "code": "MY",
+        "weight": 0.24,
+        "country": "Malaysia"
+      },
+      {
+        "code": "NO",
+        "weight": 0.23,
+        "country": "Norway"
+      },
+      {
+        "code": "LU",
+        "weight": 0.23,
+        "country": "Luxembourg"
+      }
+    ],
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -186,14 +959,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/BRIE.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/BRIE.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

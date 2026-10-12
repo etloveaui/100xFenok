@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BBUL",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T07:14:07Z",
+  "generated_at": "2026-10-12T12:07:18Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 13.224,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T05:55:52Z",
+      "fetched_at": "2026-10-12T11:32:27Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,18 +34,25 @@
           "value": 13.224,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T05:55:52Z",
+          "fetched_at": "2026-10-12T11:32:27Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 13.224,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 12.4,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T05:55:52Z",
+      "fetched_at": "2026-10-12T11:32:27Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -57,18 +64,25 @@
           "value": 12.4,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T05:55:52Z",
+          "fetched_at": "2026-10-12T11:32:27Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 12.49,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.82400036,
-      "source": "yf",
+      "value": 0.73,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T05:55:52Z",
+      "fetched_at": "2026-10-12T11:32:26Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,22 +91,29 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.73,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.82400036,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T05:55:52Z",
+          "fetched_at": "2026-10-12T11:32:27Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 6.6451645,
-      "source": "yf",
+      "value": 5.88,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T05:55:52Z",
+      "fetched_at": "2026-10-12T11:32:26Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
+          "value": 5.88,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
+          "confidence": "observed"
+        },
+        {
           "value": 6.6451645,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T05:55:52Z",
+          "fetched_at": "2026-10-12T11:32:27Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 1370000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:26Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1370000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.5,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:26Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.5,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 9.118,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": 22.965,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:26Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 9.118,
+          "value": 22.965,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 22.965,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,130 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -40.120628135697594,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:26Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -40.120628135697594,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:26Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 6,
+    "holdings_updated": "Oct 9, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Long Bb Trs Clear Street",
+        "weight_pct": 199.97,
+        "shares": 327420,
+        "raw": {
+          "no": 1,
+          "n": "Long Bb Trs Clear Street",
+          "as": "199.97%",
+          "sh": "327,420"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Cash & Cash Equivalents",
+        "weight_pct": 137.77,
+        "shares": 2010000,
+        "raw": {
+          "no": 2,
+          "n": "Cash & Cash Equivalents",
+          "as": "137.77%",
+          "sh": "2,010,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/TPIXX",
+        "name": "State Street Instl Trs Pls MMkt Premier",
+        "weight_pct": 0.0,
+        "shares": 25,
+        "raw": {
+          "no": 3,
+          "n": "State Street Instl Trs Pls MMkt Premier",
+          "s": "!mutf/TPIXX",
+          "as": "0.00%",
+          "sh": "25"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Cash",
+        "weight_pct": -0.91,
+        "shares": 0,
+        "raw": {
+          "no": 4,
+          "n": "Cash",
+          "as": "-0.91%",
+          "sh": 0
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Us Dollars",
+        "weight_pct": -52.58,
+        "shares": 767140,
+        "raw": {
+          "no": 5,
+          "n": "Us Dollars",
+          "as": "-52.58%",
+          "sh": "767,140"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Long Bb Trs Clear Street",
+        "weight_pct": -184.25,
+        "shares": 2688038,
+        "raw": {
+          "no": 6,
+          "n": "Long Bb Trs Clear Street",
+          "as": "-184.25%",
+          "sh": "2,688,038"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "BB",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +348,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/BBUL.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/BBUL.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
