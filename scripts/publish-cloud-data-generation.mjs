@@ -3225,8 +3225,11 @@ export async function runPublisherCli({
     });
     const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
-    if (args.family === "stockanalysis-etf-detail" && env.PUBLISH_BINDING_ARTIFACT_DIGEST) {
-      // The hosted ETF candidate is built from a verified active snapshot.
+    if (args.family === "stockanalysis-etf-detail"
+      && (env.PUBLISH_BINDING_ARTIFACT_DIGEST
+        || env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID
+        || env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256)) {
+      // Hosted and explicitly bound manual ETF publications use a verified active snapshot.
       // Never publish that snapshot over a different live generation, even if
       // the pointer moved before this process acquired its CAS sequence.
       const expectedId = env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID;
