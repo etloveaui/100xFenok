@@ -2,8 +2,9 @@
 
 The owner-authorized A1 user timer dispatches existing workflows on
 `etloveaui/100xFenok`, branch `main`. GitHub schedules remain fallback.
-The October 12 expansion is held until the StockAnalysis and Yahoo natural
-proof runs have been read successfully, or any failure is understood as unrelated.
+The October 12 expansion resumes missing weekly/monthly collector slots. The
+observed StockAnalysis publisher failure was unrelated stale code assertions;
+ETF outcome evidence remains separate from successful trigger installation.
 
 ## Schedule and transport
 

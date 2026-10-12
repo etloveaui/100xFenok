@@ -84,7 +84,7 @@ export const EXTERNAL_CLOCK_ADMITTED_AT = Object.freeze(Object.fromEntries(
       "global-writer-queue-observer.yml", "pins-autosync.yml", "pipeline-failure-alarm.yml",
       "retention-restore.yml", "worker-request-budget-alarm.yml", "fetch-treasury-tga.yml",
       "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file))
-      ? ["fetch-damodaran-shadow.yml", "fetch-edgar-filings.yml", "fetch-finra-ats-weekly.yml", "fetch-fred-yardeni.yml", "fetch-oecd-cli.yml", "fetch-stockanalysis.yml", "fetch-yf-finance.yml", "slickcharts-history.yml", "slickcharts-monthly.yml", "slickcharts-weekly.yml"].includes(file) ? "2026-10-12T00:50:00.000Z" : "2026-10-11T09:20:00.000Z"
+      ? ["fetch-damodaran-shadow.yml", "fetch-edgar-filings.yml", "fetch-finra-ats-weekly.yml", "fetch-fred-yardeni.yml", "fetch-oecd-cli.yml", "fetch-stockanalysis.yml", "fetch-yf-finance.yml", "slickcharts-history.yml", "slickcharts-monthly.yml", "slickcharts-weekly.yml"].includes(file) ? "2026-10-12T02:22:14.223Z" : "2026-10-11T09:20:00.000Z"
       : file === "deploy-worker.yml" ? "2026-10-11T08:40:00.000Z"
       : file === "worker-request-budget-alarm.yml" ? "2026-10-11T04:07:00.000Z"
       : ["fetch-treasury-tga.yml", "data-plane-serving-probe.yml", "fetch-fenok-news-tone.yml"].includes(file)

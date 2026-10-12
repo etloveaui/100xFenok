@@ -53,7 +53,8 @@ CHECKS = {
 UNREAD_MIN = 120  # a read that keeps failing this long is reported once (past the alarm bound nothing vouches for the alarm)
 REASONS = {"failure_streak": "연속 실패", "missed_schedule_window": "실행 누락", "lost_schedule_slot": "예약 실행 유실",
            "a1_clock_stale": "A1 시계 멈춤", "data_stopped_two_generations": "데이터 정지",
-           "health_record_stale": "건강 기록 멈춤"}
+           "health_record_stale": "건강 기록 멈춤",
+           "serving_heartbeat_stale": "게시 갱신 기한 초과", "serving_source_stale": "원본 데이터 기한 초과"}
 DELIVERED = ("success", "dedup_skipped", "already_delivered")
 MAX_CALLS = 7  # the Manifest calendar plus the existing six reads/probes
 TOKEN: str | None = None
@@ -114,8 +115,18 @@ def read_issues() -> dict:
             if line.startswith("## "):
                 head = re.sub(r"\s*\(`[^`]*`\)\s*$", "", line[3:].strip())
                 inc.setdefault(head, [])
+            elif line.startswith("- FAIL "):
+                head = line.removeprefix("- FAIL ").strip()
+                inc.setdefault(head, [])
             elif head and line.startswith("- Alarm reasons:"):
                 inc[head] = sorted(set(inc[head]) | {x.strip() for x in line.split(":", 1)[1].split(",") if x.strip()})
+            elif head and line.startswith("  - "):
+                reason = line.strip().removeprefix("- ")
+                if "heartbeat limit" in reason:
+                    reason = "serving_heartbeat_stale"
+                elif "source" in reason.lower() and "old" in reason.lower():
+                    reason = "serving_source_stale"
+                inc[head] = sorted(set(inc[head]) | {reason})
         out[str(r["number"])] = {"title": r["title"], "url": r["html_url"], "incidents": inc}
     return out
 
