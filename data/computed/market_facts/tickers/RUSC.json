@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "RUSC",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
-  "source_as_of": "2026-09-30",
+  "generated_at": "2026-10-12T02:29:07Z",
+  "source_as_of": "2026-10-08",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 36.31,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T18:12:19Z",
+      "value": 36.2396,
+      "source": "yf",
+      "as_of": "2026-10-08",
+      "fetched_at": "2026-10-09T06:24:34Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 36.2396,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:24:34Z",
+          "confidence": "observed"
+        },
+        {
           "value": 36.31,
           "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
@@ -38,13 +45,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 36.26,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T18:12:19Z",
+      "value": 36.6,
+      "source": "yf",
+      "as_of": "2026-10-08",
+      "fetched_at": "2026-10-09T06:24:34Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -52,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 36.6,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:24:34Z",
+          "confidence": "observed"
+        },
         {
           "value": 36.26,
           "source": "stockanalysis.quote",
@@ -60,13 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.05,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T18:12:19Z",
+      "value": -0.36039734,
+      "source": "yf",
+      "as_of": "2026-10-08",
+      "fetched_at": "2026-10-09T06:24:34Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -75,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.36039734,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:24:34Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.05,
           "source": "stockanalysis.quote",
@@ -83,13 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 0.13,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T18:12:19Z",
+      "value": -0.9846922,
+      "source": "yf",
+      "as_of": "2026-10-08",
+      "fetched_at": "2026-10-09T06:24:34Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": -0.9846922,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:24:34Z",
+          "confidence": "observed"
+        },
+        {
           "value": 0.13,
           "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
@@ -106,7 +137,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 79150000.0,
@@ -165,6 +197,7 @@
       "provenance": {
         "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
         "benchmark": "SPY",
+        "benchmark_ticker": "SPY",
         "currency_scope": "USD listings",
         "window_days": 365,
         "minimum_bars": 200,
@@ -194,6 +227,7 @@
           "provenance": {
             "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
             "benchmark": "SPY",
+            "benchmark_ticker": "SPY",
             "currency_scope": "USD listings",
             "window_days": 365,
             "minimum_bars": 200,
@@ -859,6 +893,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
@@ -866,6 +901,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/RUSC.json",
     "stockanalysis": "computed/data-supply/etf-detail/payloads/RUSC.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

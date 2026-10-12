@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "EHCC",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
-  "source_as_of": "2026-10-07",
+  "generated_at": "2026-10-12T02:29:07Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 23.229299545288086,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T03:12:01Z",
+      "value": 22.2853,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:42:31Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 22.2853,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:42:31Z",
+          "confidence": "observed"
+        },
+        {
           "value": 23.229299545288086,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-07",
@@ -38,13 +45,37 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "previous_close": {
+      "value": 22.36,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:42:31Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 22.36,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:42:31Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -1.083700454711913,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T03:12:01Z",
+      "value": -0.0747013,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:42:31Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -53,6 +84,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.0747013,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:42:31Z",
+          "confidence": "observed"
+        },
         {
           "value": -1.083700454711913,
           "source": "yf.stockanalysis_fallback.quote",
@@ -61,13 +99,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -4.457288095717981,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T03:12:01Z",
+      "value": -0.334085,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:42:31Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +116,13 @@
       ],
       "candidates": [
         {
+          "value": -0.334085,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:42:31Z",
+          "confidence": "observed"
+        },
+        {
           "value": -4.457288095717981,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-07",
@@ -84,7 +130,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 1433292.0,
@@ -232,6 +279,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": true,
@@ -239,6 +287,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/EHCC.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/EHCC.json",
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

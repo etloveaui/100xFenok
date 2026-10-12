@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "IXUS",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
+  "generated_at": "2026-10-12T02:29:07Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -18,9 +18,9 @@
   "facts": {
     "price": {
       "value": 94.99,
-      "source": "stockanalysis.quote",
+      "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-10T02:53:26Z",
+      "fetched_at": "2026-10-11T06:25:12Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -32,19 +32,27 @@
       "candidates": [
         {
           "value": 94.99,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:25:12Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 94.99,
           "source": "stockanalysis.quote",
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:53:26Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 94.14,
-      "source": "stockanalysis.quote",
+      "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-10T02:53:26Z",
+      "fetched_at": "2026-10-11T06:25:12Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,13 +62,21 @@
       "candidates": [
         {
           "value": 94.14,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:25:12Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 94.14,
           "source": "stockanalysis.quote",
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:53:26Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
       "value": 0.85,
@@ -81,9 +97,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:53:26Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.849998,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:25:12Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
       "value": 0.9,
@@ -104,9 +128,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:53:26Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.902909,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:25:12Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 59460000000.0,
@@ -1085,6 +1117,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
@@ -1092,6 +1125,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/IXUS.json",
     "stockanalysis": "computed/data-supply/etf-detail/payloads/IXUS.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SFGV",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
+  "generated_at": "2026-10-12T02:29:07Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -18,9 +18,9 @@
   "facts": {
     "price": {
       "value": 35.5805,
-      "source": "stockanalysis.quote",
+      "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-10T02:59:38Z",
+      "fetched_at": "2026-10-10T02:59:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -32,19 +32,27 @@
       "candidates": [
         {
           "value": 35.5805,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-10T02:59:39Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 35.5805,
           "source": "stockanalysis.quote",
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:59:38Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 35.43,
-      "source": "stockanalysis.quote",
+      "value": 35.426,
+      "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-10T02:59:38Z",
+      "fetched_at": "2026-10-10T02:59:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +61,13 @@
       ],
       "candidates": [
         {
+          "value": 35.426,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-10T02:59:39Z",
+          "confidence": "observed"
+        },
+        {
           "value": 35.43,
           "source": "stockanalysis.quote",
           "as_of": "2026-10-09",
@@ -60,7 +75,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
       "value": 0.15,
@@ -81,9 +97,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:59:38Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.154503,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-10T02:59:39Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
       "value": 0.42,
@@ -104,9 +128,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:59:38Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.436128,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-10T02:59:39Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 1160000000.0,
@@ -754,6 +786,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
@@ -761,6 +794,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/SFGV.json",
     "stockanalysis": "computed/data-supply/etf-detail/payloads/SFGV.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

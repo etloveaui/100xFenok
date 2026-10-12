@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "IBDT",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
+  "generated_at": "2026-10-12T02:29:07Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -36,9 +36,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:54:58Z",
           "confidence": "observed"
+        },
+        {
+          "value": 24.94,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:15:19Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 24.94,
@@ -58,9 +66,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:54:58Z",
           "confidence": "observed"
+        },
+        {
+          "value": 24.95,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:15:19Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
       "value": 0,
@@ -81,9 +97,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:54:58Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.0100002,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:15:19Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
       "value": 0,
@@ -104,9 +128,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-10T02:54:58Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.0400811,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T06:15:19Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 4130000000.0,
@@ -737,6 +769,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
@@ -744,6 +777,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/IBDT.json",
     "stockanalysis": "computed/data-supply/etf-detail/payloads/IBDT.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

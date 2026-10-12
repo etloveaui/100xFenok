@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BDCZ",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
+  "generated_at": "2026-10-12T02:29:07Z",
   "source_as_of": "2026-10-08",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -17,8 +17,8 @@
   },
   "facts": {
     "price": {
-      "value": 14.588500022888184,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 14.5885,
+      "source": "yf",
       "as_of": "2026-10-08",
       "fetched_at": "2026-10-09T03:20:10Z",
       "confidence": "observed",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 14.5885,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T03:20:10Z",
+          "confidence": "observed"
+        },
+        {
           "value": 14.588500022888184,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-08",
@@ -38,11 +45,35 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "previous_close": {
+      "value": 14.4214,
+      "source": "yf",
+      "as_of": "2026-10-08",
+      "fetched_at": "2026-10-09T03:20:10Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 14.4214,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T03:20:10Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.16710002288818337,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 0.1671,
+      "source": "yf",
       "as_of": "2026-10-08",
       "fetched_at": "2026-10-09T03:20:10Z",
       "confidence": "observed",
@@ -53,6 +84,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.1671,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T03:20:10Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.16710002288818337,
           "source": "yf.stockanalysis_fallback.quote",
@@ -61,11 +99,12 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 1.158694876282354,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 1.15869,
+      "source": "yf",
       "as_of": "2026-10-08",
       "fetched_at": "2026-10-09T03:20:10Z",
       "confidence": "observed",
@@ -77,6 +116,13 @@
       ],
       "candidates": [
         {
+          "value": 1.15869,
+          "source": "yf",
+          "as_of": "2026-10-08",
+          "fetched_at": "2026-10-09T03:20:10Z",
+          "confidence": "observed"
+        },
+        {
           "value": 1.158694876282354,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-10-08",
@@ -84,7 +130,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 11156400.0,
@@ -375,6 +422,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": true,
@@ -382,6 +430,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/BDCZ.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/BDCZ.json",
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
