@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BGEG",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
+  "generated_at": "2026-10-12T12:07:18Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -36,9 +36,16 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-11T05:45:53Z",
           "confidence": "observed"
+        },
+        {
+          "value": 23.4951,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
@@ -59,16 +66,23 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-11T05:45:53Z",
           "confidence": "observed"
+        },
+        {
+          "value": 23.21,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.25510025,
-      "source": "yf",
+      "value": 0.29,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T05:45:53Z",
+      "fetched_at": "2026-10-12T11:32:37Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.29,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.25510025,
           "source": "yf",
@@ -85,14 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 1.0976775,
-      "source": "yf",
+      "value": 1.23,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T05:45:53Z",
+      "fetched_at": "2026-10-12T11:32:37Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": 1.23,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed"
+        },
+        {
           "value": 1.0976775,
           "source": "yf",
           "as_of": "2026-10-09",
@@ -109,14 +137,60 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 12340000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:37Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 12340000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.79,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:37Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.79,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 2.108,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -2.7118,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:37Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 2.108,
+          "value": -2.7118,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -2.7118,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,556 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 2.419354838709676,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:37Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 2.419354838709676,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:37Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 87,
+    "holdings_updated": "Oct 9, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "!TPE/2330",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 14.22,
+        "shares": 21791,
+        "raw": {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "14.22%",
+          "sh": "21,791"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "SSU.DE",
+        "name": "Samsung Electronics Co Ltd DR",
+        "weight_pct": 9.5,
+        "shares": 241,
+        "raw": {
+          "no": 2,
+          "n": "Samsung Electronics Co Ltd DR",
+          "s": "SSU.DE",
+          "as": "9.50%",
+          "sh": "241"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!KRX/000660",
+        "name": "SK hynix Inc.",
+        "weight_pct": 4.23,
+        "shares": 412,
+        "raw": {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "4.23%",
+          "sh": "412"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!TPE/2454",
+        "name": "MediaTek Inc.",
+        "weight_pct": 4.15,
+        "shares": 3459,
+        "raw": {
+          "no": 4,
+          "n": "MediaTek Inc.",
+          "s": "!tpe/2454",
+          "as": "4.15%",
+          "sh": "3,459"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!OTC/TCEHY",
+        "name": "Tencent Holdings Limited",
+        "weight_pct": 3.93,
+        "shares": 9119,
+        "raw": {
+          "no": 5,
+          "n": "Tencent Holdings Limited",
+          "s": "!otc/TCEHY",
+          "as": "3.93%",
+          "sh": "9,119"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!KRX/402340",
+        "name": "SK Square Co., Ltd.",
+        "weight_pct": 3.21,
+        "shares": 501,
+        "raw": {
+          "no": 6,
+          "n": "SK Square Co., Ltd.",
+          "s": "!krx/402340",
+          "as": "3.21%",
+          "sh": "501"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "PBR",
+        "name": "Petróleo Brasileiro S.A. - Petrobras",
+        "weight_pct": 2.79,
+        "shares": 13854,
+        "raw": {
+          "no": 7,
+          "n": "Petróleo Brasileiro S.A. - Petrobras",
+          "s": "$PBR",
+          "as": "2.79%",
+          "sh": "13,854"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "MELI",
+        "name": "MercadoLibre, Inc.",
+        "weight_pct": 2.62,
+        "shares": 173,
+        "raw": {
+          "no": 8,
+          "n": "MercadoLibre, Inc.",
+          "s": "$MELI",
+          "as": "2.62%",
+          "sh": "173"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "!BVMF/B3SA3",
+        "name": "B3 S.A. - Brasil, Bolsa, Balcão",
+        "weight_pct": 2.5,
+        "shares": 67321,
+        "raw": {
+          "no": 9,
+          "n": "B3 S.A. - Brasil, Bolsa, Balcão",
+          "s": "!bvmf/B3SA3",
+          "as": "2.50%",
+          "sh": "67,321"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "Cash",
+        "weight_pct": 2.4,
+        "shares": 0,
+        "raw": {
+          "no": 10,
+          "n": "Cash",
+          "as": "2.40%",
+          "sh": 0
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "BABA",
+        "name": "Alibaba Group Holding Limited",
+        "weight_pct": 2.32,
+        "shares": 2686,
+        "raw": {
+          "no": 11,
+          "n": "Alibaba Group Holding Limited",
+          "s": "$BABA",
+          "as": "2.32%",
+          "sh": "2,686"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!TPE/2345",
+        "name": "Accton Technology Corporation",
+        "weight_pct": 2.3,
+        "shares": 4343,
+        "raw": {
+          "no": 12,
+          "n": "Accton Technology Corporation",
+          "s": "!tpe/2345",
+          "as": "2.30%",
+          "sh": "4,343"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!SHA/688008",
+        "name": "Montage Technology Co., Ltd.",
+        "weight_pct": 1.78,
+        "shares": 7397,
+        "raw": {
+          "no": 13,
+          "n": "Montage Technology Co., Ltd.",
+          "s": "!sha/688008",
+          "as": "1.78%",
+          "sh": "7,397"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!TPE/2408",
+        "name": "Nanya Technology Corporation",
+        "weight_pct": 1.7,
+        "shares": 12516,
+        "raw": {
+          "no": 14,
+          "n": "Nanya Technology Corporation",
+          "s": "!tpe/2408",
+          "as": "1.70%",
+          "sh": "12,516"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!TSX/FM",
+        "name": "First Quantum Minerals Ltd.",
+        "weight_pct": 1.66,
+        "shares": 7621,
+        "raw": {
+          "no": 15,
+          "n": "First Quantum Minerals Ltd.",
+          "s": "!tsx/FM",
+          "as": "1.66%",
+          "sh": "7,621"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!NSE/RELIANCE",
+        "name": "Reliance Industries Limited",
+        "weight_pct": 1.57,
+        "shares": 15755,
+        "raw": {
+          "no": 16,
+          "n": "Reliance Industries Limited",
+          "s": "!nse/RELIANCE",
+          "as": "1.57%",
+          "sh": "15,755"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!SHE/000333",
+        "name": "Midea Group Co., Ltd.",
+        "weight_pct": 1.56,
+        "shares": 15700,
+        "raw": {
+          "no": 17,
+          "n": "Midea Group Co., Ltd.",
+          "s": "!she/000333",
+          "as": "1.56%",
+          "sh": "15,700"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!OTC/AXIAY",
+        "name": "AXIA Energia SA",
+        "weight_pct": 1.53,
+        "shares": 15961,
+        "raw": {
+          "no": 18,
+          "n": "AXIA Energia SA",
+          "s": "!otc/AXIAY",
+          "as": "1.53%",
+          "sh": "15,961"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!SHE/300750",
+        "name": "Contemporary Amperex Technology Co., Limited",
+        "weight_pct": 1.47,
+        "shares": 4200,
+        "raw": {
+          "no": 19,
+          "n": "Contemporary Amperex Technology Co., Limited",
+          "s": "!she/300750",
+          "as": "1.47%",
+          "sh": "4,200"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!TPE/3711",
+        "name": "ASE Technology Holding Co., Ltd.",
+        "weight_pct": 1.44,
+        "shares": 7581,
+        "raw": {
+          "no": 20,
+          "n": "ASE Technology Holding Co., Ltd.",
+          "s": "!tpe/3711",
+          "as": "1.44%",
+          "sh": "7,581"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "EMAAR.DB",
+        "name": "Emaar Properties PJSC",
+        "weight_pct": 1.3,
+        "shares": 51823,
+        "raw": {
+          "no": 21,
+          "n": "Emaar Properties PJSC",
+          "s": "EMAAR.DB",
+          "as": "1.30%",
+          "sh": "51,823"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!NSE/BAJAJFINSV",
+        "name": "Bajaj Finserv Ltd.",
+        "weight_pct": 1.22,
+        "shares": 8482,
+        "raw": {
+          "no": 22,
+          "n": "Bajaj Finserv Ltd.",
+          "s": "!nse/BAJAJFINSV",
+          "as": "1.22%",
+          "sh": "8,482"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "NU",
+        "name": "Nu Holdings Ltd.",
+        "weight_pct": 1.11,
+        "shares": 8816,
+        "raw": {
+          "no": 23,
+          "n": "Nu Holdings Ltd.",
+          "s": "$NU",
+          "as": "1.11%",
+          "sh": "8,816"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "!HKG/2318",
+        "name": "Ping An Insurance (Group) Company of China, Ltd.",
+        "weight_pct": 1.09,
+        "shares": 20472,
+        "raw": {
+          "no": 24,
+          "n": "Ping An Insurance (Group) Company of China, Ltd.",
+          "s": "!hkg/2318",
+          "as": "1.09%",
+          "sh": "20,472"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "BAP",
+        "name": "Credicorp Ltd.",
+        "weight_pct": 1.09,
+        "shares": 351,
+        "raw": {
+          "no": 25,
+          "n": "Credicorp Ltd.",
+          "s": "$BAP",
+          "as": "1.09%",
+          "sh": "351"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
-    "countries": null,
-    "classification": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 44.43
+      },
+      {
+        "n": "Financials",
+        "w": 12.86
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 11.91
+      },
+      {
+        "n": "Materials",
+        "w": 7.19
+      },
+      {
+        "n": "Industrials",
+        "w": 6.46
+      },
+      {
+        "n": "Energy",
+        "w": 5.96
+      },
+      {
+        "n": "Communication Services",
+        "w": 5.79
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 2.46
+      },
+      {
+        "n": "Utilities",
+        "w": 1.8
+      },
+      {
+        "n": "Healthcare",
+        "w": 1.13
+      }
+    ],
+    "countries": [
+      {
+        "code": "TW",
+        "weight": 27.5,
+        "country": "Taiwan"
+      },
+      {
+        "code": "CN",
+        "weight": 14.57,
+        "country": "China"
+      },
+      {
+        "code": "BR",
+        "weight": 11.2,
+        "country": "Brazil"
+      },
+      {
+        "code": "KR",
+        "weight": 9.81,
+        "country": "South Korea"
+      },
+      {
+        "code": "KY",
+        "weight": 9.77,
+        "country": "Cayman Islands"
+      },
+      {
+        "code": "IN",
+        "weight": 7.2,
+        "country": "India"
+      },
+      {
+        "code": "MX",
+        "weight": 3.49,
+        "country": "Mexico"
+      },
+      {
+        "code": "UY",
+        "weight": 2.98,
+        "country": "Uruguay"
+      },
+      {
+        "code": "CA",
+        "weight": 2.56,
+        "country": "Canada"
+      },
+      {
+        "code": "ZA",
+        "weight": 1.57,
+        "country": "South Africa"
+      },
+      {
+        "code": "PE",
+        "weight": 1.24,
+        "country": "Peru"
+      },
+      {
+        "code": "CH",
+        "weight": 1.08,
+        "country": "Switzerland"
+      },
+      {
+        "code": "CL",
+        "weight": 0.86,
+        "country": "Chile"
+      },
+      {
+        "code": "LU",
+        "weight": 0.86,
+        "country": "Luxembourg"
+      },
+      {
+        "code": "SG",
+        "weight": 0.82,
+        "country": "Singapore"
+      },
+      {
+        "code": "VN",
+        "weight": 0.82,
+        "country": "Vietnam"
+      },
+      {
+        "code": "PL",
+        "weight": 0.78,
+        "country": "Poland"
+      },
+      {
+        "code": "KZ",
+        "weight": 0.71,
+        "country": "Kazakhstan"
+      },
+      {
+        "code": "ID",
+        "weight": 0.65,
+        "country": "Indonesia"
+      },
+      {
+        "code": "PA",
+        "weight": 0.64,
+        "country": "Panama"
+      },
+      {
+        "code": "US",
+        "weight": 0.53,
+        "country": "United States"
+      },
+      {
+        "code": "SA",
+        "weight": 0.35,
+        "country": "Saudi Arabia"
+      }
+    ],
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +774,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/BGEG.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/BGEG.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

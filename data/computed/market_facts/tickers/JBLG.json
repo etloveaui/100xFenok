@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "JBLG",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
+  "generated_at": "2026-10-12T12:07:18Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 11.025,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T05:56:41Z",
+      "fetched_at": "2026-10-12T11:35:40Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,18 +34,25 @@
           "value": 11.025,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T05:56:41Z",
+          "fetched_at": "2026-10-12T11:35:40Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 11.025,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 10.4411,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T05:56:41Z",
+      "fetched_at": "2026-10-12T11:35:40Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -57,18 +64,25 @@
           "value": 10.4411,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T05:56:41Z",
+          "fetched_at": "2026-10-12T11:35:40Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 10.44,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.583899,
-      "source": "yf",
+      "value": 0.59,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T05:56:41Z",
+      "fetched_at": "2026-10-12T11:35:39Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,22 +91,29 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.59,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.583899,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T05:56:41Z",
+          "fetched_at": "2026-10-12T11:35:40Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 5.59232,
-      "source": "yf",
+      "value": 5.6,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-11T05:56:41Z",
+      "fetched_at": "2026-10-12T11:35:39Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
+          "value": 5.6,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
+          "confidence": "observed"
+        },
+        {
           "value": 5.59232,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-11T05:56:41Z",
+          "fetched_at": "2026-10-12T11:35:40Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 1100000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:39Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1100000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.99,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:39Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.99,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 0.2668,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -7.20947,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 0.2668,
+          "value": -7.20947,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -7.20947,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,142 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -18.16116868078031,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:35:39Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -18.16116868078031,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:35:39Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 7,
+    "holdings_updated": "Oct 1, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "JABIL INC.-SWAP-CLST-L",
+        "weight_pct": 140.73,
+        "shares": 8979,
+        "raw": {
+          "no": 1,
+          "n": "JABIL INC.-SWAP-CLST-L",
+          "as": "140.73%",
+          "sh": "8,979"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 71.61,
+        "shares": 1369695,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "71.61%",
+          "sh": "1,369,695"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 30.2,
+        "shares": 577579,
+        "raw": {
+          "no": 3,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "30.20%",
+          "sh": "577,579"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "JABIL INC.-SWAP-MREX-L",
+        "weight_pct": 26.72,
+        "shares": 1705,
+        "raw": {
+          "no": 4,
+          "n": "JABIL INC.-SWAP-MREX-L",
+          "as": "26.72%",
+          "sh": "1,705"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "JABIL INC.-SWAP-CANT-L",
+        "weight_pct": 24.14,
+        "shares": 1540,
+        "raw": {
+          "no": 5,
+          "n": "JABIL INC.-SWAP-CANT-L",
+          "as": "24.14%",
+          "sh": "1,540"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!MUTF/FXFXX",
+        "name": "First American Treasury Obligs X",
+        "weight_pct": 4.23,
+        "shares": 80886,
+        "raw": {
+          "no": 6,
+          "n": "First American Treasury Obligs X",
+          "s": "!mutf/FXFXX",
+          "as": "4.23%",
+          "sh": "80,886"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Cash Offset",
+        "weight_pct": -197.62,
+        "shares": 3780034,
+        "raw": {
+          "no": 7,
+          "n": "Cash Offset",
+          "as": "-197.62%",
+          "sh": "3,780,034"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "JBL",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +360,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/JBLG.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/JBLG.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-10-12T08:13:34.081Z",
-  "classification_as_of": "2026-10-12T08:12:26.085Z",
+  "generated_at": "2026-10-12T12:09:32.297Z",
+  "classification_as_of": "2026-10-12T12:08:42.652Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -60,17 +60,17 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 15,
-    "coverage_index_inception_limited_daily_1y_gap": 726,
-    "coverage_index_terminal_limited_daily_1y_gap": 100,
+    "coverage_index_fetchable_daily_1y_gap": 13,
+    "coverage_index_inception_limited_daily_1y_gap": 759,
+    "coverage_index_terminal_limited_daily_1y_gap": 49,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4636,
-    "history_gap_report_fetchable_daily_1y_gap": 15,
-    "history_gap_report_inception_limited_daily_1y_gap": 726,
-    "history_gap_report_terminal_limited_daily_1y_gap": 100
+    "history_gap_report_fetchable_daily_1y_gap": 13,
+    "history_gap_report_inception_limited_daily_1y_gap": 759,
+    "history_gap_report_terminal_limited_daily_1y_gap": 49
   },
   "samples": {
     "fetchable": [],
@@ -110,7 +110,7 @@
         "effective_start_source": null
       },
       {
-        "ticker": "AVEM",
+        "ticker": "AVLV",
         "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
@@ -125,8 +125,8 @@
     "ticker_count": 0,
     "full_scored_scope": "full_scored_etf_universe",
     "full_scored_candidate_status": "complete",
-    "full_scored_candidate_count": 15,
-    "full_scored_candidate_ticker_count": 15,
+    "full_scored_candidate_count": 13,
+    "full_scored_candidate_ticker_count": 13,
     "full_scored_dispatch_authorized": false,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 0,
@@ -148,17 +148,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 49,
+      "ticker_count": 48,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 49,
+          "ticker_count": 48,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "AMJB,BCOM,BLST,BLTD,BNDW,BUCK,COIO,CPAG,DEFI,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,FEAT,FIVY,HYSA,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MN,MSOO,MTUL,MVRL,NVDO,OPER,PLOO,TBLL,TSLO,UCIB,UFIV,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,VXX,VXZ,VYLD"
+            "etfs": "AMJB,BCOM,BLST,BLTD,BNDW,BUCK,COIO,CPAG,DEFI,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,FEAT,FIVY,HYSA,IWDL,IWFL,IWML,LGCF,MLPB,MLPR,MN,MSOO,MTUL,MVRL,NVDO,OPER,PLOO,TSLO,UCIB,UFIV,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,VXX,VXZ,VYLD"
           }
         }
       ]

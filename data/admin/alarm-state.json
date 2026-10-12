@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-12T08:24:26.695Z",
+  "generated_at": "2026-10-12T11:34:02.824Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 3,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38228231769,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38228231769",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
@@ -13,31 +25,21 @@
       ],
       "outcome_alarms": [
         {
-          "set": "stockanalysis_etf_detail",
-          "reasons": [
-            "member_ratio_low"
-          ],
-          "source_as_of": "2026-10-09",
-          "fresh_members": 5075,
-          "total_members": 5808,
-          "latest_attempt_at": "2026-10-12T02:28:47Z"
-        },
-        {
           "set": "yahoo_etf_fallback",
           "reasons": [
             "member_ratio_low"
           ],
           "source_as_of": "2026-10-09",
-          "fresh_members": 108,
-          "total_members": 191,
+          "fresh_members": 111,
+          "total_members": 188,
           "latest_attempt_at": "2026-07-28T01:07:08Z"
         }
       ],
       "stopped_sets": [
         "yahoo_etf_fallback"
       ],
-      "latest_generated_at": "2026-10-12T08:14:26.092Z",
-      "previous_generated_at": "2026-10-12T07:42:22.840Z"
+      "latest_generated_at": "2026-10-12T11:09:58.824Z",
+      "previous_generated_at": "2026-10-12T10:53:20.098Z"
     }
   ],
   "watched_workflows": [
@@ -406,11 +408,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38223228061",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38223228061",
-    "observed_at": "2026-10-12T08:24:26.695Z",
-    "event": "workflow_dispatch",
+    "run_id": "38243318172",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38243318172",
+    "observed_at": "2026-10-12T11:34:02.824Z",
+    "event": "workflow_run",
     "workflows": [
+      "global-writer-queue-observer.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"

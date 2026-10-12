@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "RAM",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-06",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 13.25,
+      "value": 12.17,
       "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:16:44Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:37:00Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,21 +31,28 @@
       ],
       "candidates": [
         {
-          "value": 13.25,
+          "value": 12.17,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T06:16:44Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:00Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 12.17,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 14.24,
+      "value": 12.13,
       "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:16:44Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:37:00Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,21 +61,28 @@
       ],
       "candidates": [
         {
-          "value": 14.24,
+          "value": 12.13,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T06:16:44Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:00Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 12.13,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.99,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:16:44Z",
+      "value": 0.04,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,21 +92,28 @@
       ],
       "candidates": [
         {
-          "value": -0.99,
+          "value": 0.04,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.04,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T06:16:44Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:00Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -6.95225,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:16:44Z",
+      "value": 0.33,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:59Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
-          "value": -6.95225,
+          "value": 0.33,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.329761,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T06:16:44Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:37:00Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 472240000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:59Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 472240000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.25,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:59Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.25,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 12.295,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -15.30967,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:59Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 12.295,
+          "value": -15.30967,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -15.30967,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,116 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -17.04158145875937,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:59Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -17.04158145875937,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:59Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 5,
+    "holdings_updated": "Oct 5, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Recv Ram Trs Dram Us Eq",
+        "weight_pct": 188.82,
+        "shares": 15247604,
+        "raw": {
+          "no": 1,
+          "n": "Recv Ram Trs Dram Us Eq",
+          "as": "188.82%",
+          "sh": "15,247,604"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Cash And Cash Equivalents",
+        "weight_pct": 77.26,
+        "shares": 385444783,
+        "raw": {
+          "no": 2,
+          "n": "Cash And Cash Equivalents",
+          "as": "77.26%",
+          "sh": "385,444,783"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Recv Ram Trs Dram Eq",
+        "weight_pct": 44.05,
+        "shares": 3556837,
+        "raw": {
+          "no": 3,
+          "n": "Recv Ram Trs Dram Eq",
+          "as": "44.05%",
+          "sh": "3,556,837"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Payb Ram Trs Dram Eq",
+        "weight_pct": -40.15,
+        "shares": 200314144,
+        "raw": {
+          "no": 4,
+          "n": "Payb Ram Trs Dram Eq",
+          "as": "-40.15%",
+          "sh": "200,314,144"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Payb Ram Trs Dram Us Eq",
+        "weight_pct": -169.97,
+        "shares": 847969945,
+        "raw": {
+          "no": 5,
+          "n": "Payb Ram Trs Dram Us Eq",
+          "as": "-169.97%",
+          "sh": "847,969,945"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "DRAM",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +334,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/RAM.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/RAM.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

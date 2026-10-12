@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "WDRN",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-06",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 26.7859,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:23:26Z",
+      "value": 25.582,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 25.582,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed"
+        },
+        {
           "value": 26.7859,
           "source": "yf",
           "as_of": "2026-10-06",
@@ -38,14 +45,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 26.8206,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:23:26Z",
+      "value": 25.46,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 25.46,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed"
+        },
         {
           "value": 26.8206,
           "source": "yf",
@@ -61,14 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.0347004,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:23:26Z",
+      "value": 0.12,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.12,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.0347004,
           "source": "yf",
@@ -85,14 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.12938,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T06:23:26Z",
+      "value": 0.48,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": 0.48,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.12938,
           "source": "yf",
           "as_of": "2026-10-06",
@@ -109,14 +137,60 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 17840000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 17840000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.45,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.45,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -1.66962,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -4.13341,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": -1.66962,
+          "value": -4.13341,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -4.13341,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,488 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -5.887979398510072,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:38:11Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -5.887979398510072,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:38:11Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 74,
+    "holdings_updated": "Jul 6, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "!SHA/688017",
+        "name": "Leader Harmonious Drive Systems Co., Ltd.",
+        "weight_pct": 4.74,
+        "shares": 140564,
+        "raw": {
+          "no": 1,
+          "n": "Leader Harmonious Drive Systems Co., Ltd.",
+          "s": "!sha/688017",
+          "as": "4.74%",
+          "sh": "140,564"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!HKG/9880",
+        "name": "Ubtech Robotics Corp Ltd",
+        "weight_pct": 3.79,
+        "shares": 600434,
+        "raw": {
+          "no": 2,
+          "n": "Ubtech Robotics Corp Ltd",
+          "s": "!hkg/9880",
+          "as": "3.79%",
+          "sh": "600,434"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!TYO/6324",
+        "name": "Harmonic Drive Systems Inc.",
+        "weight_pct": 3.77,
+        "shares": 136150,
+        "raw": {
+          "no": 3,
+          "n": "Harmonic Drive Systems Inc.",
+          "s": "!tyo/6324",
+          "as": "3.77%",
+          "sh": "136,150"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "AVAV",
+        "name": "AeroVironment, Inc.",
+        "weight_pct": 2.99,
+        "shares": 33410,
+        "raw": {
+          "no": 4,
+          "n": "AeroVironment, Inc.",
+          "s": "$AVAV",
+          "as": "2.99%",
+          "sh": "33,410"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "RCAT",
+        "name": "Red Cat Holdings, Inc.",
+        "weight_pct": 2.82,
+        "shares": 552676,
+        "raw": {
+          "no": 5,
+          "n": "Red Cat Holdings, Inc.",
+          "s": "$RCAT",
+          "as": "2.82%",
+          "sh": "552,676"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight_pct": 2.64,
+        "shares": 12451,
+        "raw": {
+          "no": 6,
+          "n": "Tesla, Inc.",
+          "s": "$TSLA",
+          "as": "2.64%",
+          "sh": "12,451"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!SHE/300024",
+        "name": "Siasun Robot&Automation Co.,Ltd.",
+        "weight_pct": 2.44,
+        "shares": 1930600,
+        "raw": {
+          "no": 7,
+          "n": "Siasun Robot&Automation Co.,Ltd.",
+          "s": "!she/300024",
+          "as": "2.44%",
+          "sh": "1,930,600"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "OUST",
+        "name": "Ouster, Inc.",
+        "weight_pct": 2.41,
+        "shares": 95843,
+        "raw": {
+          "no": 8,
+          "n": "Ouster, Inc.",
+          "s": "$OUST",
+          "as": "2.41%",
+          "sh": "95,843"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight_pct": 2.31,
+        "shares": 23334,
+        "raw": {
+          "no": 9,
+          "n": "NVIDIA Corporation",
+          "s": "$NVDA",
+          "as": "2.31%",
+          "sh": "23,334"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!TPE/8033",
+        "name": "Thunder Tiger Corp.",
+        "weight_pct": 2.24,
+        "shares": 639648,
+        "raw": {
+          "no": 10,
+          "n": "Thunder Tiger Corp.",
+          "s": "!tpe/8033",
+          "as": "2.24%",
+          "sh": "639,648"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!OTC/XPNGF",
+        "name": "XPeng Inc.",
+        "weight_pct": 2.23,
+        "shares": 655298,
+        "raw": {
+          "no": 11,
+          "n": "XPeng Inc.",
+          "s": "!otc/XPNGF",
+          "as": "2.23%",
+          "sh": "655,298"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!HKG/2026",
+        "name": "Pony AI Inc.",
+        "weight_pct": 2.19,
+        "shares": 628920,
+        "raw": {
+          "no": 12,
+          "n": "Pony AI Inc.",
+          "s": "!hkg/2026",
+          "as": "2.19%",
+          "sh": "628,920"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!TYO/6506",
+        "name": "YASKAWA Electric Corporation",
+        "weight_pct": 2.16,
+        "shares": 93100,
+        "raw": {
+          "no": 13,
+          "n": "YASKAWA Electric Corporation",
+          "s": "!tyo/6506",
+          "as": "2.16%",
+          "sh": "93,100"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!ETR/SIE",
+        "name": "Siemens Aktiengesellschaft",
+        "weight_pct": 2.13,
+        "shares": 13087,
+        "raw": {
+          "no": 14,
+          "n": "Siemens Aktiengesellschaft",
+          "s": "!etr/SIE",
+          "as": "2.13%",
+          "sh": "13,087"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!TYO/6645",
+        "name": "OMRON Corporation",
+        "weight_pct": 2.12,
+        "shares": 110144,
+        "raw": {
+          "no": 15,
+          "n": "OMRON Corporation",
+          "s": "!tyo/6645",
+          "as": "2.12%",
+          "sh": "110,144"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!HKG/1810",
+        "name": "Xiaomi Corporation",
+        "weight_pct": 2.05,
+        "shares": 1368270,
+        "raw": {
+          "no": 16,
+          "n": "Xiaomi Corporation",
+          "s": "!hkg/1810",
+          "as": "2.05%",
+          "sh": "1,368,270"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "AMPX",
+        "name": "Amprius Technologies, Inc.",
+        "weight_pct": 2.03,
+        "shares": 307354,
+        "raw": {
+          "no": 17,
+          "n": "Amprius Technologies, Inc.",
+          "s": "$AMPX",
+          "as": "2.03%",
+          "sh": "307,354"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "SYM",
+        "name": "Symbotic Inc.",
+        "weight_pct": 2.02,
+        "shares": 89915,
+        "raw": {
+          "no": 18,
+          "n": "Symbotic Inc.",
+          "s": "$SYM",
+          "as": "2.02%",
+          "sh": "89,915"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ONDS",
+        "name": "Ondas Inc.",
+        "weight_pct": 1.94,
+        "shares": 491170,
+        "raw": {
+          "no": 19,
+          "n": "Ondas Inc.",
+          "s": "$ONDS",
+          "as": "1.94%",
+          "sh": "491,170"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "ALNT",
+        "name": "Allient Inc.",
+        "weight_pct": 1.93,
+        "shares": 43195,
+        "raw": {
+          "no": 20,
+          "n": "Allient Inc.",
+          "s": "$ALNT",
+          "as": "1.93%",
+          "sh": "43,195"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!KRX/005380",
+        "name": "Hyundai Motor Company",
+        "weight_pct": 1.92,
+        "shares": 11582,
+        "raw": {
+          "no": 21,
+          "n": "Hyundai Motor Company",
+          "s": "!krx/005380",
+          "as": "1.92%",
+          "sh": "11,582"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!TYO/6954",
+        "name": "Fanuc Corporation",
+        "weight_pct": 1.89,
+        "shares": 81329,
+        "raw": {
+          "no": 22,
+          "n": "Fanuc Corporation",
+          "s": "!tyo/6954",
+          "as": "1.89%",
+          "sh": "81,329"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!SHE/002979",
+        "name": "China Leadshine Technology Co., Ltd.",
+        "weight_pct": 1.86,
+        "shares": 341000,
+        "raw": {
+          "no": 23,
+          "n": "China Leadshine Technology Co., Ltd.",
+          "s": "!she/002979",
+          "as": "1.86%",
+          "sh": "341,000"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "IOT",
+        "name": "Samsara Inc.",
+        "weight_pct": 1.84,
+        "shares": 96888,
+        "raw": {
+          "no": 24,
+          "n": "Samsara Inc.",
+          "s": "$IOT",
+          "as": "1.84%",
+          "sh": "96,888"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "!HKG/2432",
+        "name": "Shenzhen Dobot Corp Ltd",
+        "weight_pct": 1.75,
+        "shares": 1003410,
+        "raw": {
+          "no": 25,
+          "n": "Shenzhen Dobot Corp Ltd",
+          "s": "!hkg/2432",
+          "as": "1.75%",
+          "sh": "1,003,410"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
-    "countries": null,
-    "classification": null,
+    "sectors": [
+      {
+        "n": "Industrials",
+        "w": 56.57
+      },
+      {
+        "n": "Technology",
+        "w": 26.85
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 14.23
+      },
+      {
+        "n": "Communication Services",
+        "w": 1.3
+      },
+      {
+        "n": "Healthcare",
+        "w": 1.05
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 43.98,
+        "country": "United States"
+      },
+      {
+        "code": "CN",
+        "weight": 16.58,
+        "country": "China"
+      },
+      {
+        "code": "JP",
+        "weight": 14.49,
+        "country": "Japan"
+      },
+      {
+        "code": "KY",
+        "weight": 8.51,
+        "country": "Cayman Islands"
+      },
+      {
+        "code": "KR",
+        "weight": 5.1,
+        "country": "South Korea"
+      },
+      {
+        "code": "DE",
+        "weight": 3.82,
+        "country": "Germany"
+      },
+      {
+        "code": "TW",
+        "weight": 2.26,
+        "country": "Taiwan"
+      },
+      {
+        "code": "FR",
+        "weight": 1.9,
+        "country": "France"
+      },
+      {
+        "code": "IL",
+        "weight": 1.52,
+        "country": "Israel"
+      },
+      {
+        "code": "CA",
+        "weight": 0.81,
+        "country": "Canada"
+      },
+      {
+        "code": "BM",
+        "weight": 0.71,
+        "country": "Bermuda"
+      },
+      {
+        "code": "GB",
+        "weight": 0.33,
+        "country": "United Kingdom"
+      }
+    ],
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +706,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/WDRN.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/WDRN.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
