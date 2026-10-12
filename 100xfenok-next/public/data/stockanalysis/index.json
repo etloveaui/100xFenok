@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-10-12T16:02:34Z",
+  "generated_at": "2026-10-12T17:24:36Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -26,7 +26,7 @@
     "etf_detail_missing": 4,
     "etf_detail_coverage_pct": 99.93,
     "etf_detail_primary_pct": 99.93,
-    "etfs_requested": 8,
+    "etfs_requested": 5,
     "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
@@ -34,12 +34,12 @@
     "financials_requested": 0,
     "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 8,
-    "failed": 0,
-    "hard_failed": 0,
-    "etfs_stockanalysis_ok": 8,
+    "ok": 3,
+    "failed": 2,
+    "hard_failed": 2,
+    "etfs_stockanalysis_ok": 3,
     "etfs_yahoo_fallback_ok": 0,
-    "etfs_provider_available": 8,
+    "etfs_provider_available": 3,
     "etfs_provider_absent": 0,
     "etfs_still_pending": 0,
     "incremental_etf_backfill_candidates": 0,
@@ -49,28 +49,6 @@
     "incremental_etf_ledger_cooldown": 0
   },
   "results": [
-    {
-      "ticker": "AAAU",
-      "asset_type": "etf",
-      "status": "partial_observed_complete_primary_preserved",
-      "provider": "stockanalysis",
-      "selected_provider": null,
-      "canonical_write": false,
-      "path": "etfs/AAAU.json",
-      "candidate_path": null,
-      "partial_candidate_preserved": true,
-      "fallback_candidate_path": "data/yf/etf-details/AAAU.json",
-      "financials_path": null,
-      "financials_error": null,
-      "fallback_refresh_status": "ok",
-      "fallback_refresh_error": null,
-      "latency_ms": 21867,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_complete_primary_preserved",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
     {
       "ticker": "IBTH",
       "asset_type": "etf",
@@ -84,7 +62,7 @@
       "financials_error": null,
       "fallback_refresh_status": "ok",
       "fallback_refresh_error": null,
-      "latency_ms": 3117,
+      "latency_ms": 18478,
       "stockanalysis_error": null,
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
@@ -104,7 +82,7 @@
       "financials_error": null,
       "fallback_refresh_status": "ok",
       "fallback_refresh_error": null,
-      "latency_ms": 3325,
+      "latency_ms": 2198,
       "stockanalysis_error": null,
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
@@ -124,7 +102,7 @@
       "financials_error": null,
       "fallback_refresh_status": "ok",
       "fallback_refresh_error": null,
-      "latency_ms": 3009,
+      "latency_ms": 2592,
       "stockanalysis_error": null,
       "provider_availability_status": "available",
       "provider_availability_reason": "provider_partial_detail_contract_valid",
@@ -132,97 +110,27 @@
       "error": null
     },
     {
-      "ticker": "BIL",
+      "ticker": "DFAS",
       "asset_type": "etf",
-      "status": "partial_observed_complete_primary_preserved",
-      "provider": "stockanalysis",
-      "selected_provider": null,
-      "canonical_write": false,
-      "path": "etfs/BIL.json",
-      "candidate_path": null,
-      "partial_candidate_preserved": true,
-      "fallback_candidate_path": "data/yf/etf-details/BIL.json",
-      "financials_path": null,
-      "financials_error": null,
-      "fallback_refresh_status": "ok",
-      "fallback_refresh_error": null,
-      "latency_ms": 3011,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_complete_primary_preserved",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 1400,
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y"
     },
     {
-      "ticker": "BILS",
+      "ticker": "DFAC",
       "asset_type": "etf",
-      "status": "partial_observed_complete_primary_preserved",
-      "provider": "stockanalysis",
-      "selected_provider": null,
-      "canonical_write": false,
-      "path": "etfs/BILS.json",
-      "candidate_path": null,
-      "partial_candidate_preserved": true,
-      "fallback_candidate_path": "data/yf/etf-details/BILS.json",
-      "financials_path": null,
-      "financials_error": null,
-      "fallback_refresh_status": "ok",
-      "fallback_refresh_error": null,
-      "latency_ms": 2909,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_complete_primary_preserved",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
-    {
-      "ticker": "TBIL",
-      "asset_type": "etf",
-      "status": "partial_observed_complete_primary_preserved",
-      "provider": "stockanalysis",
-      "selected_provider": null,
-      "canonical_write": false,
-      "path": "etfs/TBIL.json",
-      "candidate_path": null,
-      "partial_candidate_preserved": true,
-      "fallback_candidate_path": "data/yf/etf-details/TBIL.json",
-      "financials_path": null,
-      "financials_error": null,
-      "fallback_refresh_status": "ok",
-      "fallback_refresh_error": null,
-      "latency_ms": 3119,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_complete_primary_preserved",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
-    },
-    {
-      "ticker": "CTWO",
-      "asset_type": "etf",
-      "status": "partial_observed_complete_primary_preserved",
-      "provider": "stockanalysis",
-      "selected_provider": null,
-      "canonical_write": false,
-      "path": "etfs/CTWO.json",
-      "candidate_path": null,
-      "partial_candidate_preserved": true,
-      "fallback_candidate_path": "data/yf/etf-details/CTWO.json",
-      "financials_path": null,
-      "financials_error": null,
-      "fallback_refresh_status": "ok",
-      "fallback_refresh_error": null,
-      "latency_ms": 2755,
-      "stockanalysis_error": null,
-      "provider_availability_status": "available",
-      "provider_availability_reason": "provider_partial_detail_complete_primary_preserved",
-      "provider_response": "HTTP 200 partial contract valid",
-      "error": null
+      "status": "error",
+      "provider": null,
+      "path": null,
+      "latency_ms": 1066,
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y"
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-10-12T16:02:34Z",
+    "generated_at": "2026-10-12T17:24:36Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5784,
@@ -272,7 +180,7 @@
       "lkg": 98,
       "unavailable": 14,
       "retry": 112,
-      "failed": 0
+      "failed": 2
     },
     "degraded_tickers": [],
     "degraded_etfs": [
@@ -392,12 +300,32 @@
     "degraded_surfaces": [],
     "degraded_universes": [],
     "current_results": {
-      "observed_at": null,
-      "attempted": 0,
+      "observed_at": "2026-10-12T17:23:55Z",
+      "attempted": 2,
       "successes": 0,
-      "failed": 0,
-      "errors": [],
-      "by_kind": {}
+      "failed": 2,
+      "errors": [
+        {
+          "artifact_kind": "etf",
+          "entity": "DFAS",
+          "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y",
+          "data_loss": false
+        },
+        {
+          "artifact_kind": "etf",
+          "entity": "DFAC",
+          "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.weekly_1y",
+          "data_loss": false
+        }
+      ],
+      "by_kind": {
+        "etf": {
+          "observed_at": "2026-10-12T17:23:55Z",
+          "attempted": 2,
+          "successes": 0,
+          "failed": 2
+        }
+      }
     }
   },
   "stop_reason": null
