@@ -182,24 +182,43 @@ export function evaluateQueue(runs, { now = new Date().toISOString(), maxDepth, 
   };
 }
 
+function isTransientTransportError(error, signal) {
+  const timedOut = signal.aborted && signal.reason?.name === "TimeoutError"
+    && ["TimeoutError", "AbortError"].includes(error?.name);
+  return timedOut || (error instanceof TypeError && (
+    ["terminated", "fetch failed"].includes(error.message)
+    || ["UND_ERR_SOCKET", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT",
+      "UND_ERR_BODY_TIMEOUT", "ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "EPIPE"].includes(error.cause?.code)
+  ));
+}
+
 async function fetchJson(url, token, fetchImpl = fetch) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const response = await fetchImpl(url, { headers: authHeaders(token) });
-    if (!response.ok && [500, 502, 503, 504].includes(response.status) && attempt < 3) {
-      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
-      continue;
-    }
-    if (!response.ok) {
-      let detail = `HTTP ${response.status}`;
-      try {
-        const payload = await response.json();
-        if (payload?.message) detail = `${payload.message} (HTTP ${response.status})`;
-      } catch {
-        // Preserve the HTTP status when the API body is not JSON.
+    const signal = AbortSignal.timeout(30_000);
+    try {
+      const response = await fetchImpl(url, { headers: authHeaders(token), signal });
+      if (!response.ok && [500, 502, 503, 504].includes(response.status) && attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+        continue;
       }
-      throw new Error(detail);
+      if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+        try {
+          const payload = await response.json();
+          if (payload?.message) detail = `${payload.message} (HTTP ${response.status})`;
+        } catch {
+          // Preserve the HTTP status when the API body is not JSON.
+        }
+        throw new Error(detail);
+      }
+      return await response.json();
+    } catch (error) {
+      if (attempt < 3 && isTransientTransportError(error, signal)) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+        continue;
+      }
+      throw error;
     }
-    return response.json();
   }
 }
 
