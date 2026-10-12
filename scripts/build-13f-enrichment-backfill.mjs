@@ -35,6 +35,8 @@ const SUMMARY_PATH = path.join(ROOT, "data/sec-13f/summary.json");
 const BY_SECTOR_PATH = path.join(ROOT, "data/sec-13f/by_sector.json");
 const YF_DIR = path.join(ROOT, "data/yf/finance");
 const YF_SUMMARY_PATH = path.join(YF_DIR, "_summary.json");
+// Yahoo summaries include these benchmark indices; holding identities remain equity-only.
+const YF_SUMMARY_INDEX_SYMBOLS = new Set(["^KS11", "^KQ11"]);
 const QUARTER_CLOSES_PATH = path.join(ROOT, "data/yf/quarter_closes.json");
 
 const ABS_BUCKETS = [
@@ -220,7 +222,7 @@ function loadYfSummaryState() {
   if (Array.isArray(summary.errors)) {
     for (const [index, row] of summary.errors.entries()) {
       const ticker = String(row?.ticker ?? "").trim().toUpperCase();
-      if (!ticker || !SYMBOL_RE.test(ticker)) {
+      if (!ticker || (!SYMBOL_RE.test(ticker) && !YF_SUMMARY_INDEX_SYMBOLS.has(ticker))) {
         throw new Error(`${YF_SUMMARY_PATH}: errors[${index}].ticker must be a valid symbol`);
       }
       if (failedSymbols.has(ticker)) {
