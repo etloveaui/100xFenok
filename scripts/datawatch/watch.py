@@ -54,7 +54,9 @@ UNREAD_MIN = 120  # a read that keeps failing this long is reported once (past t
 REASONS = {"failure_streak": "연속 실패", "missed_schedule_window": "실행 누락", "lost_schedule_slot": "예약 실행 유실",
            "a1_clock_stale": "A1 시계 멈춤", "data_stopped_two_generations": "데이터 정지",
            "health_record_stale": "건강 기록 멈춤",
-           "serving_heartbeat_stale": "게시 갱신 기한 초과", "serving_source_stale": "원본 데이터 기한 초과"}
+           "serving_heartbeat_stale": "게시 갱신 기한 초과", "serving_source_stale": "원본 데이터 기한 초과",
+           "stockanalysis_etf_detail:member_ratio_low": "StockAnalysis ETF 갱신 범위 부족",
+           "yahoo_etf_fallback:member_ratio_low": "Yahoo ETF 갱신 범위 부족"}
 DELIVERED = ("success", "dedup_skipped", "already_delivered")
 MAX_CALLS = 7  # the Manifest calendar plus the existing six reads/probes
 TOKEN: str | None = None
@@ -110,24 +112,38 @@ def read_issues() -> dict:
     for r in rows:
         if "pull_request" in r or not r["title"].strip().lower().endswith("alarm"):
             continue
-        inc, head = {}, None
+        inc, head, member_reason = {}, None, None
+        details, legacy_aliases = {}, {}
         for line in (r.get("body") or "").splitlines():  # the alarm rewrites the body: "## <incident>" + "- Alarm reasons: a, b"
             if line.startswith("## "):
+                member_reason = None
                 head = re.sub(r"\s*\(`[^`]*`\)\s*$", "", line[3:].strip())
                 inc.setdefault(head, [])
             elif line.startswith("- FAIL "):
+                member_reason = None
                 head = line.removeprefix("- FAIL ").strip()
                 inc.setdefault(head, [])
             elif head and line.startswith("- Alarm reasons:"):
                 inc[head] = sorted(set(inc[head]) | {x.strip() for x in line.split(":", 1)[1].split(",") if x.strip()})
+            elif head == "Data health KPI" and (member := re.fullmatch(
+                    r"- ([a-z][a-z0-9_]*): (member_ratio_low); source .+", line)):
+                member_reason = f"{member[1]}:{member[2]}"
+                inc[head] = sorted(set(inc[head]) | {member_reason})
             elif head and line.startswith("  - "):
                 reason = line.strip().removeprefix("- ")
+                if member_reason and re.fullmatch(r"Members inside bound: \d+/\d+", reason):
+                    # Numeric evidence stays in the message, not its transition identity.
+                    count = reason.split(":", 1)[1].strip()
+                    details[member_reason] = f"{REASONS.get(member_reason, member_reason)} ({count})"
+                    legacy_aliases[reason] = member_reason
+                    continue
                 if "heartbeat limit" in reason:
                     reason = "serving_heartbeat_stale"
                 elif "source" in reason.lower() and "old" in reason.lower():
                     reason = "serving_source_stale"
                 inc[head] = sorted(set(inc[head]) | {reason})
-        out[str(r["number"])] = {"title": r["title"], "url": r["html_url"], "incidents": inc}
+        out[str(r["number"])] = {"title": r["title"], "url": r["html_url"], "incidents": inc,
+                                 "reason_details": details, "legacy_reason_aliases": legacy_aliases}
     return out
 
 
@@ -206,14 +222,16 @@ def read_ledger() -> dt.datetime:
 READERS = {"issues": read_issues, "clock": read_clock, "ledger": read_ledger, "alarm": read_alarm}  # alarm last: it probes
 
 
-def idents(incidents: dict) -> set:
-    return {(h, r) for h, rs in incidents.items() for r in (rs or [""])}
+def idents(incidents: dict, aliases: dict | None = None) -> set:
+    aliases = aliases or {}
+    return {(h, aliases.get(r, r)) for h, rs in incidents.items() for r in (rs or [""])}
 
 
-def summary(pairs: set, fallback: str) -> str:
+def summary(pairs: set, fallback: str, details: dict | None = None) -> str:
+    details = details or {}
     by: dict[str, list[str]] = {}
     for h, r in sorted(pairs):
-        by.setdefault(h, []).append(REASONS.get(r, r))
+        by.setdefault(h, []).append(details.get(r, REASONS.get(r, r)))
     parts = [h + (f"({', '.join(x for x in rs if x)})" if any(rs) else "") for h, rs in by.items()]
     return (", ".join(parts[:2]) + (f" 외 {len(parts) - 2}건" if len(parts) > 2 else "")) or fallback
 
@@ -268,14 +286,14 @@ def run(a: argparse.Namespace) -> int:
         for num, it in cur.items():
             old, link = new["issues"].get(num), f'<a href="{e(it["url"])}">이슈 #{num}</a>'
             now_ids = idents(it["incidents"])
-            added = now_ids - idents(old["incidents"]) if old else set()
+            added = now_ids - idents(old["incidents"], it.get("legacy_reason_aliases")) if old else set()
             put = lambda s, n=num, v=it: s["issues"].__setitem__(n, v)  # noqa: E731
             if old is None and not baseline:
-                events.append((f"issue:{num}:opened", f"100x 데이터 경보 열림: {e(summary(now_ids, it['title']))} {link}", put))
+                events.append((f"issue:{num}:opened", f"100x 데이터 경보 열림: {e(summary(now_ids, it['title'], it.get('reason_details')))} {link}", put))
             elif added:  # a new incident or a new reason; a growing streak alone is not a line (the alarm's own comment rule)
                 digest = hashlib.sha1(json.dumps(sorted(now_ids)).encode()).hexdigest()[:10]
                 events.append((f"issue:{num}:worsened:{digest}",
-                               f"100x 데이터 경보 악화: {e(summary(added, it['title']))} 추가 {link}", put))
+                               f"100x 데이터 경보 악화: {e(summary(added, it['title'], it.get('reason_details')))} 추가 {link}", put))
             else:
                 put(new)
         for num, old in list(new["issues"].items()):
