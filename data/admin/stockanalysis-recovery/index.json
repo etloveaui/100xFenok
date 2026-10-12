@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-12T02:28:47Z",
+  "generated_at": "2026-10-12T08:12:34Z",
   "counts": {
     "tracked": 1020,
-    "fresh": 825,
-    "lkg": 181,
+    "fresh": 823,
+    "lkg": 183,
     "unavailable": 14,
-    "retry": 195,
-    "failed": 19
+    "retry": 197,
+    "failed": 3
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 902,
-      "fresh": 707,
-      "lkg": 181,
+      "fresh": 705,
+      "lkg": 183,
       "unavailable": 14,
-      "retry": 195
+      "retry": 197
     },
     "surface": {
       "tracked": 25,
@@ -266,6 +266,14 @@
     {
       "artifact_kind": "etf",
       "entity": "DEFI"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "DFAC"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "DFAS"
     },
     {
       "artifact_kind": "etf",
@@ -1491,6 +1499,30 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "DFAC",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-30T15:54:54Z",
+      "failure_observed_at": "2026-10-12T08:12:34Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "DFAS",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-30T15:40:41Z",
+      "failure_observed_at": "2026-10-12T08:12:34Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "DLMY",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-09-30T16:27:13Z",
@@ -1866,10 +1898,10 @@
       "entity": "FXL",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-09-24T14:50:50Z",
-      "failure_observed_at": "2026-10-12T02:28:47Z",
+      "failure_observed_at": "2026-10-12T08:12:34Z",
       "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.dividendYield",
       "failure_class": "candidate_regression",
-      "failure_count": 1,
+      "failure_count": 2,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -3528,6 +3560,14 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "DFAC"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "DFAS"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "DRUP"
       },
       {
@@ -3965,41 +4005,11 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-12T02:28:47Z",
-    "attempted": 64,
-    "successes": 45,
-    "failed": 19,
+    "observed_at": "2026-10-12T08:12:34Z",
+    "attempted": 69,
+    "successes": 66,
+    "failed": 3,
     "errors": [
-      {
-        "artifact_kind": "etf",
-        "entity": "RLY",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "HYGD",
-        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "HYGU",
-        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "LQDD",
-        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "LQDU",
-        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
-        "data_loss": false
-      },
       {
         "artifact_kind": "etf",
         "entity": "FXL",
@@ -4008,101 +4018,23 @@
       },
       {
         "artifact_kind": "etf",
-        "entity": "ERUS",
-        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "entity": "DFAS",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
         "data_loss": false
       },
       {
         "artifact_kind": "etf",
-        "entity": "ESUM",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "IAUM",
-        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AAUM",
-        "error": "ValueError: provider_ticker_redirect:AAUM:REAI",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "ABNG",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "ADFI",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AEMS",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AETH",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AGRH",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AOTS",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "AXPG",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BCHI",
-        "error": "HTTPError: HTTP Error 404: Not Found",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "BEDZ",
-        "error": "HTTPError: HTTP Error 404: Not Found",
+        "entity": "DFAC",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
         "data_loss": false
       }
     ],
     "by_kind": {
       "etf": {
-        "observed_at": "2026-10-12T02:28:47Z",
-        "attempted": 38,
-        "successes": 19,
-        "failed": 19
-      },
-      "surface": {
-        "observed_at": "2026-10-12T02:28:47Z",
-        "attempted": 25,
-        "successes": 25,
-        "failed": 0
-      },
-      "universe": {
-        "observed_at": "2026-10-12T02:28:47Z",
-        "attempted": 1,
-        "successes": 1,
-        "failed": 0
+        "observed_at": "2026-10-12T08:12:34Z",
+        "attempted": 69,
+        "successes": 66,
+        "failed": 3
       }
     }
   },
@@ -4163,6 +4095,8 @@
     "DDSQ",
     "DDX",
     "DEFI",
+    "DFAC",
+    "DFAS",
     "DLMY",
     "DQJN",
     "DRUP",
