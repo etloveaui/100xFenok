@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-12T08:12:34Z",
+  "generated_at": "2026-10-12T10:06:08Z",
   "counts": {
     "tracked": 1020,
-    "fresh": 823,
-    "lkg": 183,
+    "fresh": 824,
+    "lkg": 182,
     "unavailable": 14,
-    "retry": 197,
-    "failed": 3
+    "retry": 196,
+    "failed": 1
   },
   "counts_by_kind": {
     "stock": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 902,
-      "fresh": 705,
-      "lkg": 183,
+      "fresh": 706,
+      "lkg": 182,
       "unavailable": 14,
-      "retry": 197
+      "retry": 196
     },
     "surface": {
       "tracked": 25,
@@ -553,10 +553,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "MGV"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "MLPB"
     },
     {
@@ -697,10 +693,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "TBLL"
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "TCAN"
     },
     {
@@ -710,6 +702,10 @@
     {
       "artifact_kind": "etf",
       "entity": "TLDR"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "TQQQ"
     },
     {
       "artifact_kind": "etf",
@@ -2351,18 +2347,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "MGV",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-30T20:00:00Z",
-      "failure_observed_at": "2026-10-07T02:46:44Z",
-      "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
-      "failure_class": "candidate_regression",
-      "failure_count": 1,
-      "failure_count_is_lower_bound": false,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "MLPB",
       "resolution_state": "lkg_primary",
       "source_as_of": "2025-11-01T00:00:00Z",
@@ -2783,18 +2767,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "TBLL",
-      "resolution_state": "lkg_primary",
-      "source_as_of": null,
-      "failure_observed_at": "2026-10-05T02:05:23Z",
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "provider_contract_drift",
-      "failure_count": 2,
-      "failure_count_is_lower_bound": false,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "TCAN",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-09-30T19:22:28Z",
@@ -2826,6 +2798,18 @@
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "provider_contract_drift",
       "failure_count": 4,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "TQQQ",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-07-16T20:00:00Z",
+      "failure_observed_at": "2026-10-12T10:06:08Z",
+      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -3584,15 +3568,15 @@
       },
       {
         "artifact_kind": "etf",
-        "entity": "MGV"
-      },
-      {
-        "artifact_kind": "etf",
         "entity": "PFRX"
       },
       {
         "artifact_kind": "etf",
         "entity": "RLY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TQQQ"
       }
     ],
     "provider_ticker_redirect": [
@@ -3924,10 +3908,6 @@
       },
       {
         "artifact_kind": "etf",
-        "entity": "TBLL"
-      },
-      {
-        "artifact_kind": "etf",
         "entity": "TLDR"
       },
       {
@@ -4005,36 +3985,24 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-12T08:12:34Z",
-    "attempted": 69,
-    "successes": 66,
-    "failed": 3,
+    "observed_at": "2026-10-12T10:06:08Z",
+    "attempted": 4,
+    "successes": 3,
+    "failed": 1,
     "errors": [
       {
         "artifact_kind": "etf",
-        "entity": "FXL",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.dividendYield",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "DFAS",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "DFAC",
-        "error": "ValueError: StockAnalysis ETF candidate loses canonical history_periods.daily_1y",
+        "entity": "TQQQ",
+        "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
         "data_loss": false
       }
     ],
     "by_kind": {
       "etf": {
-        "observed_at": "2026-10-12T08:12:34Z",
-        "attempted": 69,
-        "successes": 66,
-        "failed": 3
+        "observed_at": "2026-10-12T10:06:08Z",
+        "attempted": 4,
+        "successes": 3,
+        "failed": 1
       }
     }
   },
@@ -4166,7 +4134,6 @@
     "MEME",
     "METG",
     "MGKX",
-    "MGV",
     "MLPB",
     "MLPR",
     "MMID",
@@ -4202,10 +4169,10 @@
     "SMTG",
     "SNK",
     "SPAX",
-    "TBLL",
     "TCAN",
     "TGLR",
     "TLDR",
+    "TQQQ",
     "TSLO",
     "TSYW",
     "UCIB",
