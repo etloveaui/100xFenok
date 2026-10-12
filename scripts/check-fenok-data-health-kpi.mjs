@@ -37,7 +37,9 @@ function validDate(value) {
 
 function dataSetLanes(registry = LANE_REGISTRY) {
   return registry.lanes.filter((lane) => (
-    lane.lane_class === "detection_floor" && !HEALTH_SET_EXCLUSIONS.has(lane.id)
+    (lane.lane_class === "detection_floor"
+      || (lane.lane_class === "auxiliary" && lane.privacy_class === "public_mirror"))
+      && !HEALTH_SET_EXCLUSIONS.has(lane.id)
   ));
 }
 
@@ -68,7 +70,7 @@ function validateDocument(document, label, expectedLanes, floorRows, calendars, 
   for (const [index, row] of document.sets.entries()) {
     const context = `${label}.sets[${index}]`;
     if (!object(row) || typeof row.set !== "string" || !byId.has(row.set) || seen.has(row.set)) {
-      errors.push(`${context}.set must identify one unique detection-floor data set`);
+      errors.push(`${context}.set must identify one unique public health data set`);
       continue;
     }
     seen.add(row.set);
