@@ -5723,9 +5723,9 @@ def select_natural_general_incremental_candidates(
 
     for bucket, rows in buckets.items():
         rows.sort(key=lambda row: (
-            -int(first_pass(row)) if bucket == "oldest_stale" else 0,
-            -(row.get("age_hours") or 0) if bucket == "oldest_stale" and first_pass(row) else
+            # Bootstrap debt cannot displace an already-overdue tier deadline.
             -overdue_hours(row) if bucket in {"oldest_stale", "fresh"} else 0,
+            -int(first_pass(row)) if bucket == "oldest_stale" else 0,
             row.get("last_attempt_utc") or "",
             *incremental_candidate_sort_key(row),
         ))
@@ -5781,7 +5781,7 @@ def select_natural_general_incremental_candidates(
         "eligible_counts": {**{name: len(rows) for name, rows in buckets.items()}, "total": len(candidates)},
         "selected_counts": {**selected_counts, "total": len(selected)},
         "cursor": {
-            "strategy": "first_pass_then_tier_deadline_with_pending_cooldown",
+            "strategy": "tier_deadline_then_first_pass_with_pending_cooldown",
             "date": now_dt.date().isoformat(),
         },
     }
@@ -6001,7 +6001,7 @@ def incremental_etf_backfill_candidates(
             "selection": (
                 "primary StockAnalysis ETF detail files missing required history_periods only"
                 if history_gaps_only
-                else "new listings, missing source dates/details, first-pass cohort then furthest overdue tier deadline, pending retry reserve, closest tier deadline; tier 2 is the top 650 universe AUM names at 7 days, tier 3 is 30 days"
+                else "new listings, missing source dates/details, furthest overdue tier deadline then first-pass cohort, pending retry reserve, closest tier deadline; tier 2 is the top 650 universe AUM names at 7 days, tier 3 is 30 days"
                 if priority_selector is not None
                 else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then deferred quote/history and multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
             ),
