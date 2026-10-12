@@ -4,25 +4,37 @@
   "entity": "AETH",
   "resolution_state": "lkg_primary",
   "retry": true,
-  "updated_at": "2026-10-08T03:04:13Z",
+  "updated_at": "2026-10-12T02:28:47Z",
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/etf/AETH.json",
-    "payload_sha256": "fa42f98211043a8a8b8de67fd54201b2b5a090822fe96f4a1c040f094dfcb5c4",
-    "source_as_of": "2026-07-08T00:00:00Z",
-    "fetched_at": "2026-07-15T14:32:37Z"
+    "payload_sha256": "8b25fe119af63f98d1ed28d35c96d258021eaf8803ece065a8e1998c91a67834",
+    "source_as_of": "2026-09-25T13:46:01Z",
+    "fetched_at": "2026-09-28T03:38:05Z"
   },
   "current": {
     "path": "data/admin/stockanalysis-recovery/lkg/etf/AETH.json",
-    "payload_sha256": "fa42f98211043a8a8b8de67fd54201b2b5a090822fe96f4a1c040f094dfcb5c4",
-    "source_as_of": "2026-07-08T00:00:00Z",
-    "fetched_at": "2026-07-15T14:32:37Z"
+    "payload_sha256": "8b25fe119af63f98d1ed28d35c96d258021eaf8803ece065a8e1998c91a67834",
+    "source_as_of": "2026-09-25T13:46:01Z",
+    "fetched_at": "2026-09-28T03:38:05Z"
   },
   "latest_failure": {
-    "observed_at": "2026-10-08T03:04:13Z",
-    "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
+    "observed_at": "2026-10-12T02:28:47Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
     "had_canonical_before_failure": true,
-    "expected_payload_sha256": "fa42f98211043a8a8b8de67fd54201b2b5a090822fe96f4a1c040f094dfcb5c4",
+    "expected_payload_sha256": "8b25fe119af63f98d1ed28d35c96d258021eaf8803ece065a8e1998c91a67834",
     "data_loss": false
   },
-  "failure_count": 1
+  "failure_count": 2,
+  "failure_count_is_lower_bound": false,
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-12T02:28:47Z",
+    "last_probe_at": "2026-10-12T02:28:47Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-09-25",
+    "status": "unresolved",
+    "attempts": []
+  }
 }
