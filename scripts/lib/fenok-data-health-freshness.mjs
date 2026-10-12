@@ -67,9 +67,12 @@ export const HEALTH_SET_EXCLUSIONS = new Set();
 // members. The abandoned one-ticker fallback recovery index is not this set.
 export function readEtfSourceHealth(dataRoot, nowIso, fallbackOnly = false) {
   const index = readOptionalJson(dataRoot, "computed/data-supply/etf-detail/index.json");
-  const cadence = index?.detail_refresh_cadence ?? buildDetailRefreshCadence(
+  // The basket can be rebuilt before the canonical index in one sync cycle.
+  // Use the same current inputs as the index materializer for freshness bounds.
+  const cadence = buildDetailRefreshCadence(
     readOptionalJson(dataRoot, "stockanalysis/etf_universe.json"),
-    readOptionalJson(dataRoot, "admin/fenok-etf-core-daily-basket.json"));
+    readOptionalJson(dataRoot, "admin/fenok-etf-core-daily-basket.json"))
+    ?? index?.detail_refresh_cadence;
   const policy = DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail;
   const members = etfSourceMembers(index, policy, cadence, fallbackOnly);
   return members ? summarizeSourceHealth(members, nowIso, policy) : null;
