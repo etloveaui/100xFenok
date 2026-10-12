@@ -6646,6 +6646,16 @@ def preserve_yahoo_etf_history_coverage(
                 datetime.strptime(row["date"], "%Y-%m-%d")
             except ValueError as exc:
                 raise ValueError(f"Yahoo ETF {label} history date is invalid") from exc
+            # Retained raw history can include a distribution without a price.
+            # Preserve that action; fresh price rows still require a finite close.
+            if (label == "canonical"
+                    and set(row) == {"date", "Volume", "Dividends", "Stock Splits"}
+                    and all(isinstance(row[key], (int, float)) and not isinstance(row[key], bool)
+                            and math.isfinite(row[key]) and row[key] >= 0
+                            for key in ("Volume", "Dividends", "Stock Splits"))
+                    and row["Volume"] == 0
+                    and (row["Dividends"] > 0 or row["Stock Splits"] > 0)):
+                continue
             close = row.get("close", row.get("Close"))
             if (not isinstance(close, (int, float)) or isinstance(close, bool)
                     or not math.isfinite(close)):
@@ -7401,7 +7411,9 @@ def run_one(
                         fallback_options = {"collection_origin": collection_origin, "selected_refresh": True}
                         if protected_complete or selected is None or selected["provider"] == "stockanalysis":
                             fallback_options["require_resolver_fresh"] = True
+                        # Only a complete retained primary can set the fallback clock floor.
                         if (isinstance(canonical, dict) and canonical.get("source") == "stockanalysis"
+                                and is_complete_stockanalysis_etf_payload(ticker, canonical)
                                 and parse_iso_timestamp(canonical.get("source_as_of")) is not None):
                             fallback_options["minimum_source_as_of"] = canonical["source_as_of"]
                         fetch_yahoo_etf_fallback(ticker, mirror_public, **fallback_options)
