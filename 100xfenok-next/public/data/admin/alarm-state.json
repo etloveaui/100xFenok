@@ -1,13 +1,13 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-12T10:24:17.900Z",
+  "generated_at": "2026-10-12T11:34:02.824Z",
   "status": "open",
   "open_incident_count": 2,
   "open_incidents": [
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38228231769,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38228231769",
@@ -21,37 +21,25 @@
       "label": "Data stopped advancing",
       "alarm_reasons": [
         "data_stopped_two_generations",
-        "member_ratio_low",
-        "source_not_advancing"
+        "member_ratio_low"
       ],
       "outcome_alarms": [
-        {
-          "set": "stockanalysis_etf_detail",
-          "reasons": [
-            "member_ratio_low",
-            "source_not_advancing"
-          ],
-          "source_as_of": "2026-10-09",
-          "fresh_members": 5472,
-          "total_members": 5808,
-          "latest_attempt_at": "2026-10-12T08:12:34Z"
-        },
         {
           "set": "yahoo_etf_fallback",
           "reasons": [
             "member_ratio_low"
           ],
           "source_as_of": "2026-10-09",
-          "fresh_members": 108,
-          "total_members": 191,
+          "fresh_members": 111,
+          "total_members": 188,
           "latest_attempt_at": "2026-07-28T01:07:08Z"
         }
       ],
       "stopped_sets": [
         "yahoo_etf_fallback"
       ],
-      "latest_generated_at": "2026-10-12T10:18:23.426Z",
-      "previous_generated_at": "2026-10-12T10:08:08.586Z"
+      "latest_generated_at": "2026-10-12T11:09:58.824Z",
+      "previous_generated_at": "2026-10-12T10:53:20.098Z"
     }
   ],
   "watched_workflows": [
@@ -420,10 +408,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38235973333",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38235973333",
-    "observed_at": "2026-10-12T10:24:17.900Z",
-    "event": "workflow_dispatch",
+    "run_id": "38243318172",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38243318172",
+    "observed_at": "2026-10-12T11:34:02.824Z",
+    "event": "workflow_run",
     "workflows": [
       "global-writer-queue-observer.yml",
       "data-health-kpi"
