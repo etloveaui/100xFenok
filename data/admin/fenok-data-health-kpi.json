@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v4",
-  "generated_at": "2026-10-12T02:18:09.504Z",
+  "generated_at": "2026-10-12T02:31:46.561Z",
   "sets": [
     {
       "set": "fred_macro",
@@ -8,6 +8,41 @@
       "newest_source_date": "2026-10-11",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "fred_macro",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-11",
+        "oldest_source_member": "fred_macro",
+        "newest_source_date": "2026-10-11"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-11T14:50:12.843Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T14:50:12.843Z",
+        "source_as_of": "2026-10-11",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -16,10 +51,48 @@
       "newest_source_date": "2026-10-08",
       "max_age": "3d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "fred_banking",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            3,
+            20,
+            45,
+            301
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 4,
+        "fresh_members": 4,
+        "counts": {
+          "fresh": 4,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-01-01",
+        "oldest_source_member": "fred_banking_quarterly",
+        "newest_source_date": "2026-10-08"
+      },
       "oldest_source_date": "2026-01-01",
       "oldest_source_member": "fred_banking_quarterly",
       "fresh_members": 4,
       "total_members": 4,
+      "latest_attempt": {
+        "observed_at": "2026-10-11T14:04:06.932Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T14:04:06.932Z",
+        "source_as_of": "2026-10-08",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -28,6 +101,41 @@
       "newest_source_date": "2026-10-02",
       "max_age": "13d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "fred_yardeni",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            13
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-02",
+        "oldest_source_member": "fred_yardeni",
+        "newest_source_date": "2026-10-02"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-06T02:21:39.927Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-06T02:21:39.927Z",
+        "source_as_of": "2026-10-02",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -36,6 +144,41 @@
       "newest_source_date": "2026-06-30",
       "max_age": "121d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "fdic_tier1",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            121
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-06-30",
+        "oldest_source_member": "fdic_tier1",
+        "newest_source_date": "2026-06-30"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-08T06:04:26Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-08T06:04:26Z",
+        "source_as_of": "2026-06-30",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -44,14 +187,142 @@
       "newest_source_date": "2026-10-08",
       "max_age": "3d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "treasury_tga",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            3
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-08",
+        "oldest_source_member": "treasury_tga",
+        "newest_source_date": "2026-10-08"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-09T22:30:35.832Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-09T22:30:35.832Z",
+        "source_as_of": "2026-10-08",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
       "set": "defillama_stablecoins",
       "served_path": "data/macro/stablecoins.json",
-      "newest_source_date": "2026-10-11",
+      "newest_source_date": "2026-10-12",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "defillama_stablecoins",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-12",
+        "oldest_source_member": "defillama_stablecoins",
+        "newest_source_date": "2026-10-12"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-12T02:12:28.268Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-12T02:12:28.268Z",
+        "source_as_of": "2026-10-12",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
+      "serving_lkg": false
+    },
+    {
+      "set": "yahoo_etf_fallback",
+      "served_path": "data/yf/finance",
+      "newest_source_date": "2026-10-09",
+      "max_age": "9-32d",
+      "status": "stopped",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "detail",
+        "policy": {
+          "basis": "member_rotation",
+          "interval_days": [
+            7,
+            30
+          ],
+          "grace_days": [
+            2
+          ],
+          "fresh_bound_days": [
+            9,
+            32
+          ],
+          "expired_bound_days": [
+            14,
+            60
+          ]
+        },
+        "status": "stopped",
+        "reason": "member_ratio_low",
+        "total_members": 187,
+        "fresh_members": 103,
+        "counts": {
+          "fresh": 103,
+          "stale": 5,
+          "expired": 79,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-06-29T23:09:07Z",
+        "oldest_source_member": "BRKW",
+        "newest_source_date": "2026-10-09T18:59:18Z"
+      },
+      "oldest_source_date": "2026-06-29",
+      "oldest_source_member": "BRKW",
+      "fresh_members": 103,
+      "total_members": 187,
+      "latest_attempt": {
+        "observed_at": "2026-07-28T01:07:08Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-07-28T01:07:08Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -60,19 +331,91 @@
       "newest_source_date": "2026-10-05",
       "max_age": "11d",
       "status": "fresh",
-      "date_basis": "collected"
+      "date_basis": "collected",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "stockanalysis_etf_universe",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            11
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "collected",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-05",
+        "oldest_source_member": null,
+        "newest_source_date": "2026-10-05"
+      },
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
     },
     {
       "set": "stockanalysis_etf_detail",
       "served_path": "data/stockanalysis/etfs",
       "newest_source_date": "2026-10-09",
-      "max_age": "45d",
-      "status": "fresh",
-      "date_basis": "mixed",
-      "oldest_source_date": "2025-10-26",
-      "oldest_source_member": "UCIB",
-      "fresh_members": 5694,
-      "total_members": 5789
+      "max_age": "3-32d",
+      "status": "delayed",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "detail",
+        "policy": {
+          "basis": "member_rotation",
+          "interval_days": [
+            1,
+            7,
+            30
+          ],
+          "grace_days": [
+            2
+          ],
+          "fresh_bound_days": [
+            3,
+            9,
+            32
+          ],
+          "expired_bound_days": [
+            14,
+            60
+          ]
+        },
+        "status": "degraded",
+        "reason": "member_ratio_low",
+        "total_members": 5752,
+        "fresh_members": 5003,
+        "counts": {
+          "fresh": 5003,
+          "stale": 518,
+          "expired": 119,
+          "unknown": 112
+        },
+        "oldest_source_date": "2026-06-29T23:09:07Z",
+        "oldest_source_member": "BRKW",
+        "newest_source_date": "2026-10-09T20:00:00Z"
+      },
+      "oldest_source_date": "2026-06-29",
+      "oldest_source_member": "BRKW",
+      "fresh_members": 5003,
+      "total_members": 5752,
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
     },
     {
       "set": "stockanalysis_stock_financial",
@@ -80,7 +423,83 @@
       "newest_source_date": "2026-10-11",
       "max_age": "2d",
       "status": "fresh",
-      "date_basis": "collected"
+      "date_basis": "collected",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "stockanalysis_stock_financial",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "collected",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-11",
+        "oldest_source_member": "stockanalysis_stock_financial",
+        "newest_source_date": "2026-10-11"
+      },
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
+    },
+    {
+      "set": "earnings_overview",
+      "served_path": "data/earnings-overview",
+      "newest_source_date": "2026-06-30",
+      "max_age": "166d",
+      "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "earnings_overview",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            166
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 4,
+        "fresh_members": 4,
+        "counts": {
+          "fresh": 4,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-06-27",
+        "oldest_source_member": "AAPL",
+        "newest_source_date": "2026-06-30"
+      },
+      "oldest_source_date": "2026-06-27",
+      "oldest_source_member": "AAPL",
+      "fresh_members": 4,
+      "total_members": 4,
+      "latest_attempt": {
+        "observed_at": "2026-10-12T00:35:25Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-12T00:35:25Z",
+        "source_as_of": "2026-06-30",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     },
     {
       "set": "stockanalysis_surfaces",
@@ -89,10 +508,40 @@
       "max_age": "2d",
       "status": "fresh",
       "date_basis": "collected",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "stockanalysis_surfaces",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "collected",
+        "total_members": 25,
+        "fresh_members": 25,
+        "counts": {
+          "fresh": 25,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-10",
+        "oldest_source_member": "actions_recent",
+        "newest_source_date": "2026-10-11"
+      },
       "oldest_source_date": "2026-10-10",
       "oldest_source_member": "actions_recent",
       "fresh_members": 25,
-      "total_members": 25
+      "total_members": 25,
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
     },
     {
       "set": "yahoo_ticker_macro",
@@ -100,10 +549,45 @@
       "newest_source_date": "2026-10-09",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "yahoo_ticker_macro",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 2,
+        "fresh_members": 2,
+        "counts": {
+          "fresh": 2,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "SOXL",
+        "newest_source_date": "2026-10-09"
+      },
       "oldest_source_date": "2026-10-09",
       "oldest_source_member": "SOXL",
       "fresh_members": 2,
-      "total_members": 2
+      "total_members": 2,
+      "latest_attempt": {
+        "observed_at": "2026-10-12T02:05:23.616Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-12T02:05:23.616Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     },
     {
       "set": "sentiment",
@@ -111,10 +595,46 @@
       "newest_source_date": "2026-10-10",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "sentiment",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2,
+            11
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 5,
+        "fresh_members": 5,
+        "counts": {
+          "fresh": 5,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-06",
+        "oldest_source_member": "cftc",
+        "newest_source_date": "2026-10-10"
+      },
       "oldest_source_date": "2026-10-06",
       "oldest_source_member": "cftc",
       "fresh_members": 5,
       "total_members": 5,
+      "latest_attempt": {
+        "observed_at": "2026-10-10T01:35:17.187Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-10T01:35:17.187Z",
+        "source_as_of": "2026-10-10",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -123,6 +643,41 @@
       "newest_source_date": "2026-10-09",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "nasdaq_giw_sox",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "nasdaq_giw_sox",
+        "newest_source_date": "2026-10-09"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-09T03:04:52.405Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-09T03:04:52.405Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -131,10 +686,45 @@
       "newest_source_date": "2026-10-09",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "us_indices_daily",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 4,
+        "fresh_members": 4,
+        "counts": {
+          "fresh": 4,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "nasdaq",
+        "newest_source_date": "2026-10-09"
+      },
       "oldest_source_date": "2026-10-09",
       "oldest_source_member": "nasdaq",
       "fresh_members": 4,
-      "total_members": 4
+      "total_members": 4,
+      "latest_attempt": {
+        "observed_at": "2026-10-10T01:38:26.869Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-10T01:38:26.869Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     },
     {
       "set": "oecd_cli",
@@ -142,6 +732,41 @@
       "newest_source_date": "2026-09-01",
       "max_age": "45d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "oecd_cli",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            45
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-09-01",
+        "oldest_source_member": "oecd_cli",
+        "newest_source_date": "2026-09-01"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-11T13:12:00.252Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T13:12:00.252Z",
+        "source_as_of": "2026-09-01",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -150,6 +775,41 @@
       "newest_source_date": "2026-10-07",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "krx",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-07",
+        "oldest_source_member": "krx",
+        "newest_source_date": "2026-10-07"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-09T17:10:22.955Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-09T17:10:22.955Z",
+        "source_as_of": "2026-10-07",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -158,10 +818,47 @@
       "newest_source_date": "2026-10-11",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "slickcharts",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2,
+            11,
+            45
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 5,
+        "fresh_members": 5,
+        "counts": {
+          "fresh": 5,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-01",
+        "oldest_source_member": "monthly",
+        "newest_source_date": "2026-10-11"
+      },
       "oldest_source_date": "2026-10-01",
       "oldest_source_member": "monthly",
       "fresh_members": 5,
-      "total_members": 5
+      "total_members": 5,
+      "latest_attempt": {
+        "observed_at": "2026-10-11T14:11:45.666Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T14:11:45.666Z",
+        "source_as_of": "2026-10-11",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     },
     {
       "set": "edgar_filings",
@@ -170,6 +867,45 @@
       "max_age": "11d",
       "status": "fresh",
       "date_basis": "collected",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "edgar_filings",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            11
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "collected",
+        "total_members": 204,
+        "fresh_members": 204,
+        "counts": {
+          "fresh": 204,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-11",
+        "oldest_source_member": "AAPL",
+        "newest_source_date": "2026-10-11"
+      },
+      "oldest_source_date": "2026-10-11",
+      "oldest_source_member": "AAPL",
+      "fresh_members": 204,
+      "total_members": 204,
+      "latest_attempt": {
+        "observed_at": "2026-10-11T13:04:08.958Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T13:04:08.958Z",
+        "source_as_of": "2026-10-11",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -177,32 +913,199 @@
       "served_path": "data/sec-13f",
       "newest_source_date": "2026-06-30",
       "max_age": "121d",
-      "status": "fresh"
+      "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "sec_13f",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            121
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-06-30",
+        "oldest_source_member": "sec_13f",
+        "newest_source_date": "2026-06-30"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-11T16:19:34.000Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T16:19:34.000Z",
+        "source_as_of": "2026-06-30",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     },
     {
       "set": "sentiment_aaii",
       "served_path": "data/sentiment/aaii.json",
       "newest_source_date": "2026-10-07",
       "max_age": "11d",
-      "status": "fresh"
+      "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "sentiment_aaii",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            11
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-07",
+        "oldest_source_member": "sentiment_aaii",
+        "newest_source_date": "2026-10-07"
+      },
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
     },
     {
       "set": "benchmarks",
       "served_path": "data/benchmarks/us.json",
-      "newest_source_date": "2026-10-02",
+      "newest_source_date": "2026-10-09",
       "max_age": "13d",
       "status": "fresh",
-      "oldest_source_date": "2026-10-02",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "benchmarks",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            13
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 6,
+        "fresh_members": 6,
+        "counts": {
+          "fresh": 6,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "developed",
+        "newest_source_date": "2026-10-09"
+      },
+      "oldest_source_date": "2026-10-09",
       "oldest_source_member": "developed",
       "fresh_members": 6,
-      "total_members": 6
+      "total_members": 6,
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
     },
     {
       "set": "global_scouter",
       "served_path": "data/global-scouter/core/metadata.json",
       "newest_source_date": "2026-10-09",
       "max_age": "13d",
-      "status": "fresh"
+      "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "global_scouter",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            13
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "global_scouter",
+        "newest_source_date": "2026-10-09"
+      },
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
+    },
+    {
+      "set": "briefing",
+      "served_path": "data/briefing",
+      "newest_source_date": "2026-10-09",
+      "max_age": "2d",
+      "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "briefing",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "morning",
+        "newest_source_date": "2026-10-09"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-09T21:09:00.000Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-09T21:09:00.000Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     },
     {
       "set": "damodaran",
@@ -210,6 +1113,41 @@
       "newest_source_date": "2026-10-10",
       "max_age": "456d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "damodaran",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            456
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-10",
+        "oldest_source_member": "damodaran",
+        "newest_source_date": "2026-10-10"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-10T16:15:02.810Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-10T16:15:02.810Z",
+        "source_as_of": "2026-10-10",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -218,6 +1156,41 @@
       "newest_source_date": "2026-10-09",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "finra_short_volume",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "finra_short_volume",
+        "newest_source_date": "2026-10-09"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-10T06:15:05.433Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-10T06:15:05.433Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -226,6 +1199,41 @@
       "newest_source_date": "2026-08-31",
       "max_age": "39d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "finra_ats_weekly",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            39
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-08-31",
+        "oldest_source_member": "finra_ats_weekly",
+        "newest_source_date": "2026-08-31"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-07T17:49:14.001Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-07T17:49:14.001Z",
+        "source_as_of": "2026-08-31",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -234,6 +1242,41 @@
       "newest_source_date": "2026-10-09",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "occ_options_volume",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-09",
+        "oldest_source_member": "occ_options_volume",
+        "newest_source_date": "2026-10-09"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-10T06:21:15.904Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-10T06:21:15.904Z",
+        "source_as_of": "2026-10-09",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -242,6 +1285,41 @@
       "newest_source_date": "2026-10-10",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "yahoo_private_options",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-10",
+        "oldest_source_member": "yahoo_private_options",
+        "newest_source_date": "2026-10-10"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-10T07:04:01.182Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-10T07:04:01.182Z",
+        "source_as_of": "2026-10-10",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -250,6 +1328,41 @@
       "newest_source_date": "2026-10-11",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "apewisdom_attention",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-11",
+        "oldest_source_member": "apewisdom_attention",
+        "newest_source_date": "2026-10-11"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-11T13:45:19.687Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T13:45:19.687Z",
+        "source_as_of": "2026-10-11",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -258,6 +1371,41 @@
       "newest_source_date": "2026-10-10",
       "max_age": "2d",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "gdelt_news_tone",
+        "policy": {
+          "basis": "source_calendar",
+          "fresh_bound_days": [
+            2
+          ]
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 1,
+        "fresh_members": 1,
+        "counts": {
+          "fresh": 1,
+          "stale": 0,
+          "expired": 0,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-10-10",
+        "oldest_source_member": null,
+        "newest_source_date": "2026-10-10"
+      },
+      "latest_attempt": {
+        "observed_at": "2026-10-11T22:44:12.871Z",
+        "outcome": "success",
+        "failure_class": null
+      },
+      "outcome_state": {
+        "attempt_at": "2026-10-11T22:44:12.871Z",
+        "source_as_of": "2026-10-10",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      },
       "serving_lkg": false
     },
     {
@@ -266,10 +1414,38 @@
       "newest_source_date": "2026-10-09",
       "max_age": "6bd",
       "status": "fresh",
+      "source_health": {
+        "observed_at": "2026-10-12T02:31:46.561Z",
+        "scope": "yahoo_batch_quote_history",
+        "policy": {
+          "basis": "business_days",
+          "fresh_bound_business_days": 6
+        },
+        "status": "fresh",
+        "reason": null,
+        "date_basis": "source",
+        "total_members": 6896,
+        "fresh_members": 6743,
+        "counts": {
+          "fresh": 6743,
+          "stale": 0,
+          "expired": 153,
+          "unknown": 0
+        },
+        "oldest_source_date": "2026-06-09",
+        "oldest_source_member": "ZCBB",
+        "newest_source_date": "2026-10-09"
+      },
       "oldest_source_date": "2026-06-09",
       "oldest_source_member": "ZCBB",
       "fresh_members": 6743,
-      "total_members": 6896
+      "total_members": 6896,
+      "latest_attempt": {
+        "observed_at": null,
+        "outcome": "unobserved",
+        "failure_class": null
+      },
+      "outcome_state": null
     }
   ]
 }

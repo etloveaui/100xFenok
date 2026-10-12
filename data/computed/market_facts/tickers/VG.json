@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "VG",
   "asset_type": "stock",
-  "generated_at": "2026-10-11T07:40:14Z",
+  "generated_at": "2026-10-12T02:29:07Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -223,6 +223,7 @@
       "provenance": {
         "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
         "benchmark": "SPY",
+        "benchmark_ticker": "SPY",
         "currency_scope": "USD listings",
         "window_days": 365,
         "minimum_bars": 200,
@@ -252,6 +253,7 @@
           "provenance": {
             "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
             "benchmark": "SPY",
+            "benchmark_ticker": "SPY",
             "currency_scope": "USD listings",
             "window_days": 365,
             "minimum_bars": 200,
@@ -381,6 +383,7 @@
   "financials": null,
   "sources": {
     "yf": true,
+    "yf_quote": false,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
@@ -388,6 +391,7 @@
   },
   "source_files": {
     "yf": "yf/finance/VG.json",
+    "yf_quote": null,
     "stockanalysis": null,
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,

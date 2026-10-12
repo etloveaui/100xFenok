@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "VAVX",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
-  "source_as_of": "2026-07-08",
+  "generated_at": "2026-10-12T02:29:07Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 13.348999977111816,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:25:18Z",
+      "value": 20.9438,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T06:38:05Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 20.9438,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:38:05Z",
+          "confidence": "observed"
+        },
+        {
           "value": 13.348999977111816,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-07-08",
@@ -38,13 +45,37 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "previous_close": {
+      "value": 20.9,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T06:38:05Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 20.9,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:38:05Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.7710000228881828,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:25:18Z",
+      "value": 0.043800354,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T06:38:05Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -53,6 +84,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.043800354,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:38:05Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.7710000228881828,
           "source": "yf.stockanalysis_fallback.quote",
@@ -61,13 +99,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -5.460340105440388,
-      "source": "yf.stockanalysis_fallback.quote",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:25:18Z",
+      "value": 0.20957108,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T06:38:05Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +116,13 @@
       ],
       "candidates": [
         {
+          "value": 0.20957108,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T06:38:05Z",
+          "confidence": "observed"
+        },
+        {
           "value": -5.460340105440388,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-07-08",
@@ -84,7 +130,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 11308748.0,
@@ -232,6 +279,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": true,
@@ -239,6 +287,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/VAVX.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/VAVX.json",
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

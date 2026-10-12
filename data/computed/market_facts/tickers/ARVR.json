@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "ARVR",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
-  "source_as_of": "2026-09-30",
+  "generated_at": "2026-10-12T02:29:07Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 58.37,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T15:20:03Z",
+      "value": 58.887,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:44:48Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 58.887,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:44:48Z",
+          "confidence": "observed"
+        },
+        {
           "value": 58.37,
           "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
@@ -38,13 +45,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 57.08,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T15:20:03Z",
+      "value": 58.77,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:44:48Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -52,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 58.77,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:44:48Z",
+          "confidence": "observed"
+        },
         {
           "value": 57.08,
           "source": "stockanalysis.quote",
@@ -60,13 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 1.29,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T15:20:03Z",
+      "value": 0.11700058,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:44:48Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -75,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.11700058,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:44:48Z",
+          "confidence": "observed"
+        },
         {
           "value": 1.29,
           "source": "stockanalysis.quote",
@@ -83,13 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 2.26,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T15:20:03Z",
+      "value": 0.19908215,
+      "source": "yf",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-11T05:44:48Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -99,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": 0.19908215,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-11T05:44:48Z",
+          "confidence": "observed"
+        },
+        {
           "value": 2.26,
           "source": "stockanalysis.quote",
           "as_of": "2026-09-30",
@@ -106,7 +137,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 8700000.0,
@@ -803,6 +835,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
@@ -810,6 +843,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/ARVR.json",
     "stockanalysis": "computed/data-supply/etf-detail/payloads/ARVR.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

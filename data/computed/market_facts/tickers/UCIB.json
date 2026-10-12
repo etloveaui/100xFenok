@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "UCIB",
   "asset_type": "etf",
-  "generated_at": "2026-10-11T13:31:32Z",
+  "generated_at": "2026-10-12T02:29:07Z",
   "source_as_of": "2026-09-24",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -17,8 +17,8 @@
   },
   "facts": {
     "price": {
-      "value": 38.207000732421875,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": 38.2066,
+      "source": "yf",
       "as_of": "2026-09-24",
       "fetched_at": "2026-09-25T06:01:00Z",
       "confidence": "observed",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 38.2066,
+          "source": "yf",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-25T06:01:00Z",
+          "confidence": "observed"
+        },
+        {
           "value": 38.207000732421875,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-09-24",
@@ -38,11 +45,35 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "previous_close": {
+      "value": 39.11,
+      "source": "yf",
+      "as_of": "2026-09-24",
+      "fetched_at": "2026-09-25T06:01:00Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 39.11,
+          "source": "yf",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-25T06:01:00Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.9029992675781244,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -0.9034,
+      "source": "yf",
       "as_of": "2026-09-24",
       "fetched_at": "2026-09-25T06:01:00Z",
       "confidence": "observed",
@@ -53,6 +84,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.9034,
+          "source": "yf",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-25T06:01:00Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.9029992675781244,
           "source": "yf.stockanalysis_fallback.quote",
@@ -61,11 +99,12 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -2.3088705384252735,
-      "source": "yf.stockanalysis_fallback.quote",
+      "value": -2.3099,
+      "source": "yf",
       "as_of": "2026-09-24",
       "fetched_at": "2026-09-25T06:01:00Z",
       "confidence": "observed",
@@ -77,6 +116,13 @@
       ],
       "candidates": [
         {
+          "value": -2.3099,
+          "source": "yf",
+          "as_of": "2026-09-24",
+          "fetched_at": "2026-09-25T06:01:00Z",
+          "confidence": "observed"
+        },
+        {
           "value": -2.3088705384252735,
           "source": "yf.stockanalysis_fallback.quote",
           "as_of": "2026-09-24",
@@ -84,7 +130,8 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 24143276.0,
@@ -375,6 +422,7 @@
   "financials": null,
   "sources": {
     "yf": false,
+    "yf_quote": true,
     "stockanalysis": false,
     "stockanalysis_yf_fallback": true,
     "stockanalysis_etf_catalog": true,
@@ -382,6 +430,7 @@
   },
   "source_files": {
     "yf": null,
+    "yf_quote": "yf/finance/UCIB.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/UCIB.json",
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
