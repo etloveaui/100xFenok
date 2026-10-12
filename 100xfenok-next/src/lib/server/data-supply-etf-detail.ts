@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import policyRegistry from "../../generated/data-supply-policy-registry.json";
-import { sourceFreshness, detailSourcePolicy } from "../../../../scripts/lib/family-health.mjs";
+import { sourceFreshness, detailSourcePolicy } from "../../generated/family-health/family-health.mjs";
 import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,

@@ -95,6 +95,7 @@
     "start:qa": "FENOK_LOCAL_PROD_QA=1 next start",
     "sync-research": "node scripts/sync-research-artifacts.mjs",
     "lint": "eslint",
+    "pretypecheck": "node ../scripts/materialize-family-health.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "qa:browser": "node .qa-playwright.js",
