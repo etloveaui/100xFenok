@@ -62,7 +62,7 @@ export async function checkCatchup({ head = process.env.GITHUB_SHA, repo = proce
   if (!isDeployProvenance(live)) throw new Error("Live provenance is malformed");
   // Endpoint tree comparison, not a capped 300-file compare API response.
   // The gate's partial clone has the full graph/trees, without data blobs.
-  const files = command("git", ["diff", "--name-only", "-z", live.sha, head, "--"],
+  const files = command("git", ["diff", "--no-renames", "--name-only", "-z", live.sha, head, "--"],
     { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 }).split("\0").filter(Boolean);
   const publicFiles = new Set(command("git", ["ls-tree", "-r", "--name-only", "-z", head,
     "--", "100xfenok-next/public/data"], { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 }).split("\0").filter(Boolean));
