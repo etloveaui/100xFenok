@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "COMD",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T05:28:09Z",
+  "generated_at": "2026-10-12T12:07:18Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 30.2693,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T04:38:14Z",
+      "fetched_at": "2026-10-12T11:33:21Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,18 +34,25 @@
           "value": 30.2693,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T04:38:14Z",
+          "fetched_at": "2026-10-12T11:33:21Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 30.2693,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 30.2866,
       "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T04:38:14Z",
+      "fetched_at": "2026-10-12T11:33:21Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -57,18 +64,25 @@
           "value": 30.2866,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T04:38:14Z",
+          "fetched_at": "2026-10-12T11:33:21Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 30.29,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.0172997,
-      "source": "yf",
+      "value": -0.02,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T04:38:14Z",
+      "fetched_at": "2026-10-12T11:33:20Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,22 +91,29 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -0.02,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
+          "confidence": "observed"
+        },
         {
           "value": -0.0172997,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T04:38:14Z",
+          "fetched_at": "2026-10-12T11:33:21Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.0571198,
-      "source": "yf",
+      "value": -0.07,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T04:38:14Z",
+      "fetched_at": "2026-10-12T11:33:20Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
+          "value": -0.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.0571198,
           "source": "yf",
           "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T04:38:14Z",
+          "fetched_at": "2026-10-12T11:33:21Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 3640000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:20Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 3640000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.55,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:20Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.55,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 0.2123,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -0.20803,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:20Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 0.2123,
+          "value": -0.20803,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -0.20803,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,379 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 12.416344175474823,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:20Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 12.416344175474823,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:20Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 28,
+    "holdings_updated": "Oct 9, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "#CLIP",
+        "name": "Global X 1-3 Month T-Bill ETF",
+        "weight_pct": 42.67,
+        "raw": {
+          "no": 1,
+          "n": "Global X 1-3 Month T-Bill ETF",
+          "s": "#CLIP",
+          "as": "42.67%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "CASH",
+        "weight_pct": 6.62,
+        "raw": {
+          "no": 2,
+          "n": "CASH",
+          "as": "6.62%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "MGCZ6.COMDTY",
+        "name": "MICRO GOLD        DEC26",
+        "weight_pct": 5.88,
+        "raw": {
+          "no": 3,
+          "n": "MICRO GOLD        DEC26",
+          "s": "MGCZ6.Comdty",
+          "as": "5.88%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "COF7.COMDTY",
+        "name": "BRENT CRUDE FUTR  JAN27",
+        "weight_pct": 5.65,
+        "raw": {
+          "no": 4,
+          "n": "BRENT CRUDE FUTR  JAN27",
+          "s": "COF7.Comdty",
+          "as": "5.65%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "CLF7.COMDTY",
+        "name": "WTI CRUDE FUTURE  JAN27",
+        "weight_pct": 3.77,
+        "raw": {
+          "no": 5,
+          "n": "WTI CRUDE FUTURE  JAN27",
+          "s": "CLF7.Comdty",
+          "as": "3.77%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "S.F7 COMDTY",
+        "name": "SOYBEAN FUTURE    JAN27",
+        "weight_pct": 2.74,
+        "raw": {
+          "no": 6,
+          "n": "SOYBEAN FUTURE    JAN27",
+          "s": "S.F7 Comdty",
+          "as": "2.74%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "HOH7.COMDTY",
+        "name": "NY HARB ULSD FUT  MAR27",
+        "weight_pct": 2.5,
+        "raw": {
+          "no": 7,
+          "n": "NY HARB ULSD FUT  MAR27",
+          "s": "HOH7.Comdty",
+          "as": "2.50%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "HGZ6.COMDTY",
+        "name": "COPPER FUTURE     DEC26",
+        "weight_pct": 2.33,
+        "raw": {
+          "no": 8,
+          "n": "COPPER FUTURE     DEC26",
+          "s": "HGZ6.Comdty",
+          "as": "2.33%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "NGF27.COMDTY",
+        "name": "NATURAL GAS FUTR  JAN27",
+        "weight_pct": 2.22,
+        "raw": {
+          "no": 9,
+          "n": "NATURAL GAS FUTR  JAN27",
+          "s": "NGF27.Comdty",
+          "as": "2.22%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "SBH7.COMDTY",
+        "name": "SUGAR #11 (WORLD) MAR27",
+        "weight_pct": 2.21,
+        "raw": {
+          "no": 10,
+          "n": "SUGAR #11 (WORLD) MAR27",
+          "s": "SBH7.Comdty",
+          "as": "2.21%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "LAZ26.COMDTY",
+        "name": "LME PRI ALUM FUTR DEC26",
+        "weight_pct": 2.12,
+        "raw": {
+          "no": 11,
+          "n": "LME PRI ALUM FUTR DEC26",
+          "s": "LAZ26.Comdty",
+          "as": "2.12%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "C.Z6 COMDTY",
+        "name": "CORN FUTURE       DEC26",
+        "weight_pct": 2.01,
+        "raw": {
+          "no": 12,
+          "n": "CORN FUTURE       DEC26",
+          "s": "C.Z6 Comdty",
+          "as": "2.01%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "QSX6.COMDTY",
+        "name": "LOW SU GASOIL G   NOV26",
+        "weight_pct": 1.98,
+        "raw": {
+          "no": 13,
+          "n": "LOW SU GASOIL G   NOV26",
+          "s": "QSX6.Comdty",
+          "as": "1.98%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "W.Z6 COMDTY",
+        "name": "WHEAT FUTURE(CBT) DEC26",
+        "weight_pct": 1.87,
+        "raw": {
+          "no": 14,
+          "n": "WHEAT FUTURE(CBT) DEC26",
+          "s": "W.Z6 Comdty",
+          "as": "1.87%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "QSF7.COMDTY",
+        "name": "LOW SU GASOIL G   JAN27",
+        "weight_pct": 1.86,
+        "raw": {
+          "no": 15,
+          "n": "LOW SU GASOIL G   JAN27",
+          "s": "QSF7.Comdty",
+          "as": "1.86%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "XBF7.COMDTY",
+        "name": "GASOLINE RBOB FUT JAN27",
+        "weight_pct": 1.79,
+        "raw": {
+          "no": 16,
+          "n": "GASOLINE RBOB FUT JAN27",
+          "s": "XBF7.Comdty",
+          "as": "1.79%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "BOZ6.COMDTY",
+        "name": "SOYBEAN OIL FUTR  DEC26",
+        "weight_pct": 1.71,
+        "raw": {
+          "no": 17,
+          "n": "SOYBEAN OIL FUTR  DEC26",
+          "s": "BOZ6.Comdty",
+          "as": "1.71%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "CCZ6.COMDTY",
+        "name": "COCOA FUTURE      DEC26",
+        "weight_pct": 1.58,
+        "raw": {
+          "no": 18,
+          "n": "COCOA FUTURE      DEC26",
+          "s": "CCZ6.Comdty",
+          "as": "1.58%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "LXZ6.COMDTY",
+        "name": "LME ZINC FUTURE   DEC26",
+        "weight_pct": 1.33,
+        "raw": {
+          "no": 19,
+          "n": "LME ZINC FUTURE   DEC26",
+          "s": "LXZ6.Comdty",
+          "as": "1.33%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "LCZ6.COMDTY",
+        "name": "LIVE CATTLE FUTR  DEC26",
+        "weight_pct": 1.27,
+        "raw": {
+          "no": 20,
+          "n": "LIVE CATTLE FUTR  DEC26",
+          "s": "LCZ6.Comdty",
+          "as": "1.27%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "CTZ6.COMDTY",
+        "name": "COTTON NO.2 FUTR  DEC26",
+        "weight_pct": 1.12,
+        "raw": {
+          "no": 21,
+          "n": "COTTON NO.2 FUTR  DEC26",
+          "s": "CTZ6.Comdty",
+          "as": "1.12%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!OTC/SRUUF",
+        "name": "Sprott Physical Uranium Trust Fund",
+        "weight_pct": 1.02,
+        "raw": {
+          "no": 22,
+          "n": "Sprott Physical Uranium Trust Fund",
+          "s": "!otc/SRUUF",
+          "as": "1.02%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "SMZ6.COMDTY",
+        "name": "SOYBEAN MEAL FUTR DEC26",
+        "weight_pct": 1.02,
+        "raw": {
+          "no": 23,
+          "n": "SOYBEAN MEAL FUTR DEC26",
+          "s": "SMZ6.Comdty",
+          "as": "1.02%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "KWZ6.COMDTY",
+        "name": "KC HRW WHEAT FUT  DEC26",
+        "weight_pct": 1.0,
+        "raw": {
+          "no": 24,
+          "n": "KC HRW WHEAT FUT  DEC26",
+          "s": "KWZ6.Comdty",
+          "as": "1.00%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "SIOZ6.COMDTY",
+        "name": "MICRO SILVER      DEC26",
+        "weight_pct": 0.85,
+        "raw": {
+          "no": 25,
+          "n": "MICRO SILVER      DEC26",
+          "s": "SIOZ6.Comdty",
+          "as": "0.85%",
+          "sh": "n/a"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +597,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/COMD.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/COMD.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

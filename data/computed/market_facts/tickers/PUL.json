@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "PUL",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-07",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 83.0754,
+      "value": 84.9858,
       "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:17:13Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:45Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,21 +31,28 @@
       ],
       "candidates": [
         {
-          "value": 83.0754,
+          "value": 84.9858,
           "source": "yf",
-          "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:17:13Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:45Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 84.9858,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 77.19,
+      "value": 81.445,
       "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:17:13Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:45Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,21 +61,28 @@
       ],
       "candidates": [
         {
-          "value": 77.19,
+          "value": 81.445,
           "source": "yf",
-          "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:17:13Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:45Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 80.97,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 5.885399,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:17:13Z",
+      "value": 4.02,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:44Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,21 +92,28 @@
       ],
       "candidates": [
         {
-          "value": 5.885399,
+          "value": 4.02,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 3.540802,
           "source": "yf",
-          "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:17:13Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:45Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 7.6245613,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:17:13Z",
+      "value": 4.96,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:44Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
-          "value": 7.6245613,
+          "value": 4.96,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 4.3474765,
           "source": "yf",
-          "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:17:13Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:45Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 2420000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:44Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 2420000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 1.5,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:44Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1.5,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 84.346,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": 123.351,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:44Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 84.346,
+          "value": 123.351,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 123.351,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,130 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 265.85061365407216,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:36:44Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 265.85061365407216,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:36:44Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 6,
+    "holdings_updated": "Oct 9, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "Long P Trs Clear Street",
+        "weight_pct": 199.95,
+        "shares": 32070,
+        "raw": {
+          "no": 1,
+          "n": "Long P Trs Clear Street",
+          "as": "199.95%",
+          "sh": "32,070"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "Cash & Cash Equivalents",
+        "weight_pct": 41.41,
+        "shares": 1000000,
+        "raw": {
+          "no": 2,
+          "n": "Cash & Cash Equivalents",
+          "as": "41.41%",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Us Dollars",
+        "weight_pct": 2.42,
+        "shares": 58453,
+        "raw": {
+          "no": 3,
+          "n": "Us Dollars",
+          "as": "2.42%",
+          "sh": "58,453"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!MUTF/TPIXX",
+        "name": "State Street Instl Trs Pls MMkt Premier",
+        "weight_pct": 0.0,
+        "shares": 25,
+        "raw": {
+          "no": 4,
+          "n": "State Street Instl Trs Pls MMkt Premier",
+          "s": "!mutf/TPIXX",
+          "as": "0.00%",
+          "sh": "25"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash",
+        "weight_pct": -0.46,
+        "shares": 0,
+        "raw": {
+          "no": 5,
+          "n": "Cash",
+          "as": "-0.46%",
+          "sh": 0
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Long P Trs Clear Street",
+        "weight_pct": -143.32,
+        "shares": 3461110,
+        "raw": {
+          "no": 6,
+          "n": "Long P Trs Clear Street",
+          "as": "-143.32%",
+          "sh": "3,461,110"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "P",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +348,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/PUL.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/PUL.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

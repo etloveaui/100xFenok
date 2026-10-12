@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "DLMY",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-07",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 30.845,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:03:14Z",
+      "value": 30.8805,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,21 +31,28 @@
       ],
       "candidates": [
         {
-          "value": 30.845,
+          "value": 30.8805,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 30.8805,
           "source": "yf",
           "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:03:14Z",
+          "fetched_at": "2026-10-12T11:33:40Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 30.885,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:03:14Z",
+      "value": 30.77,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,21 +61,28 @@
       ],
       "candidates": [
         {
-          "value": 30.885,
+          "value": 30.77,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 30.7661,
           "source": "yf",
           "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:03:14Z",
+          "fetched_at": "2026-10-12T11:33:40Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.0400009,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:03:14Z",
+      "value": 0.11,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,21 +92,28 @@
       ],
       "candidates": [
         {
-          "value": -0.0400009,
+          "value": 0.11,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.114401,
           "source": "yf",
           "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:03:14Z",
+          "fetched_at": "2026-10-12T11:33:40Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.129516,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-08T06:03:14Z",
+      "value": 0.36,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
-          "value": -0.129516,
+          "value": 0.36,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.371841,
           "source": "yf",
           "as_of": "2026-10-07",
-          "fetched_at": "2026-10-08T06:03:14Z",
+          "fetched_at": "2026-10-12T11:33:40Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 12310000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 12310000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.85,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.85,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 0.0331,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": 1.214,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 0.0331,
+          "value": 1.214,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.214,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,280 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 2.970990330110043,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:33:39Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 2.970990330110043,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:33:39Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 16,
+    "holdings_updated": "May 31, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "SPY.5 C7.42",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 76.38,
+        "shares": 400,
+        "raw": {
+          "no": 1,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 C7.42",
+          "as": "76.38%",
+          "sh": "400"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "SPY.5 C7.42",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 19.09,
+        "shares": 100,
+        "raw": {
+          "no": 2,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 C7.42",
+          "as": "19.09%",
+          "sh": "100"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "SPY.5 P646.8",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 7.45,
+        "shares": 1600,
+        "raw": {
+          "no": 3,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P646.8",
+          "as": "7.45%",
+          "sh": "1,600"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "SPY.5 P739.2",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 7.44,
+        "shares": 800,
+        "raw": {
+          "no": 4,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P739.2",
+          "as": "7.44%",
+          "sh": "800"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "SPY.5 C7.42",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 3.82,
+        "shares": 20,
+        "raw": {
+          "no": 5,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 C7.42",
+          "as": "3.82%",
+          "sh": "20"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "SPY.5 P646.8",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 1.86,
+        "shares": 400,
+        "raw": {
+          "no": 6,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P646.8",
+          "as": "1.86%",
+          "sh": "400"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "SPY.5 P739.2",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 1.86,
+        "shares": 200,
+        "raw": {
+          "no": 7,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P739.2",
+          "as": "1.86%",
+          "sh": "200"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!MUTF/MISXX",
+        "name": "Morgan Stanley Instl Lqudty Trs Instl",
+        "weight_pct": 1.12,
+        "shares": 437211,
+        "raw": {
+          "no": 8,
+          "n": "Morgan Stanley Instl Lqudty Trs Instl",
+          "s": "!mutf/MISXX",
+          "as": "1.12%",
+          "sh": "437,211"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "SPY.5 P646.8",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 0.37,
+        "shares": 80,
+        "raw": {
+          "no": 9,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P646.8",
+          "as": "0.37%",
+          "sh": "80"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "SPY.5 P739.2",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": 0.37,
+        "shares": 40,
+        "raw": {
+          "no": 10,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P739.2",
+          "as": "0.37%",
+          "sh": "40"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "SPY.5 C843.5",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": -0.12,
+        "shares": -20,
+        "raw": {
+          "no": 11,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 C843.5",
+          "as": "-0.12%",
+          "sh": "-20"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "SPY.5 C843.5",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": -0.59,
+        "shares": -100,
+        "raw": {
+          "no": 12,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 C843.5",
+          "as": "-0.59%",
+          "sh": "-100"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "SPY.5 P665.28",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": -0.64,
+        "shares": -120,
+        "raw": {
+          "no": 13,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P665.28",
+          "as": "-0.64%",
+          "sh": "-120"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "SPY.5 C843.5",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": -2.36,
+        "shares": -400,
+        "raw": {
+          "no": 14,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 C843.5",
+          "as": "-2.36%",
+          "sh": "-400"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "SPY.5 P665.28",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": -3.21,
+        "shares": -600,
+        "raw": {
+          "no": 15,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P665.28",
+          "as": "-3.21%",
+          "sh": "-600"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "SPY.5 P665.28",
+        "name": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+        "weight_pct": -12.84,
+        "shares": -2400,
+        "raw": {
+          "no": 16,
+          "n": "CBOE GLOBAL MARKETS, INC. - STATE STREET SPDR S&P 500 ETF TRUST",
+          "s": "SPY.5 P665.28",
+          "as": "-12.84%",
+          "sh": "-2,400"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +498,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/DLMY.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/DLMY.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

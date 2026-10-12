@@ -1,42 +1,18 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-12T03:25:35.755Z",
+  "generated_at": "2026-10-12T15:24:28.910Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 2,
   "open_incidents": [
     {
-      "workflow": "deploy-worker.yml",
-      "label": "Deploy Worker (Cloudflare)",
+      "workflow": "build-stocks-analyzer.yml",
+      "label": "Build Stocks Analyzer",
       "streak": 2,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 38195589009,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38195589009",
+      "first_failing_run_id": 38210986001,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38210986001",
       "alarm_reasons": [
         "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "validate-workflows.yml",
-      "label": "Validate GitHub Workflows",
-      "streak": 3,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 38195588825,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38195588825",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "retention-sweep.yml",
-      "label": "R2 retention sweep",
-      "streak": null,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "retention_sweep_stale"
       ],
       "lost_schedule_slot_count": 0
     },
@@ -44,36 +20,23 @@
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
       "alarm_reasons": [
-        "data_stopped_two_generations",
         "member_ratio_low"
       ],
       "outcome_alarms": [
-        {
-          "set": "stockanalysis_etf_detail",
-          "reasons": [
-            "member_ratio_low"
-          ],
-          "source_as_of": "2026-10-09",
-          "fresh_members": 5003,
-          "total_members": 5752,
-          "latest_attempt_at": null
-        },
         {
           "set": "yahoo_etf_fallback",
           "reasons": [
             "member_ratio_low"
           ],
           "source_as_of": "2026-10-09",
-          "fresh_members": 103,
-          "total_members": 187,
+          "fresh_members": 170,
+          "total_members": 181,
           "latest_attempt_at": "2026-07-28T01:07:08Z"
         }
       ],
-      "stopped_sets": [
-        "yahoo_etf_fallback"
-      ],
-      "latest_generated_at": "2026-10-12T03:08:14.851Z",
-      "previous_generated_at": "2026-10-12T02:57:16.590Z"
+      "stopped_sets": [],
+      "latest_generated_at": "2026-10-12T15:15:00.823Z",
+      "previous_generated_at": "2026-10-12T14:16:18.503Z"
     }
   ],
   "watched_workflows": [
@@ -442,14 +405,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38199557354",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38199557354",
-    "observed_at": "2026-10-12T03:25:35.755Z",
-    "event": "workflow_run",
+    "run_id": "38269828193",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38269828193",
+    "observed_at": "2026-10-12T15:24:28.910Z",
+    "event": "workflow_dispatch",
     "workflows": [
-      "deploy-worker.yml",
-      "validate-workflows.yml",
-      "retention-sweep.yml",
+      "build-stocks-analyzer.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
