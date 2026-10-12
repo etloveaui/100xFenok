@@ -1,23 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-10-10T02:31:24Z",
+    "fetched_at": "2026-10-12T06:10:07Z",
     "history_as_of": "2026-10-09",
     "path": "data/yf/finance/MEGX.json",
-    "payload_sha256": "35a3cf93b64a4c8a4423ed8dbbf4aad3c3fbaff8a158d2d543717c5216cb69df",
+    "payload_sha256": "32551a23cc6b4d00697af453ed23bfdae7c5790f95e84b759c8c93f5ead760a2",
     "quote_as_of": "2026-10-07T13:52:14Z",
     "source_as_of": "2026-10-07T13:52:14Z"
   },
   "discovered_from": [
-    "market_facts",
-    "same_security_successor:MGKX",
     "stockanalysis_etf"
   ],
   "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 888,
-    "observed_at": "2026-10-10T02:31:24Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MEGX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1005,
+    "observed_at": "2026-10-12T06:10:07Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -28,9 +57,23 @@
     "quote_as_of": "2026-10-01T13:46:05Z",
     "source_as_of": "2026-10-01"
   },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-12T06:10:07Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-09",
+        "http_status": null,
+        "observed_at": "2026-10-12T06:10:07Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MEGX",
-  "updated_at": "2026-10-10T02:31:24Z"
+  "updated_at": "2026-10-12T06:10:07Z"
 }

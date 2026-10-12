@@ -1,11 +1,11 @@
 {
   "current": {
-    "fetched_at": "2026-10-06T06:21:53Z",
-    "history_as_of": "2026-10-05",
+    "fetched_at": "2026-10-12T05:59:11Z",
+    "history_as_of": "2026-10-09",
     "path": "data/yf/finance/DBAR.json",
-    "payload_sha256": "b2dff14e3a2f6f9b43394c70b656493b93697d0af7366d97e254f0d7dd54c8bc",
-    "quote_as_of": "2026-10-05T14:33:01Z",
-    "source_as_of": "2026-10-05"
+    "payload_sha256": "60efed12f83adfe41c9ea7a49b744f6c532e5ba3f59ef531375d6b7ac22e7aa4",
+    "quote_as_of": "2026-10-09T14:21:09Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -13,14 +13,52 @@
   "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 440,
-    "observed_at": "2026-10-06T06:21:53Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: DBAR: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DBAR: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DBAR: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DBAR: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DBAR: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: DBAR: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1039,
+    "observed_at": "2026-10-12T05:59:11Z",
     "outcome": "fresh"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-12T05:59:11Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DBAR",
-  "updated_at": "2026-10-06T06:21:53Z"
+  "updated_at": "2026-10-12T05:59:11Z"
 }

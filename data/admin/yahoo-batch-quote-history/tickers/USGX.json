@@ -1,23 +1,52 @@
 {
   "current": {
-    "fetched_at": "2026-10-10T02:47:03Z",
+    "fetched_at": "2026-10-12T06:20:40Z",
     "history_as_of": "2026-10-09",
     "path": "data/yf/finance/USGX.json",
-    "payload_sha256": "10654808210f5c53344748acb6d15273a12e9d046049a76a435bcc767afc13b6",
+    "payload_sha256": "0f1ab71d0bd8ca11dffbaaa7cfebcb11aa018eef38d8c38d39dc39a59aba0777",
     "quote_as_of": "2026-10-06T19:35:20Z",
     "source_as_of": "2026-10-06T19:35:20Z"
   },
   "discovered_from": [
-    "market_facts",
-    "same_security_successor:XVUG",
     "stockanalysis_etf"
   ],
   "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 673,
-    "observed_at": "2026-10-10T02:47:03Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USGX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1157,
+    "observed_at": "2026-10-12T06:20:40Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -27,6 +56,20 @@
     "payload_sha256": "11f54fe369764b2b77b6d30698c7a2de0d18cd78dd34a22f556e985559425a0e",
     "quote_as_of": "2026-10-01T13:46:08Z",
     "source_as_of": "2026-10-01"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-12T06:20:40Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-09",
+        "http_status": null,
+        "observed_at": "2026-10-12T06:20:40Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -41,5 +84,5 @@
     "source_as_of": "2026-09-01T18:05:30Z"
   },
   "ticker": "USGX",
-  "updated_at": "2026-10-10T02:47:03Z"
+  "updated_at": "2026-10-12T06:20:40Z"
 }

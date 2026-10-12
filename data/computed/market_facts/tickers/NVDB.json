@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "NVDB",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
+  "generated_at": "2026-10-12T07:14:07Z",
   "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -18,9 +18,9 @@
   "facts": {
     "price": {
       "value": 34.15,
-      "source": "stockanalysis.quote",
+      "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T02:58:00Z",
+      "fetched_at": "2026-10-12T06:11:55Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -32,19 +32,27 @@
       "candidates": [
         {
           "value": 34.15,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T06:11:55Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 34.15,
           "source": "stockanalysis.quote",
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-12T02:58:00Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
       "value": 34.47,
-      "source": "stockanalysis.quote",
+      "source": "yf",
       "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T02:58:00Z",
+      "fetched_at": "2026-10-12T06:11:55Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,13 +62,21 @@
       "candidates": [
         {
           "value": 34.47,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T06:11:55Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 34.47,
           "source": "stockanalysis.quote",
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-12T02:58:00Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
       "value": -0.32,
@@ -81,9 +97,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-12T02:58:00Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.32,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T06:11:55Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
       "value": -0.93,
@@ -104,9 +128,17 @@
           "as_of": "2026-10-09",
           "fetched_at": "2026-10-12T02:58:00Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.928343,
+          "source": "yf",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T06:11:55Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
       "value": 5180000.0,
@@ -473,7 +505,7 @@
   "financials": null,
   "sources": {
     "yf": false,
-    "yf_quote": false,
+    "yf_quote": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
@@ -481,7 +513,7 @@
   },
   "source_files": {
     "yf": null,
-    "yf_quote": null,
+    "yf_quote": "yf/finance/NVDB.json",
     "stockanalysis": "computed/data-supply/etf-detail/payloads/NVDB.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

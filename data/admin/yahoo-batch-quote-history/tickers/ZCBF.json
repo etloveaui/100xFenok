@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-08-10T15:11:38Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBF.json",
-    "payload_sha256": "75e092b6c0244f512e23e3d1f4a60b6edefa60f39bf2a1581ed5e979bf063e79",
-    "quote_as_of": "2026-08-10T13:46:09Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-10-12T05:52:06Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/yf/finance/ZCBF.json",
+    "payload_sha256": "e41802dae2b69c674b0ae0e1b9196b89eb7a40fe602932d7eb4c3a801234aa00",
+    "quote_as_of": "2026-07-22T14:36:47Z",
+    "source_as_of": "2026-10-09"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBF: quote_as_of",
     "failures": [],
-    "latency_ms": 494,
-    "observed_at": "2026-10-06T06:42:14Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBF: quote_as_of",
-    "failure_kind": "systemic_integrity",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-06T06:42:14Z"
+    "latency_ms": 1048,
+    "observed_at": "2026-10-12T05:52:06Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:11:38Z",
@@ -37,8 +26,15 @@
     "quote_as_of": "2026-08-10T13:46:09Z",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-12T05:52:06Z",
+    "last_history_as_of": "2026-10-09",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -50,5 +46,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "ZCBF",
-  "updated_at": "2026-10-06T06:42:14Z"
+  "updated_at": "2026-10-12T05:52:06Z"
 }
