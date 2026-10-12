@@ -120,7 +120,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "d5cdaccea95c6cf1059328266936d2fc81469774b99db0999c2d29cf44f7351d",
+  "registry_digest": "60086c7971d2332cbbef0e611e5230bf234ea3f8d907725b073725c248c39e4d",
   "logical_lane_count": 31,
   "producer_member_count": 36,
   "baseline": {
@@ -168,7 +168,31 @@
           },
           "affected_surface_ids": [
             "macro_fred"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "fred_macro",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "fred_macro",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "fred_banking",
@@ -186,8 +210,7 @@
             "unit": "calendar_days"
           },
           "affected_surface_ids": [
-            "banking_liquidity",
-            "rim_index_inputs"
+            "banking_liquidity"
           ],
           "source_artifacts": [
             {
@@ -230,7 +253,34 @@
               "status": "ready",
               "reason": "ok"
             }
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "fred_banking",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                3,
+                20,
+                45,
+                301
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 4,
+            "fresh_members": 4,
+            "counts": {
+              "fresh": 4,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-01-01",
+            "oldest_source_member": "fred_banking_quarterly",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "fred_yardeni",
@@ -249,7 +299,31 @@
           },
           "affected_surface_ids": [
             "yardeni_model"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "fred_yardeni",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                13
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-03",
+            "oldest_source_member": "fred_yardeni",
+            "newest_source_date": "2026-07-03"
+          }
         },
         {
           "id": "fdic_tier1",
@@ -268,7 +342,31 @@
           },
           "affected_surface_ids": [
             "banking_tier1"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "fdic_tier1",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                121
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-03-31",
+            "oldest_source_member": "fdic_tier1",
+            "newest_source_date": "2026-03-31"
+          }
         },
         {
           "id": "treasury_tga",
@@ -287,7 +385,31 @@
           },
           "affected_surface_ids": [
             "macro_tga"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "treasury_tga",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                3
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "treasury_tga",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "defillama_stablecoins",
@@ -306,7 +428,31 @@
           },
           "affected_surface_ids": [
             "macro_stablecoins"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "defillama_stablecoins",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "defillama_stablecoins",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "yahoo_etf_fallback",
@@ -326,7 +472,31 @@
           },
           "affected_surface_ids": [
             "stockanalysis_etf_detail_coverage"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "yahoo_etf_fallback",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": null,
+            "total_members": 1,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 1
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": "yahoo_etf_fallback",
+            "newest_source_date": null
+          }
         },
         {
           "id": "stockanalysis_etf_universe",
@@ -346,7 +516,31 @@
           },
           "affected_surface_ids": [
             "stockanalysis_etf_universe"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "stockanalysis_etf_universe",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                11
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 1
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": null,
+            "newest_source_date": null
+          }
         },
         {
           "id": "stockanalysis_etf_detail",
@@ -365,7 +559,31 @@
           },
           "affected_surface_ids": [
             "stockanalysis_etf_detail"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "stockanalysis_etf_detail",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                45
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": null,
+            "total_members": 1,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 1
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": "stockanalysis_etf_detail",
+            "newest_source_date": null
+          }
         },
         {
           "id": "stockanalysis_stock_financial",
@@ -384,7 +602,31 @@
           },
           "affected_surface_ids": [
             "stockanalysis_stock_financial_candidates"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "stockanalysis_stock_financial",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "collected",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-11",
+            "oldest_source_member": "stockanalysis_stock_financial",
+            "newest_source_date": "2026-07-11"
+          }
         },
         {
           "id": "stockanalysis_surfaces",
@@ -404,7 +646,31 @@
           },
           "affected_surface_ids": [
             "market_events_stockanalysis"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "stockanalysis_surfaces",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": "source",
+            "total_members": 25,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 25
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": null,
+            "newest_source_date": null
+          }
         },
         {
           "id": "yahoo_ticker_macro",
@@ -423,7 +689,31 @@
           },
           "affected_surface_ids": [
             "macro_tickers"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "yahoo_ticker_macro",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "TQQQ",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "sentiment",
@@ -442,7 +732,32 @@
           },
           "affected_surface_ids": [
             "sentiment_dashboard"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "sentiment",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2,
+                11
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": "source",
+            "total_members": 5,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 5
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": null,
+            "newest_source_date": null
+          }
         },
         {
           "id": "nasdaq_giw_sox",
@@ -459,9 +774,31 @@
             "age": 0,
             "unit": "business_days"
           },
-          "affected_surface_ids": [
-            "rim_index_inputs"
-          ]
+          "affected_surface_ids": [],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "nasdaq_giw_sox",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "nasdaq_giw_sox",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "us_indices_daily",
@@ -479,9 +816,32 @@
             "unit": "business_days"
           },
           "affected_surface_ids": [
-            "rim_index_inputs",
             "macro_index_charts"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "us_indices_daily",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "stopped",
+            "reason": "member_ratio_low",
+            "date_basis": "source",
+            "total_members": 4,
+            "fresh_members": 2,
+            "counts": {
+              "fresh": 2,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 2
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "nasdaq",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "oecd_cli",
@@ -500,7 +860,31 @@
           },
           "affected_surface_ids": [
             "activity_surveys"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "oecd_cli",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                45
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-06-01",
+            "oldest_source_member": "oecd_cli",
+            "newest_source_date": "2026-06-01"
+          }
         },
         {
           "id": "krx",
@@ -517,9 +901,31 @@
             "age": 0,
             "unit": "business_days"
           },
-          "affected_surface_ids": [
-            "rim_index_inputs"
-          ]
+          "affected_surface_ids": [],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "krx",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "krx",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "slickcharts",
@@ -604,7 +1010,33 @@
                 "unit": "calendar_days"
               }
             }
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "slickcharts",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2,
+                11,
+                45
+              ]
+            },
+            "status": "stopped",
+            "reason": "member_ratio_low",
+            "date_basis": "source",
+            "total_members": 5,
+            "fresh_members": 2,
+            "counts": {
+              "fresh": 2,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 3
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "daily",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "edgar_filings",
@@ -623,13 +1055,37 @@
           },
           "affected_surface_ids": [
             "edgar_timeline"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "edgar_filings",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                11
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 1
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": null,
+            "newest_source_date": null
+          }
         },
         {
           "id": "sec_13f",
           "label": "SEC 13F derivatives",
-          "enforcement": "shadow",
-          "kpi_required": false,
+          "enforcement": "live",
+          "kpi_required": true,
           "monitoring_mode": "artifact_only",
           "status": "ready",
           "reason": "ok",
@@ -642,7 +1098,31 @@
           },
           "affected_surface_ids": [
             "sec_13f_analytics"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "sec_13f",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                121
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-06-30",
+            "oldest_source_member": "sec_13f",
+            "newest_source_date": "2026-06-30"
+          }
         },
         {
           "id": "sentiment_aaii",
@@ -661,7 +1141,31 @@
           },
           "affected_surface_ids": [
             "market_valuation"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "sentiment_aaii",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                11
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "sentiment_aaii",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "benchmarks",
@@ -682,7 +1186,31 @@
             "market_valuation",
             "sectors",
             "dashboard"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "benchmarks",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                13
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 6,
+            "fresh_members": 6,
+            "counts": {
+              "fresh": 6,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "developed",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "global_scouter",
@@ -703,7 +1231,31 @@
             "screener",
             "stock_detail",
             "explore"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "global_scouter",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                13
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "global_scouter",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "damodaran",
@@ -724,7 +1276,31 @@
             "market_valuation",
             "stock_detail",
             "regime"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "damodaran",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                456
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-11",
+            "oldest_source_member": "damodaran",
+            "newest_source_date": "2026-07-11"
+          }
         },
         {
           "id": "finra_short_volume",
@@ -743,7 +1319,31 @@
           },
           "affected_surface_ids": [
             "fenok_flow_proxies"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "finra_short_volume",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "finra_short_volume",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "finra_ats_weekly",
@@ -762,7 +1362,31 @@
           },
           "affected_surface_ids": [
             "finra_ats_weekly_admin"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "finra_ats_weekly",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                39
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": null,
+            "total_members": 1,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 1
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": "finra_ats_weekly",
+            "newest_source_date": null
+          }
         },
         {
           "id": "occ_options_volume",
@@ -781,7 +1405,31 @@
           },
           "affected_surface_ids": [
             "fenok_occ_options"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "occ_options_volume",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "occ_options_volume",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "yahoo_private_options",
@@ -800,7 +1448,31 @@
           },
           "affected_surface_ids": [
             "yahoo_private_options_availability"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "yahoo_private_options",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "yahoo_private_options",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "apewisdom_attention",
@@ -819,7 +1491,31 @@
           },
           "affected_surface_ids": [
             "fenok_social_attention"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "apewisdom_attention",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "fresh",
+            "reason": null,
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 1,
+            "counts": {
+              "fresh": 1,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": "2026-07-10",
+            "oldest_source_member": "apewisdom_attention",
+            "newest_source_date": "2026-07-10"
+          }
         },
         {
           "id": "gdelt_news_tone",
@@ -838,7 +1534,31 @@
           },
           "affected_surface_ids": [
             "fenok_news_tone"
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "gdelt_news_tone",
+            "policy": {
+              "basis": "source_calendar",
+              "fresh_bound_days": [
+                2
+              ]
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": "source",
+            "total_members": 1,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 1
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": null,
+            "newest_source_date": null
+          }
         },
         {
           "id": "yahoo_batch_quote_history",
@@ -883,11 +1603,33 @@
                 "unit": "hours"
               }
             }
-          ]
+          ],
+          "source_health": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "scope": "yahoo_batch_quote_history",
+            "policy": {
+              "basis": "business_days",
+              "fresh_bound_business_days": 6
+            },
+            "status": "unknown",
+            "reason": "source_dates_unavailable",
+            "date_basis": "source",
+            "total_members": 0,
+            "fresh_members": 0,
+            "counts": {
+              "fresh": 0,
+              "stale": 0,
+              "expired": 0,
+              "unknown": 0
+            },
+            "oldest_source_date": null,
+            "oldest_source_member": null,
+            "newest_source_date": null
+          }
         }
       ]
     },
-    "report_file_sha256": "c40166a00eb7f935ae3d45a3a5a3d96447453f0e2bf15b1a3cc2cbb8fae3ce64"
+    "report_file_sha256": "1a45c066e923988893742f6240eb28295827268b8b7cf014460dc2028fd930aa"
   },
   "slickcharts_member_ids": [
     "daily",

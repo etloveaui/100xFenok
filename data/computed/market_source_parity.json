@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-10-12T04:55:19Z",
+  "generated_at": "2026-10-12T05:28:40Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7110,
     "fields": 19,
-    "multi_candidate_fields": 50336,
-    "divergence_rows": 50332,
+    "multi_candidate_fields": 50376,
+    "divergence_rows": 50372,
     "percent_scale_warnings": 9,
     "diagnosis_counts": {
-      "agreement": 25476,
+      "agreement": 25442,
       "scale_mismatch": 9,
-      "sign_divergence": 303,
-      "stale": 23112,
-      "value_drift": 1432
+      "sign_divergence": 292,
+      "stale": 23224,
+      "value_drift": 1405
     },
-    "stale_rows": 23112,
+    "stale_rows": 23224,
     "scale_mismatch_rows": 9,
-    "sign_divergence_rows": 303
+    "sign_divergence_rows": 292
   },
   "by_field": {
     "beta": {
@@ -36,32 +36,32 @@
     },
     "change": {
       "ticker_count": 7104,
-      "multi_candidate_count": 6795,
+      "multi_candidate_count": 6805,
       "selected_sources": {
-        "stockanalysis.quote": 780,
-        "yf": 6309,
+        "stockanalysis.quote": 762,
+        "yf": 6327,
         "yf.derived": 3,
         "yf.stockanalysis_fallback.quote": 12
       },
       "candidate_sources": {
-        "stockanalysis.quote": 5467,
-        "yf": 6793,
+        "stockanalysis.quote": 5477,
+        "yf": 6803,
         "yf.derived": 1202,
         "yf.stockanalysis_fallback.quote": 189
       }
     },
     "change_pct": {
       "ticker_count": 7103,
-      "multi_candidate_count": 6794,
+      "multi_candidate_count": 6804,
       "selected_sources": {
-        "stockanalysis.quote": 780,
-        "yf": 6309,
+        "stockanalysis.quote": 762,
+        "yf": 6327,
         "yf.derived": 2,
         "yf.stockanalysis_fallback.quote": 12
       },
       "candidate_sources": {
-        "stockanalysis.quote": 5467,
-        "yf": 6792,
+        "stockanalysis.quote": 5477,
+        "yf": 6802,
         "yf.derived": 1201,
         "yf.stockanalysis_fallback.quote": 189
       }
@@ -124,29 +124,29 @@
     },
     "previous_close": {
       "ticker_count": 7102,
-      "multi_candidate_count": 5466,
+      "multi_candidate_count": 5476,
       "selected_sources": {
-        "stockanalysis.quote": 399,
-        "yf": 6703
+        "stockanalysis.quote": 387,
+        "yf": 6715
       },
       "candidate_sources": {
-        "stockanalysis.quote": 5466,
-        "yf": 5466
+        "stockanalysis.quote": 5476,
+        "yf": 5476
       }
     },
     "price": {
       "ticker_count": 7107,
-      "multi_candidate_count": 6137,
+      "multi_candidate_count": 6147,
       "selected_sources": {
         "slickcharts": 3,
-        "stockanalysis.quote": 399,
-        "yf": 6693,
+        "stockanalysis.quote": 387,
+        "yf": 6705,
         "yf.stockanalysis_fallback.quote": 12
       },
       "candidate_sources": {
         "slickcharts": 524,
-        "stockanalysis.quote": 5467,
-        "yf": 6137,
+        "stockanalysis.quote": 5477,
+        "yf": 6147,
         "yf.stockanalysis_fallback.quote": 189
       }
     },
@@ -3388,6 +3388,43 @@
       }
     },
     {
+      "ticker": "TIPF",
+      "asset_type": "etf",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 198.444615,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 0.13
+        },
+        {
+          "source": "yf",
+          "value": -0.127978
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 198.444615,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 0.0,
+        "yf": 14.0
+      }
+    },
+    {
       "ticker": "LVLN",
       "asset_type": "etf",
       "field": "change_pct",
@@ -3948,41 +3985,6 @@
       "freshness": {
         "yf": 0.0,
         "stockanalysis.quote": 9.0
-      }
-    },
-    {
-      "ticker": "FLLA",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 198.009589,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 1.46
-        },
-        {
-          "source": "yf",
-          "value": -1.43094
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 198.009589,
-      "fresh_spread_pct": 198.009589,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 2.0
       }
     }
   ],
@@ -7136,6 +7138,43 @@
       }
     },
     {
+      "ticker": "TIPF",
+      "asset_type": "etf",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 198.444615,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 0.13
+        },
+        {
+          "source": "yf",
+          "value": -0.127978
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 198.444615,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "yf"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 0.0,
+        "yf": 14.0
+      }
+    },
+    {
       "ticker": "LVLN",
       "asset_type": "etf",
       "field": "change_pct",
@@ -7978,43 +8017,6 @@
       ],
       "diagnosis": "stale",
       "spread_pct": 197.690345,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf",
-        "policy_rank": 1,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf": 0.0,
-        "stockanalysis.quote": 7.0
-      }
-    },
-    {
-      "ticker": "HRSK",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "yf",
-      "candidate_count": 2,
-      "relative_spread_pct": 197.621629,
-      "values": [
-        {
-          "source": "yf",
-          "value": -0.389258
-        },
-        {
-          "source": "stockanalysis.quote",
-          "value": 0.38
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 197.621629,
       "fresh_spread_pct": null,
       "stale_sources": [
         "stockanalysis.quote"
