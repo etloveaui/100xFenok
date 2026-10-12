@@ -1,10 +1,14 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const buildTarget = process.env.NEXT_BUILD_TARGET ?? "runtime";
 const isStaticProfile = buildTarget === "static";
 const isCloudflareProfile = buildTarget === "cloudflare";
 
 const nextConfig: NextConfig = {
+  // The app and canonical shared modules live in the same product repository.
+  turbopack: { root: path.resolve(__dirname, "..") },
+
   // Runtime-first build. "static" profile keeps dist output only.
   ...(isStaticProfile ? { distDir: "dist" } : {}),
 
