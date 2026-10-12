@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v4",
-  "generated_at": "2026-10-12T15:15:00.823Z",
+  "generated_at": "2026-10-12T16:01:38.537Z",
   "sets": [
     {
       "set": "fred_macro",
@@ -9,7 +9,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "fred_macro",
         "policy": {
           "basis": "source_calendar",
@@ -52,7 +52,7 @@
       "max_age": "3d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "fred_banking",
         "policy": {
           "basis": "source_calendar",
@@ -102,7 +102,7 @@
       "max_age": "13d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "fred_yardeni",
         "policy": {
           "basis": "source_calendar",
@@ -145,7 +145,7 @@
       "max_age": "121d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "fdic_tier1",
         "policy": {
           "basis": "source_calendar",
@@ -188,7 +188,7 @@
       "max_age": "3d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "treasury_tga",
         "policy": {
           "basis": "source_calendar",
@@ -231,7 +231,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "defillama_stablecoins",
         "policy": {
           "basis": "source_calendar",
@@ -255,14 +255,14 @@
         "newest_source_date": "2026-10-12"
       },
       "latest_attempt": {
-        "observed_at": "2026-10-12T14:12:20.317Z",
+        "observed_at": "2026-10-12T15:12:24.638Z",
         "outcome": "success",
         "failure_class": null
       },
       "outcome_state": {
-        "attempt_at": "2026-10-12T14:12:20.317Z",
+        "attempt_at": "2026-10-12T15:12:24.638Z",
         "source_as_of": "2026-10-12",
-        "unchanged_source_attempts": 12,
+        "unchanged_source_attempts": 13,
         "consecutive_retained": 0
       },
       "serving_lkg": false
@@ -270,11 +270,11 @@
     {
       "set": "yahoo_etf_fallback",
       "served_path": "data/yf/finance",
-      "newest_source_date": "2026-10-09",
+      "newest_source_date": "2026-10-12",
       "max_age": "3-32d",
       "status": "delayed",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "detail",
         "policy": {
           "basis": "member_rotation",
@@ -299,20 +299,20 @@
         "status": "degraded",
         "reason": "member_ratio_low",
         "total_members": 181,
-        "fresh_members": 170,
+        "fresh_members": 171,
         "counts": {
-          "fresh": 170,
+          "fresh": 171,
           "stale": 0,
-          "expired": 11,
+          "expired": 10,
           "unknown": 0
         },
         "oldest_source_date": "2026-06-30T12:36:13Z",
         "oldest_source_member": "THYP",
-        "newest_source_date": "2026-10-09T20:00:01Z"
+        "newest_source_date": "2026-10-12T13:46:04Z"
       },
       "oldest_source_date": "2026-06-30",
       "oldest_source_member": "THYP",
-      "fresh_members": 170,
+      "fresh_members": 171,
       "total_members": 181,
       "latest_attempt": {
         "observed_at": "2026-07-28T01:07:08Z",
@@ -321,7 +321,7 @@
       },
       "outcome_state": {
         "attempt_at": "2026-07-28T01:07:08Z",
-        "source_as_of": "2026-10-09",
+        "source_as_of": "2026-10-12",
         "unchanged_source_attempts": 1,
         "consecutive_retained": 0
       },
@@ -335,7 +335,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "stockanalysis_etf_universe",
         "policy": {
           "basis": "source_calendar",
@@ -368,11 +368,11 @@
     {
       "set": "stockanalysis_etf_detail",
       "served_path": "data/stockanalysis/etfs",
-      "newest_source_date": "2026-10-09",
+      "newest_source_date": "2026-10-12",
       "max_age": "3-32d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "detail",
         "policy": {
           "basis": "member_rotation",
@@ -397,32 +397,27 @@
         "status": "fresh",
         "reason": null,
         "total_members": 5808,
-        "fresh_members": 5722,
+        "fresh_members": 5723,
         "counts": {
-          "fresh": 5722,
+          "fresh": 5723,
           "stale": 8,
-          "expired": 13,
+          "expired": 12,
           "unknown": 65
         },
         "oldest_source_date": "2026-06-30T12:36:13Z",
         "oldest_source_member": "THYP",
-        "newest_source_date": "2026-10-09T20:00:01Z"
+        "newest_source_date": "2026-10-12T13:46:04Z"
       },
       "oldest_source_date": "2026-06-30",
       "oldest_source_member": "THYP",
-      "fresh_members": 5722,
+      "fresh_members": 5723,
       "total_members": 5808,
       "latest_attempt": {
-        "observed_at": "2026-10-12T11:31:37Z",
-        "outcome": "partial",
+        "observed_at": null,
+        "outcome": "unobserved",
         "failure_class": null
       },
-      "outcome_state": {
-        "attempt_at": "2026-10-12T11:31:37Z",
-        "source_as_of": "2026-10-09",
-        "unchanged_source_attempts": 5,
-        "consecutive_retained": 0
-      }
+      "outcome_state": null
     },
     {
       "set": "stockanalysis_stock_financial",
@@ -432,7 +427,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "stockanalysis_stock_financial",
         "policy": {
           "basis": "source_calendar",
@@ -469,7 +464,7 @@
       "max_age": "166d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "earnings_overview",
         "policy": {
           "basis": "source_calendar",
@@ -516,7 +511,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "stockanalysis_surfaces",
         "policy": {
           "basis": "source_calendar",
@@ -557,7 +552,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "yahoo_ticker_macro",
         "policy": {
           "basis": "source_calendar",
@@ -603,7 +598,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "sentiment",
         "policy": {
           "basis": "source_calendar",
@@ -651,7 +646,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "nasdaq_giw_sox",
         "policy": {
           "basis": "source_calendar",
@@ -694,7 +689,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "us_indices_daily",
         "policy": {
           "basis": "source_calendar",
@@ -740,7 +735,7 @@
       "max_age": "45d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "oecd_cli",
         "policy": {
           "basis": "source_calendar",
@@ -783,7 +778,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "krx",
         "policy": {
           "basis": "source_calendar",
@@ -826,7 +821,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "slickcharts",
         "policy": {
           "basis": "source_calendar",
@@ -875,7 +870,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "edgar_filings",
         "policy": {
           "basis": "source_calendar",
@@ -922,7 +917,7 @@
       "max_age": "121d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "sec_13f",
         "policy": {
           "basis": "source_calendar",
@@ -964,7 +959,7 @@
       "max_age": "11d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "sentiment_aaii",
         "policy": {
           "basis": "source_calendar",
@@ -1001,7 +996,7 @@
       "max_age": "13d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "benchmarks",
         "policy": {
           "basis": "source_calendar",
@@ -1042,7 +1037,7 @@
       "max_age": "13d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "global_scouter",
         "policy": {
           "basis": "source_calendar",
@@ -1079,7 +1074,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "briefing",
         "policy": {
           "basis": "source_calendar",
@@ -1121,7 +1116,7 @@
       "max_age": "456d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "damodaran",
         "policy": {
           "basis": "source_calendar",
@@ -1164,7 +1159,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "finra_short_volume",
         "policy": {
           "basis": "source_calendar",
@@ -1207,7 +1202,7 @@
       "max_age": "39d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "finra_ats_weekly",
         "policy": {
           "basis": "source_calendar",
@@ -1250,7 +1245,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "occ_options_volume",
         "policy": {
           "basis": "source_calendar",
@@ -1293,7 +1288,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "yahoo_private_options",
         "policy": {
           "basis": "source_calendar",
@@ -1336,7 +1331,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "apewisdom_attention",
         "policy": {
           "basis": "source_calendar",
@@ -1379,7 +1374,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "gdelt_news_tone",
         "policy": {
           "basis": "source_calendar",
@@ -1422,7 +1417,7 @@
       "max_age": "6bd",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-12T15:15:00.823Z",
+        "observed_at": "2026-10-12T16:01:38.537Z",
         "scope": "yahoo_batch_quote_history",
         "policy": {
           "basis": "business_days",
@@ -1431,28 +1426,33 @@
         "status": "fresh",
         "reason": null,
         "date_basis": "source",
-        "total_members": 6891,
-        "fresh_members": 6820,
+        "total_members": 6983,
+        "fresh_members": 6886,
         "counts": {
-          "fresh": 6820,
+          "fresh": 6886,
           "stale": 0,
-          "expired": 71,
-          "unknown": 0
+          "expired": 58,
+          "unknown": 39
         },
-        "oldest_source_date": "2026-06-29",
-        "oldest_source_member": "CUSD",
+        "oldest_source_date": "2026-05-06",
+        "oldest_source_member": "CTRA",
         "newest_source_date": "2026-10-12"
       },
-      "oldest_source_date": "2026-06-29",
-      "oldest_source_member": "CUSD",
-      "fresh_members": 6820,
-      "total_members": 6891,
+      "oldest_source_date": "2026-05-06",
+      "oldest_source_member": "CTRA",
+      "fresh_members": 6886,
+      "total_members": 6983,
       "latest_attempt": {
-        "observed_at": null,
-        "outcome": "unobserved",
+        "observed_at": "2026-10-12T15:31:47Z",
+        "outcome": "partial",
         "failure_class": null
       },
-      "outcome_state": null
+      "outcome_state": {
+        "attempt_at": "2026-10-12T15:31:47Z",
+        "source_as_of": "2026-10-12",
+        "unchanged_source_attempts": 1,
+        "consecutive_retained": 0
+      }
     }
   ]
 }
