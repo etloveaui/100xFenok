@@ -3725,8 +3725,13 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
             if yahoo_days - prior_days:
                 # A whole newer record may subsume older records. Keep every
                 # old record with at least one historical day absent from it.
-                archives = [item for item in archives if not _etf_history_date_set(
-                    json.loads(item["source_payload"])["raw"]["yf"]["history_1y"]) <= yahoo_days]
+                protected = {digest for item in archives if item.get("provider") == "stockanalysis"
+                             for digest in item.get("prior_archive_sha256", [])}
+                archives = [item for item in archives if ((isinstance(prior, dict) and prior.get("source") == "stockanalysis")
+                            or item.get("provider") != "yahoo_finance"
+                            or item["payload_sha256"] in protected
+                            or not _etf_history_date_set(
+                                json.loads(item["source_payload"])["raw"]["yf"]["history_1y"]) <= yahoo_days)]
                 if digest not in {item["payload_sha256"] for item in archives}:
                     archives.append({
                         "provider": "yahoo_finance", "price_basis": "yahoo_adjusted",
@@ -3736,6 +3741,103 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
                         "history_first": dates[0].date().isoformat(),
                         "history_last": dates[1].date().isoformat(),
                     })
+    native_sources = []
+    if selected and selected["provider"] == "stockanalysis":
+        expected = f"data/stockanalysis/etfs/{ticker}.json"
+        if selected.get("provider_path") != expected:
+            raise ValueError("selected StockAnalysis ETF path is invalid")
+        ref = selected.get("payload_ref") or {}
+        if ref and ref.get("kind") not in {"provider_object", "provider_lkg"}:
+            raise ValueError("selected StockAnalysis ETF reference is not immutable")
+        object_path = ref.get("path") or _provider_object_path(selected)
+        object_file = DATA_SUPPLY_STATE_ROOT / object_path
+        if not object_file.resolve().is_relative_to(DATA_SUPPLY_STATE_ROOT.resolve()):
+            raise ValueError("selected StockAnalysis ETF reference escaped its state root")
+        if object_file.is_symlink():
+            raise ValueError("selected StockAnalysis ETF source is a symlink")
+        object_bytes = object_file.read_bytes()
+        if (len(object_bytes) > 2_000_000
+                or hashlib.sha256(object_bytes).hexdigest() != selected["payload_sha256"]):
+            raise ValueError("selected StockAnalysis ETF immutable object lost its hash binding")
+        source = json.loads(object_bytes)
+        if (source.get("ticker") != ticker or source.get("source") != "stockanalysis"
+                or source.get("asset_type") != "etf"
+                or source.get("source_as_of") != selected["source_as_of"]
+                or source.get("fetched_at") != selected["observed_at"]):
+            raise ValueError("selected StockAnalysis ETF immutable source is invalid")
+        native_sources.append(object_bytes)
+    if isinstance(prior, dict) and prior.get("source") == "stockanalysis":
+        canonical_path = OUT_DIR / "etfs" / f"{ticker}.json"
+        if canonical_path.is_symlink():
+            raise ValueError("prior StockAnalysis ETF canonical is a symlink")
+        canonical_bytes = canonical_path.read_bytes()
+        if json.loads(canonical_bytes) != prior:
+            raise ValueError("prior StockAnalysis ETF canonical changed before preservation")
+        if hashlib.sha256(canonical_bytes).digest() not in {
+                hashlib.sha256(value).digest() for value in native_sources}:
+            native_sources.append(canonical_bytes)
+    candidate_raw = ((payload.get("raw") or {}).get("history_periods") or {}).get("daily_1y")
+    candidate_days = _etf_history_date_set(candidate_raw) if candidate_raw is not None else set()
+    if candidate_days is None:
+        raise ValueError("StockAnalysis ETF native history dates are invalid")
+    for original_bytes in native_sources:
+        original = json.loads(original_bytes)
+        if original_bytes != (json.dumps(original, ensure_ascii=False, indent=2) + "\n").encode("utf-8"):
+            raise ValueError("prior StockAnalysis ETF bytes cannot be reconstructed")
+        validate_stockanalysis_etf_payload(ticker, original)
+        original_source = parse_iso_timestamp(validate_aware_timestamp(
+            original.get("source_as_of"), "prior StockAnalysis ETF source stamp"))
+        original_fetched = parse_iso_timestamp(validate_aware_timestamp(
+            original.get("fetched_at"), "prior StockAnalysis ETF fetch stamp"))
+        if original_source > original_fetched or original_fetched > parse_iso_timestamp(now_iso()):
+            raise ValueError("prior StockAnalysis ETF source clock is invalid")
+        source_archives = (original.get("normalized") or {}).get("history_archive") or []
+        known = {item["payload_sha256"]: item for item in archives}
+        for item in source_archives:
+            digest = item["payload_sha256"]
+            if digest in known and known[digest] != item:
+                raise ValueError("prior StockAnalysis ETF archive digest conflicts")
+            if digest not in known:
+                archives.append(item)
+                known[digest] = item
+        old_raw = ((original.get("raw") or {}).get("history_periods") or {}).get("daily_1y")
+        old_days = _etf_history_date_set(old_raw) if old_raw is not None else set()
+        if archives and archived_etf_history(
+                {"ticker": ticker, "normalized": {"history_archive": archives}}) is None:
+            raise ValueError("prior StockAnalysis ETF archive dates are invalid")
+        archived_days = set()
+        for item in archives:
+            if item.get("provider") == "stockanalysis":
+                source = json.loads(item["source_payload"])
+                days = _etf_history_date_set(
+                    ((source.get("raw") or {}).get("history_periods") or {}).get("daily_1y"))
+                if days is None:
+                    raise ValueError("prior StockAnalysis ETF native archive dates are invalid")
+                archived_days.update(days)
+        if old_days is None:
+            raise ValueError("prior StockAnalysis ETF native history dates are invalid")
+        if old_days - candidate_days - archived_days:
+            dates = _etf_history_dates(old_raw)
+            if dates is None:
+                raise ValueError("prior StockAnalysis ETF raw history is invalid")
+            projection = json.loads(original_bytes)
+            source_archives = (projection.get("normalized") or {}).get("history_archive")
+            refs = [item["payload_sha256"] for item in source_archives] if source_archives else []
+            if refs:
+                projection["normalized"]["history_archive"] = refs
+            source_payload = json.dumps(projection, ensure_ascii=False, indent=2) + "\n"
+            record = {
+                "archive_schema": "stockanalysis-native-history/v1",
+                "provider": "stockanalysis", "price_basis": "stockanalysis_native",
+                "source_payload": source_payload,
+                "payload_sha256": hashlib.sha256(source_payload.encode("utf-8")).hexdigest(),
+                "original_payload_sha256": hashlib.sha256(original_bytes).hexdigest(),
+                "prior_archive_sha256": refs,
+                "source_as_of": original["source_as_of"], "fetched_at": original["fetched_at"],
+                "history_first": dates[0].date().isoformat(),
+                "history_last": dates[1].date().isoformat(),
+            }
+            archives.append(record)
     if archives:
         normalized["history_archive"] = archives
     if not validate_etf_history_archive(payload):

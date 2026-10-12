@@ -235,7 +235,92 @@ def _etf_history_date_set(rows: Any) -> set[str] | None:
     return set(dates) if len(set(dates)) == len(dates) else None
 
 
-def _archive_record_dates(archive: dict, ticker: str) -> set[str] | None:
+def _aware_archive_timestamp(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value or _DATE_RE.fullmatch(value):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00" if value.endswith("Z") else value)
+    except ValueError:
+        return None
+    return parsed.astimezone(timezone.utc) if parsed.tzinfo is not None and parsed.utcoffset() is not None else None
+
+
+def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: list[dict]) -> set[str] | None:
+    """Verify a native history projection against the prior canonical byte digest."""
+    if (archive.get("archive_schema") != "stockanalysis-native-history/v1"
+            or archive.get("price_basis") != "stockanalysis_native"
+            or not isinstance(archive.get("source_payload"), str)
+            or not isinstance(archive.get("payload_sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", archive["payload_sha256"])
+            or not isinstance(archive.get("original_payload_sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", archive["original_payload_sha256"])):
+        return None
+    try:
+        projection_bytes = archive["source_payload"].encode("utf-8")
+        if (len(projection_bytes) > MAX_ETF_HISTORY_ARCHIVE_BYTES
+                or _sha256(projection_bytes) != archive["payload_sha256"]):
+            return None
+        source = json.loads(projection_bytes)
+        if (not isinstance(source, dict) or source.get("schema_version") != "stockanalysis/v1"
+                or source.get("source") != "stockanalysis" or source.get("asset_type") != "etf"
+                or source.get("source_provider") not in (None, "stockanalysis")
+                or source.get("ticker") != ticker or source.get("source_as_of") != archive.get("source_as_of")
+                or source.get("fetched_at") != archive.get("fetched_at")):
+            return None
+        if projection_bytes != (json.dumps(source, ensure_ascii=False, indent=2) + "\n").encode("utf-8"):
+            return None
+        source_stamp = _aware_archive_timestamp(source["source_as_of"])
+        fetched_stamp = _aware_archive_timestamp(source["fetched_at"])
+        if (source_stamp is None or fetched_stamp is None or source_stamp > fetched_stamp
+                or fetched_stamp > datetime.now(timezone.utc)
+                or _etf_provider_source(source) != source_stamp):
+            return None
+        normalized = source.get("normalized")
+        raw = source.get("raw")
+        if not isinstance(normalized, dict) or not isinstance(raw, dict):
+            return None
+        raw_periods = raw.get("history_periods")
+        normalized_periods = normalized.get("history_periods")
+        if not isinstance(raw_periods, dict) or not isinstance(normalized_periods, dict):
+            return None
+        raw_daily = raw_periods.get("daily_1y")
+        if raw_daily != normalized_periods.get("daily_1y"):
+            return None
+        dates = _etf_history_dates(raw_daily)
+        date_set = _etf_history_date_set(raw_daily)
+        if dates is None or date_set is None or dates[1].date() > source_stamp.date():
+            return None
+        for row in raw_daily:
+            if any(not isinstance(value, (int, float)) or isinstance(value, bool)
+                   or not math.isfinite(value) or (key in {"o", "h", "l", "c", "a"} and value <= 0)
+                   or (key == "v" and value < 0)
+                   for key, value in row.items() if key not in {"t", "date", "time"}):
+                return None
+        if (archive.get("history_first") != dates[0].date().isoformat()
+                or archive.get("history_last") != dates[1].date().isoformat()):
+            return None
+        refs = archive.get("prior_archive_sha256")
+        prior_by_digest = {item.get("payload_sha256"): item for item in prior_archives}
+        if (not isinstance(refs, list) or len(refs) != len(set(refs))
+                or any(ref not in prior_by_digest for ref in refs)):
+            return None
+        if refs:
+            if normalized.get("history_archive") != refs:
+                return None
+            normalized["history_archive"] = [prior_by_digest[ref] for ref in refs]
+        elif "history_archive" in normalized:
+            return None
+        original_bytes = (json.dumps(source, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        if _sha256(original_bytes) != archive["original_payload_sha256"]:
+            return None
+        return date_set
+    except (ValueError, TypeError, AttributeError, OverflowError, OSError, UnicodeError):
+        return None
+
+
+def _archive_record_dates(archive: dict, ticker: str, prior_archives: list[dict] | None = None) -> set[str] | None:
+    if archive.get("provider") == "stockanalysis":
+        return _stockanalysis_archive_dates(archive, ticker, prior_archives or [])
     if (archive.get("provider") != "yahoo_finance" or archive.get("price_basis") != "yahoo_adjusted"
             or not isinstance(archive.get("payload_sha256"), str)
             or not re.fullmatch(r"[0-9a-f]{64}", archive["payload_sha256"])
@@ -293,10 +378,10 @@ def archived_etf_history(payload: dict) -> set[str] | None:
     if not isinstance(archives, list) or not archives or not isinstance(ticker, str):
         return None
     all_dates = set()
-    for archive in archives:
+    for index, archive in enumerate(archives):
         if not isinstance(archive, dict):
             return None
-        dates = _archive_record_dates(archive, ticker)
+        dates = _archive_record_dates(archive, ticker, archives[:index])
         if dates is None:
             return None
         all_dates.update(dates)
@@ -325,7 +410,8 @@ def validate_etf_history_archive(payload: dict) -> bool:
     if sum(len(item.get("source_payload", "").encode("utf-8")) for item in archives
            if isinstance(item.get("source_payload"), str)) > 8_000_000:
         return False
-    return all(_archive_record_dates(item, ticker) is not None for item in archives)
+    return all(_archive_record_dates(item, ticker, archives[:index]) is not None
+               for index, item in enumerate(archives))
 
 
 def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
