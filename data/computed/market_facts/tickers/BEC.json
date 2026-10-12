@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "BEC",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T04:38:12Z",
-  "source_as_of": "2026-10-06",
+  "generated_at": "2026-10-12T12:07:18Z",
+  "source_as_of": "2026-10-09",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 20.57,
+      "value": 17.9544,
       "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T05:55:56Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:35Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,21 +31,28 @@
       ],
       "candidates": [
         {
-          "value": 20.57,
+          "value": 17.9544,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T05:55:56Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:35Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 17.9544,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 19.1114,
+      "value": 17.05,
       "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T05:55:56Z",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:35Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,21 +61,28 @@
       ],
       "candidates": [
         {
-          "value": 19.1114,
+          "value": 17.05,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T05:55:56Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:35Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 17.05,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 1.4586,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T05:55:56Z",
+      "value": 0.9,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:34Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,21 +92,28 @@
       ],
       "candidates": [
         {
-          "value": 1.4586,
+          "value": 0.9,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.9044,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T05:55:56Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:35Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 7.63209,
-      "source": "yf",
-      "as_of": "2026-10-06",
-      "fetched_at": "2026-10-07T05:55:56Z",
+      "value": 5.3,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:34Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,21 +123,74 @@
       ],
       "candidates": [
         {
-          "value": 7.63209,
+          "value": 5.3,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 5.3044,
           "source": "yf",
-          "as_of": "2026-10-06",
-          "fetched_at": "2026-10-07T05:55:56Z",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:35Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 1110000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:34Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 1110000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.45,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:34Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.45,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 87.899,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T02:29:58Z",
+      "value": -4.85215,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:34Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": 87.899,
+          "value": -4.85215,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -4.85215,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T02:29:58Z",
@@ -135,24 +217,116 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 4.495506821250647,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-09",
+      "fetched_at": "2026-10-12T11:32:34Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 4.495506821250647,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-09",
+          "fetched_at": "2026-10-12T11:32:34Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 5,
+    "holdings_updated": "Oct 8, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "BLOOM ENERGY CORPORATION-SWAP-CLST-L",
+        "weight_pct": 202.95,
+        "shares": 10193,
+        "raw": {
+          "no": 1,
+          "n": "BLOOM ENERGY CORPORATION-SWAP-CLST-L",
+          "as": "202.95%",
+          "sh": "10,193"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 83.71,
+        "shares": 1147032,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "83.71%",
+          "sh": "1,147,032"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "BLOOM ENERGY CORPORATION-SWAP-CANT-L",
+        "weight_pct": 9.14,
+        "shares": 459,
+        "raw": {
+          "no": 3,
+          "n": "BLOOM ENERGY CORPORATION-SWAP-CANT-L",
+          "as": "9.14%",
+          "sh": "459"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -6.28,
+        "shares": 86050,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-6.28%",
+          "sh": "86,050"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -189.52,
+        "shares": 2596817,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-189.52%",
+          "sh": "2,596,817"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "the publicly-traded common",
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +334,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/BEC.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/BEC.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
