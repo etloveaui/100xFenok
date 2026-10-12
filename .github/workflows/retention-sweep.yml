@@ -122,6 +122,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/ops/retention-schedule.mjs finish | tee schedule-report.json
         shell: bash
+      - name: Record verified manual cleanup
+        if: always() && github.event_name == 'workflow_dispatch' && github.event.inputs.preflight_only != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ops/retention-schedule.mjs record-manual | tee schedule-report.json
+        shell: bash
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4

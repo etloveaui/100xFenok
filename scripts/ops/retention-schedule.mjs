@@ -77,6 +77,24 @@ export function finish(state, {runId, report, now}) {
   return next;
 }
 
+// A verified manual cleanup refreshes storage health without claiming a Sunday
+// campaign, enabling weekly campaigns or consuming their attempt budget.
+export function recordManualOutcome(state, {runId, report, now}) {
+  const next = structuredClone(state);
+  if (!acceptedReport(report)) return {accepted:false, reason:'unverified_report', state:next};
+  const at = report.duration.last_confirmed_restore_at;
+  const restored = Date.parse(at), observed = Date.parse(now);
+  if (!/^[1-9][0-9]*$/.test(String(runId)) || !Number.isFinite(restored)
+    || !Number.isFinite(observed) || restored > observed) throw new Error('Invalid manual sweep identity or restore time');
+  if (Date.parse(next.last_success?.at ?? '') >= restored) {
+    return {accepted:false, reason:'already_recorded_or_older', state:next};
+  }
+  next.last_success = {campaign:null, trigger:'workflow_dispatch', run_id:runId, at,
+    bytes_freed:(report.apply.payloads?.bytes ?? 0)+(report.apply.manifests?.bytes ?? 0),
+    pause_seconds:report.duration.first_disable_to_restore_seconds};
+  return {accepted:true, reason:'verified_manual_sweep', state:next};
+}
+
 // Job success includes out-of-window no-ops. Only a verified sweep advances this
 // clock; two missed weekly campaigns raise an incident independently of job exits.
 export function classifyRetentionSchedule(state, {now = Date.now()} = {}) {
@@ -134,6 +152,18 @@ export function main(argv=process.argv.slice(2), env=process.env) {
     if (env.GITHUB_OUTPUT) fs.appendFileSync(env.GITHUB_OUTPUT,`run=${result.run}\n`);
     console.log(JSON.stringify({run:result.run,outcome:result.run?'claimed':'skipped',reason:result.reason,campaign:result.state.campaign?.id}));return;
   }
+  if (command === 'record-manual') {
+    if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch') throw new Error('Manual workflow identity required');
+    let report=null;
+    if (fs.existsSync('window-report.json')) {
+      const lines=fs.readFileSync('window-report.json','utf8').trim().split('\n');
+      try {report=JSON.parse(lines.at(-1));} catch { /* Invalid result never means success. */ }
+    }
+    const result=recordManualOutcome(state,{runId,report,now});
+    if (result.accepted) save(repo,number,result.state);
+    console.log(JSON.stringify({accepted:result.accepted,reason:result.reason,last_success:result.state.last_success ?? null}));
+    return;
+  }
   if (command === 'finish') {
     let report=null;
     if (fs.existsSync('window-report.json')) {
@@ -149,7 +179,7 @@ export function main(argv=process.argv.slice(2), env=process.env) {
     if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY,`### R2 retention campaign\n\n\`\`\`json\n${JSON.stringify(summary,null,2)}\n\`\`\`\nState: https://github.com/${repo}/issues/${issue}\n`);
     return;
   }
-  throw new Error('Expected claim, finish, or inspect');
+  throw new Error('Expected claim, finish, record-manual, or inspect');
 }
 if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   try {main();} catch(error) {console.error(`retention-schedule: ${error.message}`);process.exitCode=1;}
