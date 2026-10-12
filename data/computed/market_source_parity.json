@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-10-12T21:12:06Z",
+  "generated_at": "2026-10-12T21:42:41Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7110,
@@ -9,15 +9,15 @@
     "divergence_rows": 51118,
     "percent_scale_warnings": 9,
     "diagnosis_counts": {
-      "agreement": 27527,
+      "agreement": 27511,
       "scale_mismatch": 9,
-      "sign_divergence": 559,
+      "sign_divergence": 567,
       "stale": 21480,
-      "value_drift": 1543
+      "value_drift": 1551
     },
     "stale_rows": 21480,
     "scale_mismatch_rows": 9,
-    "sign_divergence_rows": 559
+    "sign_divergence_rows": 567
   },
   "by_field": {
     "beta": {
@@ -10065,6 +10065,86 @@
       }
     },
     {
+      "ticker": "AAPL",
+      "asset_type": "stock",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 187.297921,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 4.33
+        },
+        {
+          "source": "yf",
+          "value": -3.78
+        },
+        {
+          "source": "yf.derived",
+          "value": -3.7800000000000296
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 187.297921,
+      "fresh_spread_pct": 187.297921,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 0.0,
+        "yf": 3.0,
+        "yf.derived": 3.0
+      }
+    },
+    {
+      "ticker": "AAPL",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 186.07698,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 1.29
+        },
+        {
+          "source": "yf",
+          "value": -1.11039
+        },
+        {
+          "source": "yf.derived",
+          "value": -1.1103930438869718
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 186.07698,
+      "fresh_spread_pct": 186.07698,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 0.0,
+        "yf": 3.0,
+        "yf.derived": 3.0
+      }
+    },
+    {
       "ticker": "FXG",
       "asset_type": "etf",
       "field": "change_pct",
@@ -11462,76 +11542,6 @@
       "freshness": {
         "stockanalysis.quote": 0.0,
         "yf": 2.0
-      }
-    },
-    {
-      "ticker": "CNEQ",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 177.965617,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 0.54
-        },
-        {
-          "source": "yf",
-          "value": -0.692613
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 177.965617,
-      "fresh_spread_pct": 177.965617,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 2.0
-      }
-    },
-    {
-      "ticker": "IBB",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 177.899667,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 3.0
-        },
-        {
-          "source": "yf",
-          "value": -2.33699
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 177.899667,
-      "fresh_spread_pct": 177.899667,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 3.0
       }
     }
   ]
