@@ -1,0 +1,3235 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "VEEM",
+  "source_as_of": "2026-10-12T20:00:00Z",
+  "fetched_at": "2026-10-13T12:21:34Z",
+  "endpoints": {
+    "holdings": "/etf/veem/holdings/__data.json",
+    "overview": "/etf/veem/__data.json",
+    "quote": "/api/quotes/e/VEEM",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/VEEM/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/VEEM/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/VEEM/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/VEEM/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/VEEM/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/VEEM/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "!TPE/2330",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 16.46,
+        "shares": 7700,
+        "raw": {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "16.46%",
+          "sh": "7,700"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!KRX/005930",
+        "name": "Samsung Electronics Co., Ltd.",
+        "weight_pct": 7.16,
+        "shares": 1398,
+        "raw": {
+          "no": 2,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "7.16%",
+          "sh": "1,398"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!KRX/000660",
+        "name": "SK hynix Inc.",
+        "weight_pct": 6.12,
+        "shares": 183,
+        "raw": {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "6.12%",
+          "sh": "183"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!BVMF/PETR4",
+        "name": "Petróleo Brasileiro S.A. - Petrobras",
+        "weight_pct": 2.63,
+        "shares": 8600,
+        "raw": {
+          "no": 4,
+          "n": "Petróleo Brasileiro S.A. - Petrobras",
+          "s": "!bvmf/PETR4",
+          "as": "2.63%",
+          "sh": "8,600"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!HKG/0700",
+        "name": "Tencent Holdings Limited",
+        "weight_pct": 2.52,
+        "shares": 1700,
+        "raw": {
+          "no": 5,
+          "n": "Tencent Holdings Limited",
+          "s": "!hkg/0700",
+          "as": "2.52%",
+          "sh": "1,700"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "005935.KQ",
+        "name": "Samsung Electronics Co Ltd Pfd Registered Shs Non-Voting",
+        "weight_pct": 2.24,
+        "shares": 580,
+        "raw": {
+          "no": 6,
+          "n": "Samsung Electronics Co Ltd Pfd Registered Shs Non-Voting",
+          "s": "005935.KQ",
+          "as": "2.24%",
+          "sh": "580"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!HKG/0939",
+        "name": "China Construction Bank Corporation",
+        "weight_pct": 2.07,
+        "shares": 61000,
+        "raw": {
+          "no": 7,
+          "n": "China Construction Bank Corporation",
+          "s": "!hkg/0939",
+          "as": "2.07%",
+          "sh": "61,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!TPE/2881",
+        "name": "Fubon Financial Holding Co., Ltd.",
+        "weight_pct": 1.82,
+        "shares": 14000,
+        "raw": {
+          "no": 8,
+          "n": "Fubon Financial Holding Co., Ltd.",
+          "s": "!tpe/2881",
+          "as": "1.82%",
+          "sh": "14,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "!TADAWUL/1120",
+        "name": "Al Rajhi Banking and Investment Corporation",
+        "weight_pct": 1.61,
+        "shares": 3567,
+        "raw": {
+          "no": 9,
+          "n": "Al Rajhi Banking and Investment Corporation",
+          "s": "!tadawul/1120",
+          "as": "1.61%",
+          "sh": "3,567"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!BVMF/BPAC11",
+        "name": "Banco BTG Pactual S.A.",
+        "weight_pct": 1.56,
+        "shares": 3500,
+        "raw": {
+          "no": 10,
+          "n": "Banco BTG Pactual S.A.",
+          "s": "!bvmf/BPAC11",
+          "as": "1.56%",
+          "sh": "3,500"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!OTC/BABAF",
+        "name": "Alibaba Group Holding Limited",
+        "weight_pct": 1.55,
+        "shares": 4100,
+        "raw": {
+          "no": 11,
+          "n": "Alibaba Group Holding Limited",
+          "s": "!otc/BABAF",
+          "as": "1.55%",
+          "sh": "4,100"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!TPE/2887",
+        "name": "TS Financial Holding Co., Ltd.",
+        "weight_pct": 1.53,
+        "shares": 44000,
+        "raw": {
+          "no": 12,
+          "n": "TS Financial Holding Co., Ltd.",
+          "s": "!tpe/2887",
+          "as": "1.53%",
+          "sh": "44,000"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!BVMF/BBDC4",
+        "name": "Banco Bradesco S.A.",
+        "weight_pct": 1.51,
+        "shares": 12850,
+        "raw": {
+          "no": 13,
+          "n": "Banco Bradesco S.A.",
+          "s": "!bvmf/BBDC4",
+          "as": "1.51%",
+          "sh": "12,850"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Yuan Renminbi Offshore",
+        "weight_pct": 1.46,
+        "shares": 359664,
+        "raw": {
+          "no": 14,
+          "n": "Yuan Renminbi Offshore",
+          "as": "1.46%",
+          "sh": "359,664"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!TADAWUL/2222",
+        "name": "Saudi Arabian Oil Company",
+        "weight_pct": 1.37,
+        "shares": 7362,
+        "raw": {
+          "no": 15,
+          "n": "Saudi Arabian Oil Company",
+          "s": "!tadawul/2222",
+          "as": "1.37%",
+          "sh": "7,362"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!NSE/BHARTIARTL",
+        "name": "Bharti Airtel Limited",
+        "weight_pct": 1.29,
+        "shares": 2538,
+        "raw": {
+          "no": 16,
+          "n": "Bharti Airtel Limited",
+          "s": "!nse/BHARTIARTL",
+          "as": "1.29%",
+          "sh": "2,538"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!NSE/TITAN",
+        "name": "Titan Company Limited",
+        "weight_pct": 1.26,
+        "shares": 1018,
+        "raw": {
+          "no": 17,
+          "n": "Titan Company Limited",
+          "s": "!nse/TITAN",
+          "as": "1.26%",
+          "sh": "1,018"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!HKG/6160",
+        "name": "BeOne Medicines AG",
+        "weight_pct": 1.25,
+        "shares": 1700,
+        "raw": {
+          "no": 18,
+          "n": "BeOne Medicines AG",
+          "s": "!hkg/6160",
+          "as": "1.25%",
+          "sh": "1,700"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!TPE/2454",
+        "name": "MediaTek Inc.",
+        "weight_pct": 1.18,
+        "shares": 300,
+        "raw": {
+          "no": 19,
+          "n": "MediaTek Inc.",
+          "s": "!tpe/2454",
+          "as": "1.18%",
+          "sh": "300"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!NSE/RELIANCE",
+        "name": "Reliance Industries Limited",
+        "weight_pct": 1.05,
+        "shares": 3177,
+        "raw": {
+          "no": 20,
+          "n": "Reliance Industries Limited",
+          "s": "!nse/RELIANCE",
+          "as": "1.05%",
+          "sh": "3,177"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!JSE/CPI",
+        "name": "Capitec Limited",
+        "weight_pct": 1.04,
+        "shares": 151,
+        "raw": {
+          "no": 21,
+          "n": "Capitec Limited",
+          "s": "!jse/CPI",
+          "as": "1.04%",
+          "sh": "151"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!HKG/1801",
+        "name": "Innovent Biologics, Inc.",
+        "weight_pct": 0.97,
+        "shares": 3000,
+        "raw": {
+          "no": 22,
+          "n": "Innovent Biologics, Inc.",
+          "s": "!hkg/1801",
+          "as": "0.97%",
+          "sh": "3,000"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!NSE/HINDALCO",
+        "name": "Hindalco Industries Limited",
+        "weight_pct": 0.96,
+        "shares": 3788,
+        "raw": {
+          "no": 23,
+          "n": "Hindalco Industries Limited",
+          "s": "!nse/HINDALCO",
+          "as": "0.96%",
+          "sh": "3,788"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "!KRX/055550",
+        "name": "Shinhan Financial Group Co., Ltd.",
+        "weight_pct": 0.96,
+        "shares": 473,
+        "raw": {
+          "no": 24,
+          "n": "Shinhan Financial Group Co., Ltd.",
+          "s": "!krx/055550",
+          "as": "0.96%",
+          "sh": "473"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "NU",
+        "name": "Nu Holdings Ltd.",
+        "weight_pct": 0.94,
+        "shares": 2137,
+        "raw": {
+          "no": 25,
+          "n": "Nu Holdings Ltd.",
+          "s": "$NU",
+          "as": "0.94%",
+          "sh": "2,137"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 48.95
+      },
+      {
+        "n": "Financials",
+        "w": 23.61
+      },
+      {
+        "n": "Energy",
+        "w": 6.44
+      },
+      {
+        "n": "Healthcare",
+        "w": 5.11
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 5.08
+      },
+      {
+        "n": "Communication Services",
+        "w": 4.51
+      },
+      {
+        "n": "Materials",
+        "w": 3.58
+      },
+      {
+        "n": "Industrials",
+        "w": 2.71
+      }
+    ],
+    "countries": [
+      {
+        "code": "TW",
+        "weight": 38.94,
+        "country": "Taiwan"
+      },
+      {
+        "code": "KR",
+        "weight": 20.49,
+        "country": "South Korea"
+      },
+      {
+        "code": "BR",
+        "weight": 8.43,
+        "country": "Brazil"
+      },
+      {
+        "code": "IN",
+        "weight": 8.31,
+        "country": "India"
+      },
+      {
+        "code": "CN",
+        "weight": 7.79,
+        "country": "China"
+      },
+      {
+        "code": "KY",
+        "weight": 6.91,
+        "country": "Cayman Islands"
+      },
+      {
+        "code": "SA",
+        "weight": 4.15,
+        "country": "Saudi Arabia"
+      },
+      {
+        "code": "ZA",
+        "weight": 1.51,
+        "country": "South Africa"
+      },
+      {
+        "code": "CH",
+        "weight": 1.42,
+        "country": "Switzerland"
+      },
+      {
+        "code": "HK",
+        "weight": 1.38,
+        "country": "Hong Kong"
+      },
+      {
+        "code": "CL",
+        "weight": 0.48,
+        "country": "Chile"
+      },
+      {
+        "code": "PL",
+        "weight": 0.19,
+        "country": "Poland"
+      }
+    ],
+    "holding_count": 104,
+    "holdings_updated": "Oct 9, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$3.65M",
+      "expenseRatio": "0.30%",
+      "sharesOut": "150,000",
+      "inception": "Sep 9, 2026",
+      "provider_page": "vaneck",
+      "etf_website": "https://www.vaneck.com/us/en/investments/msci-em-analyst-sentiment-etf-veem/overview/"
+    },
+    "performance": {
+      "tr1m": -1.90406,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 24.4356,
+      "pd": 24.44,
+      "c": -0.22,
+      "cp": -0.91,
+      "cl": 24.66,
+      "cdr": -1,
+      "o": 24.44,
+      "h": 24.44,
+      "l": 24.44,
+      "v": 7,
+      "ts": 1791835200000,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "td": "2026-10-12",
+      "h52": 25.55,
+      "l52": 24.135,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1791836100018.2383,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1791894098112,
+      "symbol": "VEEM",
+      "uid": "VEEM"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 24.516,
+        "h": 25.385,
+        "l": 24.41,
+        "c": 24.436,
+        "v": 1690,
+        "a": 24.436,
+        "ch": -0.24
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.44,
+          "h": 24.44,
+          "l": 24.44,
+          "c": 24.436,
+          "v": 7,
+          "a": 24.436,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-10-09",
+          "o": 24.659,
+          "h": 24.659,
+          "l": 24.659,
+          "c": 24.659,
+          "a": 24.6591,
+          "v": 10,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-10-08",
+          "o": 24.41,
+          "h": 24.411,
+          "l": 24.41,
+          "c": 24.411,
+          "a": 24.4114,
+          "v": 578,
+          "ch": -2.12
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.94,
+          "h": 24.94,
+          "l": 24.94,
+          "c": 24.94,
+          "a": 24.9397,
+          "v": 9,
+          "ch": -1.12
+        },
+        {
+          "t": "2026-10-06",
+          "o": 25.222,
+          "h": 25.222,
+          "l": 25.222,
+          "c": 25.222,
+          "a": 25.2219,
+          "v": 14,
+          "ch": -0.6
+        },
+        {
+          "t": "2026-10-05",
+          "o": 25.385,
+          "h": 25.385,
+          "l": 25.375,
+          "c": 25.375,
+          "a": 25.3747,
+          "v": 1013.9999999999999,
+          "ch": 2.12
+        },
+        {
+          "t": "2026-10-02",
+          "o": 24.848,
+          "h": 24.848,
+          "l": 24.848,
+          "c": 24.848,
+          "a": 24.848,
+          "v": 10,
+          "ch": 1.35
+        },
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 24.516,
+          "l": 24.516,
+          "c": 24.516,
+          "a": 24.5163,
+          "v": 48,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-09-30",
+          "o": 24.494,
+          "h": 24.494,
+          "l": 24.494,
+          "c": 24.494,
+          "a": 24.4936,
+          "v": 9,
+          "ch": -0.98
+        },
+        {
+          "t": "2026-09-29",
+          "o": 24.735,
+          "h": 24.735,
+          "l": 24.735,
+          "c": 24.735,
+          "a": 24.7349,
+          "v": 58,
+          "ch": 0.12
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.705,
+          "h": 24.705,
+          "l": 24.705,
+          "c": 24.705,
+          "a": 24.7047,
+          "v": 17,
+          "ch": -1.46
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.072,
+          "h": 25.072,
+          "l": 25.072,
+          "c": 25.072,
+          "a": 25.0715,
+          "v": 13,
+          "ch": 1.14
+        },
+        {
+          "t": "2026-09-24",
+          "o": 24.79,
+          "h": 24.79,
+          "l": 24.79,
+          "c": 24.79,
+          "a": 24.7901,
+          "v": 10,
+          "ch": -0.82
+        },
+        {
+          "t": "2026-09-23",
+          "o": 24.994,
+          "h": 24.994,
+          "l": 24.994,
+          "c": 24.994,
+          "a": 24.9938,
+          "v": 99,
+          "ch": -1.83
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.459,
+          "h": 25.459,
+          "l": 25.459,
+          "c": 25.459,
+          "a": 25.4588,
+          "v": 25,
+          "ch": -0.08
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.36,
+          "h": 25.55,
+          "l": 25.36,
+          "c": 25.478,
+          "a": 25.4781,
+          "v": 9839,
+          "ch": 3.28
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.668,
+          "h": 24.668,
+          "l": 24.668,
+          "c": 24.668,
+          "a": 24.6679,
+          "v": 37,
+          "ch": 0.12
+        },
+        {
+          "t": "2026-09-17",
+          "o": 24.638,
+          "h": 24.638,
+          "l": 24.638,
+          "c": 24.638,
+          "a": 24.6384,
+          "v": 14,
+          "ch": 1.93
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.34,
+          "h": 24.34,
+          "l": 24.173,
+          "c": 24.173,
+          "a": 24.1726,
+          "v": 9311,
+          "ch": 0.16
+        },
+        {
+          "t": "2026-09-15",
+          "o": 24.205,
+          "h": 24.205,
+          "l": 24.135,
+          "c": 24.135,
+          "a": 24.1345,
+          "v": 1218,
+          "ch": -0.42
+        },
+        {
+          "t": "2026-09-14",
+          "o": 24.237,
+          "h": 24.237,
+          "l": 24.237,
+          "c": 24.237,
+          "a": 24.2373,
+          "v": 101,
+          "ch": -2.7
+        },
+        {
+          "t": "2026-09-11",
+          "o": 24.91,
+          "h": 24.91,
+          "l": 24.91,
+          "c": 24.91,
+          "a": 24.9099,
+          "v": 69,
+          "ch": 1.19
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.44,
+          "h": 24.44,
+          "l": 24.44,
+          "c": 24.436,
+          "v": 7,
+          "a": 24.436,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-10-05",
+          "o": 25.385,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.659,
+          "v": 1625,
+          "a": 24.6591,
+          "ch": -0.76
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.705,
+          "h": 24.848,
+          "l": 24.494,
+          "c": 24.848,
+          "v": 142,
+          "a": 24.848,
+          "ch": -0.89
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.36,
+          "h": 25.55,
+          "l": 24.79,
+          "c": 25.072,
+          "v": 9986,
+          "a": 25.0715,
+          "ch": 1.64
+        },
+        {
+          "t": "2026-09-14",
+          "o": 24.237,
+          "h": 24.668,
+          "l": 24.135,
+          "c": 24.668,
+          "v": 10681,
+          "a": 24.6679,
+          "ch": -0.97
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.436,
+          "v": 1690,
+          "a": 24.436,
+          "ch": -0.24
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.44,
+          "h": 24.44,
+          "l": 24.44,
+          "c": 24.436,
+          "v": 7,
+          "a": 24.436,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-10-05",
+          "o": 25.385,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.659,
+          "v": 1625,
+          "a": 24.6591,
+          "ch": -0.76
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.705,
+          "h": 24.848,
+          "l": 24.494,
+          "c": 24.848,
+          "v": 142,
+          "a": 24.848,
+          "ch": -0.89
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.36,
+          "h": 25.55,
+          "l": 24.79,
+          "c": 25.072,
+          "v": 9986,
+          "a": 25.0715,
+          "ch": 1.64
+        },
+        {
+          "t": "2026-09-14",
+          "o": 24.237,
+          "h": 24.668,
+          "l": 24.135,
+          "c": 24.668,
+          "v": 10681,
+          "a": 24.6679,
+          "ch": -0.97
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.436,
+          "v": 1690,
+          "a": 24.436,
+          "ch": -0.24
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.436,
+          "v": 1690,
+          "a": 24.436,
+          "ch": -0.24
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "VEEM",
+        "lastChecked": 1791894071086,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$3.65M",
+      "expenseRatio": "0.30%",
+      "peRatio": null,
+      "sharesOut": "150,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 104,
+      "inception": "Sep 9, 2026",
+      "chart": {
+        "expiration": 1791898200000,
+        "data": [
+          {
+            "t": 1791797400
+          },
+          {
+            "t": 1791797460
+          },
+          {
+            "t": 1791797520
+          },
+          {
+            "t": 1791797580
+          },
+          {
+            "t": 1791797640
+          },
+          {
+            "c": 24.481,
+            "o": 24.481,
+            "t": 1791797700
+          },
+          {
+            "c": null,
+            "t": 1791797760
+          },
+          {
+            "c": null,
+            "t": 1791797820
+          },
+          {
+            "c": null,
+            "t": 1791797880
+          },
+          {
+            "c": null,
+            "t": 1791797940
+          },
+          {
+            "c": null,
+            "t": 1791798000
+          },
+          {
+            "c": null,
+            "t": 1791798060
+          },
+          {
+            "c": null,
+            "t": 1791798120
+          },
+          {
+            "c": null,
+            "t": 1791798180
+          },
+          {
+            "c": null,
+            "t": 1791798240
+          },
+          {
+            "c": null,
+            "t": 1791798300
+          },
+          {
+            "c": null,
+            "t": 1791798360
+          },
+          {
+            "c": null,
+            "t": 1791798420
+          },
+          {
+            "c": null,
+            "t": 1791798480
+          },
+          {
+            "c": null,
+            "t": 1791798540
+          },
+          {
+            "c": null,
+            "t": 1791798600
+          },
+          {
+            "c": null,
+            "t": 1791798660
+          },
+          {
+            "c": null,
+            "t": 1791798720
+          },
+          {
+            "c": null,
+            "t": 1791798780
+          },
+          {
+            "c": null,
+            "t": 1791798840
+          },
+          {
+            "c": null,
+            "t": 1791798900
+          },
+          {
+            "c": null,
+            "t": 1791798960
+          },
+          {
+            "c": null,
+            "t": 1791799020
+          },
+          {
+            "c": null,
+            "t": 1791799080
+          },
+          {
+            "c": null,
+            "t": 1791799140
+          },
+          {
+            "c": null,
+            "t": 1791799200
+          },
+          {
+            "c": null,
+            "t": 1791799260
+          },
+          {
+            "c": 24.516,
+            "t": 1791799320
+          },
+          {
+            "c": null,
+            "t": 1791799380
+          },
+          {
+            "c": null,
+            "t": 1791799440
+          },
+          {
+            "c": null,
+            "t": 1791799500
+          },
+          {
+            "c": null,
+            "t": 1791799560
+          },
+          {
+            "c": null,
+            "t": 1791799620
+          },
+          {
+            "c": 24.43,
+            "t": 1791799680
+          },
+          {
+            "c": null,
+            "t": 1791799740
+          },
+          {
+            "c": null,
+            "t": 1791799800
+          },
+          {
+            "c": null,
+            "t": 1791799860
+          },
+          {
+            "c": null,
+            "t": 1791799920
+          },
+          {
+            "c": 24.47,
+            "t": 1791799980
+          },
+          {
+            "c": null,
+            "t": 1791800040
+          },
+          {
+            "c": null,
+            "t": 1791800100
+          },
+          {
+            "c": null,
+            "t": 1791800160
+          },
+          {
+            "c": null,
+            "t": 1791800220
+          },
+          {
+            "c": null,
+            "t": 1791800280
+          },
+          {
+            "c": null,
+            "t": 1791800340
+          },
+          {
+            "c": null,
+            "t": 1791800400
+          },
+          {
+            "c": null,
+            "t": 1791800460
+          },
+          {
+            "c": null,
+            "t": 1791800520
+          },
+          {
+            "c": null,
+            "t": 1791800580
+          },
+          {
+            "c": null,
+            "t": 1791800640
+          },
+          {
+            "c": null,
+            "t": 1791800700
+          },
+          {
+            "c": null,
+            "t": 1791800760
+          },
+          {
+            "c": null,
+            "t": 1791800820
+          },
+          {
+            "c": null,
+            "t": 1791800880
+          },
+          {
+            "c": null,
+            "t": 1791800940
+          },
+          {
+            "c": null,
+            "t": 1791801000
+          },
+          {
+            "c": null,
+            "t": 1791801060
+          },
+          {
+            "c": null,
+            "t": 1791801120
+          },
+          {
+            "c": null,
+            "t": 1791801180
+          },
+          {
+            "c": null,
+            "t": 1791801240
+          },
+          {
+            "c": null,
+            "t": 1791801300
+          },
+          {
+            "c": null,
+            "t": 1791801360
+          },
+          {
+            "c": null,
+            "t": 1791801420
+          },
+          {
+            "c": null,
+            "t": 1791801480
+          },
+          {
+            "c": null,
+            "t": 1791801540
+          },
+          {
+            "c": null,
+            "t": 1791801600
+          },
+          {
+            "c": null,
+            "t": 1791801660
+          },
+          {
+            "c": null,
+            "t": 1791801720
+          },
+          {
+            "c": null,
+            "t": 1791801780
+          },
+          {
+            "c": null,
+            "t": 1791801840
+          },
+          {
+            "c": null,
+            "t": 1791801900
+          },
+          {
+            "c": null,
+            "t": 1791801960
+          },
+          {
+            "c": null,
+            "t": 1791802020
+          },
+          {
+            "c": null,
+            "t": 1791802080
+          },
+          {
+            "c": null,
+            "t": 1791802140
+          },
+          {
+            "c": null,
+            "t": 1791802200
+          },
+          {
+            "c": null,
+            "t": 1791802260
+          },
+          {
+            "c": null,
+            "t": 1791802320
+          },
+          {
+            "c": null,
+            "t": 1791802380
+          },
+          {
+            "c": null,
+            "t": 1791802440
+          },
+          {
+            "c": null,
+            "t": 1791802500
+          },
+          {
+            "c": null,
+            "t": 1791802560
+          },
+          {
+            "c": null,
+            "t": 1791802620
+          },
+          {
+            "c": null,
+            "t": 1791802680
+          },
+          {
+            "c": null,
+            "t": 1791802740
+          },
+          {
+            "c": null,
+            "t": 1791802800
+          },
+          {
+            "c": null,
+            "t": 1791802860
+          },
+          {
+            "c": null,
+            "t": 1791802920
+          },
+          {
+            "c": null,
+            "t": 1791802980
+          },
+          {
+            "c": null,
+            "t": 1791803040
+          },
+          {
+            "c": null,
+            "t": 1791803100
+          },
+          {
+            "c": null,
+            "t": 1791803160
+          },
+          {
+            "c": null,
+            "t": 1791803220
+          },
+          {
+            "c": null,
+            "t": 1791803280
+          },
+          {
+            "c": null,
+            "t": 1791803340
+          },
+          {
+            "c": null,
+            "t": 1791803400
+          },
+          {
+            "c": null,
+            "t": 1791803460
+          },
+          {
+            "c": null,
+            "t": 1791803520
+          },
+          {
+            "c": null,
+            "t": 1791803580
+          },
+          {
+            "c": null,
+            "t": 1791803640
+          },
+          {
+            "c": null,
+            "t": 1791803700
+          },
+          {
+            "c": null,
+            "t": 1791803760
+          },
+          {
+            "c": null,
+            "t": 1791803820
+          },
+          {
+            "c": null,
+            "t": 1791803880
+          },
+          {
+            "c": null,
+            "t": 1791803940
+          },
+          {
+            "c": null,
+            "t": 1791804000
+          },
+          {
+            "c": null,
+            "t": 1791804060
+          },
+          {
+            "c": null,
+            "t": 1791804120
+          },
+          {
+            "c": 24.47,
+            "t": 1791804180
+          },
+          {
+            "t": 1791804239
+          },
+          {
+            "t": 1791804299
+          },
+          {
+            "t": 1791804359
+          },
+          {
+            "t": 1791804419
+          },
+          {
+            "t": 1791804479
+          },
+          {
+            "t": 1791804539
+          },
+          {
+            "t": 1791804599
+          },
+          {
+            "t": 1791804659
+          },
+          {
+            "t": 1791804719
+          },
+          {
+            "t": 1791804779
+          },
+          {
+            "t": 1791804839
+          },
+          {
+            "t": 1791804899
+          },
+          {
+            "t": 1791804959
+          },
+          {
+            "t": 1791805019
+          },
+          {
+            "t": 1791805079
+          },
+          {
+            "t": 1791805139
+          },
+          {
+            "t": 1791805199
+          },
+          {
+            "t": 1791805259
+          },
+          {
+            "t": 1791805319
+          },
+          {
+            "t": 1791805379
+          },
+          {
+            "t": 1791805439
+          },
+          {
+            "t": 1791805499
+          },
+          {
+            "t": 1791805559
+          },
+          {
+            "t": 1791805619
+          },
+          {
+            "t": 1791805679
+          },
+          {
+            "t": 1791805739
+          },
+          {
+            "t": 1791805799
+          },
+          {
+            "t": 1791805859
+          },
+          {
+            "t": 1791805919
+          },
+          {
+            "t": 1791805979
+          },
+          {
+            "t": 1791806039
+          },
+          {
+            "t": 1791806099
+          },
+          {
+            "t": 1791806159
+          },
+          {
+            "t": 1791806219
+          },
+          {
+            "t": 1791806279
+          },
+          {
+            "t": 1791806339
+          },
+          {
+            "t": 1791806399
+          },
+          {
+            "t": 1791806459
+          },
+          {
+            "t": 1791806519
+          },
+          {
+            "t": 1791806579
+          },
+          {
+            "t": 1791806639
+          },
+          {
+            "t": 1791806699
+          },
+          {
+            "t": 1791806759
+          },
+          {
+            "t": 1791806819
+          },
+          {
+            "t": 1791806879
+          },
+          {
+            "t": 1791806939
+          },
+          {
+            "t": 1791806999
+          },
+          {
+            "t": 1791807059
+          },
+          {
+            "t": 1791807119
+          },
+          {
+            "t": 1791807179
+          },
+          {
+            "t": 1791807239
+          },
+          {
+            "t": 1791807299
+          },
+          {
+            "t": 1791807359
+          },
+          {
+            "t": 1791807419
+          },
+          {
+            "t": 1791807479
+          },
+          {
+            "t": 1791807539
+          },
+          {
+            "t": 1791807599
+          },
+          {
+            "t": 1791807659
+          },
+          {
+            "t": 1791807719
+          },
+          {
+            "t": 1791807779
+          },
+          {
+            "t": 1791807839
+          },
+          {
+            "t": 1791807899
+          },
+          {
+            "t": 1791807959
+          },
+          {
+            "t": 1791808019
+          },
+          {
+            "t": 1791808079
+          },
+          {
+            "t": 1791808139
+          },
+          {
+            "t": 1791808199
+          },
+          {
+            "t": 1791808259
+          },
+          {
+            "t": 1791808319
+          },
+          {
+            "t": 1791808379
+          },
+          {
+            "t": 1791808439
+          },
+          {
+            "t": 1791808499
+          },
+          {
+            "t": 1791808559
+          },
+          {
+            "t": 1791808619
+          },
+          {
+            "t": 1791808679
+          },
+          {
+            "t": 1791808739
+          },
+          {
+            "t": 1791808799
+          },
+          {
+            "t": 1791808859
+          },
+          {
+            "t": 1791808919
+          },
+          {
+            "t": 1791808979
+          },
+          {
+            "t": 1791809039
+          },
+          {
+            "t": 1791809099
+          },
+          {
+            "t": 1791809159
+          },
+          {
+            "t": 1791809219
+          },
+          {
+            "t": 1791809279
+          },
+          {
+            "t": 1791809339
+          },
+          {
+            "t": 1791809399
+          },
+          {
+            "t": 1791809459
+          },
+          {
+            "t": 1791809519
+          },
+          {
+            "t": 1791809579
+          },
+          {
+            "t": 1791809639
+          },
+          {
+            "t": 1791809699
+          },
+          {
+            "t": 1791809759
+          },
+          {
+            "t": 1791809819
+          },
+          {
+            "t": 1791809879
+          },
+          {
+            "t": 1791809939
+          },
+          {
+            "t": 1791809999
+          },
+          {
+            "t": 1791810059
+          },
+          {
+            "t": 1791810119
+          },
+          {
+            "t": 1791810179
+          },
+          {
+            "t": 1791810239
+          },
+          {
+            "t": 1791810299
+          },
+          {
+            "t": 1791810359
+          },
+          {
+            "t": 1791810419
+          },
+          {
+            "t": 1791810479
+          },
+          {
+            "t": 1791810539
+          },
+          {
+            "t": 1791810599
+          },
+          {
+            "t": 1791810659
+          },
+          {
+            "t": 1791810719
+          },
+          {
+            "t": 1791810779
+          },
+          {
+            "t": 1791810839
+          },
+          {
+            "t": 1791810899
+          },
+          {
+            "t": 1791810959
+          },
+          {
+            "t": 1791811019
+          },
+          {
+            "t": 1791811079
+          },
+          {
+            "t": 1791811139
+          },
+          {
+            "t": 1791811199
+          },
+          {
+            "t": 1791811259
+          },
+          {
+            "t": 1791811319
+          },
+          {
+            "t": 1791811379
+          },
+          {
+            "t": 1791811439
+          },
+          {
+            "t": 1791811499
+          },
+          {
+            "t": 1791811559
+          },
+          {
+            "t": 1791811619
+          },
+          {
+            "t": 1791811679
+          },
+          {
+            "t": 1791811739
+          },
+          {
+            "t": 1791811799
+          },
+          {
+            "t": 1791811859
+          },
+          {
+            "t": 1791811919
+          },
+          {
+            "t": 1791811979
+          },
+          {
+            "t": 1791812039
+          },
+          {
+            "t": 1791812099
+          },
+          {
+            "t": 1791812159
+          },
+          {
+            "t": 1791812219
+          },
+          {
+            "t": 1791812279
+          },
+          {
+            "t": 1791812339
+          },
+          {
+            "t": 1791812399
+          },
+          {
+            "t": 1791812459
+          },
+          {
+            "t": 1791812519
+          },
+          {
+            "t": 1791812579
+          },
+          {
+            "t": 1791812639
+          },
+          {
+            "t": 1791812699
+          },
+          {
+            "t": 1791812759
+          },
+          {
+            "t": 1791812819
+          },
+          {
+            "t": 1791812879
+          },
+          {
+            "t": 1791812939
+          },
+          {
+            "t": 1791812999
+          },
+          {
+            "t": 1791813059
+          },
+          {
+            "t": 1791813119
+          },
+          {
+            "t": 1791813179
+          },
+          {
+            "t": 1791813239
+          },
+          {
+            "t": 1791813299
+          },
+          {
+            "t": 1791813359
+          },
+          {
+            "t": 1791813419
+          },
+          {
+            "t": 1791813479
+          },
+          {
+            "t": 1791813539
+          },
+          {
+            "t": 1791813599
+          },
+          {
+            "t": 1791813659
+          },
+          {
+            "t": 1791813719
+          },
+          {
+            "t": 1791813779
+          },
+          {
+            "t": 1791813839
+          },
+          {
+            "t": 1791813899
+          },
+          {
+            "t": 1791813959
+          },
+          {
+            "t": 1791814019
+          },
+          {
+            "t": 1791814079
+          },
+          {
+            "t": 1791814139
+          },
+          {
+            "t": 1791814199
+          },
+          {
+            "t": 1791814259
+          },
+          {
+            "t": 1791814319
+          },
+          {
+            "t": 1791814379
+          },
+          {
+            "t": 1791814439
+          },
+          {
+            "t": 1791814499
+          },
+          {
+            "t": 1791814559
+          },
+          {
+            "t": 1791814619
+          },
+          {
+            "t": 1791814679
+          },
+          {
+            "t": 1791814739
+          },
+          {
+            "t": 1791814799
+          },
+          {
+            "t": 1791814859
+          },
+          {
+            "t": 1791814919
+          },
+          {
+            "t": 1791814979
+          },
+          {
+            "t": 1791815039
+          },
+          {
+            "t": 1791815099
+          },
+          {
+            "t": 1791815159
+          },
+          {
+            "t": 1791815219
+          },
+          {
+            "t": 1791815279
+          },
+          {
+            "t": 1791815339
+          },
+          {
+            "t": 1791815399
+          },
+          {
+            "t": 1791815459
+          },
+          {
+            "t": 1791815519
+          },
+          {
+            "t": 1791815579
+          },
+          {
+            "t": 1791815639
+          },
+          {
+            "t": 1791815699
+          },
+          {
+            "t": 1791815759
+          },
+          {
+            "t": 1791815819
+          },
+          {
+            "t": 1791815879
+          },
+          {
+            "t": 1791815939
+          },
+          {
+            "t": 1791815999
+          },
+          {
+            "t": 1791816059
+          },
+          {
+            "t": 1791816119
+          },
+          {
+            "t": 1791816179
+          },
+          {
+            "t": 1791816239
+          },
+          {
+            "t": 1791816299
+          },
+          {
+            "t": 1791816359
+          },
+          {
+            "t": 1791816419
+          },
+          {
+            "t": 1791816479
+          },
+          {
+            "t": 1791816539
+          },
+          {
+            "t": 1791816599
+          },
+          {
+            "t": 1791816659
+          },
+          {
+            "t": 1791816719
+          },
+          {
+            "t": 1791816779
+          },
+          {
+            "t": 1791816839
+          },
+          {
+            "t": 1791816899
+          },
+          {
+            "t": 1791816959
+          },
+          {
+            "t": 1791817019
+          },
+          {
+            "t": 1791817079
+          },
+          {
+            "t": 1791817139
+          },
+          {
+            "t": 1791817199
+          },
+          {
+            "t": 1791817259
+          },
+          {
+            "t": 1791817319
+          },
+          {
+            "t": 1791817379
+          },
+          {
+            "t": 1791817439
+          },
+          {
+            "t": 1791817499
+          },
+          {
+            "t": 1791817559
+          },
+          {
+            "t": 1791817619
+          },
+          {
+            "t": 1791817679
+          },
+          {
+            "t": 1791817739
+          },
+          {
+            "t": 1791817799
+          },
+          {
+            "t": 1791817859
+          },
+          {
+            "t": 1791817919
+          },
+          {
+            "t": 1791817979
+          },
+          {
+            "t": 1791818039
+          },
+          {
+            "t": 1791818099
+          },
+          {
+            "t": 1791818159
+          },
+          {
+            "t": 1791818219
+          },
+          {
+            "t": 1791818279
+          },
+          {
+            "t": 1791818339
+          },
+          {
+            "t": 1791818399
+          },
+          {
+            "t": 1791818459
+          },
+          {
+            "t": 1791818519
+          },
+          {
+            "t": 1791818579
+          },
+          {
+            "t": 1791818639
+          },
+          {
+            "t": 1791818699
+          },
+          {
+            "t": 1791818759
+          },
+          {
+            "t": 1791818819
+          },
+          {
+            "t": 1791818879
+          },
+          {
+            "t": 1791818939
+          },
+          {
+            "t": 1791818999
+          },
+          {
+            "t": 1791819059
+          },
+          {
+            "t": 1791819119
+          },
+          {
+            "t": 1791819179
+          },
+          {
+            "t": 1791819239
+          },
+          {
+            "t": 1791819299
+          },
+          {
+            "t": 1791819359
+          },
+          {
+            "t": 1791819419
+          },
+          {
+            "t": 1791819479
+          },
+          {
+            "t": 1791819539
+          },
+          {
+            "t": 1791819599
+          },
+          {
+            "t": 1791819659
+          },
+          {
+            "t": 1791819719
+          },
+          {
+            "t": 1791819779
+          },
+          {
+            "t": 1791819839
+          },
+          {
+            "t": 1791819899
+          },
+          {
+            "t": 1791819959
+          },
+          {
+            "t": 1791820019
+          },
+          {
+            "t": 1791820079
+          },
+          {
+            "t": 1791820139
+          },
+          {
+            "t": 1791820199
+          },
+          {
+            "t": 1791820259
+          },
+          {
+            "t": 1791820319
+          },
+          {
+            "t": 1791820379
+          },
+          {
+            "t": 1791820439
+          },
+          {
+            "t": 1791820499
+          },
+          {
+            "t": 1791820559
+          },
+          {
+            "t": 1791820619
+          },
+          {
+            "t": 1791820679
+          },
+          {
+            "t": 1791820739
+          },
+          {
+            "t": 1791820799
+          },
+          {
+            "t": 1791820800
+          }
+        ]
+      },
+      "description": "The VanEck MSCI EM Analyst Sentiment ETF (VEEM) is an exchange-traded fund that mostly invests in total market equity. The fund tracks an index of companies from emerging markets identified exhibit positive analyst sentiment. The fund uses an optimization process to maximize its exposure and manage risks. VEEM was launched on Sep 9, 2026 and is issued by VanEck.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Diversified Emerging Mkts"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "Nasdaq"
+        ],
+        [
+          "Ticker Symbol",
+          "VEEM"
+        ],
+        [
+          "Provider",
+          "VanEck"
+        ],
+        [
+          "Index Tracked",
+          "MSCI Emerging Markets Analyst Sentiment Select Index"
+        ]
+      ],
+      "etf_website": "https://www.vaneck.com/us/en/investments/msci-em-analyst-sentiment-etf-veem/overview/",
+      "provider_page": "vaneck",
+      "holdingsTable": {
+        "count": 104,
+        "updated": "Oct 9, 2026",
+        "top10": 44.18,
+        "holdings": [
+          {
+            "n": "Taiwan Semiconductor Manufacturing Company Limited",
+            "s": "!tpe/2330",
+            "as": "16.46%",
+            "sh": "7,700"
+          },
+          {
+            "n": "Samsung Electronics Co., Ltd.",
+            "s": "!krx/005930",
+            "as": "7.16%",
+            "sh": "1,398"
+          },
+          {
+            "n": "SK hynix Inc.",
+            "s": "!krx/000660",
+            "as": "6.12%",
+            "sh": "183"
+          },
+          {
+            "n": "Petróleo Brasileiro S.A. - Petrobras",
+            "s": "!bvmf/PETR4",
+            "as": "2.63%",
+            "sh": "8,600"
+          },
+          {
+            "n": "Tencent Holdings Limited",
+            "s": "!hkg/0700",
+            "as": "2.52%",
+            "sh": "1,700"
+          },
+          {
+            "n": "Samsung Electronics Co Ltd Pfd Registered Shs Non-Voting",
+            "s": "005935.KQ",
+            "as": "2.24%",
+            "sh": "580"
+          },
+          {
+            "n": "China Construction Bank Corporation",
+            "s": "!hkg/0939",
+            "as": "2.07%",
+            "sh": "61,000"
+          },
+          {
+            "n": "Fubon Financial Holding Co., Ltd.",
+            "s": "!tpe/2881",
+            "as": "1.82%",
+            "sh": "14,000"
+          },
+          {
+            "n": "Al Rajhi Banking and Investment Corporation",
+            "s": "!tadawul/1120",
+            "as": "1.61%",
+            "sh": "3,567"
+          },
+          {
+            "n": "Banco BTG Pactual S.A.",
+            "s": "!bvmf/BPAC11",
+            "as": "1.56%",
+            "sh": "3,500"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1791907359860",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260910487942/en/VanEck-Launches-VEEM-ETF-Built-on-MSCI-Emerging-Markets-Analyst-Sentiment-Factor/",
+            "img": "https://cdn.snapi.dev/images/v1/7/o/t/press7-3916278.jpg",
+            "title": "VanEck Launches VEEM: ETF Built on MSCI Emerging Markets Analyst Sentiment Factor",
+            "text": "NEW YORK--(BUSINESS WIRE)--VanEck today announced the launch of the VanEck MSCI EM Analyst Sentiment ETF (Nasdaq: VEEM), giving investors a systematic, forward-looking way to access emerging markets e...",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 10, 2026, 8:30 AM EDT",
+            "ago": "4 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 25.375,
+        "price1m": 24.91,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.616
+      },
+      "performance": {
+        "tr1m": -1.90406,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      },
+      "provider_holdings_available": true
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "16.46%",
+          "sh": "7,700"
+        },
+        {
+          "no": 2,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "7.16%",
+          "sh": "1,398"
+        },
+        {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "6.12%",
+          "sh": "183"
+        },
+        {
+          "no": 4,
+          "n": "Petróleo Brasileiro S.A. - Petrobras",
+          "s": "!bvmf/PETR4",
+          "as": "2.63%",
+          "sh": "8,600"
+        },
+        {
+          "no": 5,
+          "n": "Tencent Holdings Limited",
+          "s": "!hkg/0700",
+          "as": "2.52%",
+          "sh": "1,700"
+        },
+        {
+          "no": 6,
+          "n": "Samsung Electronics Co Ltd Pfd Registered Shs Non-Voting",
+          "s": "005935.KQ",
+          "as": "2.24%",
+          "sh": "580"
+        },
+        {
+          "no": 7,
+          "n": "China Construction Bank Corporation",
+          "s": "!hkg/0939",
+          "as": "2.07%",
+          "sh": "61,000"
+        },
+        {
+          "no": 8,
+          "n": "Fubon Financial Holding Co., Ltd.",
+          "s": "!tpe/2881",
+          "as": "1.82%",
+          "sh": "14,000"
+        },
+        {
+          "no": 9,
+          "n": "Al Rajhi Banking and Investment Corporation",
+          "s": "!tadawul/1120",
+          "as": "1.61%",
+          "sh": "3,567"
+        },
+        {
+          "no": 10,
+          "n": "Banco BTG Pactual S.A.",
+          "s": "!bvmf/BPAC11",
+          "as": "1.56%",
+          "sh": "3,500"
+        },
+        {
+          "no": 11,
+          "n": "Alibaba Group Holding Limited",
+          "s": "!otc/BABAF",
+          "as": "1.55%",
+          "sh": "4,100"
+        },
+        {
+          "no": 12,
+          "n": "TS Financial Holding Co., Ltd.",
+          "s": "!tpe/2887",
+          "as": "1.53%",
+          "sh": "44,000"
+        },
+        {
+          "no": 13,
+          "n": "Banco Bradesco S.A.",
+          "s": "!bvmf/BBDC4",
+          "as": "1.51%",
+          "sh": "12,850"
+        },
+        {
+          "no": 14,
+          "n": "Yuan Renminbi Offshore",
+          "as": "1.46%",
+          "sh": "359,664"
+        },
+        {
+          "no": 15,
+          "n": "Saudi Arabian Oil Company",
+          "s": "!tadawul/2222",
+          "as": "1.37%",
+          "sh": "7,362"
+        },
+        {
+          "no": 16,
+          "n": "Bharti Airtel Limited",
+          "s": "!nse/BHARTIARTL",
+          "as": "1.29%",
+          "sh": "2,538"
+        },
+        {
+          "no": 17,
+          "n": "Titan Company Limited",
+          "s": "!nse/TITAN",
+          "as": "1.26%",
+          "sh": "1,018"
+        },
+        {
+          "no": 18,
+          "n": "BeOne Medicines AG",
+          "s": "!hkg/6160",
+          "as": "1.25%",
+          "sh": "1,700"
+        },
+        {
+          "no": 19,
+          "n": "MediaTek Inc.",
+          "s": "!tpe/2454",
+          "as": "1.18%",
+          "sh": "300"
+        },
+        {
+          "no": 20,
+          "n": "Reliance Industries Limited",
+          "s": "!nse/RELIANCE",
+          "as": "1.05%",
+          "sh": "3,177"
+        },
+        {
+          "no": 21,
+          "n": "Capitec Limited",
+          "s": "!jse/CPI",
+          "as": "1.04%",
+          "sh": "151"
+        },
+        {
+          "no": 22,
+          "n": "Innovent Biologics, Inc.",
+          "s": "!hkg/1801",
+          "as": "0.97%",
+          "sh": "3,000"
+        },
+        {
+          "no": 23,
+          "n": "Hindalco Industries Limited",
+          "s": "!nse/HINDALCO",
+          "as": "0.96%",
+          "sh": "3,788"
+        },
+        {
+          "no": 24,
+          "n": "Shinhan Financial Group Co., Ltd.",
+          "s": "!krx/055550",
+          "as": "0.96%",
+          "sh": "473"
+        },
+        {
+          "no": 25,
+          "n": "Nu Holdings Ltd.",
+          "s": "$NU",
+          "as": "0.94%",
+          "sh": "2,137"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 48.95
+        },
+        {
+          "n": "Financials",
+          "w": 23.61
+        },
+        {
+          "n": "Energy",
+          "w": 6.44
+        },
+        {
+          "n": "Healthcare",
+          "w": 5.11
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 5.08
+        },
+        {
+          "n": "Communication Services",
+          "w": 4.51
+        },
+        {
+          "n": "Materials",
+          "w": 3.58
+        },
+        {
+          "n": "Industrials",
+          "w": 2.71
+        }
+      ],
+      "countries": [
+        {
+          "code": "TW",
+          "weight": 38.94,
+          "country": "Taiwan"
+        },
+        {
+          "code": "KR",
+          "weight": 20.49,
+          "country": "South Korea"
+        },
+        {
+          "code": "BR",
+          "weight": 8.43,
+          "country": "Brazil"
+        },
+        {
+          "code": "IN",
+          "weight": 8.31,
+          "country": "India"
+        },
+        {
+          "code": "CN",
+          "weight": 7.79,
+          "country": "China"
+        },
+        {
+          "code": "KY",
+          "weight": 6.91,
+          "country": "Cayman Islands"
+        },
+        {
+          "code": "SA",
+          "weight": 4.15,
+          "country": "Saudi Arabia"
+        },
+        {
+          "code": "ZA",
+          "weight": 1.51,
+          "country": "South Africa"
+        },
+        {
+          "code": "CH",
+          "weight": 1.42,
+          "country": "Switzerland"
+        },
+        {
+          "code": "HK",
+          "weight": 1.38,
+          "country": "Hong Kong"
+        },
+        {
+          "code": "CL",
+          "weight": 0.48,
+          "country": "Chile"
+        },
+        {
+          "code": "PL",
+          "weight": 0.19,
+          "country": "Poland"
+        }
+      ],
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 48.95
+          },
+          {
+            "name": "Financials",
+            "y": 23.61
+          },
+          {
+            "name": "Energy",
+            "y": 6.44
+          },
+          {
+            "name": "Healthcare",
+            "y": 5.11
+          },
+          {
+            "name": "Consumer Discretionary",
+            "y": 5.08
+          },
+          {
+            "name": "Communication Services",
+            "y": 4.51
+          },
+          {
+            "name": "Materials",
+            "y": 3.58
+          },
+          {
+            "name": "Industrials",
+            "y": 2.71
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "Taiwan",
+            "y": 38.94
+          },
+          {
+            "name": "South Korea",
+            "y": 20.49
+          },
+          {
+            "name": "Brazil",
+            "y": 8.43
+          },
+          {
+            "name": "India",
+            "y": 8.31
+          },
+          {
+            "name": "China",
+            "y": 7.79
+          },
+          {
+            "name": "Cayman Islands",
+            "y": 6.91
+          },
+          {
+            "name": "Saudi Arabia",
+            "y": 4.15
+          },
+          {
+            "name": "South Africa",
+            "y": 1.51
+          },
+          {
+            "name": "Switzerland",
+            "y": 1.42
+          },
+          {
+            "name": "Hong Kong",
+            "y": 1.38
+          },
+          {
+            "name": "Chile",
+            "y": 0.48
+          },
+          {
+            "name": "Poland",
+            "y": 0.19
+          }
+        ]
+      },
+      "news": [
+        {
+          "t": "VanEck Launches VEEM: ETF Built on MSCI Emerging Markets Analyst Sentiment Factor",
+          "u": "https://www.businesswire.com/news/home/20260910487942/en/VanEck-Launches-VEEM-ETF-Built-on-MSCI-Emerging-Markets-Analyst-Sentiment-Factor/",
+          "n": "Business Wire",
+          "d": "4 weeks ago"
+        }
+      ],
+      "infoBox": "VEEM is an equity ETF with a total of 104 individual holdings. The top holdings are Taiwan Semiconductor Manufacturing Company stock at 16.46%, Samsung Electronics at 7.16%, SK hynix at 6.12%, Petróleo Brasileiro S.A. - Petrobras at 2.63%, and Tencent Holdings at 2.52%.",
+      "infoTable": {
+        "count": 104,
+        "top10": 44.18,
+        "assetClass": "Equity",
+        "category": "Diversified Emerging Mkts",
+        "categoryLabel": "ETF Category",
+        "aum": 3648315,
+        "peRatio": null
+      },
+      "date": "Oct 9, 2026",
+      "count": 104,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Oct 9, 2026",
+        "lastChecked": 1791880264103,
+        "topic": "holdings",
+        "ticker": "VEEM",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 24.4356,
+      "pd": 24.44,
+      "c": -0.22,
+      "cp": -0.91,
+      "cl": 24.66,
+      "cdr": -1,
+      "o": 24.44,
+      "h": 24.44,
+      "l": 24.44,
+      "v": 7,
+      "ts": 1791835200000,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "td": "2026-10-12",
+      "h52": 25.55,
+      "l52": 24.135,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1791836100018.2383,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1791894098112,
+      "symbol": "VEEM",
+      "uid": "VEEM"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 24.516,
+        "h": 25.385,
+        "l": 24.41,
+        "c": 24.436,
+        "v": 1690,
+        "a": 24.436,
+        "ch": -0.24
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.44,
+          "h": 24.44,
+          "l": 24.44,
+          "c": 24.436,
+          "v": 7,
+          "a": 24.436,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-10-09",
+          "o": 24.659,
+          "h": 24.659,
+          "l": 24.659,
+          "c": 24.659,
+          "a": 24.6591,
+          "v": 10,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-10-08",
+          "o": 24.41,
+          "h": 24.411,
+          "l": 24.41,
+          "c": 24.411,
+          "a": 24.4114,
+          "v": 578,
+          "ch": -2.12
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.94,
+          "h": 24.94,
+          "l": 24.94,
+          "c": 24.94,
+          "a": 24.9397,
+          "v": 9,
+          "ch": -1.12
+        },
+        {
+          "t": "2026-10-06",
+          "o": 25.222,
+          "h": 25.222,
+          "l": 25.222,
+          "c": 25.222,
+          "a": 25.2219,
+          "v": 14,
+          "ch": -0.6
+        },
+        {
+          "t": "2026-10-05",
+          "o": 25.385,
+          "h": 25.385,
+          "l": 25.375,
+          "c": 25.375,
+          "a": 25.3747,
+          "v": 1013.9999999999999,
+          "ch": 2.12
+        },
+        {
+          "t": "2026-10-02",
+          "o": 24.848,
+          "h": 24.848,
+          "l": 24.848,
+          "c": 24.848,
+          "a": 24.848,
+          "v": 10,
+          "ch": 1.35
+        },
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 24.516,
+          "l": 24.516,
+          "c": 24.516,
+          "a": 24.5163,
+          "v": 48,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-09-30",
+          "o": 24.494,
+          "h": 24.494,
+          "l": 24.494,
+          "c": 24.494,
+          "a": 24.4936,
+          "v": 9,
+          "ch": -0.98
+        },
+        {
+          "t": "2026-09-29",
+          "o": 24.735,
+          "h": 24.735,
+          "l": 24.735,
+          "c": 24.735,
+          "a": 24.7349,
+          "v": 58,
+          "ch": 0.12
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.705,
+          "h": 24.705,
+          "l": 24.705,
+          "c": 24.705,
+          "a": 24.7047,
+          "v": 17,
+          "ch": -1.46
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.072,
+          "h": 25.072,
+          "l": 25.072,
+          "c": 25.072,
+          "a": 25.0715,
+          "v": 13,
+          "ch": 1.14
+        },
+        {
+          "t": "2026-09-24",
+          "o": 24.79,
+          "h": 24.79,
+          "l": 24.79,
+          "c": 24.79,
+          "a": 24.7901,
+          "v": 10,
+          "ch": -0.82
+        },
+        {
+          "t": "2026-09-23",
+          "o": 24.994,
+          "h": 24.994,
+          "l": 24.994,
+          "c": 24.994,
+          "a": 24.9938,
+          "v": 99,
+          "ch": -1.83
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.459,
+          "h": 25.459,
+          "l": 25.459,
+          "c": 25.459,
+          "a": 25.4588,
+          "v": 25,
+          "ch": -0.08
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.36,
+          "h": 25.55,
+          "l": 25.36,
+          "c": 25.478,
+          "a": 25.4781,
+          "v": 9839,
+          "ch": 3.28
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.668,
+          "h": 24.668,
+          "l": 24.668,
+          "c": 24.668,
+          "a": 24.6679,
+          "v": 37,
+          "ch": 0.12
+        },
+        {
+          "t": "2026-09-17",
+          "o": 24.638,
+          "h": 24.638,
+          "l": 24.638,
+          "c": 24.638,
+          "a": 24.6384,
+          "v": 14,
+          "ch": 1.93
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.34,
+          "h": 24.34,
+          "l": 24.173,
+          "c": 24.173,
+          "a": 24.1726,
+          "v": 9311,
+          "ch": 0.16
+        },
+        {
+          "t": "2026-09-15",
+          "o": 24.205,
+          "h": 24.205,
+          "l": 24.135,
+          "c": 24.135,
+          "a": 24.1345,
+          "v": 1218,
+          "ch": -0.42
+        },
+        {
+          "t": "2026-09-14",
+          "o": 24.237,
+          "h": 24.237,
+          "l": 24.237,
+          "c": 24.237,
+          "a": 24.2373,
+          "v": 101,
+          "ch": -2.7
+        },
+        {
+          "t": "2026-09-11",
+          "o": 24.91,
+          "h": 24.91,
+          "l": 24.91,
+          "c": 24.91,
+          "a": 24.9099,
+          "v": 69,
+          "ch": 1.19
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.44,
+          "h": 24.44,
+          "l": 24.44,
+          "c": 24.436,
+          "v": 7,
+          "a": 24.436,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-10-05",
+          "o": 25.385,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.659,
+          "v": 1625,
+          "a": 24.6591,
+          "ch": -0.76
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.705,
+          "h": 24.848,
+          "l": 24.494,
+          "c": 24.848,
+          "v": 142,
+          "a": 24.848,
+          "ch": -0.89
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.36,
+          "h": 25.55,
+          "l": 24.79,
+          "c": 25.072,
+          "v": 9986,
+          "a": 25.0715,
+          "ch": 1.64
+        },
+        {
+          "t": "2026-09-14",
+          "o": 24.237,
+          "h": 24.668,
+          "l": 24.135,
+          "c": 24.668,
+          "v": 10681,
+          "a": 24.6679,
+          "ch": -0.97
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.436,
+          "v": 1690,
+          "a": 24.436,
+          "ch": -0.24
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.44,
+          "h": 24.44,
+          "l": 24.44,
+          "c": 24.436,
+          "v": 7,
+          "a": 24.436,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-10-05",
+          "o": 25.385,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.659,
+          "v": 1625,
+          "a": 24.6591,
+          "ch": -0.76
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.705,
+          "h": 24.848,
+          "l": 24.494,
+          "c": 24.848,
+          "v": 142,
+          "a": 24.848,
+          "ch": -0.89
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.36,
+          "h": 25.55,
+          "l": 24.79,
+          "c": 25.072,
+          "v": 9986,
+          "a": 25.0715,
+          "ch": 1.64
+        },
+        {
+          "t": "2026-09-14",
+          "o": 24.237,
+          "h": 24.668,
+          "l": 24.135,
+          "c": 24.668,
+          "v": 10681,
+          "a": 24.6679,
+          "ch": -0.97
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.436,
+          "v": 1690,
+          "a": 24.436,
+          "ch": -0.24
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.516,
+          "h": 25.385,
+          "l": 24.41,
+          "c": 24.436,
+          "v": 1690,
+          "a": 24.436,
+          "ch": -0.24
+        }
+      ]
+    }
+  },
+  "field_sources": {
+    "holdings": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-09T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
+}

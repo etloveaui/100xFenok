@@ -1,0 +1,1369 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "HWMV",
+  "source_as_of": "2026-10-12T20:00:00Z",
+  "fetched_at": "2026-10-13T12:19:01Z",
+  "endpoints": {
+    "holdings": "/etf/hwmv/holdings/__data.json",
+    "overview": "/etf/hwmv/__data.json",
+    "quote": "/api/quotes/e/HWMV",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/HWMV/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/HWMV/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/HWMV/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/HWMV/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/HWMV/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/HWMV/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "APA",
+        "name": "APA Corporation",
+        "weight_pct": 5.03,
+        "shares": 13325,
+        "raw": {
+          "no": 1,
+          "n": "APA Corporation",
+          "s": "$APA",
+          "as": "5.03%",
+          "sh": "13,325"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "AIG",
+        "name": "American International Group, Inc.",
+        "weight_pct": 4.45,
+        "shares": 7105,
+        "raw": {
+          "no": 2,
+          "n": "American International Group, Inc.",
+          "s": "$AIG",
+          "as": "4.45%",
+          "sh": "7,105"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "WDAY",
+        "name": "Workday, Inc.",
+        "weight_pct": 4.25,
+        "shares": 2802,
+        "raw": {
+          "no": 3,
+          "n": "Workday, Inc.",
+          "s": "$WDAY",
+          "as": "4.25%",
+          "sh": "2,802"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "KOS",
+        "name": "Kosmos Energy Ltd.",
+        "weight_pct": 4.18,
+        "shares": 190815,
+        "raw": {
+          "no": 4,
+          "n": "Kosmos Energy Ltd.",
+          "s": "$KOS",
+          "as": "4.18%",
+          "sh": "190,815"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "First American Government Obligations Fund 12/01/2031",
+        "weight_pct": 3.39,
+        "shares": 421294,
+        "raw": {
+          "no": 5,
+          "n": "First American Government Obligations Fund 12/01/2031",
+          "as": "3.39%",
+          "sh": "421,294"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "CRGY",
+        "name": "Crescent Energy Company",
+        "weight_pct": 3.1,
+        "shares": 30083,
+        "raw": {
+          "no": 6,
+          "n": "Crescent Energy Company",
+          "s": "$CRGY",
+          "as": "3.10%",
+          "sh": "30,083"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "FI",
+        "name": "Fiserv Inc",
+        "weight_pct": 2.97,
+        "shares": 8014,
+        "raw": {
+          "no": 7,
+          "n": "Fiserv Inc",
+          "s": "FI",
+          "as": "2.97%",
+          "sh": "8,014"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "SLM",
+        "name": "SLM Corporation",
+        "weight_pct": 2.72,
+        "shares": 14726,
+        "raw": {
+          "no": 8,
+          "n": "SLM Corporation",
+          "s": "$SLM",
+          "as": "2.72%",
+          "sh": "14,726"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "CNC",
+        "name": "Centene Corporation",
+        "weight_pct": 2.6,
+        "shares": 4813,
+        "raw": {
+          "no": 9,
+          "n": "Centene Corporation",
+          "s": "$CNC",
+          "as": "2.60%",
+          "sh": "4,813"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "FLR",
+        "name": "Fluor Corporation",
+        "weight_pct": 2.49,
+        "shares": 6207,
+        "raw": {
+          "no": 10,
+          "n": "Fluor Corporation",
+          "s": "$FLR",
+          "as": "2.49%",
+          "sh": "6,207"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "WPP",
+        "name": "WPP plc",
+        "weight_pct": 2.3,
+        "shares": 11492,
+        "raw": {
+          "no": 11,
+          "n": "WPP plc",
+          "s": "$WPP",
+          "as": "2.30%",
+          "sh": "11,492"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "UHS",
+        "name": "Universal Health Services, Inc.",
+        "weight_pct": 2.26,
+        "shares": 1571,
+        "raw": {
+          "no": 12,
+          "n": "Universal Health Services, Inc.",
+          "s": "$UHS",
+          "as": "2.26%",
+          "sh": "1,571"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "BCO",
+        "name": "The Brink's Company",
+        "weight_pct": 1.9,
+        "shares": 2306,
+        "raw": {
+          "no": 13,
+          "n": "The Brink's Company",
+          "s": "$BCO",
+          "as": "1.90%",
+          "sh": "2,306"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "SWK",
+        "name": "Stanley Black & Decker, Inc.",
+        "weight_pct": 1.87,
+        "shares": 2621,
+        "raw": {
+          "no": 14,
+          "n": "Stanley Black & Decker, Inc.",
+          "s": "$SWK",
+          "as": "1.87%",
+          "sh": "2,621"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "OMC",
+        "name": "Omnicom Group Inc.",
+        "weight_pct": 1.86,
+        "shares": 3000,
+        "raw": {
+          "no": 15,
+          "n": "Omnicom Group Inc.",
+          "s": "$OMC",
+          "as": "1.86%",
+          "sh": "3,000"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "OLN",
+        "name": "Olin Corporation",
+        "weight_pct": 1.8,
+        "shares": 15207,
+        "raw": {
+          "no": 16,
+          "n": "Olin Corporation",
+          "s": "$OLN",
+          "as": "1.80%",
+          "sh": "15,207"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "DOX",
+        "name": "Amdocs Limited",
+        "weight_pct": 1.54,
+        "shares": 3256,
+        "raw": {
+          "no": 17,
+          "n": "Amdocs Limited",
+          "s": "$DOX",
+          "as": "1.54%",
+          "sh": "3,256"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "U-Haul Holding Co",
+        "weight_pct": 1.54,
+        "shares": 3860,
+        "raw": {
+          "no": 18,
+          "n": "U-Haul Holding Co",
+          "as": "1.54%",
+          "sh": "3,860"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "APTV",
+        "name": "Aptiv PLC",
+        "weight_pct": 1.51,
+        "shares": 4306,
+        "raw": {
+          "no": 19,
+          "n": "Aptiv PLC",
+          "s": "$APTV",
+          "as": "1.51%",
+          "sh": "4,306"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "CNHI",
+        "name": "CNH Industrial NV",
+        "weight_pct": 1.5,
+        "shares": 16003,
+        "raw": {
+          "no": 20,
+          "n": "CNH Industrial NV",
+          "s": "CNHI",
+          "as": "1.50%",
+          "sh": "16,003"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "ERIC",
+        "name": "Telefonaktiebolaget LM Ericsson (publ)",
+        "weight_pct": 1.48,
+        "shares": 19559,
+        "raw": {
+          "no": 21,
+          "n": "Telefonaktiebolaget LM Ericsson (publ)",
+          "s": "$ERIC",
+          "as": "1.48%",
+          "sh": "19,559"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "HLF",
+        "name": "Herbalife Ltd.",
+        "weight_pct": 1.44,
+        "shares": 13096,
+        "raw": {
+          "no": 22,
+          "n": "Herbalife Ltd.",
+          "s": "$HLF",
+          "as": "1.44%",
+          "sh": "13,096"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "ALLY",
+        "name": "Ally Financial Inc.",
+        "weight_pct": 1.43,
+        "shares": 4694,
+        "raw": {
+          "no": 23,
+          "n": "Ally Financial Inc.",
+          "s": "$ALLY",
+          "as": "1.43%",
+          "sh": "4,694"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "ZION",
+        "name": "Zions Bancorporation, National Association",
+        "weight_pct": 1.43,
+        "shares": 2822,
+        "raw": {
+          "no": 24,
+          "n": "Zions Bancorporation, National Association",
+          "s": "$ZION",
+          "as": "1.43%",
+          "sh": "2,822"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "FCNCA",
+        "name": "First Citizens BancShares, Inc.",
+        "weight_pct": 1.41,
+        "shares": 84,
+        "raw": {
+          "no": 25,
+          "n": "First Citizens BancShares, Inc.",
+          "s": "$FCNCA",
+          "as": "1.41%",
+          "sh": "84"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 72,
+    "holdings_updated": "Oct 13, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "expenseRatio": "0.94%",
+      "sharesOut": "20,000",
+      "inception": "Sep 24, 2026"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 24.8249,
+      "pd": 24.82,
+      "c": 0.13,
+      "cp": 0.55,
+      "cl": 24.69,
+      "cdr": 1,
+      "o": 24.82,
+      "h": 24.82,
+      "l": 24.82,
+      "v": 6,
+      "ts": 1791835200000,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "td": "2026-10-12",
+      "h52": 25.05,
+      "l52": 24.278,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1791836100004.3325,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1791893945137,
+      "symbol": "HWMV",
+      "uid": "HWMV"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 24.5,
+        "h": 24.82,
+        "l": 24.5,
+        "c": 24.825,
+        "v": 57,
+        "a": 24.825,
+        "ch": 2.25
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.82,
+          "h": 24.82,
+          "l": 24.82,
+          "c": 24.825,
+          "v": 6,
+          "a": 24.825,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-10-09",
+          "o": 24.691,
+          "h": 24.691,
+          "l": 24.691,
+          "c": 24.691,
+          "a": 24.6909,
+          "v": 6,
+          "ch": -0.27
+        },
+        {
+          "t": "2026-10-08",
+          "o": 24.758,
+          "h": 24.758,
+          "l": 24.758,
+          "c": 24.758,
+          "a": 24.7584,
+          "v": 8,
+          "ch": 0.86
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.547,
+          "h": 24.547,
+          "l": 24.547,
+          "c": 24.547,
+          "a": 24.5467,
+          "v": 8,
+          "ch": -0.79
+        },
+        {
+          "t": "2026-10-06",
+          "o": 24.742,
+          "h": 24.742,
+          "l": 24.742,
+          "c": 24.742,
+          "a": 24.7424,
+          "v": 5,
+          "ch": 0.3
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.668,
+          "h": 24.668,
+          "l": 24.668,
+          "c": 24.668,
+          "a": 24.6675,
+          "v": 8,
+          "ch": 0.53
+        },
+        {
+          "t": "2026-10-02",
+          "o": 24.537,
+          "h": 24.537,
+          "l": 24.537,
+          "c": 24.537,
+          "a": 24.5366,
+          "v": 8,
+          "ch": 0.15
+        },
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.5,
+          "l": 24.5,
+          "c": 24.5,
+          "a": 24.5003,
+          "v": 8,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-09-30",
+          "o": 24.37,
+          "h": 24.37,
+          "l": 24.278,
+          "c": 24.278,
+          "a": 24.2777,
+          "v": 113,
+          "ch": -0.86
+        },
+        {
+          "t": "2026-09-29",
+          "o": 24.6,
+          "h": 24.6,
+          "l": 24.489,
+          "c": 24.489,
+          "a": 24.4885,
+          "v": 211,
+          "ch": -0.45
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.81,
+          "h": 24.81,
+          "l": 24.599,
+          "c": 24.599,
+          "a": 24.5986,
+          "v": 1409,
+          "ch": -1.22
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.902,
+          "h": 24.902,
+          "l": 24.902,
+          "c": 24.902,
+          "a": 24.9023,
+          "v": 8,
+          "ch": 0.15
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.82,
+          "h": 24.82,
+          "l": 24.82,
+          "c": 24.825,
+          "v": 6,
+          "a": 24.825,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.668,
+          "h": 24.758,
+          "l": 24.547,
+          "c": 24.691,
+          "v": 35,
+          "a": 24.6909,
+          "ch": 0.63
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.81,
+          "h": 24.81,
+          "l": 24.278,
+          "c": 24.537,
+          "v": 1749,
+          "a": 24.5366,
+          "ch": -1.47
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.82,
+          "l": 24.5,
+          "c": 24.825,
+          "v": 57,
+          "a": 24.825,
+          "ch": 2.25
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.82,
+          "h": 24.82,
+          "l": 24.82,
+          "c": 24.825,
+          "v": 6,
+          "a": 24.825,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.668,
+          "h": 24.758,
+          "l": 24.547,
+          "c": 24.691,
+          "v": 35,
+          "a": 24.6909,
+          "ch": 0.63
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.81,
+          "h": 24.81,
+          "l": 24.278,
+          "c": 24.537,
+          "v": 1749,
+          "a": 24.5366,
+          "ch": -1.47
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.82,
+          "l": 24.5,
+          "c": 24.825,
+          "v": 57,
+          "a": 24.825,
+          "ch": 2.25
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.82,
+          "l": 24.5,
+          "c": 24.825,
+          "v": 57,
+          "a": 24.825,
+          "ch": 2.25
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "HWMV",
+        "lastChecked": 1791893891341,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "expenseRatio": "0.94%",
+      "peRatio": null,
+      "sharesOut": "20,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 72,
+      "inception": "Sep 24, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Fund seeks capital appreciation. Under normal circumstances, the Fund invests at least 80% of its net assets in equity securities of mid-capitalization companies that the Advisor believes are undervalued. The strategy invests in industries and companies that may be out of favor and misunderstood due to temporary or cyclical factors, with an emphasis on sustainable cash flow, a strong balance sheet, and potential for long-term capital appreciation.",
+      "infoTable": [
+        [
+          "Category",
+          "Mid-Cap Value"
+        ],
+        [
+          "Stock Exchange",
+          "Nasdaq"
+        ],
+        [
+          "Ticker Symbol",
+          "HWMV"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 72,
+        "updated": "Oct 13, 2026",
+        "top10": 35.18,
+        "holdings": [
+          {
+            "n": "APA Corporation",
+            "s": "$APA",
+            "as": "5.03%",
+            "sh": "13,325"
+          },
+          {
+            "n": "American International Group, Inc.",
+            "s": "$AIG",
+            "as": "4.45%",
+            "sh": "7,105"
+          },
+          {
+            "n": "Workday, Inc.",
+            "s": "$WDAY",
+            "as": "4.25%",
+            "sh": "2,802"
+          },
+          {
+            "n": "Kosmos Energy Ltd.",
+            "s": "$KOS",
+            "as": "4.18%",
+            "sh": "190,815"
+          },
+          {
+            "n": "First American Government Obligations Fund 12/01/2031",
+            "as": "3.39%",
+            "sh": "421,294"
+          },
+          {
+            "n": "Crescent Energy Company",
+            "s": "$CRGY",
+            "as": "3.10%",
+            "sh": "30,083"
+          },
+          {
+            "n": "Fiserv Inc",
+            "s": "FI",
+            "as": "2.97%",
+            "sh": "8,014"
+          },
+          {
+            "n": "SLM Corporation",
+            "s": "$SLM",
+            "as": "2.72%",
+            "sh": "14,726"
+          },
+          {
+            "n": "Centene Corporation",
+            "s": "$CNC",
+            "as": "2.60%",
+            "sh": "4,813"
+          },
+          {
+            "n": "Fluor Corporation",
+            "s": "$FLR",
+            "as": "2.49%",
+            "sh": "6,207"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1791890421811",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20260923062046/en/Hotchkis-Wiley-Launches-ETF-Share-Class-for-Mid-Cap-Value-Fund/",
+            "img": "https://cdn.snapi.dev/images/v1/j/5/m/press12-3940965.jpg",
+            "title": "Hotchkis & Wiley Launches ETF Share Class for Mid-Cap Value Fund",
+            "text": "LOS ANGELES--(BUSINESS WIRE)--Hotchkis & Wiley announces launch of a new ETF share class for its Mid-Cap Value Fund. The new ETF is the Hotchkis & Wiley Mid-Cap Value Fund HWMV.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 24, 2026, 8:30 AM EDT",
+            "ago": "18 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 24.668,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.865
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      },
+      "provider_holdings_available": true
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "APA Corporation",
+          "s": "$APA",
+          "as": "5.03%",
+          "sh": "13,325"
+        },
+        {
+          "no": 2,
+          "n": "American International Group, Inc.",
+          "s": "$AIG",
+          "as": "4.45%",
+          "sh": "7,105"
+        },
+        {
+          "no": 3,
+          "n": "Workday, Inc.",
+          "s": "$WDAY",
+          "as": "4.25%",
+          "sh": "2,802"
+        },
+        {
+          "no": 4,
+          "n": "Kosmos Energy Ltd.",
+          "s": "$KOS",
+          "as": "4.18%",
+          "sh": "190,815"
+        },
+        {
+          "no": 5,
+          "n": "First American Government Obligations Fund 12/01/2031",
+          "as": "3.39%",
+          "sh": "421,294"
+        },
+        {
+          "no": 6,
+          "n": "Crescent Energy Company",
+          "s": "$CRGY",
+          "as": "3.10%",
+          "sh": "30,083"
+        },
+        {
+          "no": 7,
+          "n": "Fiserv Inc",
+          "s": "FI",
+          "as": "2.97%",
+          "sh": "8,014"
+        },
+        {
+          "no": 8,
+          "n": "SLM Corporation",
+          "s": "$SLM",
+          "as": "2.72%",
+          "sh": "14,726"
+        },
+        {
+          "no": 9,
+          "n": "Centene Corporation",
+          "s": "$CNC",
+          "as": "2.60%",
+          "sh": "4,813"
+        },
+        {
+          "no": 10,
+          "n": "Fluor Corporation",
+          "s": "$FLR",
+          "as": "2.49%",
+          "sh": "6,207"
+        },
+        {
+          "no": 11,
+          "n": "WPP plc",
+          "s": "$WPP",
+          "as": "2.30%",
+          "sh": "11,492"
+        },
+        {
+          "no": 12,
+          "n": "Universal Health Services, Inc.",
+          "s": "$UHS",
+          "as": "2.26%",
+          "sh": "1,571"
+        },
+        {
+          "no": 13,
+          "n": "The Brink's Company",
+          "s": "$BCO",
+          "as": "1.90%",
+          "sh": "2,306"
+        },
+        {
+          "no": 14,
+          "n": "Stanley Black & Decker, Inc.",
+          "s": "$SWK",
+          "as": "1.87%",
+          "sh": "2,621"
+        },
+        {
+          "no": 15,
+          "n": "Omnicom Group Inc.",
+          "s": "$OMC",
+          "as": "1.86%",
+          "sh": "3,000"
+        },
+        {
+          "no": 16,
+          "n": "Olin Corporation",
+          "s": "$OLN",
+          "as": "1.80%",
+          "sh": "15,207"
+        },
+        {
+          "no": 17,
+          "n": "Amdocs Limited",
+          "s": "$DOX",
+          "as": "1.54%",
+          "sh": "3,256"
+        },
+        {
+          "no": 18,
+          "n": "U-Haul Holding Co",
+          "as": "1.54%",
+          "sh": "3,860"
+        },
+        {
+          "no": 19,
+          "n": "Aptiv PLC",
+          "s": "$APTV",
+          "as": "1.51%",
+          "sh": "4,306"
+        },
+        {
+          "no": 20,
+          "n": "CNH Industrial NV",
+          "s": "CNHI",
+          "as": "1.50%",
+          "sh": "16,003"
+        },
+        {
+          "no": 21,
+          "n": "Telefonaktiebolaget LM Ericsson (publ)",
+          "s": "$ERIC",
+          "as": "1.48%",
+          "sh": "19,559"
+        },
+        {
+          "no": 22,
+          "n": "Herbalife Ltd.",
+          "s": "$HLF",
+          "as": "1.44%",
+          "sh": "13,096"
+        },
+        {
+          "no": 23,
+          "n": "Ally Financial Inc.",
+          "s": "$ALLY",
+          "as": "1.43%",
+          "sh": "4,694"
+        },
+        {
+          "no": 24,
+          "n": "Zions Bancorporation, National Association",
+          "s": "$ZION",
+          "as": "1.43%",
+          "sh": "2,822"
+        },
+        {
+          "no": 25,
+          "n": "First Citizens BancShares, Inc.",
+          "s": "$FCNCA",
+          "as": "1.41%",
+          "sh": "84"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "Hotchkis & Wiley Launches ETF Share Class for Mid-Cap Value Fund",
+          "u": "https://www.businesswire.com/news/home/20260923062046/en/Hotchkis-Wiley-Launches-ETF-Share-Class-for-Mid-Cap-Value-Fund/",
+          "n": "Business Wire",
+          "d": "18 days ago"
+        }
+      ],
+      "date": "Oct 13, 2026",
+      "count": 72,
+      "trust": {
+        "sources": [
+          {
+            "name": "Financial Modeling Prep",
+            "short": "FMP",
+            "url": "https://financialmodelingprep.com/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Oct 13, 2026",
+        "lastChecked": 1791885582601,
+        "topic": "holdings",
+        "ticker": "HWMV",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 24.8249,
+      "pd": 24.82,
+      "c": 0.13,
+      "cp": 0.55,
+      "cl": 24.69,
+      "cdr": 1,
+      "o": 24.82,
+      "h": 24.82,
+      "l": 24.82,
+      "v": 6,
+      "ts": 1791835200000,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "td": "2026-10-12",
+      "h52": 25.05,
+      "l52": 24.278,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "pre",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1791836100004.3325,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1791893945137,
+      "symbol": "HWMV",
+      "uid": "HWMV"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 24.5,
+        "h": 24.82,
+        "l": 24.5,
+        "c": 24.825,
+        "v": 57,
+        "a": 24.825,
+        "ch": 2.25
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.82,
+          "h": 24.82,
+          "l": 24.82,
+          "c": 24.825,
+          "v": 6,
+          "a": 24.825,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-10-09",
+          "o": 24.691,
+          "h": 24.691,
+          "l": 24.691,
+          "c": 24.691,
+          "a": 24.6909,
+          "v": 6,
+          "ch": -0.27
+        },
+        {
+          "t": "2026-10-08",
+          "o": 24.758,
+          "h": 24.758,
+          "l": 24.758,
+          "c": 24.758,
+          "a": 24.7584,
+          "v": 8,
+          "ch": 0.86
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.547,
+          "h": 24.547,
+          "l": 24.547,
+          "c": 24.547,
+          "a": 24.5467,
+          "v": 8,
+          "ch": -0.79
+        },
+        {
+          "t": "2026-10-06",
+          "o": 24.742,
+          "h": 24.742,
+          "l": 24.742,
+          "c": 24.742,
+          "a": 24.7424,
+          "v": 5,
+          "ch": 0.3
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.668,
+          "h": 24.668,
+          "l": 24.668,
+          "c": 24.668,
+          "a": 24.6675,
+          "v": 8,
+          "ch": 0.53
+        },
+        {
+          "t": "2026-10-02",
+          "o": 24.537,
+          "h": 24.537,
+          "l": 24.537,
+          "c": 24.537,
+          "a": 24.5366,
+          "v": 8,
+          "ch": 0.15
+        },
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.5,
+          "l": 24.5,
+          "c": 24.5,
+          "a": 24.5003,
+          "v": 8,
+          "ch": 0.92
+        },
+        {
+          "t": "2026-09-30",
+          "o": 24.37,
+          "h": 24.37,
+          "l": 24.278,
+          "c": 24.278,
+          "a": 24.2777,
+          "v": 113,
+          "ch": -0.86
+        },
+        {
+          "t": "2026-09-29",
+          "o": 24.6,
+          "h": 24.6,
+          "l": 24.489,
+          "c": 24.489,
+          "a": 24.4885,
+          "v": 211,
+          "ch": -0.45
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.81,
+          "h": 24.81,
+          "l": 24.599,
+          "c": 24.599,
+          "a": 24.5986,
+          "v": 1409,
+          "ch": -1.22
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.902,
+          "h": 24.902,
+          "l": 24.902,
+          "c": 24.902,
+          "a": 24.9023,
+          "v": 8,
+          "ch": 0.15
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.82,
+          "h": 24.82,
+          "l": 24.82,
+          "c": 24.825,
+          "v": 6,
+          "a": 24.825,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.668,
+          "h": 24.758,
+          "l": 24.547,
+          "c": 24.691,
+          "v": 35,
+          "a": 24.6909,
+          "ch": 0.63
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.81,
+          "h": 24.81,
+          "l": 24.278,
+          "c": 24.537,
+          "v": 1749,
+          "a": 24.5366,
+          "ch": -1.47
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.82,
+          "l": 24.5,
+          "c": 24.825,
+          "v": 57,
+          "a": 24.825,
+          "ch": 2.25
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 24.82,
+          "h": 24.82,
+          "l": 24.82,
+          "c": 24.825,
+          "v": 6,
+          "a": 24.825,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.668,
+          "h": 24.758,
+          "l": 24.547,
+          "c": 24.691,
+          "v": 35,
+          "a": 24.6909,
+          "ch": 0.63
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.81,
+          "h": 24.81,
+          "l": 24.278,
+          "c": 24.537,
+          "v": 1749,
+          "a": 24.5366,
+          "ch": -1.47
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.82,
+          "l": 24.5,
+          "c": 24.825,
+          "v": 57,
+          "a": 24.825,
+          "ch": 2.25
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 24.5,
+          "h": 24.82,
+          "l": 24.5,
+          "c": 24.825,
+          "v": 57,
+          "a": 24.825,
+          "ch": 2.25
+        }
+      ]
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ],
+  "field_sources": {
+    "holdings": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-13T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
+}
