@@ -958,11 +958,26 @@ jobs:
               reasons = payload.get("partial_reason_codes") or []
               missing_surface = any(reason == "holdings_unavailable" or reason.startswith("holdings_surface_")
                                     for reason in reasons)
-              if not baseline_bytes or not missing_surface:
+              if not baseline_bytes:
                   return False
               baseline, _, _, _ = checked_payload(baseline_bytes, ticker, "active", legacy_baseline=True)
               old = baseline.get("normalized") or {}
               if not old.get("holdings"):
+                  return False
+              issuer_date = fetcher.issuer_holdings_snapshot(payload)
+              if issuer_date is not None:
+                  old_date = fetcher.parse_stockanalysis_date(old.get("holdings_updated"))
+                  if old_date is not None and issuer_date < old_date:
+                      return False
+                  # Git and the active plane can hold different prior portfolios.
+                  # Preserve the exact active snapshot before the detail-loss gate.
+                  snapshot = fetcher.etf_holdings_snapshot(baseline)
+                  history = payload["normalized"].setdefault("holdings_history", [])
+                  if snapshot not in history:
+                      history.append(snapshot)
+                      return True
+                  return False
+              if not missing_surface:
                   return False
               # The overview is a sample when the holdings endpoint is absent.
               # Keep the verified portfolio and its dates as one bound component.

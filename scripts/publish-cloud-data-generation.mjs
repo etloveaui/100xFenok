@@ -1051,6 +1051,81 @@ function stockAnalysisLatestHistorySourceDay(payload) {
   return days.length > 0 ? days.sort().at(-1) : null;
 }
 
+// Mirrors etf_display_daily_history in stockanalysis_recovery_state.py. When a
+// digest-bound archived provider series is the displayed daily series, the
+// native tail alone cannot date the history clock; the archive record is read
+// only after its hash, identity and own dates are verified.
+function stockAnalysisDisplayDailyHistory(payload, raw, normalized) {
+  const selection = normalized.daily_history_selection;
+  if (selection === undefined || selection === null) {
+    const periods = raw.history_periods && typeof raw.history_periods === "object"
+      && !Array.isArray(raw.history_periods)
+      ? raw.history_periods
+      : normalized.history_periods && typeof normalized.history_periods === "object"
+        && !Array.isArray(normalized.history_periods)
+        ? normalized.history_periods
+        : {};
+    return periods.daily_1y;
+  }
+  if (typeof selection !== "object" || Array.isArray(selection)
+    || selection.provider !== "yahoo_finance") {
+    return null;
+  }
+  const archives = normalized.history_archive;
+  if (!Array.isArray(archives)) return null;
+  for (const archive of archives) {
+    if (!archive || typeof archive !== "object" || Array.isArray(archive)) continue;
+    if (archive.provider !== "yahoo_finance" || archive.price_basis !== "yahoo_adjusted") continue;
+    if (archive.payload_sha256 !== selection.payload_sha256) continue;
+    if (typeof archive.payload_sha256 !== "string"
+      || !/^[0-9a-f]{64}$/.test(archive.payload_sha256)
+      || typeof archive.source_payload !== "string") {
+      return null;
+    }
+    const objectBytes = new TextEncoder().encode(archive.source_payload);
+    if (objectBytes.byteLength > 2_000_000
+      || sha256Bytes(objectBytes) !== archive.payload_sha256) {
+      return null;
+    }
+    let source;
+    try {
+      source = JSON.parse(archive.source_payload);
+    } catch {
+      return null;
+    }
+    if (!source || typeof source !== "object"
+      || source.schema_version !== "yf-etf-detail/v1"
+      || source.ticker !== payload.ticker
+      || source.source_provider !== "yahoo_finance"
+      || source.source_as_of !== archive.source_as_of
+      || source.fetched_at !== archive.fetched_at) {
+      return null;
+    }
+    const data = source.raw && typeof source.raw === "object" ? source.raw.yf : null;
+    if (!data || typeof data !== "object") return null;
+    const info = data.info && typeof data.info === "object" ? data.info : {};
+    const funds = data.funds_data && typeof data.funds_data === "object" ? data.funds_data : {};
+    const symbol = String(info.symbol || funds.symbol || "").trim().toUpperCase();
+    const quoteType = String(info.quoteType || funds.quote_type || "").trim().toUpperCase();
+    if (symbol !== String(payload.ticker || "").trim().toUpperCase()
+      || !["ETF", "MUTUALFUND"].includes(quoteType)) {
+      return null;
+    }
+    const rows = Array.isArray(data.history_1y) ? data.history_1y : null;
+    if (!rows || rows.length === 0) return null;
+    const days = rows
+      .map((row) => stockAnalysisCollectionDay(row?.date || row?.t || row?.time))
+      .filter(Boolean)
+      .sort();
+    if (days.length === 0
+      || archive.history_first !== days[0] || archive.history_last !== days.at(-1)) {
+      return null;
+    }
+    return rows;
+  }
+  return null;
+}
+
 // Mirrors stockanalysis_detail_source_timestamp in fetch-stockanalysis.py.
 // The manifest only needs an ISO day, so quote epoch precision is normalized
 // after the Python-equivalent priority/fallback decision.
@@ -1105,7 +1180,7 @@ function stockAnalysisDetailSourceObservation(payload) {
       }
     }
     quoteStamp ??= quoteDate;
-    const dailyRows = normalized.history_periods?.daily_1y;
+    const dailyRows = stockAnalysisDisplayDailyHistory(payload, raw, normalized);
     const dailyStamps = Array.isArray(dailyRows)
       ? dailyRows.filter((row) => row && typeof row === "object" && !Array.isArray(row))
         .map((row) => observedStamp(row.date || row.t || row.time))
