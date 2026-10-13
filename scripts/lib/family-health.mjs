@@ -28,7 +28,8 @@ export function buildDetailRefreshCadence(universe, core) {
     const age = (today - day) / 86400_000;
     return Number.isFinite(age) && age >= 0 && age <= rotation.new_fund_observation_days;
   }).map(row => String(row.ticker ?? row.s ?? "").toUpperCase()).filter(Boolean);
-  return { schema_version: rotation.schema_version, core_tickers: [...new Set(coreTickers)].sort(),
+  const dailyWatch = rotation.daily_market_watch_tickers.filter(ticker => aums.has(ticker));
+  return { schema_version: rotation.schema_version, core_tickers: [...new Set([...coreTickers, ...dailyWatch])].sort(),
     tier2_tickers: ranked.slice(0, rotation.tier2_size), new_fund_tickers: [...new Set(newFunds)].sort() };
 }
 

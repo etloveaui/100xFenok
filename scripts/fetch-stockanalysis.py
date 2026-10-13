@@ -8223,6 +8223,10 @@ def _main() -> None:
     if (yahoo_retry_etfs or retry_etfs) and not bounded_natural_general:
         etfs = unique_symbols(yahoo_retry_etfs + retry_etfs + etfs)
     if args.natural_run:
+        if "etf" in natural_recovery_kinds and not args.stocks_only:
+            # Existing major-market configuration is monitored independently of
+            # the score-selected basket, which can omit SPY/QQQ and bond benchmarks.
+            etfs = unique_symbols(etfs + ROTATION_POLICY["daily_market_watch_tickers"])
         etfs = list(current_yahoo_universe_sources({ticker: [] for ticker in etfs}, now_iso()))
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:

@@ -56,7 +56,7 @@ def detail_refresh_cadence(root):
             and isinstance(row.get("aum"), (int, float)) and row["aum"] > 0}
     ranked = sorted(aums, key=lambda ticker: (-aums[ticker], ticker))
     return {"schema_version": ROTATION_POLICY["schema_version"],
-            "core_tickers": sorted(set(core_tickers)),
+            "core_tickers": sorted(set(core_tickers) | (set(ROTATION_POLICY["daily_market_watch_tickers"]) & set(aums))),
             "tier2_tickers": ranked[:ROTATION_POLICY["tier2_size"]],
             "new_fund_tickers": sorted(new_fund_tickers(records))}
 
