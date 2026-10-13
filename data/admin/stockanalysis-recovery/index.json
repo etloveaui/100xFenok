@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-13T05:08:26Z",
+  "generated_at": "2026-10-13T11:21:32Z",
   "counts": {
-    "tracked": 1113,
+    "tracked": 1115,
     "fresh": 930,
-    "lkg": 169,
+    "lkg": 171,
     "unavailable": 14,
-    "retry": 183,
-    "failed": 0
+    "retry": 185,
+    "failed": 2
   },
   "counts_by_kind": {
     "stock": {
@@ -25,11 +25,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 995,
+      "tracked": 997,
       "fresh": 812,
-      "lkg": 169,
+      "lkg": 171,
       "unavailable": 14,
-      "retry": 183
+      "retry": 185
     },
     "surface": {
       "tracked": 25,
@@ -345,6 +345,10 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "ENHE"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "ERUS"
     },
     {
@@ -486,6 +490,10 @@
     {
       "artifact_kind": "etf",
       "entity": "LIMI"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LLMA"
     },
     {
       "artifact_kind": "etf",
@@ -1671,6 +1679,18 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "ENHE",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-02T20:00:00Z",
+      "failure_observed_at": "2026-10-13T11:21:32Z",
+      "error": "ValueError: StockAnalysis ETF weekly_1y history dates are invalid",
+      "failure_class": "other",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "ERUS",
       "resolution_state": "unavailable",
       "source_as_of": null,
@@ -2097,6 +2117,18 @@
       "failure_observed_at": "2026-09-30T15:41:18Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
       "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LLMA",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-10-02T20:00:00Z",
+      "failure_observed_at": "2026-10-13T11:21:32Z",
+      "error": "ValueError: StockAnalysis ETF weekly_1y history dates are invalid",
+      "failure_class": "other",
       "failure_count": 1,
       "failure_count_is_lower_bound": false,
       "data_loss": false
@@ -3418,6 +3450,10 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "ENHE"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "GEMQ"
       },
       {
@@ -3455,6 +3491,10 @@
       {
         "artifact_kind": "etf",
         "entity": "KCHP"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LLMA"
       },
       {
         "artifact_kind": "etf",
@@ -3727,17 +3767,30 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-13T04:31:59Z",
-    "attempted": 8,
-    "successes": 8,
-    "failed": 0,
-    "errors": [],
+    "observed_at": "2026-10-13T11:21:32Z",
+    "attempted": 4,
+    "successes": 2,
+    "failed": 2,
+    "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "ENHE",
+        "error": "ValueError: StockAnalysis ETF weekly_1y history dates are invalid",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "LLMA",
+        "error": "ValueError: StockAnalysis ETF weekly_1y history dates are invalid",
+        "data_loss": false
+      }
+    ],
     "by_kind": {
       "etf": {
-        "observed_at": "2026-10-13T04:31:59Z",
-        "attempted": 8,
-        "successes": 8,
-        "failed": 0
+        "observed_at": "2026-10-13T11:21:32Z",
+        "attempted": 4,
+        "successes": 2,
+        "failed": 2
       }
     }
   },
@@ -3817,6 +3870,7 @@
     "EJUN",
     "EMSE",
     "EMTL",
+    "ENHE",
     "ERUS",
     "ESUM",
     "EWCO",
@@ -3853,6 +3907,7 @@
     "KCHP",
     "LGCF",
     "LIMI",
+    "LLMA",
     "LPSV",
     "LQDD",
     "LQDU",
