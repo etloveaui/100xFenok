@@ -113,6 +113,7 @@ def latest_recorded_observations(
                 row["endpoint_family"] != LEGACY_YAHOO_ENDPOINT_FAMILY,
                 row.get("validation_scope") == "serving_detail",
                 row.get("observation_origin") == "migration",
+                row["validation_status"] == "valid",
                 row["event_id"],
             )
             previous_order = (
@@ -121,6 +122,7 @@ def latest_recorded_observations(
                     previous["endpoint_family"] != LEGACY_YAHOO_ENDPOINT_FAMILY,
                     previous.get("validation_scope") == "serving_detail",
                     previous.get("observation_origin") == "migration",
+                    previous["validation_status"] == "valid",
                     previous["event_id"],
                 )
                 if previous is not None
