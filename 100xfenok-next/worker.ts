@@ -30,6 +30,7 @@ import {
   type UserRegistryStats,
 } from "./src/lib/server/userRegistry";
 import { handleWorkerClosedSiteGate } from "./src/lib/server/closed-site";
+import { handleNativeEtfDetail } from "./src/lib/server/data-supply-etf-worker";
 
 type StaticAssetsBinding = { fetch: (request: Request) => Promise<Response> };
 
@@ -186,6 +187,9 @@ const worker = {
 
     const gateResponse = await handleWorkerClosedSiteGate(request, env);
     if (gateResponse) return gateResponse;
+
+    const nativeEtf = await handleNativeEtfDetail(request, env, ctx);
+    if (nativeEtf) return nativeEtf;
 
 
     const assets = (env as { ASSETS?: { fetch: (request: Request) => Promise<Response> } })?.ASSETS;

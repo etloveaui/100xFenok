@@ -36,7 +36,7 @@ YAHOO_SAME_SECURITY_SUCCESSORS = {
     "EQR": "VMRK", "BK": "BNY", "SATS": "ECHO", "MMC": "MRSH",
     "MGKX": "MEGX", "VBX": "USSX", "VOOX": "USLX",
     "XVO": "USMX", "XVUG": "USGX", "EWCO": "RSPC", "IHYF": "GTOQ",
-    "PSKY": "SKYD",
+    "PSKY": "SKYD", "MAPP": "MATR",
 }
 YAHOO_SAME_SECURITY_EFFECTIVE = {
     "EQR": "2026-08-18", "BK": "2026-05-21", "SATS": "2026-06-24",
@@ -46,7 +46,7 @@ YAHOO_SAME_SECURITY_EFFECTIVE = {
     # Conservative routing cutoff: this dated SEC prospectus confirms the
     # completed rename. This is not a claim about the first GTOQ trading day.
     "IHYF": "2026-02-27",
-    "PSKY": "2026-10-06",
+    "PSKY": "2026-10-06", "MAPP": "2026-08-31",
 }
 # Public securities ended; merger consideration is not a ticker alias.
 # AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
@@ -85,6 +85,7 @@ YAHOO_SECURITY_END_DATES = {
     "012510.KS": "2026-07-15", "230360.KQ": "2026-06-30",
 }
 YAHOO_LIFECYCLE_SOURCES = {
+    "MAPP": "https://www.sec.gov/Archives/edgar/data/1860434/000119312526353573/d180613d497.htm",
     **{symbol: "https://www.sec.gov/Archives/edgar/data/1580843/000121390026090266/ea0302118-01_497.htm"
        for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
     "USML": "https://etracs.ubs.com/news/show-article/id/724",

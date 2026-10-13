@@ -1,16 +1,10 @@
 import { createHash } from "node:crypto";
 import policyRegistry from "../../generated/data-supply-policy-registry.json";
 import { sourceFreshness, detailSourcePolicy } from "../../generated/family-health/family-health.mjs";
-import {
-  getDataSupplyEtfEnrollmentDocument,
-  getDataSupplyEtfIndexDocument,
-  getDataSupplyEtfIndexShardDocument,
-  getDataSupplyEtfPayloadDocument,
-  getStockanalysisEtfPlaneDocument,
-  getStockanalysisEtfShardDocument,
-  type PublicJsonDocument,
-  type StockanalysisEtfPlaneDocumentResult,
-  type StockanalysisEtfShardDocumentResult,
+import type {
+  PublicJsonDocument,
+  StockanalysisEtfPlaneDocumentResult,
+  StockanalysisEtfShardDocumentResult,
 } from "./data-loader";
 
 export type { PublicJsonDocument } from "./data-loader";
@@ -126,17 +120,23 @@ export interface EtfDetailResolverDependencies {
   readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
   readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
   now: () => Date;
+  // Only readers of immutable, deployment-bundled enrollment may opt in.
+  cacheImmutableEnrollment?: boolean;
 }
 
-const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
-  readEnrollment: getDataSupplyEtfEnrollmentDocument,
-  readIndex: getDataSupplyEtfIndexDocument,
-  readIndexShard: getDataSupplyEtfIndexShardDocument,
-  readProjectionPayload: getDataSupplyEtfPayloadDocument,
-  readPlanePayload: getStockanalysisEtfPlaneDocument,
-  readShardPayload: getStockanalysisEtfShardDocument,
-  now: () => new Date(),
-};
+let defaultDependenciesPending: Promise<EtfDetailResolverDependencies> | undefined;
+let defaultEnrollmentReader: EtfDetailResolverDependencies["readEnrollment"] | undefined;
+function defaultDependencies(): Promise<EtfDetailResolverDependencies> {
+  return defaultDependenciesPending ??= import("./data-loader").then((loader) => ({
+    readEnrollment: defaultEnrollmentReader = loader.getDataSupplyEtfEnrollmentDocument,
+    readIndex: loader.getDataSupplyEtfIndexDocument,
+    readIndexShard: loader.getDataSupplyEtfIndexShardDocument,
+    readProjectionPayload: loader.getDataSupplyEtfPayloadDocument,
+    readPlanePayload: loader.getStockanalysisEtfPlaneDocument,
+    readShardPayload: loader.getStockanalysisEtfShardDocument,
+    now: () => new Date(),
+  }));
+}
 
 function asRecord(value: unknown): JsonRecord | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : null;
@@ -285,6 +285,7 @@ function parseGuard(value: JsonRecord) {
     || tickers.some((ticker, index) => index > 0 && ticker <= tickers[index - 1]!)
   ) return null;
   let shards: IndexShardBinding[] | null = null;
+  let shardMembers: string[][] | null = null;
   if (["index_shards", "index_shard_count", "index_shard_algorithm"].some((key) => key in value)) {
     if (value.index_shard_algorithm !== "fnv1a32-utf16-v1"
       || value.index_shard_count !== 64 || !Array.isArray(value.index_shards)
@@ -295,9 +296,9 @@ function parseGuard(value: JsonRecord) {
       || !isSha256(item.index_sha256) || !isSha256(item.membership_sha256)
       || !Number.isInteger(item.enrolled_count) || (item.enrolled_count as number) < 0)) return null;
     shards = bindings as unknown as IndexShardBinding[];
-    const counts = new Array<number>(64).fill(0);
-    for (const ticker of tickers) counts[indexShardId(ticker)]! += 1;
-    if (shards.some((shard) => shard.enrolled_count !== counts[shard.id])) return null;
+    shardMembers = Array.from({ length: 64 }, () => []);
+    for (const ticker of tickers) shardMembers[indexShardId(ticker)]!.push(ticker);
+    if (shards.some((shard) => shard.enrolled_count !== shardMembers![shard.id]!.length)) return null;
   }
   return {
     transactionId: value.active_transaction_id,
@@ -306,6 +307,7 @@ function parseGuard(value: JsonRecord) {
     membershipSha: value.membership_sha256,
     tickers: new Set(tickers),
     shards,
+    shardMembers,
   } as const;
 }
 
@@ -353,24 +355,29 @@ async function parseIndex(
 
 type EnrollmentGuard = NonNullable<ReturnType<typeof parseGuard>>;
 type ParsedIndex = Awaited<ReturnType<typeof parseIndex>>;
-// Cache only the immutable bundled guard. Injected readers remain observable
-// on every call, including generation changes and malformed fixtures.
-let bundledGuardPending: Promise<EnrollmentGuard | null> | undefined;
-async function readGuard(reader: EtfDetailResolverDependencies["readEnrollment"]): Promise<EnrollmentGuard | null> {
-  const bundled = reader === getDataSupplyEtfEnrollmentDocument;
-  if (bundled && bundledGuardPending) return bundledGuardPending;
+// Cache only immutable enrollment readers. Ordinary injected readers remain
+// observable on every call, including generation changes and malformed fixtures.
+const immutableGuards = new WeakMap<EtfDetailResolverDependencies["readEnrollment"], Promise<EnrollmentGuard | null>>();
+async function readGuard(
+  reader: EtfDetailResolverDependencies["readEnrollment"],
+  immutable: boolean,
+): Promise<EnrollmentGuard | null> {
+  if (immutable) {
+    const cached = immutableGuards.get(reader);
+    if (cached) return cached;
+  }
   const pending = (async () => {
     const document = await reader();
     const guard = document ? parseGuard(document.value) : null;
     return guard && await canonicalJsonSha256([...guard.tickers]) === guard.membershipSha ? guard : null;
   })();
-  if (bundled) bundledGuardPending = pending;
+  if (immutable) immutableGuards.set(reader, pending);
   try {
     const guard = await pending;
-    if (bundled && !guard) bundledGuardPending = undefined;
+    if (immutable && !guard && immutableGuards.get(reader) === pending) immutableGuards.delete(reader);
     return guard;
   } catch (error) {
-    if (bundled) bundledGuardPending = undefined;
+    if (immutable && immutableGuards.get(reader) === pending) immutableGuards.delete(reader);
     throw error;
   }
 }
@@ -400,7 +407,7 @@ async function readValidatedShard(ticker: string, guard: EnrollmentGuard, depend
     const document = await reader(id);
     if (!document) return null;
     if (document.value.global_index_sha256 !== guard.indexSha) return { kind: "crossbind" };
-    const tickers = [...guard.tickers].filter((member) => indexShardId(member) === id);
+    const tickers = guard.shardMembers?.[id] ?? [];
     if (await canonicalJsonSha256(tickers) !== binding.membership_sha256) return { kind: "crossbind" };
     return parseIndex(document, { ...guard, indexSha: binding.index_sha256,
       membershipSha: binding.membership_sha256, tickers: new Set(tickers) }, dependencies.now());
@@ -581,8 +588,13 @@ export async function resolveDataSupplyEtfDetail(
   ticker: string,
   overrides: Partial<EtfDetailResolverDependencies> = {},
 ): Promise<EtfDetailResolution> {
-  const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
-  const guard = await readGuard(dependencies.readEnrollment);
+  const complete = overrides.readEnrollment && overrides.readIndex && overrides.readIndexShard
+    && overrides.readProjectionPayload && overrides.readPlanePayload && overrides.readShardPayload && overrides.now;
+  const dependencies = complete
+    ? overrides as EtfDetailResolverDependencies
+    : { ...await defaultDependencies(), ...overrides };
+  const guard = await readGuard(dependencies.readEnrollment,
+    dependencies.readEnrollment === defaultEnrollmentReader || dependencies.cacheImmutableEnrollment === true);
   if (!guard) return { kind: "error", code: "DATA_SUPPLY_GUARD_UNAVAILABLE", projectionDigest: null };
 
   const enrolled = guard.tickers.has(ticker);

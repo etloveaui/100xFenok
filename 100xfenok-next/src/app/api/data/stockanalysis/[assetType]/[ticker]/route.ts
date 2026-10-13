@@ -5,76 +5,19 @@ import {
   normalizeStockanalysisTicker,
 } from "@/lib/server/data-loader";
 import {
-  buildUnavailableEtfRepresentation,
-  mergeEtfDataSupply,
   resolveDataSupplyEtfDetail,
-  type EtfDetailResolution,
 } from "@/lib/server/data-supply-etf-detail";
+import {
+  buildEtfResponse,
+  STOCKANALYSIS_CACHE_HEADERS,
+} from "@/lib/server/data-supply-etf-response";
 import { recordTypedUnavailableResponse } from "@/lib/server/data-supply-etf-telemetry";
 import { withResponseCache } from "@/lib/server/response-cache";
 import { BUILD_VERSION } from "@/generated/build-version";
 
-const STOCKANALYSIS_CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
-} as const;
-
-const DATA_SUPPLY_NEGATIVE_CACHE_HEADERS = {
-  "Cache-Control": "public, max-age=15, s-maxage=60",
-  "X-100x-Data-Supply-SLO": "typed-unavailable",
-} as const;
-
 export const dynamic = "force-dynamic";
 export const revalidate = false;
-
-export async function buildEtfResponse(resolution: EtfDetailResolution, ticker: string) {
-  if ((resolution.kind === "selected" || resolution.kind === "unavailable")
-      && resolution.dataSupply.security_lifecycle) {
-    return NextResponse.json({
-      error: resolution.dataSupply.security_lifecycle.status === "renamed"
-        ? "DATA_SUPPLY_SECURITY_RENAMED" : "DATA_SUPPLY_SECURITY_CLOSED",
-      ticker,
-      data_supply: resolution.dataSupply,
-      ...(resolution.kind === "selected" ? { retained_payload: resolution.payload } : {}),
-    }, { status: 410, headers: STOCKANALYSIS_CACHE_HEADERS });
-  }
-  if (resolution.kind === "selected") {
-    return NextResponse.json(
-      mergeEtfDataSupply(resolution.payload, resolution.dataSupply),
-      { headers: STOCKANALYSIS_CACHE_HEADERS },
-    );
-  }
-  if (resolution.kind === "shard") {
-    return new Response(resolution.document.raw, {
-      headers: {
-        ...STOCKANALYSIS_CACHE_HEADERS,
-        "Content-Type": "application/json",
-      },
-    });
-  }
-  if (resolution.kind === "unavailable") {
-    const representation = buildUnavailableEtfRepresentation(ticker, resolution.dataSupply);
-    return NextResponse.json(
-      representation.body,
-      { status: 503, headers: DATA_SUPPLY_NEGATIVE_CACHE_HEADERS },
-    );
-  }
-  if (resolution.kind === "shard_unavailable") {
-    return NextResponse.json(
-      { error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE", ticker },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-  if (resolution.kind === "error") {
-    return NextResponse.json(
-      { error: resolution.code, ticker },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-  return NextResponse.json(
-    { error: "STOCKANALYSIS_ASSET_NOT_FOUND", assetType: "etfs", ticker },
-    { status: 404, headers: { "Cache-Control": "no-store" } },
-  );
-}
+export { buildEtfResponse } from "@/lib/server/data-supply-etf-response";
 
 export async function getEtfResponse(
   ticker: string,
