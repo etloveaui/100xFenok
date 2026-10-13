@@ -20,6 +20,7 @@ const STOCKANALYSIS_ETF_SHARD_ONLY_MODE = "shard-only";
 const DATA_SUPPLY_ETF_DETAIL_PREFIX = "data/computed/data-supply/etf-detail/";
 const DATA_SUPPLY_ETF_DETAIL_RAW_PAYLOAD_PATTERN = /^data\/computed\/data-supply\/etf-detail\/payloads\/[^/]+\.json$/;
 const DATA_SUPPLY_ETF_DETAIL_PACKED_PAYLOAD_PATTERN = /^data\/computed\/data-supply\/etf-detail\/payloads\/_shards\/([0-9a-f]{2})\.bin$/;
+const DATA_SUPPLY_ETF_DETAIL_INDEX_SHARD_PATTERN = /^data\/computed\/data-supply\/etf-detail\/index-shards\/([0-5][0-9]|6[0-3])\.json$/;
 const DATA_SUPPLY_ETF_DETAIL_TICKER_PATTERN = /^[A-Z0-9][A-Z0-9._-]*$/;
 const SHA256_HEX_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -68,18 +69,20 @@ function projectionCounts(files) {
   const projection = files.filter((item) => item.relativePath.startsWith(prefix));
   const enrollmentFiles = projection.filter((item) => item.relativePath === prefix + "enrollment.json").length;
   const indexFiles = projection.filter((item) => item.relativePath === prefix + "index.json").length;
+  const indexShardFiles = projection.filter((item) => DATA_SUPPLY_ETF_DETAIL_INDEX_SHARD_PATTERN.test(item.relativePath)).length;
   const payloadFiles = projection.filter((item) => DATA_SUPPLY_ETF_DETAIL_RAW_PAYLOAD_PATTERN.test(item.relativePath)).length;
   const packedFiles = projection.filter((item) => DATA_SUPPLY_ETF_DETAIL_PACKED_PAYLOAD_PATTERN.test(item.relativePath)).length;
   if (payloadFiles > 0 && packedFiles > 0) {
     throw new Error("R2.4 asset projection mixes raw payloads and packed shards");
   }
-  const recognized = enrollmentFiles + indexFiles + payloadFiles + packedFiles;
+  const recognized = enrollmentFiles + indexFiles + indexShardFiles + payloadFiles + packedFiles;
   if (recognized !== projection.length) {
     const unknown = projection.filter((item) => (
       item.relativePath !== prefix + "enrollment.json"
       && item.relativePath !== prefix + "index.json"
       && !DATA_SUPPLY_ETF_DETAIL_RAW_PAYLOAD_PATTERN.test(item.relativePath)
       && !DATA_SUPPLY_ETF_DETAIL_PACKED_PAYLOAD_PATTERN.test(item.relativePath)
+      && !DATA_SUPPLY_ETF_DETAIL_INDEX_SHARD_PATTERN.test(item.relativePath)
     ));
     throw new Error("unexpected R2.4 projection assets: " + unknown.map((item) => item.relativePath).join(", "));
   }
@@ -90,6 +93,7 @@ function projectionCounts(files) {
     total_files: projection.length,
   };
   if (packedFiles > 0) counts.packed_files = packedFiles;
+  if (indexShardFiles > 0) counts.index_shard_files = indexShardFiles;
   return counts;
 }
 
@@ -203,7 +207,7 @@ function validatePackedProjection(assetRoot, counts, files, index) {
   if (counts.packed_files > 256) {
     throw new Error("R2.4 packed asset projection exceeds 256 buckets: " + counts.packed_files);
   }
-  if (counts.total_files !== counts.packed_files + 2) {
+  if (counts.total_files !== counts.packed_files + 2 + (counts.index_shard_files || 0)) {
     throw new Error("R2.4 packed asset projection count mismatch: " + JSON.stringify(counts));
   }
 
@@ -268,10 +272,11 @@ function validatePackedProjection(assetRoot, counts, files, index) {
     payload_files: index.selected_count,
     total_files: counts.total_files,
     packed_files: counts.packed_files,
+    ...(counts.index_shard_files ? { index_shard_files: counts.index_shard_files } : {}),
   };
 }
 
-function validateProjectionCounts(assetRoot, counts, files) {
+function validateProjectionCounts(assetRoot, counts, files, expectedPublicRoot) {
   if (counts.enrollment_files !== 1 || counts.index_files !== 1) {
     throw new Error("R2.4 asset projection requires one enrollment and one index file: " + JSON.stringify(counts));
   }
@@ -285,10 +290,30 @@ function validateProjectionCounts(assetRoot, counts, files) {
   if (!Number.isInteger(index?.selected_count) || index.selected_count < 0) {
     throw new Error("R2.4 asset index selected_count is invalid");
   }
+  const enrollment = JSON.parse(fs.readFileSync(path.join(assetRoot, DATA_SUPPLY_ETF_DETAIL_PREFIX, "enrollment.json"), "utf8"));
+  if (counts.index_shard_files || enrollment.index_shard_count !== undefined) {
+    if (counts.index_shard_files !== 64 || enrollment.index_shard_count !== 64
+      || enrollment.index_shard_algorithm !== "fnv1a32-utf16-v1"
+      || !Array.isArray(enrollment.index_shards) || enrollment.index_shards.length !== 64) {
+      throw new Error("R2.4 index shard count/binding mismatch");
+    }
+    for (let id = 0; id < 64; id += 1) {
+      const relative = `index-shards/${String(id).padStart(2, "0")}.json`;
+      const binding = enrollment.index_shards[id];
+      const emitted = fs.readFileSync(path.join(assetRoot, DATA_SUPPLY_ETF_DETAIL_PREFIX, relative));
+      const expected = fs.readFileSync(path.join(expectedPublicRoot, DATA_SUPPLY_ETF_DETAIL_PREFIX, relative));
+      const shard = JSON.parse(emitted);
+      if (binding.id !== id || binding.path !== relative || shard.index_sha256 !== binding.index_sha256
+        || shard.membership_sha256 !== binding.membership_sha256 || shard.enrolled_count !== binding.enrolled_count
+        || shard.global_index_sha256 !== index.index_sha256 || !emitted.equals(expected)) {
+        throw new Error("R2.4 emitted index shard differs from public projection: " + relative);
+      }
+    }
+  }
   if (Object.prototype.hasOwnProperty.call(counts, "packed_files")) {
     return validatePackedProjection(assetRoot, counts, files, index);
   }
-  if (counts.payload_files !== index.selected_count || counts.total_files !== index.selected_count + 2) {
+  if (counts.payload_files !== index.selected_count || counts.total_files !== index.selected_count + 2 + (counts.index_shard_files || 0)) {
     throw new Error("R2.4 asset projection count mismatch: index=" + index.selected_count + ", files=" + JSON.stringify(counts));
   }
   return counts;
@@ -479,7 +504,7 @@ export function inspectCloudflareAssetBudget({
   const files = collectRegularFiles(root);
   const generatedDataManifest = validateGeneratedDataManifest(root);
   const count = files.length;
-  const dataSupplyProjection = validateProjectionCounts(root, projectionCounts(files), files);
+  const dataSupplyProjection = validateProjectionCounts(root, projectionCounts(files), files, expectedRoot);
   const stockanalysisEtfShards = validateStockanalysisEtfShardAssets(root, files, expectedRoot);
   const payload = {
     schema_version: "cloudflare-asset-budget/v1",

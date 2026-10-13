@@ -1417,6 +1417,32 @@ try {
   assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 1029);
   assert.equal(path.relative(assetRoot, reportPath).startsWith(".."), true);
 
+  // Serving-index shards must survive the emitted-asset allowlist without
+  // allowing extra files, partial sets, or a changed public snapshot.
+  const indexPrefix = "data/computed/data-supply/etf-detail/";
+  const bindings = [];
+  for (let id = 0; id < 64; id += 1) {
+    const relative = `index-shards/${String(id).padStart(2, "0")}.json`;
+    const shard = { index_sha256: "a".repeat(64), membership_sha256: "b".repeat(64), enrolled_count: 0 };
+    bindings.push({ id, path: relative, ...shard });
+    write(assetRoot, indexPrefix + relative, JSON.stringify(shard));
+    write(expectedPublicRoot, indexPrefix + relative, JSON.stringify(shard));
+  }
+  write(assetRoot, indexPrefix + "enrollment.json", JSON.stringify({
+    index_shard_count: 64, index_shard_algorithm: "fnv1a32-utf16-v1", index_shards: bindings,
+  }));
+  const shardedBudget = inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1200 });
+  assert.equal(shardedBudget.data_supply_projection.index_shard_files, 64);
+  assert.equal(shardedBudget.regular_file_count, 1093);
+  fs.appendFileSync(path.join(assetRoot, indexPrefix, "index-shards/00.json"), " ");
+  assert.throws(() => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1200 }),
+    /emitted index shard differs/);
+  fs.rmSync(path.join(assetRoot, indexPrefix, "index-shards/00.json"));
+  assert.throws(() => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1200 }),
+    /index shard count\/binding mismatch/);
+  fs.rmSync(path.join(assetRoot, indexPrefix, "index-shards"), { recursive: true });
+  write(assetRoot, indexPrefix + "enrollment.json", "{}\n");
+
   write(assetRoot, "data/stockanalysis/etfs/SPY.json", "{\"stale\":true}\n");
   assert.throws(
     () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1031 }),
