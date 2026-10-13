@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "AVNC",
   "asset_type": "etf",
-  "generated_at": "2026-10-12T02:29:07Z",
-  "source_as_of": "2026-10-08",
+  "generated_at": "2026-10-13T13:08:05Z",
+  "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 49.3761,
+      "value": 49.6116,
       "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:07:04Z",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:18:21Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,21 +31,28 @@
       ],
       "candidates": [
         {
-          "value": 49.3761,
+          "value": 49.6116,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:07:04Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 49.6116,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 49.676,
+      "value": 49.7417,
       "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:07:04Z",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:18:21Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -54,21 +61,28 @@
       ],
       "candidates": [
         {
-          "value": 49.676,
+          "value": 49.7417,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:07:04Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 49.74,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.2999,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:07:04Z",
+      "value": -0.13,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:18:21Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,21 +92,28 @@
       ],
       "candidates": [
         {
-          "value": -0.2999,
+          "value": -0.13,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
+          "confidence": "observed"
+        },
+        {
+          "value": -0.1301,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:07:04Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.603712,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-09T06:07:04Z",
+      "value": -0.26,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:18:21Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,32 +123,63 @@
       ],
       "candidates": [
         {
-          "value": -0.603712,
+          "value": -0.26,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
+          "confidence": "observed"
+        },
+        {
+          "value": -0.261552,
           "source": "yf",
-          "as_of": "2026-10-08",
-          "fetched_at": "2026-10-09T06:07:04Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "expense_ratio": {
+      "value": 0.28,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:18:21Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.28,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:21Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": 558,
-    "holdings_updated": "Oct 4, 2026",
+    "holdings_count": 1648,
+    "holdings_updated": "Oct 9, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "#VWO",
         "name": "Vanguard FTSE Emerging Markets ETF",
-        "weight_pct": 9.83,
+        "weight_pct": 9.64,
         "shares": 158128,
         "raw": {
           "no": 1,
           "n": "Vanguard FTSE Emerging Markets ETF",
           "s": "#VWO",
-          "as": "9.83%",
+          "as": "9.64%",
           "sh": "158,128"
         }
       },
@@ -135,13 +187,13 @@
         "rank": 2,
         "symbol": "TSM",
         "name": "Taiwan Semiconductor Manufacturing Company Limited",
-        "weight_pct": 4.06,
+        "weight_pct": 3.89,
         "shares": 8405,
         "raw": {
           "no": 2,
           "n": "Taiwan Semiconductor Manufacturing Company Limited",
           "s": "$TSM",
-          "as": "4.06%",
+          "as": "3.89%",
           "sh": "8,405"
         }
       },
@@ -149,13 +201,13 @@
         "rank": 3,
         "symbol": "ASML",
         "name": "ASML Holding N.V.",
-        "weight_pct": 3.51,
+        "weight_pct": 3.35,
         "shares": 1841,
         "raw": {
           "no": 3,
           "n": "ASML Holding N.V.",
           "s": "$ASML",
-          "as": "3.51%",
+          "as": "3.35%",
           "sh": "1,841"
         }
       },
@@ -163,27 +215,27 @@
         "rank": 4,
         "symbol": "#AVDV",
         "name": "Avantis International Small Cap Value ETF",
-        "weight_pct": 1.79,
+        "weight_pct": 1.74,
         "shares": 15755,
         "raw": {
           "no": 4,
           "n": "Avantis International Small Cap Value ETF",
           "s": "#AVDV",
-          "as": "1.79%",
+          "as": "1.74%",
           "sh": "15,755"
         }
       },
       {
         "rank": 5,
-        "symbol": "ATEYY",
-        "name": "ADVANTEST CORP  SPON ADR ADR",
-        "weight_pct": 1.6,
+        "symbol": "!OTC/ATEYY",
+        "name": "Advantest Corporation",
+        "weight_pct": 1.72,
         "shares": 6460,
         "raw": {
           "no": 5,
-          "n": "ADVANTEST CORP  SPON ADR ADR",
-          "s": "ATEYY",
-          "as": "1.60%",
+          "n": "Advantest Corporation",
+          "s": "!otc/ATEYY",
+          "as": "1.72%",
           "sh": "6,460"
         }
       },
@@ -191,41 +243,41 @@
         "rank": 6,
         "symbol": "#VEU",
         "name": "Vanguard FTSE All-World ex-US Index Fund",
-        "weight_pct": 1.58,
+        "weight_pct": 1.54,
         "shares": 18180,
         "raw": {
           "no": 6,
           "n": "Vanguard FTSE All-World ex-US Index Fund",
           "s": "#VEU",
-          "as": "1.58%",
+          "as": "1.54%",
           "sh": "18,180"
         }
       },
       {
         "rank": 7,
-        "symbol": "RYCEY",
-        "name": "ROLLS ROYCE HOLDINGS SP ADR ADR",
-        "weight_pct": 1.27,
+        "symbol": "!OTC/RYCEY",
+        "name": "Rolls-Royce Holdings plc",
+        "weight_pct": 1.17,
         "shares": 62070,
         "raw": {
           "no": 7,
-          "n": "ROLLS ROYCE HOLDINGS SP ADR ADR",
-          "s": "RYCEY",
-          "as": "1.27%",
+          "n": "Rolls-Royce Holdings plc",
+          "s": "!otc/RYCEY",
+          "as": "1.17%",
           "sh": "62,070"
         }
       },
       {
         "rank": 8,
-        "symbol": "CFRUY",
-        "name": "CIE FINANCIERE RICH UNSP ADR ADR",
-        "weight_pct": 1.14,
+        "symbol": "!OTC/CFRUY",
+        "name": "Compagnie Financière Richemont SA",
+        "weight_pct": 1.09,
         "shares": 51929,
         "raw": {
           "no": 8,
-          "n": "CIE FINANCIERE RICH UNSP ADR ADR",
-          "s": "CFRUY",
-          "as": "1.14%",
+          "n": "Compagnie Financière Richemont SA",
+          "s": "!otc/CFRUY",
+          "as": "1.09%",
           "sh": "51,929"
         }
       },
@@ -233,122 +285,108 @@
         "rank": 9,
         "symbol": "#AVEM",
         "name": "Avantis Emerging Markets Equity ETF",
-        "weight_pct": 1.06,
+        "weight_pct": 1.03,
         "shares": 10750,
         "raw": {
           "no": 9,
           "n": "Avantis Emerging Markets Equity ETF",
           "s": "#AVEM",
-          "as": "1.06%",
+          "as": "1.03%",
           "sh": "10,750"
         }
       },
       {
         "rank": 10,
-        "symbol": "NSRGY",
-        "name": "NESTLE SA SPONS ADR ADR",
-        "weight_pct": 0.96,
+        "symbol": "!OTC/NSRGY",
+        "name": "Nestlé S.A.",
+        "weight_pct": 0.95,
         "shares": 10185,
         "raw": {
           "no": 10,
-          "n": "NESTLE SA SPONS ADR ADR",
-          "s": "NSRGY",
-          "as": "0.96%",
+          "n": "Nestlé S.A.",
+          "s": "!otc/NSRGY",
+          "as": "0.95%",
           "sh": "10,185"
         }
       },
       {
         "rank": 11,
-        "symbol": "HTHIY",
-        "name": "HITACHI LTD  ADR ADR",
+        "symbol": "!OTC/HTHIY",
+        "name": "Hitachi, Ltd.",
         "weight_pct": 0.91,
         "shares": 24915,
         "raw": {
           "no": 11,
-          "n": "HITACHI LTD  ADR ADR",
-          "s": "HTHIY",
+          "n": "Hitachi, Ltd.",
+          "s": "!otc/HTHIY",
           "as": "0.91%",
           "sh": "24,915"
         }
       },
       {
         "rank": 12,
-        "symbol": "MUFG",
-        "name": "Mitsubishi UFJ Financial Group, Inc.",
+        "symbol": "SHEL",
+        "name": "Shell plc",
         "weight_pct": 0.85,
-        "shares": 35691,
+        "shares": 8284,
         "raw": {
           "no": 12,
-          "n": "Mitsubishi UFJ Financial Group, Inc.",
-          "s": "$MUFG",
+          "n": "Shell plc",
+          "s": "$SHEL",
           "as": "0.85%",
-          "sh": "35,691"
+          "sh": "8,284"
         }
       },
       {
         "rank": 13,
-        "symbol": "SMERY",
-        "name": "SIEMENS ENERGY AG SPON ADR ADR",
-        "weight_pct": 0.85,
+        "symbol": "!OTC/SMERY",
+        "name": "Siemens Energy AG",
+        "weight_pct": 0.83,
         "shares": 24814,
         "raw": {
           "no": 13,
-          "n": "SIEMENS ENERGY AG SPON ADR ADR",
-          "s": "SMERY",
-          "as": "0.85%",
+          "n": "Siemens Energy AG",
+          "s": "!otc/SMERY",
+          "as": "0.83%",
           "sh": "24,814"
         }
       },
       {
         "rank": 14,
-        "symbol": "SHEL",
-        "name": "Shell plc",
-        "weight_pct": 0.83,
-        "shares": 8284,
+        "symbol": "MUFG",
+        "name": "Mitsubishi UFJ Financial Group, Inc.",
+        "weight_pct": 0.82,
+        "shares": 35691,
         "raw": {
           "no": 14,
-          "n": "Shell plc",
-          "s": "$SHEL",
-          "as": "0.83%",
-          "sh": "8,284"
+          "n": "Mitsubishi UFJ Financial Group, Inc.",
+          "s": "$MUFG",
+          "as": "0.82%",
+          "sh": "35,691"
         }
       },
       {
         "rank": 15,
-        "symbol": "SKHYV",
-        "name": "SK HYNIX INC ADR ADR",
-        "weight_pct": 0.83,
-        "shares": 4064,
+        "symbol": "AZN",
+        "name": "AstraZeneca PLC",
+        "weight_pct": 0.81,
+        "shares": 5002,
         "raw": {
           "no": 15,
-          "n": "SK HYNIX INC ADR ADR",
-          "s": "SKHYV",
-          "as": "0.83%",
-          "sh": "4,064"
+          "n": "AstraZeneca PLC",
+          "s": "$AZN",
+          "as": "0.81%",
+          "sh": "5,002"
         }
       },
       {
         "rank": 16,
-        "symbol": "!LON/AZN",
-        "name": "AstraZeneca PLC",
-        "weight_pct": 0.81,
-        "shares": 4875,
-        "raw": {
-          "no": 16,
-          "n": "AstraZeneca PLC",
-          "s": "!lon/AZN",
-          "as": "0.81%",
-          "sh": "4,875"
-        }
-      },
-      {
-        "rank": 17,
         "symbol": "ASX",
         "name": "ASE Technology Holding Co., Ltd.",
         "weight_pct": 0.81,
         "shares": 17105,
         "raw": {
-          "no": 17,
+          "no": 16,
           "n": "ASE Technology Holding Co., Ltd.",
           "s": "$ASX",
           "as": "0.81%",
@@ -356,55 +394,55 @@
         }
       },
       {
-        "rank": 18,
+        "rank": 17,
         "symbol": "#AAUS",
         "name": "Alpha Architect US Equity ETF",
-        "weight_pct": 0.8,
+        "weight_pct": 0.79,
         "shares": 12376,
         "raw": {
-          "no": 18,
+          "no": 17,
           "n": "Alpha Architect US Equity ETF",
           "s": "#AAUS",
-          "as": "0.80%",
+          "as": "0.79%",
           "sh": "12,376"
         }
       },
       {
-        "rank": 19,
+        "rank": 18,
         "symbol": "TXN",
         "name": "Texas Instruments Incorporated",
-        "weight_pct": 0.8,
+        "weight_pct": 0.78,
         "shares": 2700,
         "raw": {
-          "no": 19,
+          "no": 18,
           "n": "Texas Instruments Incorporated",
           "s": "$TXN",
-          "as": "0.80%",
+          "as": "0.78%",
           "sh": "2,700"
         }
       },
       {
-        "rank": 20,
-        "symbol": "!SWX/UBSG",
+        "rank": 19,
+        "symbol": "UBS",
         "name": "UBS Group AG",
-        "weight_pct": 0.79,
+        "weight_pct": 0.78,
         "shares": 15805,
         "raw": {
-          "no": 20,
+          "no": 19,
           "n": "UBS Group AG",
-          "s": "!swx/UBSG",
-          "as": "0.79%",
+          "s": "$UBS",
+          "as": "0.78%",
           "sh": "15,805"
         }
       },
       {
-        "rank": 21,
+        "rank": 20,
         "symbol": "NVS",
         "name": "Novartis AG",
         "weight_pct": 0.77,
         "shares": 5217,
         "raw": {
-          "no": 21,
+          "no": 20,
           "n": "Novartis AG",
           "s": "$NVS",
           "as": "0.77%",
@@ -412,58 +450,72 @@
         }
       },
       {
-        "rank": 22,
-        "symbol": "!TSX/CP",
+        "rank": 21,
+        "symbol": "CP",
         "name": "Canadian Pacific Kansas City Limited",
-        "weight_pct": 0.75,
+        "weight_pct": 0.73,
         "shares": 8456,
         "raw": {
-          "no": 22,
+          "no": 21,
           "n": "Canadian Pacific Kansas City Limited",
-          "s": "!tsx/CP",
-          "as": "0.75%",
+          "s": "$CP",
+          "as": "0.73%",
           "sh": "8,456"
         }
       },
       {
-        "rank": 23,
-        "symbol": "RHHBY",
-        "name": "ROCHE HOLDINGS LTD SPONS ADR ADR",
+        "rank": 22,
+        "symbol": "!OTC/RHHBY",
+        "name": "Roche Holding AG",
         "weight_pct": 0.72,
         "shares": 12980,
         "raw": {
-          "no": 23,
-          "n": "ROCHE HOLDINGS LTD SPONS ADR ADR",
-          "s": "RHHBY",
+          "no": 22,
+          "n": "Roche Holding AG",
+          "s": "!otc/RHHBY",
           "as": "0.72%",
           "sh": "12,980"
         }
       },
       {
+        "rank": 23,
+        "symbol": "SKHY",
+        "name": "SK hynix Inc.",
+        "weight_pct": 0.7,
+        "shares": 4064,
+        "raw": {
+          "no": 23,
+          "n": "SK hynix Inc.",
+          "s": "$SKHY",
+          "as": "0.70%",
+          "sh": "4,064"
+        }
+      },
+      {
         "rank": 24,
-        "symbol": "SIEGY",
-        "name": "SIEMENS AG SPONS ADR ADR",
-        "weight_pct": 0.69,
+        "symbol": "!OTC/SIEGY",
+        "name": "Siemens Aktiengesellschaft",
+        "weight_pct": 0.67,
         "shares": 4278,
         "raw": {
           "no": 24,
-          "n": "SIEMENS AG SPONS ADR ADR",
-          "s": "SIEGY",
-          "as": "0.69%",
+          "n": "Siemens Aktiengesellschaft",
+          "s": "!otc/SIEGY",
+          "as": "0.67%",
           "sh": "4,278"
         }
       },
       {
         "rank": 25,
-        "symbol": "SAFRY",
-        "name": "SAFRAN SA UNSPON ADR ADR",
-        "weight_pct": 0.69,
+        "symbol": "!OTC/SAFRY",
+        "name": "Safran SA",
+        "weight_pct": 0.64,
         "shares": 7109,
         "raw": {
           "no": 25,
-          "n": "SAFRAN SA UNSPON ADR ADR",
-          "s": "SAFRY",
-          "as": "0.69%",
+          "n": "Safran SA",
+          "s": "!otc/SAFRY",
+          "as": "0.64%",
           "sh": "7,109"
         }
       }

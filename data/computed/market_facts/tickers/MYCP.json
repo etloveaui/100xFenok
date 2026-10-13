@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MYCP",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T07:57:34Z",
+  "generated_at": "2026-10-13T13:08:05Z",
   "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 24.575,
       "source": "yf",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T07:03:06Z",
+      "fetched_at": "2026-10-13T12:20:13Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,14 +34,14 @@
           "value": 24.575,
           "source": "yf",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T07:03:06Z",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         },
         {
-          "value": 24.49,
+          "value": 24.575,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:37Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         }
       ],
@@ -52,7 +52,7 @@
       "value": 24.44,
       "source": "yf",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T07:03:06Z",
+      "fetched_at": "2026-10-13T12:20:13Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -64,14 +64,14 @@
           "value": 24.44,
           "source": "yf",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T07:03:06Z",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         },
         {
-          "value": 24.47,
+          "value": 24.54,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:37Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         }
       ],
@@ -79,10 +79,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.13500023,
-      "source": "yf",
+      "value": 0.04,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T07:03:06Z",
+      "fetched_at": "2026-10-13T12:20:13Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -92,17 +92,17 @@
       ],
       "candidates": [
         {
-          "value": 0.13500023,
-          "source": "yf",
+          "value": 0.04,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T07:03:06Z",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         },
         {
-          "value": 0.02,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:37Z",
+          "value": 0.13500023,
+          "source": "yf",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         }
       ],
@@ -110,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 0.55237406,
-      "source": "yf",
+      "value": 0.14,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T07:03:06Z",
+      "fetched_at": "2026-10-13T12:20:13Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -123,39 +123,88 @@
       ],
       "candidates": [
         {
-          "value": 0.55237406,
-          "source": "yf",
+          "value": 0.14,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T07:03:06Z",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         },
         {
-          "value": 0.1,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:37Z",
+          "value": 0.55237406,
+          "source": "yf",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:13Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "dividend_yield": {
+      "value": 0.13,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:20:13Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.13,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:13Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.15,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:20:13Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.15,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:13Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": 56,
-    "holdings_updated": "Sep 28, 2026",
+    "holdings_count": 55,
+    "holdings_updated": "Oct 9, 2026",
     "top_holdings": [
       {
         "rank": 1,
         "symbol": "AMD.5.5 08.17.36",
         "name": "ADVANCED MICRO DEVICES SR UNSECURED 08/36 5.5",
-        "weight_pct": 4.55,
+        "weight_pct": 4.54,
         "shares": 350000,
         "raw": {
           "no": 1,
           "n": "ADVANCED MICRO DEVICES SR UNSECURED 08/36 5.5",
           "s": "AMD.5.5 08.17.36",
-          "as": "4.55%",
+          "as": "4.54%",
           "sh": "350,000"
         }
       },
@@ -163,13 +212,13 @@
         "rank": 2,
         "symbol": "BG.5.15 03.19.36",
         "name": "BUNGE LTD FINANCE CORP COMPANY GUAR 03/36 5.15",
-        "weight_pct": 4.44,
+        "weight_pct": 4.45,
         "shares": 350000,
         "raw": {
           "no": 2,
           "n": "BUNGE LTD FINANCE CORP COMPANY GUAR 03/36 5.15",
           "s": "BG.5.15 03.19.36",
-          "as": "4.44%",
+          "as": "4.45%",
           "sh": "350,000"
         }
       },
@@ -177,13 +226,13 @@
         "rank": 3,
         "symbol": "AVGO.4.95 01.15.36",
         "name": "BROADCOM INC SR UNSECURED 01/36 4.95",
-        "weight_pct": 4.3,
+        "weight_pct": 4.28,
         "shares": 350000,
         "raw": {
           "no": 3,
           "n": "BROADCOM INC SR UNSECURED 01/36 4.95",
           "s": "AVGO.4.95 01.15.36",
-          "as": "4.30%",
+          "as": "4.28%",
           "sh": "350,000"
         }
       },
@@ -191,13 +240,13 @@
         "rank": 4,
         "symbol": "MTNA.5.375 05.19.36",
         "name": "ARCELORMITTAL SA SR UNSECURED 05/36 5.375",
-        "weight_pct": 4.14,
+        "weight_pct": 4.13,
         "shares": 325000,
         "raw": {
           "no": 4,
           "n": "ARCELORMITTAL SA SR UNSECURED 05/36 5.375",
           "s": "MTNA.5.375 05.19.36",
-          "as": "4.14%",
+          "as": "4.13%",
           "sh": "325,000"
         }
       },
@@ -205,13 +254,13 @@
         "rank": 5,
         "symbol": "ORCL.5.7 02.04.36",
         "name": "ORACLE CORP SR UNSECURED 02/36 5.7",
-        "weight_pct": 3.59,
+        "weight_pct": 3.57,
         "shares": 300000,
         "raw": {
           "no": 5,
           "n": "ORACLE CORP SR UNSECURED 02/36 5.7",
           "s": "ORCL.5.7 02.04.36",
-          "as": "3.59%",
+          "as": "3.57%",
           "sh": "300,000"
         }
       },
@@ -247,13 +296,13 @@
         "rank": 8,
         "symbol": "INTC.5.3 05.15.36",
         "name": "INTEL CORP SR UNSECURED 05/36 5.3",
-        "weight_pct": 2.55,
+        "weight_pct": 2.54,
         "shares": 200000,
         "raw": {
           "no": 8,
           "n": "INTEL CORP SR UNSECURED 05/36 5.3",
           "s": "INTC.5.3 05.15.36",
-          "as": "2.55%",
+          "as": "2.54%",
           "sh": "200,000"
         }
       },
@@ -261,13 +310,13 @@
         "rank": 9,
         "symbol": "META.5.25 05.15.36",
         "name": "META PLATFORMS INC SR UNSECURED 05/36 5.25",
-        "weight_pct": 2.22,
+        "weight_pct": 2.21,
         "shares": 175000,
         "raw": {
           "no": 9,
           "n": "META PLATFORMS INC SR UNSECURED 05/36 5.25",
           "s": "META.5.25 05.15.36",
-          "as": "2.22%",
+          "as": "2.21%",
           "sh": "175,000"
         }
       },
@@ -303,13 +352,13 @@
         "rank": 12,
         "symbol": "EPD.5.2 01.15.36",
         "name": "ENTERPRISE PRODUCTS OPER COMPANY GUAR 01/36 5.2",
-        "weight_pct": 1.94,
+        "weight_pct": 1.93,
         "shares": 150000,
         "raw": {
           "no": 12,
           "n": "ENTERPRISE PRODUCTS OPER COMPANY GUAR 01/36 5.2",
           "s": "EPD.5.2 01.15.36",
-          "as": "1.94%",
+          "as": "1.93%",
           "sh": "150,000"
         }
       },
@@ -331,40 +380,40 @@
         "rank": 14,
         "symbol": "ET.5.35 01.15.36",
         "name": "ENERGY TRANSFER LP SR UNSECURED 01/36 5.35",
-        "weight_pct": 1.93,
+        "weight_pct": 1.92,
         "shares": 150000,
         "raw": {
           "no": 14,
           "n": "ENERGY TRANSFER LP SR UNSECURED 01/36 5.35",
           "s": "ET.5.35 01.15.36",
-          "as": "1.93%",
+          "as": "1.92%",
           "sh": "150,000"
         }
       },
       {
         "rank": 15,
-        "symbol": "MRVL.5.3 04.15.36",
-        "name": "MARVELL TECHNOLOGY INC COMPANY GUAR 04/36 5.3",
+        "symbol": "D.5.35 06.15.36",
+        "name": "DOMINION ENERGY INC SR UNSECURED 06/36 5.35",
         "weight_pct": 1.91,
         "shares": 150000,
         "raw": {
           "no": 15,
-          "n": "MARVELL TECHNOLOGY INC COMPANY GUAR 04/36 5.3",
-          "s": "MRVL.5.3 04.15.36",
+          "n": "DOMINION ENERGY INC SR UNSECURED 06/36 5.35",
+          "s": "D.5.35 06.15.36",
           "as": "1.91%",
           "sh": "150,000"
         }
       },
       {
         "rank": 16,
-        "symbol": "D.5.35 06.15.36",
-        "name": "DOMINION ENERGY INC SR UNSECURED 06/36 5.35",
+        "symbol": "MRVL.5.3 04.15.36",
+        "name": "MARVELL TECHNOLOGY INC COMPANY GUAR 04/36 5.3",
         "weight_pct": 1.91,
         "shares": 150000,
         "raw": {
           "no": 16,
-          "n": "DOMINION ENERGY INC SR UNSECURED 06/36 5.35",
-          "s": "D.5.35 06.15.36",
+          "n": "MARVELL TECHNOLOGY INC COMPANY GUAR 04/36 5.3",
+          "s": "MRVL.5.3 04.15.36",
           "as": "1.91%",
           "sh": "150,000"
         }
@@ -385,12 +434,26 @@
       },
       {
         "rank": 18,
+        "symbol": "SRE.5.25 03.15.36",
+        "name": "SEMPRA SR UNSECURED 03/36 5.25",
+        "weight_pct": 1.89,
+        "shares": 150000,
+        "raw": {
+          "no": 18,
+          "n": "SEMPRA SR UNSECURED 03/36 5.25",
+          "s": "SRE.5.25 03.15.36",
+          "as": "1.89%",
+          "sh": "150,000"
+        }
+      },
+      {
+        "rank": 19,
         "symbol": "HONA.4.95 03.16.36",
         "name": "HONEYWELL AEROSPACE INC SR UNSECURED 03/36 4.95",
         "weight_pct": 1.89,
         "shares": 150000,
         "raw": {
-          "no": 18,
+          "no": 19,
           "n": "HONEYWELL AEROSPACE INC SR UNSECURED 03/36 4.95",
           "s": "HONA.4.95 03.16.36",
           "as": "1.89%",
@@ -398,29 +461,15 @@
         }
       },
       {
-        "rank": 19,
+        "rank": 20,
         "symbol": "J.5.375 03.03.36",
         "name": "JACOBS SOLUTIONS INC COMPANY GUAR 03/36 5.375",
         "weight_pct": 1.89,
         "shares": 150000,
         "raw": {
-          "no": 19,
+          "no": 20,
           "n": "JACOBS SOLUTIONS INC COMPANY GUAR 03/36 5.375",
           "s": "J.5.375 03.03.36",
-          "as": "1.89%",
-          "sh": "150,000"
-        }
-      },
-      {
-        "rank": 20,
-        "symbol": "SRE.5.25 03.15.36",
-        "name": "SEMPRA SR UNSECURED 03/36 5.25",
-        "weight_pct": 1.89,
-        "shares": 150000,
-        "raw": {
-          "no": 20,
-          "n": "SEMPRA SR UNSECURED 03/36 5.25",
-          "s": "SRE.5.25 03.15.36",
           "as": "1.89%",
           "sh": "150,000"
         }

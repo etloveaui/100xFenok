@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "XUSM",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T07:57:34Z",
+  "generated_at": "2026-10-13T13:08:05Z",
   "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -38,10 +38,10 @@
           "confidence": "observed"
         },
         {
-          "value": 24.87,
+          "value": 24.3258,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:17:06Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:21:49Z",
           "confidence": "observed"
         }
       ],
@@ -68,10 +68,10 @@
           "confidence": "observed"
         },
         {
-          "value": 24.83,
+          "value": 24.39,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:17:06Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:21:49Z",
           "confidence": "observed"
         }
       ],
@@ -79,10 +79,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.12409973,
-      "source": "yf",
+      "value": -0.06,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:44:49Z",
+      "fetched_at": "2026-10-13T12:21:49Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -92,17 +92,17 @@
       ],
       "candidates": [
         {
+          "value": -0.06,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:21:49Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.12409973,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T06:44:49Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.04,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:17:06Z",
           "confidence": "observed"
         }
       ],
@@ -110,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.50756747,
-      "source": "yf",
+      "value": -0.26,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:44:49Z",
+      "fetched_at": "2026-10-13T12:21:49Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -123,31 +123,523 @@
       ],
       "candidates": [
         {
+          "value": -0.26,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:21:49Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.50756747,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T06:44:49Z",
           "confidence": "observed"
-        },
-        {
-          "value": 0.14,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:17:06Z",
-          "confidence": "observed"
         }
       ],
       "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "expense_ratio": {
+      "value": 0.75,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:21:49Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.75,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:21:49Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 52,
+    "holdings_updated": "Oct 12, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "!TYO/7735",
+        "name": "SCREEN Holdings Co., Ltd.",
+        "weight_pct": 2.66,
+        "shares": 3348,
+        "raw": {
+          "no": 1,
+          "n": "SCREEN Holdings Co., Ltd.",
+          "s": "!tyo/7735",
+          "as": "2.66%",
+          "sh": "3,348"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!VIE/ATS",
+        "name": "AT & S Austria Technologie & Systemtechnik Aktiengesellschaft",
+        "weight_pct": 2.47,
+        "shares": 1350,
+        "raw": {
+          "no": 2,
+          "n": "AT & S Austria Technologie & Systemtechnik Aktiengesellschaft",
+          "s": "!vie/ATS",
+          "as": "2.47%",
+          "sh": "1,350"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!TYO/6525",
+        "name": "Kokusai Electric Corporation",
+        "weight_pct": 2.46,
+        "shares": 5076,
+        "raw": {
+          "no": 3,
+          "n": "Kokusai Electric Corporation",
+          "s": "!tyo/6525",
+          "as": "2.46%",
+          "sh": "5,076"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "ASX",
+        "name": "ASE Technology Holding Co., Ltd.",
+        "weight_pct": 2.4,
+        "shares": 6804,
+        "raw": {
+          "no": 4,
+          "n": "ASE Technology Holding Co., Ltd.",
+          "s": "$ASX",
+          "as": "2.40%",
+          "sh": "6,804"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!TYO/4062",
+        "name": "Ibiden Co.,Ltd.",
+        "weight_pct": 2.33,
+        "shares": 4212,
+        "raw": {
+          "no": 5,
+          "n": "Ibiden Co.,Ltd.",
+          "s": "!tyo/4062",
+          "as": "2.33%",
+          "sh": "4,212"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "GMAB",
+        "name": "Genmab A/S",
+        "weight_pct": 2.33,
+        "shares": 8262,
+        "raw": {
+          "no": 6,
+          "n": "Genmab A/S",
+          "s": "$GMAB",
+          "as": "2.33%",
+          "sh": "8,262"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!TYO/8035",
+        "name": "Tokyo Electron Limited",
+        "weight_pct": 2.26,
+        "shares": 3780,
+        "raw": {
+          "no": 7,
+          "n": "Tokyo Electron Limited",
+          "s": "!tyo/8035",
+          "as": "2.26%",
+          "sh": "3,780"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!TYO/6098",
+        "name": "Recruit Holdings Co., Ltd.",
+        "weight_pct": 2.26,
+        "shares": 2646,
+        "raw": {
+          "no": 8,
+          "n": "Recruit Holdings Co., Ltd.",
+          "s": "!tyo/6098",
+          "as": "2.26%",
+          "sh": "2,646"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "!HKG/0992",
+        "name": "Lenovo Group Limited",
+        "weight_pct": 2.15,
+        "shares": 67608,
+        "raw": {
+          "no": 9,
+          "n": "Lenovo Group Limited",
+          "s": "!hkg/0992",
+          "as": "2.15%",
+          "sh": "67,608"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!TYO/6981",
+        "name": "Murata Manufacturing Co., Ltd.",
+        "weight_pct": 2.15,
+        "shares": 5616,
+        "raw": {
+          "no": 10,
+          "n": "Murata Manufacturing Co., Ltd.",
+          "s": "!tyo/6981",
+          "as": "2.15%",
+          "sh": "5,616"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!TYO/6963",
+        "name": "ROHM Co., Ltd.",
+        "weight_pct": 2.14,
+        "shares": 9018,
+        "raw": {
+          "no": 11,
+          "n": "ROHM Co., Ltd.",
+          "s": "!tyo/6963",
+          "as": "2.14%",
+          "sh": "9,018"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!TYO/6752",
+        "name": "Panasonic Holdings Corporation",
+        "weight_pct": 2.1,
+        "shares": 9828,
+        "raw": {
+          "no": 12,
+          "n": "Panasonic Holdings Corporation",
+          "s": "!tyo/6752",
+          "as": "2.10%",
+          "sh": "9,828"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!TYO/6971",
+        "name": "Kyocera Corporation",
+        "weight_pct": 2.1,
+        "shares": 11664,
+        "raw": {
+          "no": 13,
+          "n": "Kyocera Corporation",
+          "s": "!tyo/6971",
+          "as": "2.10%",
+          "sh": "11,664"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Yangzijiang Shipbuilding Holdings Ltd",
+        "weight_pct": 2.08,
+        "shares": 68688,
+        "raw": {
+          "no": 14,
+          "n": "Yangzijiang Shipbuilding Holdings Ltd",
+          "as": "2.08%",
+          "sh": "68,688"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!TYO/7550",
+        "name": "Zensho Holdings Co., Ltd.",
+        "weight_pct": 2.07,
+        "shares": 3672,
+        "raw": {
+          "no": 15,
+          "n": "Zensho Holdings Co., Ltd.",
+          "s": "!tyo/7550",
+          "as": "2.07%",
+          "sh": "3,672"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!TYO/9104",
+        "name": "Mitsui O.S.K. Lines, Ltd.",
+        "weight_pct": 2.07,
+        "shares": 5886,
+        "raw": {
+          "no": 16,
+          "n": "Mitsui O.S.K. Lines, Ltd.",
+          "s": "!tyo/9104",
+          "as": "2.07%",
+          "sh": "5,886"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "TX",
+        "name": "Ternium S.A.",
+        "weight_pct": 2.06,
+        "shares": 4644,
+        "raw": {
+          "no": 17,
+          "n": "Ternium S.A.",
+          "s": "$TX",
+          "as": "2.06%",
+          "sh": "4,644"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!ASX/CPU",
+        "name": "Computershare Limited",
+        "weight_pct": 2.04,
+        "shares": 9504,
+        "raw": {
+          "no": 18,
+          "n": "Computershare Limited",
+          "s": "!asx/CPU",
+          "as": "2.04%",
+          "sh": "9,504"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "ONC",
+        "name": "BeOne Medicines AG",
+        "weight_pct": 2.04,
+        "shares": 756,
+        "raw": {
+          "no": 19,
+          "n": "BeOne Medicines AG",
+          "s": "$ONC",
+          "as": "2.04%",
+          "sh": "756"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "!TYO/9101",
+        "name": "Nippon Yusen Kabushiki Kaisha",
+        "weight_pct": 2.01,
+        "shares": 5670,
+        "raw": {
+          "no": 20,
+          "n": "Nippon Yusen Kabushiki Kaisha",
+          "s": "!tyo/9101",
+          "as": "2.01%",
+          "sh": "5,670"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!TSX/AYA",
+        "name": "Aya Gold & Silver Inc.",
+        "weight_pct": 2.0,
+        "shares": 9612,
+        "raw": {
+          "no": 21,
+          "n": "Aya Gold & Silver Inc.",
+          "s": "!tsx/AYA",
+          "as": "2.00%",
+          "sh": "9,612"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!TYO/9107",
+        "name": "Kawasaki Kisen Kaisha, Ltd.",
+        "weight_pct": 1.98,
+        "shares": 12204,
+        "raw": {
+          "no": 22,
+          "n": "Kawasaki Kisen Kaisha, Ltd.",
+          "s": "!tyo/9107",
+          "as": "1.98%",
+          "sh": "12,204"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!TSX/SLF",
+        "name": "Sun Life Financial Inc.",
+        "weight_pct": 1.96,
+        "shares": 3348,
+        "raw": {
+          "no": 23,
+          "n": "Sun Life Financial Inc.",
+          "s": "!tsx/SLF",
+          "as": "1.96%",
+          "sh": "3,348"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "EC",
+        "name": "Ecopetrol S.A.",
+        "weight_pct": 1.96,
+        "shares": 15174,
+        "raw": {
+          "no": 24,
+          "n": "Ecopetrol S.A.",
+          "s": "$EC",
+          "as": "1.96%",
+          "sh": "15,174"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "!TSX/DPM",
+        "name": "DPM Metals Inc.",
+        "weight_pct": 1.95,
+        "shares": 6156,
+        "raw": {
+          "no": 25,
+          "n": "DPM Metals Inc.",
+          "s": "!tsx/DPM",
+          "as": "1.95%",
+          "sh": "6,156"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
-    "countries": null,
+    "sectors": [
+      {
+        "n": "Financials",
+        "w": 36.88
+      },
+      {
+        "n": "Technology",
+        "w": 26.02
+      },
+      {
+        "n": "Industrials",
+        "w": 12.28
+      },
+      {
+        "n": "Materials",
+        "w": 11.8
+      },
+      {
+        "n": "Healthcare",
+        "w": 6.44
+      },
+      {
+        "n": "Communication Services",
+        "w": 2.36
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 2.16
+      },
+      {
+        "n": "Energy",
+        "w": 2.05
+      }
+    ],
+    "countries": [
+      {
+        "code": "JP",
+        "weight": 37.72,
+        "country": "Japan"
+      },
+      {
+        "code": "CA",
+        "weight": 13.62,
+        "country": "Canada"
+      },
+      {
+        "code": "NL",
+        "weight": 5.7,
+        "country": "Netherlands"
+      },
+      {
+        "code": "IT",
+        "weight": 5.59,
+        "country": "Italy"
+      },
+      {
+        "code": "AT",
+        "weight": 4.51,
+        "country": "Austria"
+      },
+      {
+        "code": "CH",
+        "weight": 4.02,
+        "country": "Switzerland"
+      },
+      {
+        "code": "LU",
+        "weight": 3.99,
+        "country": "Luxembourg"
+      },
+      {
+        "code": "GB",
+        "weight": 3.83,
+        "country": "United Kingdom"
+      },
+      {
+        "code": "ES",
+        "weight": 3.83,
+        "country": "Spain"
+      },
+      {
+        "code": "TW",
+        "weight": 2.51,
+        "country": "Taiwan"
+      },
+      {
+        "code": "DK",
+        "weight": 2.44,
+        "country": "Denmark"
+      },
+      {
+        "code": "HK",
+        "weight": 2.25,
+        "country": "Hong Kong"
+      },
+      {
+        "code": "AU",
+        "weight": 2.13,
+        "country": "Australia"
+      },
+      {
+        "code": "CO",
+        "weight": 2.05,
+        "country": "Colombia"
+      },
+      {
+        "code": "BR",
+        "weight": 2.02,
+        "country": "Brazil"
+      },
+      {
+        "code": "IE",
+        "weight": 1.92,
+        "country": "Ireland"
+      },
+      {
+        "code": "DE",
+        "weight": 1.87,
+        "country": "Germany"
+      }
+    ],
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,

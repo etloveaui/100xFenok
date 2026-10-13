@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "PBUB",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T07:57:34Z",
+  "generated_at": "2026-10-13T13:08:05Z",
   "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -38,10 +38,10 @@
           "confidence": "observed"
         },
         {
-          "value": 24.6345,
+          "value": 24.7177,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:42Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:40Z",
           "confidence": "observed"
         }
       ],
@@ -68,10 +68,10 @@
           "confidence": "observed"
         },
         {
-          "value": 24.6,
+          "value": 24.58,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:42Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:40Z",
           "confidence": "observed"
         }
       ],
@@ -79,10 +79,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.23769951,
-      "source": "yf",
+      "value": 0.14,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T07:34:41Z",
+      "fetched_at": "2026-10-13T12:20:40Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -92,17 +92,17 @@
       ],
       "candidates": [
         {
+          "value": 0.14,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:40Z",
+          "confidence": "observed"
+        },
+        {
           "value": 0.23769951,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T07:34:41Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.03,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:42Z",
           "confidence": "observed"
         }
       ],
@@ -110,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 0.9709948,
-      "source": "yf",
+      "value": 0.56,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T07:34:41Z",
+      "fetched_at": "2026-10-13T12:20:40Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -123,28 +123,311 @@
       ],
       "candidates": [
         {
+          "value": 0.56,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:40Z",
+          "confidence": "observed"
+        },
+        {
           "value": 0.9709948,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T07:34:41Z",
           "confidence": "observed"
-        },
-        {
-          "value": 0.12,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:42Z",
-          "confidence": "observed"
         }
       ],
       "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "expense_ratio": {
+      "value": 0.14,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:20:40Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.14,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:20:40Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 20,
+    "holdings_updated": "Oct 13, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight_pct": 14.72,
+        "shares": 434,
+        "raw": {
+          "no": 1,
+          "n": "JPMorgan Chase & Co.",
+          "s": "$JPM",
+          "as": "14.72%",
+          "sh": "434"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "BANK OF AMERICA CORP",
+        "weight_pct": 12.29,
+        "shares": 2221,
+        "raw": {
+          "no": 2,
+          "n": "BANK OF AMERICA CORP",
+          "as": "12.29%",
+          "sh": "2,221"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "WELLS FARGO & CO",
+        "weight_pct": 8.18,
+        "shares": 961,
+        "raw": {
+          "no": 3,
+          "n": "WELLS FARGO & CO",
+          "as": "8.18%",
+          "sh": "961"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "CITIGROUP INC",
+        "weight_pct": 7.02,
+        "shares": 532,
+        "raw": {
+          "no": 4,
+          "n": "CITIGROUP INC",
+          "as": "7.02%",
+          "sh": "532"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "EWBC",
+        "name": "East West Bancorp, Inc.",
+        "weight_pct": 4.69,
+        "shares": 367,
+        "raw": {
+          "no": 5,
+          "n": "East West Bancorp, Inc.",
+          "s": "$EWBC",
+          "as": "4.69%",
+          "sh": "367"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "FIFTH THIRD BANCORP",
+        "weight_pct": 4.54,
+        "shares": 880,
+        "raw": {
+          "no": 6,
+          "n": "FIFTH THIRD BANCORP",
+          "as": "4.54%",
+          "sh": "880"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "FCNCA",
+        "name": "First Citizens BancShares, Inc.",
+        "weight_pct": 4.42,
+        "shares": 21,
+        "raw": {
+          "no": 7,
+          "n": "First Citizens BancShares, Inc.",
+          "s": "$FCNCA",
+          "as": "4.42%",
+          "sh": "21"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "HUNTINGTON BANCSHARES INC",
+        "weight_pct": 4.42,
+        "shares": 2832,
+        "raw": {
+          "no": 8,
+          "n": "HUNTINGTON BANCSHARES INC",
+          "as": "4.42%",
+          "sh": "2,832"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "MTB",
+        "name": "M&T Bank Corporation",
+        "weight_pct": 4.36,
+        "shares": 197,
+        "raw": {
+          "no": 9,
+          "n": "M&T Bank Corporation",
+          "s": "$MTB",
+          "as": "4.36%",
+          "sh": "197"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "US BANCORP",
+        "weight_pct": 4.35,
+        "shares": 748,
+        "raw": {
+          "no": 10,
+          "n": "US BANCORP",
+          "as": "4.35%",
+          "sh": "748"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "KEYCORP",
+        "weight_pct": 4.32,
+        "shares": 2124,
+        "raw": {
+          "no": 11,
+          "n": "KEYCORP",
+          "as": "4.32%",
+          "sh": "2,124"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "TFC",
+        "name": "Truist Financial Corporation",
+        "weight_pct": 4.3,
+        "shares": 916,
+        "raw": {
+          "no": 12,
+          "n": "Truist Financial Corporation",
+          "s": "$TFC",
+          "as": "4.30%",
+          "sh": "916"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "PNC FINANCIAL SERVICES GROUP",
+        "weight_pct": 4.29,
+        "shares": 192,
+        "raw": {
+          "no": 13,
+          "n": "PNC FINANCIAL SERVICES GROUP",
+          "as": "4.29%",
+          "sh": "192"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "RF",
+        "name": "Regions Financial Corporation",
+        "weight_pct": 4.27,
+        "shares": 1553,
+        "raw": {
+          "no": 14,
+          "n": "Regions Financial Corporation",
+          "s": "$RF",
+          "as": "4.27%",
+          "sh": "1,553"
+        }
+      },
+      {
+        "rank": 15,
+        "name": "CITIZENS FINANCIAL GROUP",
+        "weight_pct": 4.25,
+        "shares": 656,
+        "raw": {
+          "no": 15,
+          "n": "CITIZENS FINANCIAL GROUP",
+          "as": "4.25%",
+          "sh": "656"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "PNFP",
+        "name": "Pinnacle Financial Partners, Inc.",
+        "weight_pct": 3.83,
+        "shares": 400,
+        "raw": {
+          "no": 16,
+          "n": "Pinnacle Financial Partners, Inc.",
+          "s": "$PNFP",
+          "as": "3.83%",
+          "sh": "400"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "FIRST HORIZON CORP",
+        "weight_pct": 2.98,
+        "shares": 1268,
+        "raw": {
+          "no": 17,
+          "n": "FIRST HORIZON CORP",
+          "as": "2.98%",
+          "sh": "1,268"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "WTFC",
+        "name": "Wintrust Financial Corporation",
+        "weight_pct": 2.63,
+        "shares": 180,
+        "raw": {
+          "no": 18,
+          "n": "Wintrust Financial Corporation",
+          "s": "$WTFC",
+          "as": "2.63%",
+          "sh": "180"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "N/A",
+        "name": "DREYFUS TRSRY SECURITIES CASH MGMT",
+        "weight_pct": 0.15,
+        "shares": 1451,
+        "raw": {
+          "no": 19,
+          "n": "DREYFUS TRSRY SECURITIES CASH MGMT",
+          "s": "n/a",
+          "as": "0.15%",
+          "sh": "1,451"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "CASH",
+        "weight_pct": 0.0,
+        "shares": 23,
+        "raw": {
+          "no": 20,
+          "n": "CASH",
+          "as": "0.00%",
+          "sh": "23"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,

@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "BSMA",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T07:57:34Z",
+  "generated_at": "2026-10-13T13:08:05Z",
   "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -20,7 +20,7 @@
       "value": 24.55,
       "source": "yf",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:44:37Z",
+      "fetched_at": "2026-10-13T12:18:26Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -34,14 +34,14 @@
           "value": 24.55,
           "source": "yf",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T06:44:37Z",
+          "fetched_at": "2026-10-13T12:18:26Z",
           "confidence": "observed"
         },
         {
-          "value": 24.42,
+          "value": 24.55,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:09Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:25Z",
           "confidence": "observed"
         }
       ],
@@ -52,7 +52,7 @@
       "value": 24.55,
       "source": "yf",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:44:37Z",
+      "fetched_at": "2026-10-13T12:18:26Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -64,14 +64,14 @@
           "value": 24.55,
           "source": "yf",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T06:44:37Z",
+          "fetched_at": "2026-10-13T12:18:26Z",
           "confidence": "observed"
         },
         {
-          "value": 24.13,
+          "value": 24.55,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:09Z",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:25Z",
           "confidence": "observed"
         }
       ],
@@ -79,10 +79,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.0,
-      "source": "yf",
+      "value": 0,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:44:37Z",
+      "fetched_at": "2026-10-13T12:18:25Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -92,17 +92,17 @@
       ],
       "candidates": [
         {
-          "value": 0.0,
-          "source": "yf",
+          "value": 0,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T06:44:37Z",
+          "fetched_at": "2026-10-13T12:18:25Z",
           "confidence": "observed"
         },
         {
-          "value": 0.29,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:09Z",
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:26Z",
           "confidence": "observed"
         }
       ],
@@ -110,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 0.0,
-      "source": "yf",
+      "value": 0,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:44:37Z",
+      "fetched_at": "2026-10-13T12:18:25Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -123,28 +123,351 @@
       ],
       "candidates": [
         {
-          "value": 0.0,
-          "source": "yf",
+          "value": 0,
+          "source": "stockanalysis.quote",
           "as_of": "2026-10-12",
-          "fetched_at": "2026-10-13T06:44:37Z",
+          "fetched_at": "2026-10-13T12:18:25Z",
           "confidence": "observed"
         },
         {
-          "value": 1.2,
-          "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T15:16:09Z",
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:26Z",
           "confidence": "observed"
         }
       ],
       "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "expense_ratio": {
+      "value": 0.18,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T12:18:25Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.18,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T12:18:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 191,
+    "holdings_updated": "Oct 12, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "name": "CASH & EQUIVALENTS",
+        "weight_pct": 1.53,
+        "shares": 74896,
+        "raw": {
+          "no": 1,
+          "n": "CASH & EQUIVALENTS",
+          "as": "1.53%",
+          "sh": "74,896"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "City of New York NY 5.00% 08/01/2044",
+        "weight_pct": 1.4,
+        "shares": 70000,
+        "raw": {
+          "no": 2,
+          "n": "City of New York NY 5.00% 08/01/2044",
+          "as": "1.40%",
+          "sh": "70,000"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Mountain View Capital Improvements Financing Authority 5.00% 05/01/2056",
+        "weight_pct": 1.3,
+        "shares": 65000,
+        "raw": {
+          "no": 3,
+          "n": "Mountain View Capital Improvements Financing Authority 5.00% 05/01/2056",
+          "as": "1.30%",
+          "sh": "65,000"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "Metropolitan Transportation Authority 4.00% 11/15/2036",
+        "weight_pct": 1.24,
+        "shares": 65000,
+        "raw": {
+          "no": 4,
+          "n": "Metropolitan Transportation Authority 4.00% 11/15/2036",
+          "as": "1.24%",
+          "sh": "65,000"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Port Authority of New York & New Jersey 3.25% 12/01/2036",
+        "weight_pct": 1.24,
+        "shares": 70000,
+        "raw": {
+          "no": 5,
+          "n": "Port Authority of New York & New Jersey 3.25% 12/01/2036",
+          "as": "1.24%",
+          "sh": "70,000"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Sales Tax Securitization Corp 5.00% 01/01/2039",
+        "weight_pct": 1.22,
+        "shares": 60000,
+        "raw": {
+          "no": 6,
+          "n": "Sales Tax Securitization Corp 5.00% 01/01/2039",
+          "as": "1.22%",
+          "sh": "60,000"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "New York State Thruway Authority 5.00% 01/01/2045",
+        "weight_pct": 1.22,
+        "shares": 60000,
+        "raw": {
+          "no": 7,
+          "n": "New York State Thruway Authority 5.00% 01/01/2045",
+          "as": "1.22%",
+          "sh": "60,000"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "USD Pending Dividends",
+        "weight_pct": 1.15,
+        "raw": {
+          "no": 8,
+          "n": "USD Pending Dividends",
+          "as": "1.15%"
+        }
+      },
+      {
+        "rank": 9,
+        "name": "New York City Transitional Finance Authority Future Tax Secured Revenue 5.00% 02/01/2043",
+        "weight_pct": 1.12,
+        "shares": 55000,
+        "raw": {
+          "no": 9,
+          "n": "New York City Transitional Finance Authority Future Tax Secured Revenue 5.00% 02/01/2043",
+          "as": "1.12%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 10,
+        "name": "University of California 5.00% 05/15/2036",
+        "weight_pct": 1.11,
+        "shares": 50000,
+        "raw": {
+          "no": 10,
+          "n": "University of California 5.00% 05/15/2036",
+          "as": "1.11%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 11,
+        "name": "Montgomery County Toll Road Authority 5.00% 09/15/2056",
+        "weight_pct": 1.06,
+        "shares": 55000,
+        "raw": {
+          "no": 11,
+          "n": "Montgomery County Toll Road Authority 5.00% 09/15/2056",
+          "as": "1.06%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 12,
+        "name": "Commonwealth of Pennsylvania 3.00% 09/15/2036",
+        "weight_pct": 1.04,
+        "shares": 60000,
+        "raw": {
+          "no": 12,
+          "n": "Commonwealth of Pennsylvania 3.00% 09/15/2036",
+          "as": "1.04%",
+          "sh": "60,000"
+        }
+      },
+      {
+        "rank": 13,
+        "name": "State of Washington 5.00% 02/01/2043",
+        "weight_pct": 1.03,
+        "shares": 50000,
+        "raw": {
+          "no": 13,
+          "n": "State of Washington 5.00% 02/01/2043",
+          "as": "1.03%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 14,
+        "name": "Arizona Department of Transportation State Highway Fund Revenue 5.00% 07/01/2045",
+        "weight_pct": 1.02,
+        "shares": 50000,
+        "raw": {
+          "no": 14,
+          "n": "Arizona Department of Transportation State Highway Fund Revenue 5.00% 07/01/2045",
+          "as": "1.02%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 15,
+        "name": "New York State Thruway Authority 5.00% 09/15/2045",
+        "weight_pct": 1.02,
+        "shares": 50000,
+        "raw": {
+          "no": 15,
+          "n": "New York State Thruway Authority 5.00% 09/15/2045",
+          "as": "1.02%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 16,
+        "name": "New York State Dormitory Authority 5.25% 03/15/2056",
+        "weight_pct": 1.01,
+        "shares": 50000,
+        "raw": {
+          "no": 16,
+          "n": "New York State Dormitory Authority 5.25% 03/15/2056",
+          "as": "1.01%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 17,
+        "name": "Black Belt Energy Gas District 5.00% 11/01/2036",
+        "weight_pct": 1.01,
+        "shares": 50000,
+        "raw": {
+          "no": 17,
+          "n": "Black Belt Energy Gas District 5.00% 11/01/2036",
+          "as": "1.01%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 18,
+        "name": "New York City Transitional Finance Authority Future Tax Secured Revenue 5.00% 11/01/2045",
+        "weight_pct": 1.01,
+        "shares": 50000,
+        "raw": {
+          "no": 18,
+          "n": "New York City Transitional Finance Authority Future Tax Secured Revenue 5.00% 11/01/2045",
+          "as": "1.01%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 19,
+        "name": "City of Manchester NH Sewer Revenue 5.25% 07/01/2056",
+        "weight_pct": 0.99,
+        "shares": 50000,
+        "raw": {
+          "no": 19,
+          "n": "City of Manchester NH Sewer Revenue 5.25% 07/01/2056",
+          "as": "0.99%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 20,
+        "name": "Metropolitan Government Nashville & Davidson County Health & Educational Facs Bd 5.00% 08/01/2041",
+        "weight_pct": 0.99,
+        "shares": 50000,
+        "raw": {
+          "no": 20,
+          "n": "Metropolitan Government Nashville & Davidson County Health & Educational Facs Bd 5.00% 08/01/2041",
+          "as": "0.99%",
+          "sh": "50,000"
+        }
+      },
+      {
+        "rank": 21,
+        "name": "South Broward Hospital District 3.00% 05/01/2036",
+        "weight_pct": 0.97,
+        "shares": 55000,
+        "raw": {
+          "no": 21,
+          "n": "South Broward Hospital District 3.00% 05/01/2036",
+          "as": "0.97%",
+          "sh": "55,000"
+        }
+      },
+      {
+        "rank": 22,
+        "name": "Texas Transportation Commission 5.00% 04/01/2044",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 22,
+          "n": "Texas Transportation Commission 5.00% 04/01/2044",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 23,
+        "name": "California Community Choice Financing Authority 5.00% 06/01/2036",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 23,
+          "n": "California Community Choice Financing Authority 5.00% 06/01/2036",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 24,
+        "name": "Massachusetts Development Finance Agency 5.00% 07/01/2040",
+        "weight_pct": 0.93,
+        "shares": 45000,
+        "raw": {
+          "no": 24,
+          "n": "Massachusetts Development Finance Agency 5.00% 07/01/2040",
+          "as": "0.93%",
+          "sh": "45,000"
+        }
+      },
+      {
+        "rank": 25,
+        "name": "City of Lincoln NE Electric System Revenue 3.50% 09/01/2036",
+        "weight_pct": 0.93,
+        "shares": 50000,
+        "raw": {
+          "no": 25,
+          "n": "City of Lincoln NE Electric System Revenue 3.50% 09/01/2036",
+          "as": "0.93%",
+          "sh": "50,000"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
