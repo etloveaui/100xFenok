@@ -30,6 +30,8 @@ from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, terminal_e
 DOMAIN = "etf_detail"
 ENROLLMENT_SCHEMA = "data-supply-etf-detail-enrollment/v1"
 INDEX_SCHEMA = "data-supply-etf-detail-public-index/v1"
+INDEX_SHARD_ALGORITHM = "fnv1a32-utf16-v1"
+INDEX_SHARD_COUNT = 64
 STOCKANALYSIS_ETF_PUBLIC_MODE = "shard-only"
 STOCKANALYSIS_ETF_SHARD_COUNT = 1024
 STATE_REL_ROOT = Path("data/admin/data-supply-state/v1")
@@ -105,6 +107,7 @@ class MaterializationError(RuntimeError):
 class Projection:
     enrollment: dict[str, Any]
     index: dict[str, Any]
+    index_shards: dict[str, dict[str, Any]]
     payloads: dict[str, bytes]
     counts: dict[str, int]
     tracked_paths: tuple[str, ...]
@@ -179,6 +182,53 @@ def index_content_sha256(index: Mapping[str, Any]) -> str:
     logical = dict(index)
     logical.pop("index_sha256", None)
     return canonical_sha256(logical)
+
+
+def index_shard_id(ticker: str) -> int:
+    """FNV-1a over UTF-16 code units; safe ticker characters are ASCII."""
+
+    _ticker(ticker, "index shard ticker")
+    value = 0x811C9DC5
+    for character in ticker:
+        value = ((value ^ ord(character)) * 0x01000193) & 0xFFFFFFFF
+    return value % INDEX_SHARD_COUNT
+
+
+def index_shards_for_index(index: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    """Partition an already finalized global index without changing its digest."""
+
+    logical_index = {key: value for key, value in index.items() if key != "index_sha256"}
+    bucket_entries: list[dict[str, dict[str, Any]]] = [{} for _ in range(INDEX_SHARD_COUNT)]
+    for ticker, entry in index["entries"].items():
+        bucket_entries[index_shard_id(ticker)][ticker] = entry
+    index_shards: dict[str, dict[str, Any]] = {}
+    shard_enrollment: list[dict[str, Any]] = []
+    for shard_id, shard_entries in enumerate(bucket_entries):
+        shard_tickers = list(shard_entries)
+        shard_counts = {key: 0 for key in STATE_COUNT_KEYS}
+        for entry in shard_entries.values():
+            shard_counts[entry["resolution_state"]] += 1
+        shard_index = {
+            **logical_index,
+            "global_index_sha256": index["index_sha256"],
+            "membership_sha256": canonical_sha256(shard_tickers),
+            "enrolled_count": len(shard_tickers),
+            "selected_count": len(shard_tickers) - shard_counts["unavailable"],
+            "unavailable_count": shard_counts["unavailable"],
+            "resolution_state_counts": shard_counts,
+            "entries": shard_entries,
+        }
+        shard_index["index_sha256"] = index_content_sha256(shard_index)
+        shard_path = f"index-shards/{shard_id:02d}.json"
+        index_shards[shard_path] = shard_index
+        shard_enrollment.append({
+            "id": shard_id,
+            "path": shard_path,
+            "index_sha256": shard_index["index_sha256"],
+            "membership_sha256": shard_index["membership_sha256"],
+            "enrolled_count": len(shard_tickers),
+        })
+    return index_shards, shard_enrollment
 
 
 def _fsync_dir(path: Path) -> None:
@@ -529,6 +579,7 @@ class PublicDataSupplyMaterializer:
         }
         index_sha = index_content_sha256(logical_index)
         index = {**logical_index, "index_sha256": index_sha}
+        index_shards, shard_enrollment = index_shards_for_index(index)
         enrollment = {
             "schema_version": ENROLLMENT_SCHEMA,
             "domain": DOMAIN,
@@ -539,8 +590,13 @@ class PublicDataSupplyMaterializer:
             "membership_sha256": membership_sha,
             "enrolled_count": len(tickers),
             "tickers": tickers,
+            "index_shard_algorithm": INDEX_SHARD_ALGORITHM,
+            "index_shard_count": INDEX_SHARD_COUNT,
+            "index_shards": shard_enrollment,
         }
-        for label, payload in (("index", _pretty_json_bytes(index)), ("enrollment", _pretty_json_bytes(enrollment))):
+        metadata = [("index", index), ("enrollment", enrollment), *index_shards.items()]
+        for label, document in metadata:
+            payload = _pretty_json_bytes(document)
             hits = [token.decode() for token in FORBIDDEN_METADATA_TOKENS if token in payload]
             if hits:
                 raise MaterializationError(f"{label} contains private token(s): {hits}")
@@ -550,7 +606,7 @@ class PublicDataSupplyMaterializer:
             "unavailable": len(tickers) - len(current_keys),
             "payloads": len(projection_payloads),
         }
-        return Projection(enrollment, index, projection_payloads, counts, tuple(sorted(required_paths)))
+        return Projection(enrollment, index, index_shards, projection_payloads, counts, tuple(sorted(required_paths)))
 
     def _tree_files(self, root: Path) -> set[str]:
         if root.is_symlink() or not root.is_dir():
@@ -565,7 +621,7 @@ class PublicDataSupplyMaterializer:
                 raise MaterializationError(f"projection contains special file: {path}")
         return files
 
-    def _load_projection_tree(self, root: Path) -> Projection:
+    def _load_projection_tree(self, root: Path, *, allow_legacy_index_shards: bool = False) -> Projection:
         files = self._tree_files(root)
         if "enrollment.json" not in files or "index.json" not in files:
             raise MaterializationError("projection is missing enrollment.json or index.json")
@@ -648,15 +704,40 @@ class PublicDataSupplyMaterializer:
             expected_files.add(f"payloads/{ticker}.json")
             selected_count += 1
             state_counts[state] += 1
-        if files != expected_files:
-            raise MaterializationError(f"projection contains missing/orphan files: {sorted(files ^ expected_files)[:5]}")
         if index.get("selected_count") != selected_count or index.get("unavailable_count") != unavailable_count:
             raise MaterializationError("projection selected/unavailable count mismatch")
         if index.get("resolution_state_counts") != state_counts:
             raise MaterializationError("projection state counts mismatch")
+        shard_fields = {"index_shard_algorithm", "index_shard_count", "index_shards"}
+        present_shard_fields = shard_fields.intersection(enrollment)
+        index_shards: dict[str, dict[str, Any]] = {}
+        if not present_shard_fields and allow_legacy_index_shards:
+            if any(path.startswith("index-shards/") for path in files):
+                raise MaterializationError("legacy projection has unlisted index shards")
+        else:
+            if (
+                present_shard_fields != shard_fields
+                or enrollment["index_shard_algorithm"] != INDEX_SHARD_ALGORITHM
+                or enrollment["index_shard_count"] != INDEX_SHARD_COUNT
+            ):
+                raise MaterializationError("projection index shard contract mismatch")
+            expected_shards, expected_enrollment = index_shards_for_index(index)
+            if enrollment["index_shards"] != expected_enrollment:
+                raise MaterializationError("projection index shard enrollment mismatch")
+            for relative, expected in expected_shards.items():
+                shard_path = root / relative
+                self._regular_file(shard_path, root=root, label=f"projection {relative}")
+                shard = _strict_json_bytes(shard_path.read_bytes(), f"projection {relative}")
+                if shard != expected:
+                    raise MaterializationError(f"projection index shard content/binding mismatch: {relative}")
+                index_shards[relative] = shard
+            expected_files.update(expected_shards)
+        if files != expected_files:
+            raise MaterializationError(f"projection contains missing/orphan files: {sorted(files ^ expected_files)[:5]}")
         return Projection(
             enrollment,
             index,
+            index_shards,
             payloads,
             {"enrolled": len(tickers), "selected": selected_count, "unavailable": unavailable_count, "payloads": len(payloads)},
             (),
@@ -668,6 +749,11 @@ class PublicDataSupplyMaterializer:
         for ticker, body in projection.payloads.items():
             _write_file_fsync(payload_root / f"{ticker}.json", body)
         _fsync_dir(payload_root)
+        shard_root = root / "index-shards"
+        shard_root.mkdir(parents=True)
+        for relative, shard in projection.index_shards.items():
+            _write_file_fsync(root / relative, _pretty_json_bytes(shard))
+        _fsync_dir(shard_root)
         _write_file_fsync(root / "index.json", _pretty_json_bytes(projection.index))
         _write_file_fsync(root / "enrollment.json", _pretty_json_bytes(projection.enrollment))
         _fsync_dir(root)
@@ -695,7 +781,7 @@ class PublicDataSupplyMaterializer:
         projection = self.build_projection(generated_at=generated_at)
         exists = self.canonical_root.exists()
         if exists:
-            existing = self._load_projection_tree(self.canonical_root)
+            existing = self._load_projection_tree(self.canonical_root, allow_legacy_index_shards=True)
             if bootstrap_enrollment:
                 raise MaterializationError("--bootstrap-enrollment is allowed only for the first canonical write")
             existing_tickers = set(existing.enrollment["tickers"])
@@ -714,7 +800,8 @@ class PublicDataSupplyMaterializer:
         try:
             self._write_projection_tree(temporary, projection)
             checked = self._load_projection_tree(temporary)
-            if checked.index != projection.index or checked.enrollment != projection.enrollment or checked.payloads != projection.payloads:
+            if (checked.index != projection.index or checked.enrollment != projection.enrollment
+                or checked.index_shards != projection.index_shards or checked.payloads != projection.payloads):
                 raise MaterializationError("temporary projection verification mismatch")
             self.failpoint("canonical_before_swap")
             self._swap_tree(temporary)
@@ -921,7 +1008,8 @@ class PublicDataSupplyMaterializer:
         canonical = self._load_projection_tree(self.canonical_root)
         generated_at = canonical.index.get("generated_at")
         projection = self.build_projection(generated_at=generated_at)
-        if canonical.index != projection.index or canonical.enrollment != projection.enrollment or canonical.payloads != projection.payloads:
+        if (canonical.index != projection.index or canonical.enrollment != projection.enrollment
+            or canonical.index_shards != projection.index_shards or canonical.payloads != projection.payloads):
             raise MaterializationError("canonical projection does not match active snapshot")
         public_projection_root = self.public_data_root / "computed/data-supply/etf-detail"
         deleted = self._prune_public_projection(
@@ -931,6 +1019,8 @@ class PublicDataSupplyMaterializer:
         if (
             (public_projection_root / "index.json").read_bytes() != (self.canonical_root / "index.json").read_bytes()
             or (public_projection_root / "enrollment.json").read_bytes() != (self.canonical_root / "enrollment.json").read_bytes()
+            or any((public_projection_root / relative).read_bytes() != (self.canonical_root / relative).read_bytes()
+                   for relative in canonical.index_shards)
             or public_projection.payloads != canonical.payloads
         ):
             raise MaterializationError("canonical/public projection byte parity mismatch")

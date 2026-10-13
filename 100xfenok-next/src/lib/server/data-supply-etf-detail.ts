@@ -4,6 +4,7 @@ import { sourceFreshness, detailSourcePolicy } from "../../generated/family-heal
 import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
+  getDataSupplyEtfIndexShardDocument,
   getDataSupplyEtfPayloadDocument,
   getStockanalysisEtfPlaneDocument,
   getStockanalysisEtfShardDocument,
@@ -120,6 +121,7 @@ export type EtfDetailResolution =
 export interface EtfDetailResolverDependencies {
   readEnrollment: () => Promise<PublicJsonDocument | null>;
   readIndex: () => Promise<PublicJsonDocument | null>;
+  readIndexShard?: (id: number) => Promise<PublicJsonDocument | null>;
   readProjectionPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
   readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
   readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
@@ -129,6 +131,7 @@ export interface EtfDetailResolverDependencies {
 const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
   readEnrollment: getDataSupplyEtfEnrollmentDocument,
   readIndex: getDataSupplyEtfIndexDocument,
+  readIndexShard: getDataSupplyEtfIndexShardDocument,
   readProjectionPayload: getDataSupplyEtfPayloadDocument,
   readPlanePayload: getStockanalysisEtfPlaneDocument,
   readShardPayload: getStockanalysisEtfShardDocument,
@@ -249,6 +252,20 @@ async function canonicalIndexSha256(value: JsonRecord): Promise<string> {
   return canonicalJsonSha256(withoutDigest);
 }
 
+interface IndexShardBinding {
+  id: number;
+  path: string;
+  index_sha256: string;
+  membership_sha256: string;
+  enrolled_count: number;
+}
+
+function indexShardId(ticker: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < ticker.length; i += 1) hash = Math.imul(hash ^ ticker.charCodeAt(i), 0x01000193) >>> 0;
+  return hash % 64;
+}
+
 function parseGuard(value: JsonRecord) {
   const tickers = Array.isArray(value.tickers) && value.tickers.every((ticker) => typeof ticker === "string")
     ? value.tickers as string[]
@@ -267,12 +284,28 @@ function parseGuard(value: JsonRecord) {
     || new Set(tickers).size !== tickers.length
     || tickers.some((ticker, index) => index > 0 && ticker <= tickers[index - 1]!)
   ) return null;
+  let shards: IndexShardBinding[] | null = null;
+  if (["index_shards", "index_shard_count", "index_shard_algorithm"].some((key) => key in value)) {
+    if (value.index_shard_algorithm !== "fnv1a32-utf16-v1"
+      || value.index_shard_count !== 64 || !Array.isArray(value.index_shards)
+      || value.index_shards.length !== 64) return null;
+    const bindings = value.index_shards.map(asRecord);
+    if (bindings.some((item, id) => !item || item.id !== id
+      || item.path !== `index-shards/${String(id).padStart(2, "0")}.json`
+      || !isSha256(item.index_sha256) || !isSha256(item.membership_sha256)
+      || !Number.isInteger(item.enrolled_count) || (item.enrolled_count as number) < 0)) return null;
+    shards = bindings as unknown as IndexShardBinding[];
+    const counts = new Array<number>(64).fill(0);
+    for (const ticker of tickers) counts[indexShardId(ticker)]! += 1;
+    if (shards.some((shard) => shard.enrolled_count !== counts[shard.id])) return null;
+  }
   return {
     transactionId: value.active_transaction_id,
     manifestSha: value.active_generation_manifest_sha256,
     indexSha: value.index_sha256,
     membershipSha: value.membership_sha256,
     tickers: new Set(tickers),
+    shards,
   } as const;
 }
 
@@ -320,6 +353,68 @@ async function parseIndex(
 
 type EnrollmentGuard = NonNullable<ReturnType<typeof parseGuard>>;
 type ParsedIndex = Awaited<ReturnType<typeof parseIndex>>;
+// Cache only the immutable bundled guard. Injected readers remain observable
+// on every call, including generation changes and malformed fixtures.
+let bundledGuardPending: Promise<EnrollmentGuard | null> | undefined;
+async function readGuard(reader: EtfDetailResolverDependencies["readEnrollment"]): Promise<EnrollmentGuard | null> {
+  const bundled = reader === getDataSupplyEtfEnrollmentDocument;
+  if (bundled && bundledGuardPending) return bundledGuardPending;
+  const pending = (async () => {
+    const document = await reader();
+    const guard = document ? parseGuard(document.value) : null;
+    return guard && await canonicalJsonSha256([...guard.tickers]) === guard.membershipSha ? guard : null;
+  })();
+  if (bundled) bundledGuardPending = pending;
+  try {
+    const guard = await pending;
+    if (bundled && !guard) bundledGuardPending = undefined;
+    return guard;
+  } catch (error) {
+    if (bundled) bundledGuardPending = undefined;
+    throw error;
+  }
+}
+
+const validatedShardCache = new WeakMap<NonNullable<EtfDetailResolverDependencies["readIndexShard"]>, {
+  guard: EnrollmentGuard;
+  shards: Map<number, Promise<ParsedIndex | null>>;
+}>();
+
+async function readValidatedShard(ticker: string, guard: EnrollmentGuard, dependencies: EtfDetailResolverDependencies): Promise<ParsedIndex | null> {
+  const reader = dependencies.readIndexShard;
+  if (!reader || !guard.shards) return null;
+  const id = indexShardId(ticker);
+  const binding = guard.shards[id]!;
+  let cached = validatedShardCache.get(reader);
+  if (cached?.guard.indexSha === guard.indexSha) {
+    if (cached.guard.transactionId !== guard.transactionId || cached.guard.manifestSha !== guard.manifestSha
+      || cached.guard.membershipSha !== guard.membershipSha
+      || stableJson(cached.guard.shards?.[id]) !== stableJson(binding)) return { kind: "crossbind" };
+  } else {
+    cached = { guard, shards: new Map() };
+    validatedShardCache.set(reader, cached);
+  }
+  const existing = cached.shards.get(id);
+  if (existing) return existing;
+  const pending = (async (): Promise<ParsedIndex | null> => {
+    const document = await reader(id);
+    if (!document) return null;
+    if (document.value.global_index_sha256 !== guard.indexSha) return { kind: "crossbind" };
+    const tickers = [...guard.tickers].filter((member) => indexShardId(member) === id);
+    if (await canonicalJsonSha256(tickers) !== binding.membership_sha256) return { kind: "crossbind" };
+    return parseIndex(document, { ...guard, indexSha: binding.index_sha256,
+      membershipSha: binding.membership_sha256, tickers: new Set(tickers) }, dependencies.now());
+  })();
+  cached.shards.set(id, pending);
+  try {
+    const parsed = await pending;
+    if (parsed?.kind !== "ok") cached.shards.delete(id);
+    return parsed;
+  } catch (error) {
+    cached.shards.delete(id);
+    throw error;
+  }
+}
 // One generation per reader/isolate. Sharing the pending read also prevents
 // simultaneous requests for different tickers from repeating full validation.
 const validatedIndexCache = new WeakMap<EtfDetailResolverDependencies["readIndex"], {
@@ -487,12 +582,8 @@ export async function resolveDataSupplyEtfDetail(
   overrides: Partial<EtfDetailResolverDependencies> = {},
 ): Promise<EtfDetailResolution> {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
-  const guardDocument = await dependencies.readEnrollment();
-  const guard = guardDocument ? parseGuard(guardDocument.value) : null;
+  const guard = await readGuard(dependencies.readEnrollment);
   if (!guard) return { kind: "error", code: "DATA_SUPPLY_GUARD_UNAVAILABLE", projectionDigest: null };
-  if (await canonicalJsonSha256([...guard.tickers]) !== guard.membershipSha) {
-    return { kind: "error", code: "DATA_SUPPLY_GUARD_UNAVAILABLE", projectionDigest: null };
-  }
 
   const enrolled = guard.tickers.has(ticker);
   const resolveShard = async (): Promise<EtfDetailResolution> => {
@@ -544,7 +635,9 @@ export async function resolveDataSupplyEtfDetail(
         : "mismatch",
     };
   };
-  const parsedIndex = await readValidatedIndex(guard, dependencies);
+  const parsedIndex = guard.shards
+    ? await readValidatedShard(ticker, guard, dependencies)
+    : await readValidatedIndex(guard, dependencies);
   if (!parsedIndex) {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
     return resolveShard();

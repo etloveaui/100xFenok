@@ -1048,13 +1048,34 @@ export async function getAlarmStateDocument() {
   return readStrictPublicJsonDocument(path.join(PUBLIC_DATA_ROOT, "admin", "alarm-state.json"));
 }
 
+// These bundled assets cannot change within a deployed Worker version. Share
+// successful reads only; an unavailable asset must remain retryable.
+let etfEnrollmentPending: Promise<PublicJsonDocument | null> | undefined;
 export async function getDataSupplyEtfEnrollmentDocument() {
-  return readStrictPublicJsonDocument(path.join(
+  if (etfEnrollmentPending) return etfEnrollmentPending;
+  const pending = readStrictPublicJsonDocument(path.join(
     PUBLIC_DATA_ROOT,
     "computed",
     "data-supply",
     "etf-detail",
     "enrollment.json",
+  ));
+  etfEnrollmentPending = pending;
+  try {
+    const document = await pending;
+    if (!document) etfEnrollmentPending = undefined;
+    return document;
+  } catch (error) {
+    etfEnrollmentPending = undefined;
+    throw error;
+  }
+}
+
+export async function getDataSupplyEtfIndexShardDocument(id: number) {
+  if (!Number.isInteger(id) || id < 0 || id >= 64) return null;
+  return readStrictPublicJsonDocument(path.join(
+    PUBLIC_DATA_ROOT, "computed", "data-supply", "etf-detail", "index-shards",
+    `${String(id).padStart(2, "0")}.json`,
   ));
 }
 

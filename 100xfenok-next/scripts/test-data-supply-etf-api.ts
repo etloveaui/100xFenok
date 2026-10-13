@@ -37,6 +37,9 @@ async function fixture(options: {
   plane?: JsonRecord | null;
   planeUnavailable?: boolean;
   planeThrows?: boolean;
+  sharded?: boolean;
+  corruptShard?: boolean;
+  wrongShardGeneration?: boolean;
 }) {
   const ticker = options.ticker ?? "ADIU";
   const enrolledTicker = options.enrolledTicker ?? ticker;
@@ -117,10 +120,43 @@ async function fixture(options: {
     tickers: enrolledTickers,
   };
 
+  const shards: JsonRecord[] = [];
+  const bucket = (symbol: string) => {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < symbol.length; i += 1) hash = Math.imul(hash ^ symbol.charCodeAt(i), 0x01000193) >>> 0;
+    return hash % 64;
+  };
+  if (options.sharded) {
+    const bindings = [];
+    for (let id = 0; id < 64; id += 1) {
+      const members = enrolledTickers.filter((symbol) => bucket(symbol) === id);
+      const unavailableMembers = members.filter((symbol) => entries[symbol]!.resolution_state === "unavailable");
+      const shard = { ...index, global_index_sha256: indexSha,
+        entries: Object.fromEntries(members.map((symbol) => [symbol, entries[symbol]])),
+        membership_sha256: await canonicalJsonSha256(members), enrolled_count: members.length,
+        selected_count: members.length - unavailableMembers.length, unavailable_count: unavailableMembers.length };
+      delete (shard as JsonRecord).index_sha256;
+      (shard as JsonRecord).index_sha256 = await canonicalJsonSha256(shard);
+      shards.push(shard);
+      bindings.push({ id, path: `index-shards/${String(id).padStart(2, "0")}.json`,
+        index_sha256: (shard as JsonRecord).index_sha256, membership_sha256: shard.membership_sha256,
+        enrolled_count: members.length });
+    }
+    Object.assign(guard, { index_shard_count: 64, index_shard_algorithm: "fnv1a32-utf16-v1", index_shards: bindings });
+    if (options.corruptShard) shards[bucket(ticker)]!.selected_count = 99;
+    if (options.wrongShardGeneration) shards[bucket(ticker)]!.global_index_sha256 = "f".repeat(64);
+  }
   return resolveDataSupplyEtfDetail(ticker, {
     now: () => new Date(options.now ?? "2026-07-12T00:00:00Z"),
     readEnrollment: async () => options.guardMissing ? null : document(guard),
-    readIndex: async () => options.indexMissing ? null : document(index),
+    readIndex: async () => {
+      assert.equal(options.sharded, undefined, "sharded requests must never load the global index");
+      return options.indexMissing ? null : document(index);
+    },
+    readIndexShard: async (id) => {
+      assert.equal(id, bucket(ticker), "only the requested ticker bucket may be read");
+      return options.indexMissing ? null : document(shards[id]!);
+    },
     readProjectionPayload: async () => payloadDoc,
     readPlanePayload: async () => {
       if (options.planeThrows) throw new Error("fixture plane failure");
@@ -177,6 +213,15 @@ if (fresh.kind === "selected") {
 const lkg = await fixture({ state: "lkg_fallback" });
 assert.equal(lkg.kind, "selected");
 if (lkg.kind === "selected") assert.equal(lkg.dataSupply.resolution_state, "lkg_fallback");
+for (const state of ["fresh_fallback", "lkg_fallback", "unavailable"] as const) {
+  const selected = await fixture({ state, sharded: true });
+  assert.equal(selected.kind, state === "unavailable" ? "unavailable" : "selected");
+  if (selected.kind === "selected" || selected.kind === "unavailable") assert.equal(selected.dataSupply.resolution_state, state);
+}
+for (const failure of [{ corruptShard: true }, { wrongShardGeneration: true }, { indexMissing: true }, { crossbind: true }]) {
+  const rejected = await fixture({ state: "fresh_fallback", sharded: true, ...failure });
+  assert.equal(rejected.kind, "error", "missing, altered or cross-generation shard must fail closed");
+}
 
 const primaryPayload = {
   schema_version: "stockanalysis/v1",
