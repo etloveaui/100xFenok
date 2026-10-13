@@ -3922,6 +3922,27 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
             original.get("fetched_at"), "prior StockAnalysis ETF fetch stamp"))
         if original_source > original_fetched or original_fetched > parse_iso_timestamp(now_iso()):
             raise ValueError("prior StockAnalysis ETF source clock is invalid")
+        if issuer_holdings_snapshot(payload) is not None:
+            # Issuer portfolios do not necessarily publish allocation breakdowns.
+            # Keep the last published breakdown with its own provenance/date;
+            # it is not a breakdown of the new issuer snapshot.
+            retained = payload["raw"].setdefault("retained_allocations", {})
+            for field in ("countries", "sectors", "asset_allocation"):
+                old_value = (original.get("normalized") or {}).get(field)
+                if not old_value or (normalized.get(field) and field not in retained):
+                    continue
+                old_source = (original.get("field_sources") or {}).get(field) or {}
+                stamp = parse_stockanalysis_date(old_source.get("source_as_of")) or parse_stockanalysis_date(
+                    (original.get("normalized") or {}).get("holdings_updated"))
+                previous_stamp = parse_stockanalysis_date((retained.get(field) or {}).get("source_as_of"))
+                if field in retained and (stamp is None or (previous_stamp and stamp <= previous_stamp)):
+                    continue
+                source = {"provider": old_source.get("provider") or original["source"],
+                          "source_as_of": utc_iso(stamp) if stamp else None,
+                          "status": "retained", "payload_sha256": hashlib.sha256(original_bytes).hexdigest()}
+                normalized[field] = old_value
+                retained[field] = {**source, "value": old_value}
+                payload.setdefault("field_sources", {})[field] = source
         source_archives = (original.get("normalized") or {}).get("history_archive") or []
         known = {item["payload_sha256"]: item for item in archives}
         for item in source_archives:

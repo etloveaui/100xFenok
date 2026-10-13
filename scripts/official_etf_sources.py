@@ -40,6 +40,8 @@ import sys
 import threading
 import urllib.error
 import urllib.request
+import xml.etree.ElementTree as ET
+import zipfile
 from urllib.parse import urlparse
 from datetime import datetime, timezone
 
@@ -74,6 +76,12 @@ SUPPORTED_TICKERS = (
     "QBUF",
     "RBUF",
     "TBJL",
+    "TBIL",
+    "DWUS",
+    "HYTR",
+    "BIL",
+    "BILS",
+    "IWMW",
     "MWHS",
     "THYP",
 )
@@ -92,6 +100,36 @@ _INNOVATOR_HOLDINGS_URL = "https://www.innovatoretfs.com/etf/xt_holdings.csv"
 _INNOVATOR_CSV_CACHE: dict = {}
 _INNOVATOR_CSV_LOCK = threading.Lock()
 _PLAIN_TICKER = re.compile(r"^[A-Z][A-Z0-9.\-]{0,6}$")
+
+_FM_PAGE_URLS = {
+    "TBIL": "https://www.fminvest.com/etfs/tbil-fm-us-treasury-3-month-bill-etf",
+}
+_FM_HOLDINGS_API = "https://www.fminvest.com/api/v1/etfs/{node_id}/holdings"
+
+_ADVISORSHARES_HOLDINGS_URLS = {
+    "DWUS": "https://advisorshares.com/wp-content/uploads/csv/holdings/AdvisorShares_DWUS_Holdings_File.csv",
+}
+
+_COUNTERPOINT_HOLDINGS_URL = "https://counterpointfunds.com/etfdata/holdings.csv"
+_COUNTERPOINT_FUNDS = {
+    "HYTR": {
+        "portfolio_number": "1242",
+        "portfolio_name": "Counterpoint High Yield Trend ETF",
+    },
+}
+
+_SSGA_HOLDINGS_URLS = {
+    "BIL": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bil.xlsx",
+    "BILS": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bils.xlsx",
+}
+# Expanded xlsx content is bounded before any worksheet is parsed.
+_XLSX_EXPANDED_LIMIT = 20_000_000
+_XLSX_MEMBER_LIMIT = 8_000_000
+
+_ISHARES_HOLDINGS_URLS = {
+    "IWMW": ("https://www.ishares.com/us/products/336263/ishares-russell-2000-buywrite-etf/latest-holdings.csv",
+             "iShares Russell 2000 BuyWrite ETF"),
+}
 
 _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -914,6 +952,791 @@ def _fetch_innovator(ticker: str, timeout: int) -> dict:
 
 
 # --------------------------------------------------------------------------
+# F/m (TBIL), AdvisorShares (DWUS), Counterpoint (HYTR)
+# --------------------------------------------------------------------------
+
+
+def _money(value):
+    """Return a float from an issuer money string such as "$7,541.67M"."""
+    text = _text(value)
+    if text is None:
+        return None
+    multiplier = 1.0
+    suffix = text[-1:].upper()
+    if suffix in {"K", "M", "B", "T"}:
+        multiplier = {"K": 1e3, "M": 1e6, "B": 1e9, "T": 1e12}[suffix]
+        text = text[:-1]
+    text = text.replace("$", "").replace(",", "").replace("%", "").strip()
+    if not text:
+        return None
+    try:
+        number = float(text)
+    except ValueError:
+        return None
+    result = number * multiplier
+    return result if math.isfinite(result) else None
+
+
+def _html_text(html: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+
+
+def _fm_row_date(value) -> str | None:
+    text = str(value or "")
+    match = re.search(r'datetime="(\d{4}-\d{2}-\d{2})', text)
+    if match:
+        return match.group(1)
+    return _normalise_date(re.sub(r"<[^>]+>", " ", text))
+
+
+def _fetch_fm(ticker: str, timeout: int) -> dict:
+    """F/m: the issuer page binds the ticker and the holdings node id."""
+    page_url = _FM_PAGE_URLS[ticker]
+    html = _http_get(page_url, timeout, accept="text/html").decode("utf-8", errors="replace")
+    text = _html_text(html)
+
+    overview_start = text.find("Fund Overview")
+    if overview_start < 0:
+        raise OfficialEtfSourceError(f"Fund Overview block not found for {ticker}")
+    overview = text[overview_start:overview_start + 1200]
+
+    page_ticker = _text((re.search(r"Ticker\s+([A-Z][A-Z0-9.\-]{0,9})\b", overview) or [None, None])[1])
+    if page_ticker is None or page_ticker.upper() != ticker.upper():
+        raise OfficialEtfSourceError(
+            f"issuer identity mismatch: asked {ticker}, page reports {page_ticker!r}"
+        )
+
+    as_of = _normalise_date((re.search(r"As of\s+(\d{2}/\d{2}/\d{4})", overview) or [None, None])[1])
+    shares_out = _number((re.search(r"Shares Outstanding\s+([\d,]+(?:\.\d+)?)", overview) or [None, None])[1])
+    net_assets = _money((re.search(r"Net Assets\s+(\$[\d,.]+\s*[KMBT]?)", overview) or [None, None])[1])
+    nav = _money((re.search(r"\bNAV\s+(\$[\d,.]+)", overview) or [None, None])[1])
+    closing = _money((re.search(r"Closing Price\s+(\$[\d,.]+)", overview) or [None, None])[1])
+
+    settings = re.search(
+        r'<script type="application/json" data-drupal-selector="drupal-settings-json">(.*?)</script>',
+        html, re.S)
+    node_id = None
+    if settings:
+        try:
+            node_id = str((json.loads(settings.group(1)).get("etf") or {}).get("node_id") or "").strip()
+        except json.JSONDecodeError:
+            node_id = None
+    if not node_id or not node_id.isdigit():
+        raise OfficialEtfSourceError(f"issuer holdings node id not found for {ticker}")
+
+    holdings_url = _FM_HOLDINGS_API.format(node_id=node_id)
+    body = _http_get(holdings_url, timeout, accept="application/json")
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise OfficialEtfSourceError(f"unparseable issuer holdings JSON from {holdings_url}") from exc
+    if not isinstance(payload, list) or not payload:
+        raise OfficialEtfSourceError(f"no issuer holdings rows for {ticker}")
+
+    holdings = []
+    dates = set()
+    for raw in payload:
+        if not isinstance(raw, dict):
+            raise OfficialEtfSourceError(f"malformed issuer holdings row for {ticker}")
+        name = _text(re.sub(r"&amp;", "&", str(raw.get("field_name") or "")))
+        identifier = _text(re.sub(r"&amp;", "&", str(raw.get("field_symbol") or "")))
+        market_value = _money(raw.get("field_market_value"))
+        par_value = _number(raw.get("field_par_value"))
+        weight = _number(raw.get("field_weightings"))
+        row_date = _fm_row_date(raw.get("field_as_of_date"))
+        if name is None or market_value is None or weight is None or row_date is None:
+            raise OfficialEtfSourceError(f"malformed issuer holdings row for {ticker}: {name!r}")
+        dates.add(row_date)
+        holdings.append({
+            "name": name,
+            "symbol": identifier if identifier and _PLAIN_TICKER.fullmatch(identifier) else None,
+            "identifier": identifier,
+            "identifier_type": "cusip" if identifier and re.fullmatch(r"[0-9A-Z]{9}", identifier) else "issuer_identifier",
+            "weight_pct": weight,
+            "weight_basis": "provider_weightings",
+            "market_value": market_value,
+            "par_value": par_value,
+            "shares": None,
+            "quantity": None,
+            "as_of_date": row_date,
+            "position_date": None,
+            "raw": raw,
+        })
+    if len(dates) != 1:
+        raise OfficialEtfSourceError(f"issuer holdings rows for {ticker} carry conflicting dates: {sorted(dates)}")
+    holdings_date = dates.pop()
+
+    quote = {}
+    if shares_out is not None and as_of is not None:
+        quote["shares_outstanding"] = shares_out
+        quote["shares_outstanding_as_of"] = as_of
+    if net_assets is not None and as_of is not None:
+        quote["aum"] = net_assets
+        quote["aum_as_of"] = as_of
+    if nav is not None and as_of is not None:
+        quote["nav"] = nav
+        quote["nav_as_of"] = as_of
+    if closing is not None and as_of is not None:
+        quote["closing_price"] = closing
+        quote["closing_price_as_of"] = as_of
+
+    field_dates = {
+        "holdings": holdings_date,
+        "overview": as_of,
+        "shares_outstanding": quote.get("shares_outstanding_as_of"),
+        "aum": quote.get("aum_as_of"),
+    }
+
+    completeness = [
+        "holdings are the issuer API's complete published set for this fund, dated "
+        f"{holdings_date}",
+        "the Fund Overview block is dated separately and supplies shares outstanding, "
+        "net assets and NAV with that block's own date",
+        "the holdings API publishes par value, not a share count, so shares stays null",
+        "the holdings node id is bound to the ticker through the Fund Overview block "
+        "on the issuer page",
+    ]
+
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": holdings_date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate",
+        "scope_note": "issuer API publishes every holdings row for this fund under its node id",
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "fm",
+        "source_url": holdings_url,
+        "fetched_at": _now_utc(),
+        "source_as_of": _max_date(field_dates.values()),
+        "holdings": holdings,
+        "quote": quote,
+        "history": [],
+        "classification": {"page_url": page_url},
+        "field_dates": field_dates,
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"page_url": page_url, "node_id": node_id, "holdings_rows": payload},
+    }
+
+
+def _fetch_advisorshares(ticker: str, timeout: int) -> dict:
+    """AdvisorShares: one per-fund CSV whose first row carries date and account."""
+    url = _ADVISORSHARES_HOLDINGS_URLS[ticker]
+    body = _http_get(url, timeout).decode("utf-8")
+    reader = csv.DictReader(io.StringIO(body))
+    required = {"Date", "Account Symbol", "Stock Ticker", "Security Number",
+                "Security Description", "Shares/Par (Full)", "Price (Base)",
+                "Traded Market Value (Base)", "Portfolio Weight %"}
+    if not required <= set(reader.fieldnames or []):
+        raise OfficialEtfSourceError("AdvisorShares holdings CSV header is incomplete")
+
+    current_account = None
+    current_date = None
+    holdings = []
+    dates = set()
+    for raw in reader:
+        account = _text(raw.get("Account Symbol"))
+        if account:
+            if account.upper() != ticker.upper():
+                raise OfficialEtfSourceError(
+                    f"issuer holdings file mixes funds: {account!r} appears in the {ticker} file"
+                )
+            current_account = account
+        raw_date = _text(raw.get("Date"))
+        if raw_date is None:
+            # Only a blank cell inherits the file's first-row date.
+            row_date = current_date
+        else:
+            row_date = _normalise_date(raw_date)
+            if row_date is None:
+                raise OfficialEtfSourceError(
+                    f"unreadable holdings date for {ticker}: {raw_date!r}")
+            current_date = row_date
+        if current_account is None or current_date is None:
+            raise OfficialEtfSourceError(f"holdings row before any account or date for {ticker}")
+        name = _text(raw.get("Security Description"))
+        shares = _number(raw.get("Shares/Par (Full)"))
+        market_value = _number(raw.get("Traded Market Value (Base)"))
+        weight = _number(raw.get("Portfolio Weight %"))
+        if name is None or shares is None or market_value is None or weight is None:
+            raise OfficialEtfSourceError(f"malformed holdings row for {ticker}: {name!r}")
+        provider_ticker = _text(raw.get("Stock Ticker"))
+        identifier = _text(raw.get("Security Number"))
+        asset_group = _text(raw.get("Asset Group"))
+        # Shares/Par holds currency for cash and money-market/par instruments;
+        # that value stays available as provider_quantity but is never shares.
+        par_instrument = asset_group in {"CA", "MM"} or provider_ticker is None
+        dates.add(current_date)
+        holdings.append({
+            "name": name,
+            "symbol": provider_ticker if provider_ticker and _PLAIN_TICKER.fullmatch(provider_ticker) else None,
+            "identifier": identifier,
+            "identifier_type": "cusip" if identifier and re.fullmatch(r"[0-9A-Z]{9}", identifier) else "issuer_identifier",
+            "weight_pct": weight,
+            "weight_basis": "provider_portfolio_weight_signed",
+            "market_value": market_value,
+            "shares": None if par_instrument else shares,
+            "provider_quantity": shares,
+            "quantity": None,
+            "price": _number(raw.get("Price (Base)")),
+            "asset_group": asset_group,
+            "as_of_date": current_date,
+            "position_date": None,
+            "provider_ticker": provider_ticker,
+            "raw": raw,
+        })
+    if not holdings:
+        raise OfficialEtfSourceError(f"no holdings rows for {ticker}")
+    if len(dates) != 1:
+        raise OfficialEtfSourceError(f"holdings rows for {ticker} carry conflicting dates: {sorted(dates)}")
+    date = dates.pop()
+
+    completeness = [
+        "holdings are every row of the issuer's per-fund holdings file, all carrying "
+        f"the file's single date {date}",
+        "the file publishes a signed portfolio weight and a cash row, so weights are "
+        "kept signed with no sum-to-100 check",
+        "the file publishes no shares outstanding or AUM, so quote stays empty",
+        "only the first row carries the account symbol and date; later rows inherit both, "
+        "and a nonblank unreadable date is refused instead of inherited",
+        "Shares/Par holds currency on cash and money-market rows, so those rows keep the "
+        "value in provider_quantity and leave shares null",
+    ]
+
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate",
+        "scope_note": "issuer publishes one dated holdings file for this fund",
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "advisorshares",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": {},
+        "history": [],
+        "classification": {"provider_account": ticker.upper()},
+        "field_dates": {"holdings": date},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "holdings_rows": [row["raw"] for row in holdings]},
+    }
+
+
+def _fetch_counterpoint(ticker: str, timeout: int) -> dict:
+    """Counterpoint: an all-funds CSV filtered by exact portfolio identity."""
+    url = _COUNTERPOINT_HOLDINGS_URL
+    identity = _COUNTERPOINT_FUNDS[ticker]
+    body = _http_get(url, timeout).decode("utf-8")
+    reader = csv.DictReader(io.StringIO(body))
+    fields = set(reader.fieldnames or [])
+    if not {"asOfDate", "portfolioNumber", "securityIdentifier", "shares",
+            "marketValueBase", "marketValuePercent"} <= fields:
+        raise OfficialEtfSourceError("Counterpoint holdings CSV header is incomplete")
+
+    selected = []
+    for raw in reader:
+        number = _text(raw.get("portfolioNumber"))
+        name = _text(raw.get("portfolioName")) or _text(raw.get("portoflioName"))
+        if number != identity["portfolio_number"] or name != identity["portfolio_name"]:
+            continue
+        selected.append(raw)
+    if not selected:
+        raise OfficialEtfSourceError(
+            f"no rows for {ticker} in the Counterpoint all-funds holdings file")
+    # The provider's marketValuePercent column is a fraction of market value even
+    # though its name says percent: for this portfolio the selected values sum to
+    # 1.0 (0.005791436429 + 0.994391479537 - 0.000182915966 = 0.9999999999). The
+    # contract is fixed to that evidence, never switched with the weights.
+
+    holdings = []
+    dates = set()
+    for raw in selected:
+        row_date = _normalise_date(str(raw.get("asOfDate") or "")[:10])
+        description = _text(raw.get("securityDescriptionShort")) or _text(raw.get("securityDescriptionLong"))
+        shares = _number(raw.get("shares"))
+        market_value = _number(raw.get("marketValueBase"))
+        weight = _number(raw.get("marketValuePercent"))
+        if row_date is None or description is None or shares is None or market_value is None or weight is None:
+            raise OfficialEtfSourceError(
+                f"malformed Counterpoint holdings row for {ticker}: {description!r}")
+        weight_pct = weight * 100.0
+        weight_basis = "market_value_percent_fraction_converted"
+        identifier = _text(raw.get("securityIdentifier"))
+        provider_ticker = _text(raw.get("securityTicker"))
+        dates.add(row_date)
+        holdings.append({
+            "name": description,
+            "symbol": provider_ticker if provider_ticker and _PLAIN_TICKER.fullmatch(provider_ticker) else None,
+            "identifier": identifier,
+            "identifier_type": "cusip" if identifier and re.fullmatch(r"[0-9A-Z]{9}", identifier) else "issuer_identifier",
+            "weight_pct": weight_pct,
+            "weight_raw": weight,
+            "weight_basis": weight_basis,
+            "net_assets_percent": _number(raw.get("netAssetsPercent")),
+            "market_value": market_value,
+            "shares": shares,
+            "quantity": None,
+            "price": _number(raw.get("priceLocal")),
+            "direction": _text(raw.get("longShortIndicator")),
+            "country": _text(raw.get("country")),
+            "as_of_date": row_date,
+            "position_date": None,
+            "provider_ticker": provider_ticker,
+            "raw": raw,
+        })
+    if not holdings:
+        raise OfficialEtfSourceError(
+            f"no rows for {ticker} in the Counterpoint all-funds holdings file")
+    if len(dates) != 1:
+        raise OfficialEtfSourceError(f"holdings rows for {ticker} carry conflicting dates: {sorted(dates)}")
+    date = dates.pop()
+
+    completeness = [
+        "the file is an all-funds file; only rows matching the exact portfolio number "
+        f"and portfolio name for {ticker} are selected, so funds are never mixed",
+        f"all selected rows carry the single date {date}",
+        "the provider column named marketValuePercent is a fraction of market value: "
+        "the selected values sum to 1.0, so the fixed conversion is *100 and weight_raw "
+        "keeps the provider value",
+        "signed rows (Receivables/Payables) and the long/short indicator are preserved",
+        "the file publishes no shares outstanding or AUM, so quote stays empty",
+    ]
+
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate",
+        "scope_note": "issuer publishes every row for this portfolio in one dated all-funds CSV",
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "counterpoint",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": {},
+        "history": [],
+        "classification": {
+            "portfolio_number": identity["portfolio_number"],
+            "portfolio_name": identity["portfolio_name"],
+        },
+        "field_dates": {"holdings": date},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "holdings_rows": [row["raw"] for row in holdings]},
+    }
+
+
+# --------------------------------------------------------------------------
+# State Street xlsx (BIL, BILS) and iShares csv (IWMW)
+# --------------------------------------------------------------------------
+
+
+_MONTHS = {"jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
+           "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12"}
+
+
+def _day_month_year_date(value) -> str | None:
+    """Parse an issuer date such as 09-Oct-2026."""
+    text = _text(value)
+    if text is None:
+        return None
+    match = re.search(r"(\d{1,2})-([A-Za-z]{3})-(\d{4})", text)
+    if not match:
+        match = re.search(r"([A-Za-z]{3})[a-z]*\s+(\d{1,2}),\s*(\d{4})", text)
+        if match:
+            month, day, year = match.groups()
+            month_number = _MONTHS.get(month.lower())
+            return _normalise_date(f"{year}-{month_number}-{int(day):02d}") if month_number else None
+        return _normalise_date(text)
+    day, month, year = match.groups()
+    month_number = _MONTHS.get(month.lower())
+    if month_number is None:
+        return None
+    return _normalise_date(f"{year}-{month_number}-{int(day):02d}")
+
+
+def _xlsx_column_index(reference) -> int:
+    match = re.match(r"([A-Z]+)", str(reference or ""))
+    if not match:
+        return -1
+    index = 0
+    for char in match.group(1):
+        index = index * 26 + (ord(char) - 64)
+    if index > 16384:
+        raise OfficialEtfSourceError("xlsx column exceeds worksheet bounds")
+    return index - 1
+
+
+def _xml_local(tag) -> str:
+    """Local XML name, so namespace-less and namespaced xlsx parts both parse."""
+    return str(tag).rsplit("}", 1)[-1]
+
+
+def _xlsx_shared_strings(archive) -> list:
+    if "xl/sharedStrings.xml" not in archive.namelist():
+        return []
+    root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+    return ["".join(node.text or "" for node in item.iter() if _xml_local(node.tag) == "t")
+            for item in root]
+
+
+def _xlsx_sheet_rows(archive, target: str) -> list:
+    root = ET.fromstring(archive.read(target))
+    shared = _xlsx_shared_strings(archive)
+    rows = []
+    for row in root.iter():
+        if _xml_local(row.tag) != "row":
+            continue
+        cells = {}
+        for cell in row:
+            if _xml_local(cell.tag) != "c":
+                continue
+            column = _xlsx_column_index(cell.get("r"))
+            if column < 0:
+                continue
+            kind = cell.get("t")
+            if kind == "inlineStr":
+                value = "".join(node.text or "" for node in cell.iter() if _xml_local(node.tag) == "t")
+            else:
+                raw = None
+                for node in cell:
+                    if _xml_local(node.tag) == "v":
+                        raw = node.text
+                        break
+                if raw is None:
+                    value = ""
+                elif kind == "s":
+                    try:
+                        shared_index = int(raw)
+                        if shared_index < 0:
+                            raise IndexError("negative shared string index")
+                        value = shared[shared_index]
+                    except (ValueError, IndexError):
+                        raise OfficialEtfSourceError("xlsx shared string index is invalid")
+                else:
+                    value = raw
+            cells[column] = str(value).strip()
+        width = (max(cells) + 1) if cells else 0
+        rows.append([cells.get(position, "") for position in range(width)])
+    return rows
+
+
+def _xlsx_holdings_target(archive) -> str | None:
+    if "xl/workbook.xml" not in archive.namelist():
+        return None
+    workbook = archive.read("xl/workbook.xml").decode("utf-8", errors="replace")
+    relationships = {}
+    if "xl/_rels/workbook.xml.rels" in archive.namelist():
+        relationships = dict(re.findall(
+            r'<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"',
+            archive.read("xl/_rels/workbook.xml.rels").decode("utf-8", errors="replace")))
+    for name, relationship_id in re.findall(r'<sheet[^>]*name="([^"]+)"[^>]*r:id="([^"]+)"', workbook):
+        if name.strip().lower() != "holdings":
+            continue
+        target = relationships.get(relationship_id)
+        if not target:
+            continue
+        target = target.lstrip("/")
+        return target if target.startswith("xl/") else "xl/" + target
+    return None
+
+
+def _fetch_ssga(ticker: str, timeout: int) -> dict:
+    """State Street daily holdings xlsx: explicit holdings sheet, bounded size."""
+    url = _SSGA_HOLDINGS_URLS[ticker]
+    body = _http_get(url, timeout)
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(body))
+    except zipfile.BadZipFile as exc:
+        raise OfficialEtfSourceError(f"unreadable xlsx from {url}") from exc
+    members = archive.infolist()
+    expanded = sum(item.file_size for item in members)
+    if expanded > _XLSX_EXPANDED_LIMIT or any(item.file_size > _XLSX_MEMBER_LIMIT for item in members):
+        raise OfficialEtfSourceError(f"xlsx expanded size exceeds the bound for {ticker}")
+
+    target = _xlsx_holdings_target(archive)
+    if target is None or target not in archive.namelist():
+        raise OfficialEtfSourceError(f"holdings worksheet not found for {ticker}")
+    rows = _xlsx_sheet_rows(archive, target)
+
+    def label_value(label: str):
+        for row in rows[:8]:
+            for index, cell in enumerate(row):
+                if cell.lower().startswith(label.lower()):
+                    for value in row[index + 1:]:
+                        if value:
+                            return value
+        return None
+
+    sheet_ticker = label_value("Ticker Symbol")
+    if sheet_ticker is None or sheet_ticker.upper() != ticker.upper():
+        raise OfficialEtfSourceError(
+            f"issuer identity mismatch: asked {ticker}, sheet reports {sheet_ticker!r}")
+    as_of = _day_month_year_date(label_value("Holdings"))
+    if as_of is None:
+        raise OfficialEtfSourceError(f"holdings date is missing or invalid for {ticker}")
+
+    header_index = None
+    for index, row in enumerate(rows[:12]):
+        lowered = [cell.lower() for cell in row]
+        if "name" in lowered and "weight" in lowered:
+            header_index = index
+            break
+    if header_index is None:
+        raise OfficialEtfSourceError(f"holdings header not found for {ticker}")
+    columns = {cell.lower(): position for position, cell in enumerate(rows[header_index]) if cell}
+    if "market value" not in columns:
+        raise OfficialEtfSourceError(f"holdings header lacks Market Value for {ticker}")
+
+    holdings = []
+    footer = None
+    for row_index, row in enumerate(rows[header_index + 1:], start=header_index + 1):
+        if not any(cell for cell in row):
+            continue
+
+        def value(label: str) -> str:
+            position = columns.get(label)
+            return row[position] if position is not None and position < len(row) else ""
+
+        name = _text(value("name"))
+        weight = _number(value("weight"))
+        market_value = _number(value("market value"))
+        if name == ("State Street Global Advisors (SSGA) is now State Street Investment Management. "
+                    "Please click\u00a0here for more information.") and not value("weight") and not value("market value"):
+            # Only the observed issuer note ends the portfolio. A malformed
+            # holding must never masquerade as a footer and truncate the fund.
+            for remaining in rows[row_index + 1:]:
+                if any(position < len(remaining) and remaining[position].strip()
+                       for key in ("weight", "market value", "identifier", "par value", "shares held")
+                       if (position := columns.get(key)) is not None):
+                    raise OfficialEtfSourceError(f"position values after the holdings footer for {ticker}")
+            footer = name
+            break
+        if name is None or weight is None or market_value is None:
+            raise OfficialEtfSourceError(f"malformed holdings row for {ticker}: {name!r}")
+        identifier = _text(value("identifier"))
+        shares_held = _number(value("shares held"))
+        par_value = _number(value("par value"))
+        if par_value is not None:
+            provider_quantity, quantity_unit = par_value, "par_value"
+        elif shares_held is not None:
+            provider_quantity, quantity_unit = shares_held, "shares"
+        else:
+            provider_quantity, quantity_unit = None, None
+        holdings.append({
+            "name": name,
+            "symbol": None,
+            "identifier": identifier,
+            "identifier_type": "cusip" if identifier and re.fullmatch(r"[0-9A-Z]{9}", identifier) else "issuer_identifier",
+            "weight_pct": weight,
+            "weight_basis": "provider_weight",
+            "market_value": market_value,
+            "notional_value": _number(value("notional value")),
+            "par_value": par_value,
+            "shares": shares_held if shares_held is not None else None,
+            "provider_quantity": provider_quantity,
+            "quantity_unit": quantity_unit,
+            "coupon": _number(value("coupon")),
+            "maturity": _text(value("maturity")),
+            "sedol": _text(value("sedol")),
+            "currency": _text(value("local currency")),
+            "as_of_date": as_of,
+            "position_date": None,
+            "raw": {"row": row, "columns": columns},
+        })
+    if not holdings:
+        raise OfficialEtfSourceError(f"no holdings rows for {ticker}")
+
+    # A currency position such as "US DOLLAR" (999USDZ92) is a cash row even
+    # when the worksheet never uses the word cash.
+    has_cash_row = any("cash" in (row["name"] or "").lower()
+                       or bool(re.fullmatch(r"999[A-Z]{3}Z\d{2}", row.get("identifier") or ""))
+                       for row in holdings)
+    completeness = [
+        "holdings are every data row of the issuer's explicit holdings worksheet, "
+        f"dated {as_of}",
+        "par value is preserved as provider_quantity with unit par_value; it is not a "
+        "share count, so shares stays null unless the file publishes Shares Held",
+        "weights are the provider's own weights with no sum-to-100 check",
+        "notional is kept separate from market value and is null when the file omits it",
+        "the file publishes no dated history and no shares outstanding",
+    ]
+    if footer:
+        completeness.append(f"the worksheet ends with a note row that is not a position: {footer[:120]}")
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": as_of,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate" if has_cash_row else "not_published",
+        "scope_note": "issuer publishes the complete holdings worksheet for this fund",
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "ssga",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": as_of,
+        "holdings": holdings,
+        "quote": {},
+        "history": [],
+        "classification": {"worksheet": target},
+        "field_dates": {"holdings": as_of},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "expanded_bytes": expanded, "footer_note": footer},
+    }
+
+
+_ISHARES_QUANTITY_UNITS = {
+    "EQUITY": "shares",
+    "FUND": "fund_units",
+    "CASH": "currency",
+    "OPTION": "contracts",
+}
+
+
+def _fetch_ishares(ticker: str, timeout: int) -> dict:
+    """iShares latest-holdings csv: first section only, Type-aware quantities."""
+    url, expected_name = _ISHARES_HOLDINGS_URLS[ticker]
+    body = _http_get(url, timeout).decode("utf-8", errors="replace")
+    lines = [line.rstrip("\r") for line in body.split("\n")]
+    if not lines:
+        raise OfficialEtfSourceError(f"empty holdings file for {ticker}")
+    fund_name = lines[0].strip()
+    if fund_name.lower() != expected_name.lower():
+        raise OfficialEtfSourceError(
+            f"issuer identity mismatch: asked {ticker}, file reports {fund_name!r}")
+
+    as_of = None
+    shares_outstanding = None
+    for line in lines[:10]:
+        lowered = line.lower()
+        if lowered.startswith("fund holdings as of"):
+            as_of = _day_month_year_date(line.split(",", 1)[1].strip().strip('"'))
+        elif lowered.startswith("shares outstanding"):
+            shares_outstanding = _number(line.split(",", 1)[1].strip().strip('"'))
+
+    if as_of is None:
+        raise OfficialEtfSourceError(f"holdings date is missing or invalid for {ticker}")
+    header_index = next((index for index, line in enumerate(lines) if line.startswith("Ticker,")), None)
+    if header_index is None:
+        raise OfficialEtfSourceError(f"holdings table not found for {ticker}")
+    section = []
+    for line in lines[header_index + 1:]:
+        if not line.strip():
+            break
+        section.append(line)
+    if not section:
+        raise OfficialEtfSourceError(f"no holdings rows for {ticker}")
+
+    reader = csv.DictReader(io.StringIO("\n".join([lines[header_index]] + section)))
+    holdings = []
+    for raw in reader:
+        name = _text(raw.get("Name"))
+        provider_ticker = _text(raw.get("Ticker"))
+        market_value = _number(raw.get("Market Value"))
+        weight = _number(raw.get("Weight (%)"))
+        if name is None or market_value is None or weight is None:
+            raise OfficialEtfSourceError(f"malformed holdings row for {ticker}: {name!r}")
+        kind = (_text(raw.get("Type")) or "").upper()
+        quantity = _number(raw.get("Quantity"))
+        shares = quantity if kind == "EQUITY" else None
+        # A currency code or an option's underlying code is not an equity symbol.
+        symbol = provider_ticker if (kind in {"EQUITY", "FUND"} and provider_ticker
+                                     and _PLAIN_TICKER.fullmatch(provider_ticker)) else None
+        holdings.append({
+            "name": name,
+            "symbol": symbol,
+            "identifier": provider_ticker,
+            "identifier_type": "provider_ticker",
+            "weight_pct": weight,
+            "weight_basis": "provider_weight_signed",
+            "market_value": market_value,
+            "notional_value": _number(raw.get("Notional Value")),
+            "shares": shares,
+            "provider_quantity": quantity,
+            "quantity_unit": _ISHARES_QUANTITY_UNITS.get(kind, kind.lower() or None),
+            "price": _number(raw.get("Price")),
+            "strike_price": _number(raw.get("Strike price")),
+            "location": _text(raw.get("Location")),
+            "exchange": _text(raw.get("Exchange")),
+            "currency": _text(raw.get("Currency")),
+            "maturity": _text(raw.get("Maturity")),
+            "as_of_date": as_of,
+            "position_date": None,
+            "instrument_type": kind or None,
+            "raw": raw,
+        })
+
+    quote = {}
+    if shares_outstanding is not None and as_of is not None:
+        quote["shares_outstanding"] = shares_outstanding
+        quote["shares_outstanding_as_of"] = as_of
+
+    has_cash_row = any((row["instrument_type"] or "") == "CASH" for row in holdings)
+    completeness = [
+        "holdings are the fund's own published portfolio section, dated "
+        f"{as_of}; the later index-constituent section of the same file is deliberately "
+        "not used",
+        "quantities keep the provider value with a Type-based unit: EQUITY shares, FUND "
+        "fund_units, CASH currency, OPTION contracts; normalized shares is set only for "
+        "EQUITY rows",
+        "notional value is kept separate from market value",
+        "weights are the provider's signed weights, so derivative rows may be negative "
+        "with no sum-to-100 check",
+        "shares outstanding carries the file's own explicit as-of date and no scaling "
+        "guess is applied",
+    ]
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": as_of,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate" if has_cash_row else "not_published",
+        "scope_note": "issuer publishes the fund's own holdings section with cash and derivatives",
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "ishares",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": as_of,
+        "holdings": holdings,
+        "quote": quote,
+        "history": [],
+        "classification": {"fund_name": fund_name},
+        "field_dates": {"holdings": as_of, "shares_outstanding": as_of},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "fund_name": fund_name},
+    }
+
+
+# --------------------------------------------------------------------------
 # public entry point
 # --------------------------------------------------------------------------
 
@@ -931,6 +1754,16 @@ def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
         return _fetch_corgi(symbol, timeout)
     if symbol in INNOVATOR_TICKERS:
         return _fetch_innovator(symbol, timeout)
+    if symbol in _FM_PAGE_URLS:
+        return _fetch_fm(symbol, timeout)
+    if symbol in _ADVISORSHARES_HOLDINGS_URLS:
+        return _fetch_advisorshares(symbol, timeout)
+    if symbol in _COUNTERPOINT_FUNDS:
+        return _fetch_counterpoint(symbol, timeout)
+    if symbol in _SSGA_HOLDINGS_URLS:
+        return _fetch_ssga(symbol, timeout)
+    if symbol in _ISHARES_HOLDINGS_URLS:
+        return _fetch_ishares(symbol, timeout)
     if symbol == "MWHS":
         return _fetch_skylar(symbol, timeout)
     return _fetch_twenty_one_shares(symbol, timeout)

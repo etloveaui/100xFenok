@@ -1368,6 +1368,12 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const assetAllocation = normalized.asset_allocation ?? marketFacts?.etf?.asset_allocation ?? null;
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
+  const allocationNote = (field: string) => {
+    const source = etfData?.field_sources?.[field];
+    return source?.status === "retained"
+      ? `이전 공개값 유지 · ${source.provider ?? "출처 미확인"} · ${source.source_as_of ? formatDateish(source.source_as_of) : "기준일 미확인"}`
+      : undefined;
+  };
   const history = Array.isArray(normalized.history) ? normalized.history : [];
   const historyPeriods = normalized.history_periods ?? {};
   const [historyMode, setHistoryMode] = useState<HistoryMode>("monthly");
@@ -1766,13 +1772,13 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           </SectionCard>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <SectionCard title="자산 분해" marker="asset-allocation">
+            <SectionCard title="자산 분해" desc={allocationNote("asset_allocation")} marker="asset-allocation">
               <WeightedList rows={assetAllocation} empty="자산 분해 데이터 없음" />
             </SectionCard>
-            <SectionCard title="섹터 분해" marker="sectors">
+            <SectionCard title="섹터 분해" desc={allocationNote("sectors")} marker="sectors">
               <WeightedList rows={sectors} empty="섹터 데이터 없음" />
             </SectionCard>
-            <SectionCard title="국가 분해" marker="countries">
+            <SectionCard title="국가 분해" desc={allocationNote("countries")} marker="countries">
               <WeightedList rows={countries} empty="국가 데이터 없음" />
             </SectionCard>
           </div>

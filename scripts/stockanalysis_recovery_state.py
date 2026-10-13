@@ -513,6 +513,12 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
                    for symbol in ("ACII", "BDEC", "BJUL", "BJUN", "BNOV", "BSTP", "EBUF", "EJAN",
                                   "EJUL", "IAPR", "PMAR", "PMAY", "PSTP", "QBUF", "RBUF", "TBJL")}
                 | {"MWHS": "https://www.skylaretfs.com/mwhs",
+                   "TBIL": "https://www.fminvest.com/api/v1/etfs/1/holdings",
+                   "DWUS": "https://advisorshares.com/wp-content/uploads/csv/holdings/AdvisorShares_DWUS_Holdings_File.csv",
+                   "HYTR": "https://counterpointfunds.com/etfdata/holdings.csv",
+                   "BIL": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bil.xlsx",
+                   "BILS": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bils.xlsx",
+                   "IWMW": "https://www.ishares.com/us/products/336263/ishares-russell-2000-buywrite-etf/latest-holdings.csv",
                    "THYP": "https://api.primary.21shares.com/api/product_details/THYP"})
     if ticker not in expected or issuer.get("source_url") != expected[ticker]:
         return None
