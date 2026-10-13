@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v2",
   "source_stamp_version": 2,
-  "generated_at": "2026-10-13T11:13:50.299Z",
+  "generated_at": "2026-10-13T12:33:17.262Z",
   "source": "local DataPack coverage files",
   "route_inventory": {
     "status": "observed",
@@ -46,8 +46,8 @@
       "recovered_from_live_count": 0,
       "missing_date_count": 102,
       "age_histogram": {
-        "days_0_7": 1596,
-        "days_8_30": 4110,
+        "days_0_7": 1863,
+        "days_8_30": 3843,
         "days_31_90": 0,
         "over_90_days": 0
       },
@@ -79,8 +79,8 @@
   "totals": {
     "surfaces": 38,
     "ready": 2,
-    "partial": 1,
-    "stale": 1,
+    "partial": 2,
+    "stale": 0,
     "pending": 3,
     "unavailable": 0,
     "error": 0,
@@ -98,8 +98,8 @@
     "sec13fJson": 81,
     "edgarByTicker": 204,
     "slickchartsJson": 583,
-    "dataUsageRootJson": 30113,
-    "dataUsagePublicJson": 15815
+    "dataUsageRootJson": 30177,
+    "dataUsagePublicJson": 15879
   },
   "surfaces": [
     {
@@ -187,7 +187,7 @@
           "status_label": "준비됨",
           "detail": "6890 / 6983개 기준 이내",
           "source_health": {
-            "observed_at": "2026-10-13T11:13:50.299Z",
+            "observed_at": "2026-10-13T12:33:17.262Z",
             "scope": "yahoo_batch_quote_history",
             "policy": {
               "basis": "business_days",
@@ -431,7 +431,7 @@
           "collection_fresh_count": 23,
           "stale_count": 0,
           "collected_at_floor": "2026-10-12T23:54:05Z",
-          "collection_age_hours": 11.329,
+          "collection_age_hours": 12.653,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -459,8 +459,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "30,113개 루트 JSON",
-          "count": 30113
+          "detail": "30,177개 루트 JSON",
+          "count": 30177
         },
         {
           "label": "시장 구조",
@@ -472,8 +472,8 @@
           "label": "소스 일치성",
           "status": "partial",
           "status_label": "부분 준비",
-          "detail": "50,843개 복수 후보",
-          "count": 50843,
+          "detail": "50,846개 복수 후보",
+          "count": 50846,
           "reason": "차이·오래됨·부호 차이를 Data Lab에서 계속 노출"
         },
         {
@@ -482,7 +482,7 @@
           "status_label": "준비됨",
           "detail": "1 / 1개 기준 이내",
           "source_health": {
-            "observed_at": "2026-10-13T11:13:50.299Z",
+            "observed_at": "2026-10-13T12:33:17.262Z",
             "scope": "fred_yardeni",
             "policy": {
               "basis": "source_calendar",
@@ -513,7 +513,7 @@
           "status_label": "준비됨",
           "detail": "6890 / 6983개 기준 이내",
           "source_health": {
-            "observed_at": "2026-10-13T11:13:50.299Z",
+            "observed_at": "2026-10-13T12:33:17.262Z",
             "scope": "yahoo_batch_quote_history",
             "policy": {
               "basis": "business_days",
@@ -555,7 +555,7 @@
           "calendar": "us_market"
         }
       ],
-      "as_of": "2026-10-13T11:11:23Z",
+      "as_of": "2026-10-13T12:29:51Z",
       "source_as_of": "2026-10-02",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -794,7 +794,7 @@
           "collection_fresh_count": 16,
           "stale_count": 0,
           "collected_at_floor": "2026-10-13T03:59:48Z",
-          "collection_age_hours": 7.234,
+          "collection_age_hours": 8.558,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -839,7 +839,7 @@
           "status_label": "준비됨",
           "detail": "6890 / 6983개 기준 이내",
           "source_health": {
-            "observed_at": "2026-10-13T11:13:50.299Z",
+            "observed_at": "2026-10-13T12:33:17.262Z",
             "scope": "yahoo_batch_quote_history",
             "policy": {
               "basis": "business_days",
@@ -881,7 +881,7 @@
           "calendar": "us_market"
         }
       ],
-      "as_of": "2026-10-13T11:11:23Z",
+      "as_of": "2026-10-13T12:29:51Z",
       "source_as_of": "2026-10-09",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -929,7 +929,7 @@
           "collection_fresh_count": 3,
           "stale_count": 0,
           "collected_at_floor": "2026-10-13T04:00:00Z",
-          "collection_age_hours": 7.231,
+          "collection_age_hours": 8.555,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -942,9 +942,9 @@
       "route": "/etfs",
       "label": "ETF 센터",
       "owner": "ETF center",
-      "status": "stale",
-      "status_label": "오래됨",
-      "coverage_score": 60,
+      "status": "partial",
+      "status_label": "부분 준비",
+      "coverage_score": 80,
       "summary": "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
       "checks": [
         {
@@ -982,11 +982,11 @@
         },
         {
           "label": "ETF 상세 원천 신선도",
-          "status": "stale",
-          "status_label": "오래됨",
-          "detail": "5289 / 5808개 기준 이내",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "5557 / 5808개 기준 이내",
           "source_health": {
-            "observed_at": "2026-10-13T11:13:50.299Z",
+            "observed_at": "2026-10-13T12:33:17.262Z",
             "scope": "detail",
             "policy": {
               "basis": "member_rotation",
@@ -1008,13 +1008,13 @@
                 60
               ]
             },
-            "status": "degraded",
-            "reason": "member_ratio_low",
+            "status": "fresh",
+            "reason": null,
             "total_members": 5808,
-            "fresh_members": 5289,
+            "fresh_members": 5557,
             "counts": {
-              "fresh": 5289,
-              "stale": 416,
+              "fresh": 5557,
+              "stale": 148,
               "expired": 1,
               "unknown": 102
             },
@@ -1024,7 +1024,7 @@
           }
         }
       ],
-      "as_of": "2026-10-13T05:08:53Z",
+      "as_of": "2026-10-13T11:36:19Z",
       "source_as_of": "2026-09-21",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -1078,7 +1078,7 @@
           {
             "id": "etf_detail:AAOG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AAOX",
@@ -1088,7 +1088,7 @@
           {
             "id": "etf_detail:AAOZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AAPB",
@@ -1138,7 +1138,7 @@
           {
             "id": "etf_detail:AAUB",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AAUS",
@@ -1243,7 +1243,7 @@
           {
             "id": "etf_detail:ACGO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ACGR",
@@ -1258,7 +1258,7 @@
           {
             "id": "etf_detail:ACIG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ACII",
@@ -1323,7 +1323,7 @@
           {
             "id": "etf_detail:ACSM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ACSP",
@@ -1383,12 +1383,12 @@
           {
             "id": "etf_detail:ACYQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ACYS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ADBG",
@@ -1403,7 +1403,7 @@
           {
             "id": "etf_detail:ADDS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ADIU",
@@ -1433,7 +1433,7 @@
           {
             "id": "etf_detail:AEHG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AELV",
@@ -1448,7 +1448,7 @@
           {
             "id": "etf_detail:AEMG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AEMV",
@@ -1633,7 +1633,7 @@
           {
             "id": "etf_detail:AHD",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AHLT",
@@ -1738,12 +1738,12 @@
           {
             "id": "etf_detail:AIQD",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AIQU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AIRR",
@@ -1778,7 +1778,7 @@
           {
             "id": "etf_detail:AIX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AIYY",
@@ -1828,7 +1828,7 @@
           {
             "id": "etf_detail:ALDB",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ALIL",
@@ -1858,7 +1858,7 @@
           {
             "id": "etf_detail:AMA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMAA",
@@ -1868,7 +1868,7 @@
           {
             "id": "etf_detail:AMAU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMAX",
@@ -1908,7 +1908,7 @@
           {
             "id": "etf_detail:AMEI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMEM",
@@ -1918,12 +1918,12 @@
           {
             "id": "etf_detail:AMGR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMHI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMID",
@@ -1938,7 +1938,7 @@
           {
             "id": "etf_detail:AMKL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMKX",
@@ -1953,7 +1953,7 @@
           {
             "id": "etf_detail:AMMO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:AMOM",
@@ -2403,7 +2403,7 @@
           {
             "id": "etf_detail:ASEC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ASGM",
@@ -2463,7 +2463,7 @@
           {
             "id": "etf_detail:ASTG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ASTN",
@@ -2873,7 +2873,7 @@
           {
             "id": "etf_detail:BAGX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BAGY",
@@ -3443,7 +3443,7 @@
           {
             "id": "etf_detail:BGFI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BGGG",
@@ -3478,7 +3478,7 @@
           {
             "id": "etf_detail:BGUS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BHDG",
@@ -3573,7 +3573,7 @@
           {
             "id": "etf_detail:BITA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BITB",
@@ -3713,7 +3713,7 @@
           {
             "id": "etf_detail:BKLG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BKLN",
@@ -3863,7 +3863,7 @@
           {
             "id": "etf_detail:BMSI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BMVP",
@@ -4128,12 +4128,12 @@
           {
             "id": "etf_detail:BRSM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BRSV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BRTR",
@@ -4163,7 +4163,7 @@
           {
             "id": "etf_detail:BSCA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BSCQ",
@@ -4228,7 +4228,7 @@
           {
             "id": "etf_detail:BSGT",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BSJQ",
@@ -4273,7 +4273,7 @@
           {
             "id": "etf_detail:BSJY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BSMA",
@@ -4353,17 +4353,17 @@
           {
             "id": "etf_detail:BSTS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BSTU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BSTV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BSV",
@@ -4418,7 +4418,7 @@
           {
             "id": "etf_detail:BTCU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BTCW",
@@ -4433,7 +4433,7 @@
           {
             "id": "etf_detail:BTDL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BTF",
@@ -4583,7 +4583,7 @@
           {
             "id": "etf_detail:BUSM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BUXX",
@@ -4633,7 +4633,7 @@
           {
             "id": "etf_detail:BWQG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:BWTG",
@@ -5018,12 +5018,12 @@
           {
             "id": "etf_detail:CDNG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CDPI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CDX",
@@ -5193,7 +5193,7 @@
           {
             "id": "etf_detail:CGOV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CGPT",
@@ -5258,7 +5258,7 @@
           {
             "id": "etf_detail:CHDG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CHGX",
@@ -5308,7 +5308,7 @@
           {
             "id": "etf_detail:CHYG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CIBR",
@@ -5323,7 +5323,7 @@
           {
             "id": "etf_detail:CIEI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CIEX",
@@ -5353,7 +5353,7 @@
           {
             "id": "etf_detail:CIVG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CJUL",
@@ -5363,7 +5363,7 @@
           {
             "id": "etf_detail:CJUN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CLCG",
@@ -5423,7 +5423,7 @@
           {
             "id": "etf_detail:CLOO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CLOU",
@@ -5778,7 +5778,7 @@
           {
             "id": "etf_detail:CPNX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CPRA",
@@ -6058,7 +6058,7 @@
           {
             "id": "etf_detail:CSEN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CSEP",
@@ -6108,7 +6108,7 @@
           {
             "id": "etf_detail:CSRA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CSRE",
@@ -6143,7 +6143,7 @@
           {
             "id": "etf_detail:CTAU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CTEC",
@@ -6173,7 +6173,7 @@
           {
             "id": "etf_detail:CTJN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CTMA",
@@ -6203,7 +6203,7 @@
           {
             "id": "etf_detail:CUST",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:CUT",
@@ -6383,7 +6383,7 @@
           {
             "id": "etf_detail:DBAR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DBAW",
@@ -6498,7 +6498,7 @@
           {
             "id": "etf_detail:DDFG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DDFJ",
@@ -6538,7 +6538,7 @@
           {
             "id": "etf_detail:DDFZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DDIV",
@@ -6583,7 +6583,7 @@
           {
             "id": "etf_detail:DDTG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DDTJ",
@@ -6623,7 +6623,7 @@
           {
             "id": "etf_detail:DDTZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DDV",
@@ -6768,7 +6768,7 @@
           {
             "id": "etf_detail:DFAL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DFAR",
@@ -6978,7 +6978,7 @@
           {
             "id": "etf_detail:DGJL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DGLO",
@@ -7113,7 +7113,7 @@
           {
             "id": "etf_detail:DISK",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DISV",
@@ -7233,7 +7233,7 @@
           {
             "id": "etf_detail:DLCU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DLFE",
@@ -7378,7 +7378,7 @@
           {
             "id": "etf_detail:DRAL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DRAM",
@@ -7423,12 +7423,12 @@
           {
             "id": "etf_detail:DRMP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DRMY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DRN",
@@ -7458,7 +7458,7 @@
           {
             "id": "etf_detail:DRVR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DSCO",
@@ -7768,7 +7768,7 @@
           {
             "id": "etf_detail:DWWN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:DWX",
@@ -7838,7 +7838,7 @@
           {
             "id": "etf_detail:EAFH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EAGG",
@@ -8248,12 +8248,12 @@
           {
             "id": "etf_detail:ELOL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EMAU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EMB",
@@ -8303,7 +8303,7 @@
           {
             "id": "etf_detail:EMEM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EMEQ",
@@ -8353,7 +8353,7 @@
           {
             "id": "etf_detail:EMJN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EMKT",
@@ -8413,7 +8413,7 @@
           {
             "id": "etf_detail:EMSC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EMSE",
@@ -8483,7 +8483,7 @@
           {
             "id": "etf_detail:ENTL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ENZL",
@@ -8603,7 +8603,7 @@
           {
             "id": "etf_detail:EQQQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EQRR",
@@ -8898,7 +8898,7 @@
           {
             "id": "etf_detail:EVMU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:EVNT",
@@ -9553,7 +9553,7 @@
           {
             "id": "etf_detail:FECM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FEDM",
@@ -9648,7 +9648,7 @@
           {
             "id": "etf_detail:FESC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FESM",
@@ -9808,7 +9808,7 @@
           {
             "id": "etf_detail:FHIL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FHLC",
@@ -9873,7 +9873,7 @@
           {
             "id": "etf_detail:FINA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FINT",
@@ -9903,7 +9903,7 @@
           {
             "id": "etf_detail:FITZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FIVA",
@@ -9943,7 +9943,7 @@
           {
             "id": "etf_detail:FIZY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FJAN",
@@ -10443,7 +10443,7 @@
           {
             "id": "etf_detail:FOMG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FOPC",
@@ -10513,7 +10513,7 @@
           {
             "id": "etf_detail:FPSX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FPWR",
@@ -10653,7 +10653,7 @@
           {
             "id": "etf_detail:FSPC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FSTA",
@@ -10738,7 +10738,7 @@
           {
             "id": "etf_detail:FTGC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-09"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:FTGS",
@@ -11078,7 +11078,7 @@
           {
             "id": "etf_detail:GALX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GAMR",
@@ -11108,7 +11108,7 @@
           {
             "id": "etf_detail:GASZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GAUG",
@@ -11178,7 +11178,7 @@
           {
             "id": "etf_detail:GCPB",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GCPU",
@@ -11188,7 +11188,7 @@
           {
             "id": "etf_detail:GCSH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GDE",
@@ -11323,7 +11323,7 @@
           {
             "id": "etf_detail:GEQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GEVC",
@@ -11448,7 +11448,7 @@
           {
             "id": "etf_detail:GINC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GIND",
@@ -11468,7 +11468,7 @@
           {
             "id": "etf_detail:GISC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:GJAN",
@@ -12243,7 +12243,7 @@
           {
             "id": "etf_detail:HAUG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HAUS",
@@ -12283,7 +12283,7 @@
           {
             "id": "etf_detail:HBMX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HBR",
@@ -12563,7 +12563,7 @@
           {
             "id": "etf_detail:HIS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HISF",
@@ -12583,7 +12583,7 @@
           {
             "id": "etf_detail:HJUN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HLAL",
@@ -12693,7 +12693,7 @@
           {
             "id": "etf_detail:HRSK",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HRTS",
@@ -12783,7 +12783,7 @@
           {
             "id": "etf_detail:HWIV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HWMV",
@@ -12793,7 +12793,7 @@
           {
             "id": "etf_detail:HWO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HWSM",
@@ -12933,7 +12933,7 @@
           {
             "id": "etf_detail:HYNX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:HYP",
@@ -13448,7 +13448,7 @@
           {
             "id": "etf_detail:IDAU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:IDEC",
@@ -14003,7 +14003,7 @@
           {
             "id": "etf_detail:INFH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:INFL",
@@ -14203,7 +14203,7 @@
           {
             "id": "etf_detail:IQQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:IQQQ",
@@ -14238,7 +14238,7 @@
           {
             "id": "etf_detail:IREC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:IREG",
@@ -14878,7 +14878,7 @@
           {
             "id": "etf_detail:JCAL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:JCHI",
@@ -14928,7 +14928,7 @@
           {
             "id": "etf_detail:JELH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:JELM",
@@ -15118,7 +15118,7 @@
           {
             "id": "etf_detail:JLCO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:JLQD",
@@ -15218,7 +15218,7 @@
           {
             "id": "etf_detail:JOUL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:JOYT",
@@ -15338,7 +15338,7 @@
           {
             "id": "etf_detail:JQTY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:JQUA",
@@ -15378,7 +15378,7 @@
           {
             "id": "etf_detail:JTNY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:JUCY",
@@ -15768,7 +15768,7 @@
           {
             "id": "etf_detail:KMCA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:KMEM",
@@ -15913,7 +15913,7 @@
           {
             "id": "etf_detail:KRWX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:KRYP",
@@ -15978,7 +15978,7 @@
           {
             "id": "etf_detail:KWH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:KWIN",
@@ -16043,12 +16043,12 @@
           {
             "id": "etf_detail:LATR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LAZR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LBAY",
@@ -16083,7 +16083,7 @@
           {
             "id": "etf_detail:LCIV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LCLG",
@@ -16183,7 +16183,7 @@
           {
             "id": "etf_detail:LEND",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LENS",
@@ -16248,7 +16248,7 @@
           {
             "id": "etf_detail:LGDS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LGDX",
@@ -16338,7 +16338,7 @@
           {
             "id": "etf_detail:LITU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LITX",
@@ -16348,7 +16348,7 @@
           {
             "id": "etf_detail:LITZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LJAN",
@@ -16418,7 +16418,7 @@
           {
             "id": "etf_detail:LOEV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LOFD",
@@ -16428,7 +16428,7 @@
           {
             "id": "etf_detail:LOFF",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LOGO",
@@ -16438,7 +16438,7 @@
           {
             "id": "etf_detail:LOHA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LONZ",
@@ -16513,7 +16513,7 @@
           {
             "id": "etf_detail:LQDM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LQDU",
@@ -16528,7 +16528,7 @@
           {
             "id": "etf_detail:LQID",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LQTI",
@@ -16653,12 +16653,12 @@
           {
             "id": "etf_detail:LUMA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LUNC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:LUNL",
@@ -16928,7 +16928,7 @@
           {
             "id": "etf_detail:MCHG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MCHI",
@@ -16943,7 +16943,7 @@
           {
             "id": "etf_detail:MCHU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MCOW",
@@ -16963,7 +16963,7 @@
           {
             "id": "etf_detail:MDCR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MDEV",
@@ -17313,7 +17313,7 @@
           {
             "id": "etf_detail:MIVL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MJ",
@@ -17418,7 +17418,7 @@
           {
             "id": "etf_detail:MMHI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MMID",
@@ -17598,7 +17598,7 @@
           {
             "id": "etf_detail:MPWX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MQQQ",
@@ -17608,7 +17608,7 @@
           {
             "id": "etf_detail:MRA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MRAL",
@@ -17663,7 +17663,7 @@
           {
             "id": "etf_detail:MSEP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MSFD",
@@ -17723,7 +17723,7 @@
           {
             "id": "etf_detail:MSOL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MSOS",
@@ -17738,12 +17738,12 @@
           {
             "id": "etf_detail:MSR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MSSE",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MSSM",
@@ -17963,7 +17963,7 @@
           {
             "id": "etf_detail:MUY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MUYY",
@@ -17973,7 +17973,7 @@
           {
             "id": "etf_detail:MUZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:MVAL",
@@ -18248,7 +18248,7 @@
           {
             "id": "etf_detail:NBIC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NBIE",
@@ -18498,7 +18498,7 @@
           {
             "id": "etf_detail:NISM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NITE",
@@ -18653,7 +18653,7 @@
           {
             "id": "etf_detail:NRR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NRSH",
@@ -18678,17 +18678,17 @@
           {
             "id": "etf_detail:NSIG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NSIV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NTAL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NTRL",
@@ -18953,7 +18953,7 @@
           {
             "id": "etf_detail:NVPS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NVTC",
@@ -18973,12 +18973,12 @@
           {
             "id": "etf_detail:NXPG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NXPX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NXTE",
@@ -19013,7 +19013,7 @@
           {
             "id": "etf_detail:NYNY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NYSX",
@@ -19023,7 +19023,7 @@
           {
             "id": "etf_detail:NYYY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:NZAC",
@@ -19118,7 +19118,7 @@
           {
             "id": "etf_detail:OCT",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:OCTB",
@@ -19133,7 +19133,7 @@
           {
             "id": "etf_detail:OCTI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:OCTJ",
@@ -19178,7 +19178,7 @@
           {
             "id": "etf_detail:ODDZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ODHY",
@@ -19328,7 +19328,7 @@
           {
             "id": "etf_detail:ONG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ONLN",
@@ -19348,7 +19348,7 @@
           {
             "id": "etf_detail:ONX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:OOSP",
@@ -19423,7 +19423,7 @@
           {
             "id": "etf_detail:ORCZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ORO",
@@ -19453,7 +19453,7 @@
           {
             "id": "etf_detail:OSSL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:OTAX",
@@ -19478,7 +19478,7 @@
           {
             "id": "etf_detail:OUSL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:OUSM",
@@ -19523,7 +19523,7 @@
           {
             "id": "etf_detail:OWN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:OWNB",
@@ -19803,7 +19803,7 @@
           {
             "id": "etf_detail:PCEB",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PCEF",
@@ -19833,7 +19833,7 @@
           {
             "id": "etf_detail:PCLC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PCLG",
@@ -19873,7 +19873,7 @@
           {
             "id": "etf_detail:PCPP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PCR",
@@ -19888,7 +19888,7 @@
           {
             "id": "etf_detail:PCSG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PCY",
@@ -20238,7 +20238,7 @@
           {
             "id": "etf_detail:PJUS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PKB",
@@ -20253,7 +20253,7 @@
           {
             "id": "etf_detail:PLA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PLGI",
@@ -20433,7 +20433,7 @@
           {
             "id": "etf_detail:POEL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PONX",
@@ -20533,7 +20533,7 @@
           {
             "id": "etf_detail:PQXX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PRAB",
@@ -20588,7 +20588,7 @@
           {
             "id": "etf_detail:PRIZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PRMR",
@@ -20628,7 +20628,7 @@
           {
             "id": "etf_detail:PRXI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PRXV",
@@ -20638,7 +20638,7 @@
           {
             "id": "etf_detail:PSAI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PSC",
@@ -20928,7 +20928,7 @@
           {
             "id": "etf_detail:PUR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PUSH",
@@ -20968,7 +20968,7 @@
           {
             "id": "etf_detail:PWRX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:PWRZ",
@@ -21288,7 +21288,7 @@
           {
             "id": "etf_detail:QFF",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:QFHD",
@@ -21453,7 +21453,7 @@
           {
             "id": "etf_detail:QNDX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:QNTU",
@@ -21738,12 +21738,12 @@
           {
             "id": "etf_detail:QTUP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:QUA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:QUAL",
@@ -21803,7 +21803,7 @@
           {
             "id": "etf_detail:QVOL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:QVOY",
@@ -21848,7 +21848,7 @@
           {
             "id": "etf_detail:RACK",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RAFE",
@@ -21863,7 +21863,7 @@
           {
             "id": "etf_detail:RAML",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RAMZ",
@@ -21873,7 +21873,7 @@
           {
             "id": "etf_detail:RANK",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RAUS",
@@ -21998,7 +21998,7 @@
           {
             "id": "etf_detail:RECI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RECS",
@@ -22218,7 +22218,7 @@
           {
             "id": "etf_detail:RISE",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RISN",
@@ -22243,7 +22243,7 @@
           {
             "id": "etf_detail:RIZE",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RJCA",
@@ -22483,7 +22483,7 @@
           {
             "id": "etf_detail:RSIT",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RSJN",
@@ -22618,7 +22618,7 @@
           {
             "id": "etf_detail:RTOO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:RTRE",
@@ -22853,7 +22853,7 @@
           {
             "id": "etf_detail:SCA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SCAP",
@@ -23018,7 +23018,7 @@
           {
             "id": "etf_detail:SCJN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SCLZ",
@@ -23318,7 +23318,7 @@
           {
             "id": "etf_detail:SEUS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SFEB",
@@ -23363,7 +23363,7 @@
           {
             "id": "etf_detail:SFYI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SGDJ",
@@ -23468,7 +23468,7 @@
           {
             "id": "etf_detail:SHRD",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SHRT",
@@ -23648,12 +23648,12 @@
           {
             "id": "etf_detail:SK",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKDD",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKF",
@@ -23668,7 +23668,7 @@
           {
             "id": "etf_detail:SKHL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKHN",
@@ -23683,17 +23683,17 @@
           {
             "id": "etf_detail:SKHU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKHX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKHZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKOR",
@@ -23708,7 +23708,7 @@
           {
             "id": "etf_detail:SKUU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SKYU",
@@ -23783,7 +23783,7 @@
           {
             "id": "etf_detail:SLVY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SLWS",
@@ -23888,7 +23888,7 @@
           {
             "id": "etf_detail:SMHC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SMHD",
@@ -24043,17 +24043,17 @@
           {
             "id": "etf_detail:SNDC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SNDG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SNDQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SNDU",
@@ -24108,7 +24108,7 @@
           {
             "id": "etf_detail:SNTQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SNXX",
@@ -24213,7 +24213,7 @@
           {
             "id": "etf_detail:SPAL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SPAM",
@@ -24258,17 +24258,17 @@
           {
             "id": "etf_detail:SPCF",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SPCG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SPCH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SPCI",
@@ -24293,7 +24293,7 @@
           {
             "id": "etf_detail:SPCQ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SPCT",
@@ -24303,7 +24303,7 @@
           {
             "id": "etf_detail:SPCU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SPD",
@@ -24733,7 +24733,7 @@
           {
             "id": "etf_detail:SSMG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SSO",
@@ -24743,7 +24743,7 @@
           {
             "id": "etf_detail:SSPC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:SSPY",
@@ -24873,7 +24873,7 @@
           {
             "id": "etf_detail:STXL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:STXT",
@@ -24883,7 +24883,7 @@
           {
             "id": "etf_detail:STXU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:STXV",
@@ -24893,7 +24893,7 @@
           {
             "id": "etf_detail:STXX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:STYL",
@@ -25253,7 +25253,7 @@
           {
             "id": "etf_detail:TDCL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TDEC",
@@ -25263,7 +25263,7 @@
           {
             "id": "etf_detail:TDEM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TDI",
@@ -25348,7 +25348,7 @@
           {
             "id": "etf_detail:TECY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TEK",
@@ -25448,7 +25448,7 @@
           {
             "id": "etf_detail:TEUP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TEXN",
@@ -25623,7 +25623,7 @@
           {
             "id": "etf_detail:TILC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TILL",
@@ -25683,7 +25683,7 @@
           {
             "id": "etf_detail:TIPE",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TIPF",
@@ -25713,7 +25713,7 @@
           {
             "id": "etf_detail:TISC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TIZE",
@@ -25743,12 +25743,12 @@
           {
             "id": "etf_detail:TKNS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TKNZ",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TLA",
@@ -25878,7 +25878,7 @@
           {
             "id": "etf_detail:TMGN",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TMH",
@@ -26053,17 +26053,17 @@
           {
             "id": "etf_detail:TPFC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TPFG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TPFI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TPHD",
@@ -26108,7 +26108,7 @@
           {
             "id": "etf_detail:TPUT",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TPYP",
@@ -26203,12 +26203,12 @@
           {
             "id": "etf_detail:TRUI",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TRUM",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TRUN",
@@ -26218,7 +26218,7 @@
           {
             "id": "etf_detail:TRUO",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TRUR",
@@ -26273,7 +26273,7 @@
           {
             "id": "etf_detail:TSEG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TSEL",
@@ -26593,7 +26593,7 @@
           {
             "id": "etf_detail:TXXH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TXXI",
@@ -26633,7 +26633,7 @@
           {
             "id": "etf_detail:TYYY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:TZA",
@@ -26718,7 +26718,7 @@
           {
             "id": "etf_detail:UCOP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:UCRD",
@@ -26813,7 +26813,7 @@
           {
             "id": "etf_detail:UGLD",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:UITB",
@@ -26963,7 +26963,7 @@
           {
             "id": "etf_detail:UPAL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:UPAR",
@@ -26983,7 +26983,7 @@
           {
             "id": "etf_detail:UPLT",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:UPRO",
@@ -27178,7 +27178,7 @@
           {
             "id": "etf_detail:USLV",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:USLX",
@@ -27343,7 +27343,7 @@
           {
             "id": "etf_detail:UUPP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:UUUC",
@@ -27433,7 +27433,7 @@
           {
             "id": "etf_detail:VAIE",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:VALG",
@@ -27663,7 +27663,7 @@
           {
             "id": "etf_detail:VELL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:VEM",
@@ -28293,12 +28293,12 @@
           {
             "id": "etf_detail:WARP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WATS",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WBIF",
@@ -28383,7 +28383,7 @@
           {
             "id": "etf_detail:WDE",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WDEF",
@@ -28523,7 +28523,7 @@
           {
             "id": "etf_detail:WNDR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WNTR",
@@ -28548,7 +28548,7 @@
           {
             "id": "etf_detail:WR",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WRND",
@@ -28558,7 +28558,7 @@
           {
             "id": "etf_detail:WRTH",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WSDB",
@@ -28588,7 +28588,7 @@
           {
             "id": "etf_detail:WSPC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WTAI",
@@ -28688,7 +28688,7 @@
           {
             "id": "etf_detail:WYFL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:WZRD",
@@ -28698,7 +28698,7 @@
           {
             "id": "etf_detail:XA",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XAGG",
@@ -28908,7 +28908,7 @@
           {
             "id": "etf_detail:XEY",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XFEB",
@@ -29253,7 +29253,7 @@
           {
             "id": "etf_detail:XNDX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XNOV",
@@ -29303,7 +29303,7 @@
           {
             "id": "etf_detail:XOVL",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XOVR",
@@ -29428,7 +29428,7 @@
           {
             "id": "etf_detail:XSHP",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XSHQ",
@@ -29453,7 +29453,7 @@
           {
             "id": "etf_detail:XSPC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XSPI",
@@ -29638,7 +29638,7 @@
           {
             "id": "etf_detail:XX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-10-02"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:XXQQ",
@@ -29833,12 +29833,12 @@
           {
             "id": "etf_detail:YSAG",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:YSAU",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:YSEP",
@@ -29848,7 +29848,7 @@
           {
             "id": "etf_detail:YSPC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:YSPY",
@@ -29968,7 +29968,7 @@
           {
             "id": "etf_detail:ZINC",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-09-30"
+            "source_as_of": "2026-10-12"
           },
           {
             "id": "etf_detail:ZINN",
@@ -30123,7 +30123,7 @@
           "collection_fresh_count": 5,
           "stale_count": 0,
           "collected_at_floor": "2026-10-12T23:54:05Z",
-          "collection_age_hours": 11.329,
+          "collection_age_hours": 12.653,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -30160,7 +30160,7 @@
           "status_label": "준비됨",
           "detail": "1 / 1개 기준 이내",
           "source_health": {
-            "observed_at": "2026-10-13T11:13:50.299Z",
+            "observed_at": "2026-10-13T12:33:17.262Z",
             "scope": "global_scouter",
             "policy": {
               "basis": "source_calendar",
@@ -30232,9 +30232,9 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "30,113 / 15,815 JSON",
-          "root": 30113,
-          "public": 15815
+          "detail": "30,177 / 15,879 JSON",
+          "root": 30177,
+          "public": 15879
         },
         {
           "label": "시장 데이터 감사",
@@ -30268,7 +30268,7 @@
           "reason": "internal artifact uses generation time; no upstream source date"
         }
       ],
-      "as_of": "2026-10-13T11:13:50.299Z",
+      "as_of": "2026-10-13T12:33:17.262Z",
       "source_as_of": null,
       "source_as_of_reason": "internal artifact uses generation time; no upstream source date"
     },
