@@ -68,6 +68,7 @@ from stockanalysis_recovery_state import (
     _etf_component_clocks,
     _etf_history_dates,
     _etf_history_date_set,
+    OPTIONAL_ETF_HISTORY_PERIODS,
     _valid_payload,
     validate_etf_history_archive,
 )
@@ -2006,7 +2007,7 @@ def fetch_official_etf_holdings(ticker: str, timeout: int) -> tuple[str, dict, d
                 name, cusip = row["Name"].strip(), row["CUSIP"].strip()
                 weight = float(row["Weight (%)"].replace(",", ""))
                 asset_class = row["Asset Class"].strip()
-                issuer_cash = ticker in ISHARES_TERM_TIPS_WITH_PRICE and (
+                issuer_cash = ticker in ISHARES_TERM_TIPS_YEARS and (
                     name == "USD CASH" or asset_class == "Cash" or cusip == "-"
                 )
                 if issuer_cash:
@@ -3961,9 +3962,22 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
             raise ValueError("prior StockAnalysis ETF archive dates are invalid")
         missing_native_dates = False
         for period, rows in old_periods.items():
-            old_days = _etf_history_date_set(rows)
+            # Empty optional history has no dates to preserve; malformed nonempty rows still fail.
+            old_days = (
+                set()
+                if period in OPTIONAL_ETF_HISTORY_PERIODS and isinstance(rows, list) and not rows
+                else _etf_history_date_set(rows)
+            )
             current_rows = candidate_periods.get(period)
-            current_days = _etf_history_date_set(current_rows) if current_rows is not None else set()
+            current_days = (
+                set()
+                if current_rows is None or (
+                    period in OPTIONAL_ETF_HISTORY_PERIODS
+                    and isinstance(current_rows, list)
+                    and not current_rows
+                )
+                else _etf_history_date_set(current_rows)
+            )
             if old_days is None or current_days is None:
                 raise ValueError(f"StockAnalysis ETF {period} history dates are invalid")
             if old_days - current_days - archived_periods.get(period, set()):

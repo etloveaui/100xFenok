@@ -253,6 +253,15 @@ def _etf_history_date_set(rows: Any) -> set[str] | None:
     return set(dates) if len(set(dates)) == len(dates) else None
 
 
+OPTIONAL_ETF_HISTORY_PERIODS = frozenset({
+    "weekly_1y",
+    "monthly_1y",
+    "weekly_3y",
+    "monthly_3y",
+    "monthly_5y",
+})
+
+
 def _aware_archive_timestamp(value: Any) -> datetime | None:
     if not isinstance(value, str) or not value or _DATE_RE.fullmatch(value):
         return None
@@ -305,6 +314,8 @@ def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: lis
         for period, rows in raw_periods.items():
             if not isinstance(period, str) or rows != normalized_periods[period]:
                 return None
+            if period in OPTIONAL_ETF_HISTORY_PERIODS and isinstance(rows, list) and not rows:
+                continue
             period_bounds = _etf_history_dates(rows)
             period_days = _etf_history_date_set(rows)
             history_bound = fetched_stamp if issuer_holdings_snapshot(source) else source_stamp
@@ -463,6 +474,8 @@ def archived_etf_history_periods(payload: dict, provider: str | None = None) -> 
         source = json.loads(archive["source_payload"])
         raw_periods = source["raw"]["history_periods"]
         for period, rows in raw_periods.items():
+            if period in OPTIONAL_ETF_HISTORY_PERIODS and isinstance(rows, list) and not rows:
+                continue
             days = _etf_history_date_set(rows)
             if days is None:
                 return None

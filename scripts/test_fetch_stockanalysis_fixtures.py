@@ -236,9 +236,18 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                              for index, (name, kind, cusip, weight) in enumerate(holdings["IBIJ"])]
         with self.assertRaises(ValueError):
             fetch("IBIJ", document("IBIJ", positions=ibij_one_treasury))
-        ibim_cash = [*holdings["IBIM"], ("USD CASH", "Cash", "-", "0.00")]
-        with self.assertRaises(ValueError):
-            fetch("IBIM", document("IBIM", positions=ibim_cash))
+        ibim_positions = [
+            *holdings["IBIM"],
+            ("BLK CSH FND TREASURY SL AGENCY", "Money Market", "066922477", "0.01"),
+            ("USD CASH", "Cash", "-", "0.00"),
+        ]
+        _, ibim_data, _ = fetch("IBIM", document("IBIM", positions=ibim_positions))
+        ibim_cash_row = next(row for row in ibim_data["holdings"] if row["n"] == "USD CASH")
+        self.assertIsNone(ibim_cash_row["cusip"])
+        self.assertEqual(ibim_cash_row["raw"]["CUSIP"], "-")
+        bad_ibim_cash = [*ibim_positions[:-1], ("OTHER CASH", "Cash", "-", "0.00")]
+        with self.assertRaisesRegex(ValueError, "official holdings CSV has an invalid holding"):
+            fetch("IBIM", document("IBIM", positions=bad_ibim_cash))
         for ticker in ("IBIZ", "UNVERIFIED"):
             with self.assertRaisesRegex(ValueError, "no verified official holdings fallback"):
                 self.fetcher.fetch_official_etf_holdings(ticker, 1)
@@ -6290,6 +6299,121 @@ module.main()
                                 ticker, bad_provider, bad_detail, mirror_public=True
                             )
                         self.assertEqual([path.read_bytes() for path in paths], before)
+
+    def test_stockanalysis_history_preservation_handles_empty_optional_periods(self) -> None:
+        ticker = "ACBH"
+        daily = [
+            {"t": "2026-09-29", "c": 100.0},
+            {"t": "2026-09-30", "c": 101.0},
+        ]
+        weekly_old = [{"t": "2026-09-25", "c": 99.0}]
+        fresh_periods = {
+            "weekly_1y": [{"t": "2026-10-02", "c": 103.0}],
+            "monthly_1y": [{"t": "2026-10-01", "c": 102.0}],
+            "weekly_3y": [{"t": "2026-10-02", "c": 98.0}],
+            "monthly_3y": [{"t": "2026-10-01", "c": 97.0}],
+            "monthly_5y": [{"t": "2026-10-01", "c": 96.0}],
+        }
+
+        def stockanalysis_payload(periods):
+            return {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "ticker": ticker,
+                "source_as_of": "2026-09-30T00:00:00Z",
+                "fetched_at": "2026-10-01T00:00:00Z",
+                "normalized": {
+                    "history_periods": {key: list(rows) for key, rows in periods.items()},
+                },
+                "raw": {"history_periods": periods},
+            }
+
+        def candidate_payload(periods):
+            return {
+                "ticker": ticker,
+                "normalized": {
+                    "history_periods": {key: list(rows) for key, rows in periods.items()},
+                },
+                "raw": {"history_periods": periods},
+            }
+
+        class EmptyDataSupplyStore:
+            def read_active_domain(self, _domain):
+                return {"current": {}, "lkg": {}}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / "data/stockanalysis"
+            canonical = out / "etfs" / f"{ticker}.json"
+            with patch.object(self.fetcher, "OUT_DIR", out), \
+                    patch.object(self.fetcher, "STORAGE_ROOT", root), \
+                    patch.object(self.fetcher, "DATA_SUPPLY_STATE_ROOT", root), \
+                    patch.object(self.fetcher, "data_supply_store", return_value=EmptyDataSupplyStore()), \
+                    patch.object(self.fetcher, "issuer_holdings_snapshot", return_value=None), \
+                    patch.object(self.fetcher, "validate_stockanalysis_etf_payload"), \
+                    patch.object(self.fetcher, "now_iso", return_value="2026-10-13T00:00:00Z"):
+                old_periods = {
+                    "daily_1y": daily,
+                    "weekly_1y": weekly_old,
+                    "monthly_1y": [],
+                    "weekly_3y": [],
+                    "monthly_3y": [],
+                    "monthly_5y": [],
+                }
+                self.fetcher.write_json(canonical, stockanalysis_payload(old_periods))
+                old_bytes = canonical.read_bytes()
+                candidate = candidate_payload({
+                    "daily_1y": daily[1:],
+                    **fresh_periods,
+                })
+                self.fetcher.retain_yahoo_etf_history_archive(ticker, candidate)
+                archives = candidate["normalized"]["history_archive"]
+                self.assertEqual(len(archives), 1)
+                self.assertEqual(archives[0]["source_payload"].encode("utf-8"), old_bytes)
+                archived_periods = self.fetcher.archived_etf_history_periods(candidate, "stockanalysis")
+                self.assertEqual(
+                    archived_periods,
+                    {
+                        "daily_1y": {"2026-09-29", "2026-09-30"},
+                        "weekly_1y": {"2026-09-25"},
+                    },
+                )
+
+                self.fetcher.write_json(canonical, stockanalysis_payload({
+                    "daily_1y": daily,
+                    "monthly_1y": [{"t": "2026-09-01", "c": 99.0}],
+                }))
+                candidate = candidate_payload({
+                    "daily_1y": daily,
+                    "monthly_1y": [],
+                })
+                self.fetcher.retain_yahoo_etf_history_archive(ticker, candidate)
+                archives = candidate["normalized"]["history_archive"]
+                self.assertEqual(len(archives), 1)
+                archived = json.loads(archives[0]["source_payload"])
+                self.assertEqual(
+                    archived["raw"]["history_periods"]["monthly_1y"],
+                    [{"t": "2026-09-01", "c": 99.0}],
+                )
+                archived_periods = self.fetcher.archived_etf_history_periods(candidate, "stockanalysis")
+                self.assertEqual(archived_periods["monthly_1y"], {"2026-09-01"})
+
+                malformed = candidate_payload({
+                    "daily_1y": daily,
+                    "monthly_1y": [{"t": "not-a-date", "c": 103.0}],
+                })
+                with self.assertRaisesRegex(
+                        ValueError, "StockAnalysis ETF monthly_1y history dates are invalid"):
+                    self.fetcher.retain_yahoo_etf_history_archive(ticker, malformed)
+
+                empty_daily = candidate_payload({
+                    "daily_1y": [],
+                    "monthly_1y": [],
+                })
+                with self.assertRaisesRegex(
+                        ValueError, "StockAnalysis ETF native history dates are invalid"):
+                    self.fetcher.retain_yahoo_etf_history_archive(ticker, empty_daily)
 
     def test_yahoo_fallback_preserves_validated_history_before_normalizing(self) -> None:
         ticker = "IAUM"

@@ -76,6 +76,12 @@ SUPPORTED_TICKERS = (
     "QBUF",
     "RBUF",
     "TBJL",
+    "AJAN", "AJUL", "BMAR", "IBUF", "IDEC", "IFEB", "IJAN", "IJUL",
+    "IJUN", "IMAR", "IMAY", "INOV", "JAJL", "JULH", "JULJ", "KAUG",
+    "KDEC", "KJAN", "KJUN", "KMAR", "KMAY", "KOCT", "KSEP", "LJUL",
+    "NAUG", "NDEC", "NFEB", "NJAN", "NJUL", "UFEB", "UJAN", "USEP",
+    "XDQQ", "XTJA", "XTJL", "XTOC", "ZAUG", "ZDEK", "ZFEB", "ZJAN",
+    "ZJUL", "ZNOV", "ZOCT", "ZSEP",
     "TBIL",
     "DWUS",
     "HYTR",
@@ -93,11 +99,17 @@ CORGI_TICKERS = ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "LRNX", "ONDC",
 INNOVATOR_TICKERS = (
     "ACII", "BDEC", "BJUL", "BJUN", "BNOV", "BSTP", "EBUF", "EJAN",
     "EJUL", "IAPR", "PMAR", "PMAY", "PSTP", "QBUF", "RBUF", "TBJL",
+    "AJAN", "AJUL", "BMAR", "IBUF", "IDEC", "IFEB", "IJAN", "IJUL",
+    "IJUN", "IMAR", "IMAY", "INOV", "JAJL", "JULH", "JULJ", "KAUG",
+    "KDEC", "KJAN", "KJUN", "KMAR", "KMAY", "KOCT", "KSEP", "LJUL",
+    "NAUG", "NDEC", "NFEB", "NJAN", "NJUL", "UFEB", "UJAN", "USEP",
+    "XDQQ", "XTJA", "XTJL", "XTOC", "ZAUG", "ZDEK", "ZFEB", "ZJAN",
+    "ZJUL", "ZNOV", "ZOCT", "ZSEP",
 )
 
 _INNOVATOR_HOLDINGS_URL = "https://www.innovatoretfs.com/etf/xt_holdings.csv"
 # The all-funds CSV carries every Innovator fund, so one cached body serves all
-# sixteen members inside a single collector process.
+# enrolled members inside a single collector process.
 _INNOVATOR_CSV_CACHE: dict = {}
 _INNOVATOR_CSV_LOCK = threading.Lock()
 _PLAIN_TICKER = re.compile(r"^[A-Z][A-Z0-9.\-]{0,6}$")
