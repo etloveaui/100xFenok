@@ -1,0 +1,741 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "VMSD",
+  "source_as_of": "2026-10-12T20:00:00Z",
+  "fetched_at": "2026-10-13T00:15:25Z",
+  "endpoints": {
+    "holdings": "/etf/vmsd/holdings/__data.json",
+    "overview": "/etf/vmsd/__data.json",
+    "quote": "/api/quotes/e/VMSD",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/VMSD/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/VMSD/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/VMSD/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/VMSD/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/VMSD/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/VMSD/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "expenseRatio": "0.62%",
+      "sharesOut": "975,000",
+      "inception": "Sep 22, 2026"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 25.03,
+      "pd": 25.03,
+      "c": -0.03,
+      "cp": -0.12,
+      "cl": 25.06,
+      "cdr": -1,
+      "o": 25.03,
+      "h": 25.03,
+      "l": 25.03,
+      "v": 206,
+      "ts": 1791835200000,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "td": "2026-10-12",
+      "h52": 25.15,
+      "l52": 24.89,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 25.0473,
+      "epd": 25.05,
+      "ec": 0.02,
+      "ecp": 0.07,
+      "eu": "Oct 12, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1791836100018.2104,
+      "etd": "2026-10-12",
+      "epv": null,
+      "days": 0,
+      "exp": 1791850529362,
+      "symbol": "VMSD",
+      "uid": "VMSD"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 25.07,
+        "h": 25.15,
+        "l": 24.97,
+        "c": 25.03,
+        "v": 25773,
+        "a": 25.03,
+        "ch": -0.08
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 25.03,
+          "h": 25.03,
+          "l": 25.03,
+          "c": 25.03,
+          "v": 206,
+          "a": 25.03,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-10-09",
+          "o": 25.06,
+          "h": 25.06,
+          "l": 25.06,
+          "c": 25.06,
+          "a": 25.06,
+          "v": 6,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-08",
+          "o": 25.06,
+          "h": 25.061,
+          "l": 25.06,
+          "c": 25.061,
+          "a": 25.0606,
+          "v": 108,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.97,
+          "h": 25.05,
+          "l": 24.97,
+          "c": 25.05,
+          "a": 25.05,
+          "v": 6809,
+          "ch": 0.05
+        },
+        {
+          "t": "2026-10-06",
+          "o": 25.037,
+          "h": 25.037,
+          "l": 25.037,
+          "c": 25.037,
+          "a": 25.0366,
+          "v": 20,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.97,
+          "h": 25.055,
+          "l": 24.97,
+          "c": 25.055,
+          "a": 25.055,
+          "v": 4508,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-02",
+          "o": 25.1,
+          "h": 25.15,
+          "l": 25.05,
+          "c": 25.055,
+          "a": 25.055,
+          "v": 12008,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.05,
+          "c": 25.051,
+          "a": 25.0509,
+          "v": 2108,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-30",
+          "o": 25.05,
+          "h": 25.11,
+          "l": 25.05,
+          "c": 25.05,
+          "a": 25.05,
+          "v": 17813,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-09-29",
+          "o": 24.995,
+          "h": 25.04,
+          "l": 24.99,
+          "c": 25.031,
+          "a": 25.0308,
+          "v": 8111.999999999999,
+          "ch": 0.2
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.95,
+          "h": 24.98,
+          "l": 24.89,
+          "c": 24.98,
+          "a": 24.9797,
+          "v": 26824,
+          "ch": -0.14
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.01,
+          "h": 25.015,
+          "l": 25.01,
+          "c": 25.015,
+          "a": 25.015,
+          "v": 148,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.01,
+          "h": 25.01,
+          "l": 25.01,
+          "c": 25.01,
+          "a": 25.01,
+          "v": 7,
+          "ch": 0
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 25.03,
+          "h": 25.03,
+          "l": 25.03,
+          "c": 25.03,
+          "v": 206,
+          "a": 25.03,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.97,
+          "h": 25.061,
+          "l": 24.97,
+          "c": 25.06,
+          "v": 11451,
+          "a": 25.06,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.95,
+          "h": 25.15,
+          "l": 24.89,
+          "c": 25.055,
+          "v": 66865,
+          "a": 25.055,
+          "ch": 0.16
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.15,
+          "l": 24.97,
+          "c": 25.03,
+          "v": 25773,
+          "a": 25.03,
+          "ch": -0.08
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 25.03,
+          "h": 25.03,
+          "l": 25.03,
+          "c": 25.03,
+          "v": 206,
+          "a": 25.03,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.97,
+          "h": 25.061,
+          "l": 24.97,
+          "c": 25.06,
+          "v": 11451,
+          "a": 25.06,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.95,
+          "h": 25.15,
+          "l": 24.89,
+          "c": 25.055,
+          "v": 66865,
+          "a": 25.055,
+          "ch": 0.16
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.15,
+          "l": 24.97,
+          "c": 25.03,
+          "v": 25773,
+          "a": 25.03,
+          "ch": -0.08
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.15,
+          "l": 24.97,
+          "c": 25.03,
+          "v": 25773,
+          "a": 25.03,
+          "ch": -0.08
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "VMSD",
+        "lastChecked": 1791849853164,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "expenseRatio": "0.62%",
+      "peRatio": null,
+      "sharesOut": "975,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Sep 22, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "VictoryShares Short-Duration Municipal ETF is an exchange-traded fund that seeks to provide interest income exempt from federal income tax. The fund primarily invests in investment-grade municipal securities and generally maintains a short-duration portfolio, with an effective duration targeted within two years of the Bloomberg Municipal Bond 3 Year (2-4) Total Return Index.",
+      "infoTable": [
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "Nasdaq"
+        ],
+        [
+          "Ticker Symbol",
+          "VMSD"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1791876991711",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.055,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.01
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 25.03,
+      "pd": 25.03,
+      "c": -0.03,
+      "cp": -0.12,
+      "cl": 25.06,
+      "cdr": -1,
+      "o": 25.03,
+      "h": 25.03,
+      "l": 25.03,
+      "v": 206,
+      "ts": 1791835200000,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "td": "2026-10-12",
+      "h52": 25.15,
+      "l52": 24.89,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 25.0473,
+      "epd": 25.05,
+      "ec": 0.02,
+      "ecp": 0.07,
+      "eu": "Oct 12, 2026, 4:15 PM EDT",
+      "es": "After-hours",
+      "ets": 1791836100018.2104,
+      "etd": "2026-10-12",
+      "epv": null,
+      "days": 0,
+      "exp": 1791850529362,
+      "symbol": "VMSD",
+      "uid": "VMSD"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 25.07,
+        "h": 25.15,
+        "l": 24.97,
+        "c": 25.03,
+        "v": 25773,
+        "a": 25.03,
+        "ch": -0.08
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 25.03,
+          "h": 25.03,
+          "l": 25.03,
+          "c": 25.03,
+          "v": 206,
+          "a": 25.03,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-10-09",
+          "o": 25.06,
+          "h": 25.06,
+          "l": 25.06,
+          "c": 25.06,
+          "a": 25.06,
+          "v": 6,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-08",
+          "o": 25.06,
+          "h": 25.061,
+          "l": 25.06,
+          "c": 25.061,
+          "a": 25.0606,
+          "v": 108,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.97,
+          "h": 25.05,
+          "l": 24.97,
+          "c": 25.05,
+          "a": 25.05,
+          "v": 6809,
+          "ch": 0.05
+        },
+        {
+          "t": "2026-10-06",
+          "o": 25.037,
+          "h": 25.037,
+          "l": 25.037,
+          "c": 25.037,
+          "a": 25.0366,
+          "v": 20,
+          "ch": -0.07
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.97,
+          "h": 25.055,
+          "l": 24.97,
+          "c": 25.055,
+          "a": 25.055,
+          "v": 4508,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-02",
+          "o": 25.1,
+          "h": 25.15,
+          "l": 25.05,
+          "c": 25.055,
+          "a": 25.055,
+          "v": 12008,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.08,
+          "l": 25.05,
+          "c": 25.051,
+          "a": 25.0509,
+          "v": 2108,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-30",
+          "o": 25.05,
+          "h": 25.11,
+          "l": 25.05,
+          "c": 25.05,
+          "a": 25.05,
+          "v": 17813,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-09-29",
+          "o": 24.995,
+          "h": 25.04,
+          "l": 24.99,
+          "c": 25.031,
+          "a": 25.0308,
+          "v": 8111.999999999999,
+          "ch": 0.2
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.95,
+          "h": 24.98,
+          "l": 24.89,
+          "c": 24.98,
+          "a": 24.9797,
+          "v": 26824,
+          "ch": -0.14
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.01,
+          "h": 25.015,
+          "l": 25.01,
+          "c": 25.015,
+          "a": 25.015,
+          "v": 148,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.01,
+          "h": 25.01,
+          "l": 25.01,
+          "c": 25.01,
+          "a": 25.01,
+          "v": 7,
+          "ch": 0
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 25.03,
+          "h": 25.03,
+          "l": 25.03,
+          "c": 25.03,
+          "v": 206,
+          "a": 25.03,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.97,
+          "h": 25.061,
+          "l": 24.97,
+          "c": 25.06,
+          "v": 11451,
+          "a": 25.06,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.95,
+          "h": 25.15,
+          "l": 24.89,
+          "c": 25.055,
+          "v": 66865,
+          "a": 25.055,
+          "ch": 0.16
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.15,
+          "l": 24.97,
+          "c": 25.03,
+          "v": 25773,
+          "a": 25.03,
+          "ch": -0.08
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 25.03,
+          "h": 25.03,
+          "l": 25.03,
+          "c": 25.03,
+          "v": 206,
+          "a": 25.03,
+          "ch": -0.12
+        },
+        {
+          "t": "2026-10-05",
+          "o": 24.97,
+          "h": 25.061,
+          "l": 24.97,
+          "c": 25.06,
+          "v": 11451,
+          "a": 25.06,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.95,
+          "h": 25.15,
+          "l": 24.89,
+          "c": 25.055,
+          "v": 66865,
+          "a": 25.055,
+          "ch": 0.16
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.15,
+          "l": 24.97,
+          "c": 25.03,
+          "v": 25773,
+          "a": 25.03,
+          "ch": -0.08
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.07,
+          "h": 25.15,
+          "l": 24.97,
+          "c": 25.03,
+          "v": 25773,
+          "a": 25.03,
+          "ch": -0.08
+        }
+      ]
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

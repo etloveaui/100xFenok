@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "BLCN",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-12T23:53:29Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "c7ee8ed2b52a7552569e40e7610610d0799021db2d2a854f17afac19dfd99489",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-12T23:53:29Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BLCN.json",
+    "payload_sha256": "c7ee8ed2b52a7552569e40e7610610d0799021db2d2a854f17afac19dfd99489",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:44:10Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BLCN.json",
+    "payload_sha256": "c7ee8ed2b52a7552569e40e7610610d0799021db2d2a854f17afac19dfd99489",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:44:10Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-12T23:53:29Z",
+    "last_probe_at": "2026-10-12T23:53:29Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-06-18",
+    "status": "unresolved",
+    "attempts": []
+  }
+}

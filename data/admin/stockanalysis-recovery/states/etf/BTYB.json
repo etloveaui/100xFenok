@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "BTYB",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-12T23:53:29Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "8df342150685704ee58152cd0763cec85190b99a7d6556c3d531f97a3fb6a9e5",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-12T23:53:29Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BTYB.json",
+    "payload_sha256": "8df342150685704ee58152cd0763cec85190b99a7d6556c3d531f97a3fb6a9e5",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:45:25Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BTYB.json",
+    "payload_sha256": "8df342150685704ee58152cd0763cec85190b99a7d6556c3d531f97a3fb6a9e5",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:45:25Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-12T23:53:29Z",
+    "last_probe_at": "2026-10-12T23:53:29Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-06-18",
+    "status": "unresolved",
+    "attempts": []
+  }
+}
