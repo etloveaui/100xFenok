@@ -506,6 +506,7 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
     if not isinstance(issuer, dict) or issuer.get("ticker") != payload.get("ticker"):
         return None
     ticker = payload.get("ticker")
+    issuer_date = _iso_timestamp((issuer.get("field_dates") or {}).get("holdings"))
     expected = ({symbol: f"https://corgiinvest.com/{symbol.lower()}"
                  for symbol in ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "ONDC", "LRNX",
                                 "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM")}
@@ -520,6 +521,9 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
                    "BILS": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bils.xlsx",
                    "IWMW": "https://www.ishares.com/us/products/336263/ishares-russell-2000-buywrite-etf/latest-holdings.csv",
                    "THYP": "https://api.primary.21shares.com/api/product_details/THYP"})
+    if ticker == "SPBC" and issuer_date is not None:
+        expected["SPBC"] = ("https://www.simplify.us/sites/default/files/excel_holdings/"
+                            f"{issuer_date:%Y_%m_%d}_Simplify_Portfolio_EOD_Tracker.xlsx")
     if ticker not in expected or issuer.get("source_url") != expected[ticker]:
         return None
     rows = issuer.get("holdings")

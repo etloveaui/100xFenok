@@ -82,6 +82,7 @@ SUPPORTED_TICKERS = (
     "BIL",
     "BILS",
     "IWMW",
+    "SPBC",
     "MWHS",
     "THYP",
 )
@@ -125,6 +126,13 @@ _SSGA_HOLDINGS_URLS = {
 # Expanded xlsx content is bounded before any worksheet is parsed.
 _XLSX_EXPANDED_LIMIT = 20_000_000
 _XLSX_MEMBER_LIMIT = 8_000_000
+
+_SIMPLIFY_PAGE_URLS = {
+    "SPBC": "https://www.simplify.us/etfs/spbc-simplify-us-equity-plus-bitcoin-strategy-etf",
+}
+_SIMPLIFY_TRACKER_SHEET = "simplify portfolio tracker"
+# The provider's own Security Master Asset Group decides the quantity unit.
+_SIMPLIFY_QUANTITY_UNITS = {"fund": "shares", "future": "contracts", "cash": "currency"}
 
 _ISHARES_HOLDINGS_URLS = {
     "IWMW": ("https://www.ishares.com/us/products/336263/ishares-russell-2000-buywrite-etf/latest-holdings.csv",
@@ -1737,6 +1745,225 @@ def _fetch_ishares(ticker: str, timeout: int) -> dict:
 
 
 # --------------------------------------------------------------------------
+# Simplify (SPBC) dated EOD tracker xlsx
+# --------------------------------------------------------------------------
+
+
+def _xlsx_named_sheet_target(archive, wanted: str):
+    """Resolve a named worksheet through the workbook relationships.
+
+    Relationship and sheet attributes are read one by one because their order
+    differs between issuers (Simplify writes Target before Id).
+    """
+    if "xl/workbook.xml" not in archive.namelist():
+        return None
+    workbook = archive.read("xl/workbook.xml").decode("utf-8", errors="replace")
+    relationships = {}
+    if "xl/_rels/workbook.xml.rels" in archive.namelist():
+        rels = archive.read("xl/_rels/workbook.xml.rels").decode("utf-8", errors="replace")
+        for element in re.findall(r"<Relationship[^>]*/>", rels):
+            id_match = re.search(r'Id="([^"]+)"', element)
+            target_match = re.search(r'Target="([^"]+)"', element)
+            if id_match and target_match:
+                relationships[id_match.group(1)] = target_match.group(1)
+    for element in re.findall(r"<sheet[^>]*/>", workbook):
+        name_match = re.search(r'name="([^"]+)"', element)
+        id_match = re.search(r'r:id="([^"]+)"', element)
+        if not name_match or not id_match:
+            continue
+        if name_match.group(1).strip().lower() != wanted:
+            continue
+        target = relationships.get(id_match.group(1))
+        if not target:
+            continue
+        target = target.lstrip("/")
+        return target if target.startswith("xl/") else "xl/" + target
+    return None
+
+
+def _simplify_identifier_type(identifier):
+    if identifier and re.fullmatch(r"[0-9A-Z]{9}", identifier):
+        return "cusip"
+    if identifier and re.fullmatch(r"[A-Z]{2}[0-9A-Z]{9}[0-9]", identifier):
+        return "isin"
+    return "issuer_identifier" if identifier else None
+
+
+def _fetch_simplify(ticker: str, timeout: int) -> dict:
+    """Simplify EOD tracker xlsx, discovered from the fund page on each call."""
+    page_url = _SIMPLIFY_PAGE_URLS[ticker]
+    page = _http_get(page_url, timeout, accept="text/html").decode("utf-8", errors="replace")
+    if ticker.upper() not in page.upper():
+        raise OfficialEtfSourceError(
+            f"issuer identity mismatch: {page_url} does not mention {ticker}")
+
+    trackers = {}
+    for year, month, day in re.findall(
+            r"https://www\.simplify\.us/sites/default/files/excel_holdings/"
+            r"(\d{4})_(\d{2})_(\d{2})_Simplify_Portfolio_EOD_Tracker\.xlsx", page):
+        key = f"{year}-{month}-{day}"
+        trackers[key] = ("https://www.simplify.us/sites/default/files/excel_holdings/"
+                         f"{year}_{month}_{day}_Simplify_Portfolio_EOD_Tracker.xlsx")
+    if not trackers:
+        raise OfficialEtfSourceError(
+            f"no dated Simplify EOD tracker link on {page_url}; the route requires a published "
+            f"{ticker} tracker URL")
+    url = trackers[max(trackers)]
+
+    body = _http_get(url, timeout)
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(body))
+    except zipfile.BadZipFile as exc:
+        raise OfficialEtfSourceError(f"unreadable xlsx from {url}") from exc
+    members = archive.infolist()
+    expanded = sum(item.file_size for item in members)
+    if expanded > _XLSX_EXPANDED_LIMIT or any(item.file_size > _XLSX_MEMBER_LIMIT for item in members):
+        raise OfficialEtfSourceError(f"xlsx expanded size exceeds the bound for {ticker}")
+
+    target = _xlsx_named_sheet_target(archive, _SIMPLIFY_TRACKER_SHEET)
+    if target is None or target not in archive.namelist():
+        raise OfficialEtfSourceError(f"tracker worksheet not found for {ticker}")
+    rows = _xlsx_sheet_rows(archive, target)
+
+    header_index = None
+    for index, row in enumerate(rows[:6]):
+        lowered = [cell.lower() for cell in row]
+        if "fund name" in lowered and "security description" in lowered:
+            header_index = index
+            break
+    if header_index is None:
+        raise OfficialEtfSourceError(f"tracker header not found for {ticker}")
+    columns = {cell.lower(): position for position, cell in enumerate(rows[header_index]) if cell}
+    for required in ("fund name", "security description", "quantity",
+                     "market value/exposure", "weight"):
+        if required not in columns:
+            raise OfficialEtfSourceError(f"tracker header lacks {required} for {ticker}")
+
+    tracker_date = None
+    for row in rows[:header_index]:
+        for cell in row:
+            day = _normalise_date(cell)
+            if day:
+                tracker_date = day
+                break
+        if tracker_date:
+            break
+    if tracker_date is None:
+        raise OfficialEtfSourceError(f"tracker date not found for {ticker}")
+    if tracker_date != max(trackers):
+        raise OfficialEtfSourceError(f"tracker date contradicts its published URL for {ticker}")
+
+    def value(row, label):
+        position = columns.get(label)
+        return row[position] if position is not None and position < len(row) else ""
+
+    holdings = []
+    shares_values = set()
+    aum_values = set()
+    nav_values = set()
+    for row in rows[header_index + 1:]:
+        if not any(cell for cell in row):
+            continue
+        fund = _text(value(row, "fund name"))
+        if fund is None or fund.upper() != ticker.upper():
+            continue
+        name = _text(value(row, "security description"))
+        quantity = _number(value(row, "quantity"))
+        market_value = _number(value(row, "market value/exposure"))
+        weight = _number(value(row, "weight"))
+        if name is None or quantity is None or market_value is None or weight is None:
+            raise OfficialEtfSourceError(f"malformed tracker row for {ticker}: {name!r}")
+        group = (_text(value(row, "security master asset group")) or "").lower()
+        provider_ticker = _text(value(row, "ticker"))
+        cusip = _text(value(row, "cusip"))
+        isin = _text(value(row, "isin"))
+        sedol = _text(value(row, "sedol"))
+        identifier = cusip if cusip and re.fullmatch(r"[0-9A-Z]{9}", cusip) else (isin or sedol)
+        holdings.append({
+            "name": name,
+            "symbol": provider_ticker if provider_ticker and _PLAIN_TICKER.fullmatch(provider_ticker) else None,
+            "identifier": identifier,
+            "identifier_type": _simplify_identifier_type(identifier),
+            "weight_pct": weight * 100.0,
+            "weight_raw": weight,
+            "weight_basis": "provider_weight_fraction_converted",
+            "market_value": market_value if group in {"fund", "cash"} else None,
+            "provider_market_value_or_exposure": market_value,
+            "notional_value": None,
+            "shares": quantity if group == "fund" else None,
+            "provider_quantity": quantity,
+            "quantity_unit": _SIMPLIFY_QUANTITY_UNITS.get(group, group or None),
+            "price": _number(value(row, "bny prices")),
+            "sedol": sedol,
+            "isin": isin,
+            "cusip": cusip,
+            "asset_group": group or None,
+            "as_of_date": tracker_date,
+            "position_date": None,
+            "provider_ticker": provider_ticker,
+            "raw": row,
+        })
+        shares_values.add(_number(value(row, "shares out")))
+        aum_values.add(_number(value(row, "total mv")))
+        nav_values.add(_number(value(row, "official nav")))
+    if not holdings:
+        raise OfficialEtfSourceError(f"no tracker rows for {ticker}")
+
+    quote = {}
+    if len(shares_values) == 1 and None not in shares_values:
+        quote["shares_outstanding"] = shares_values.pop()
+        quote["shares_outstanding_as_of"] = tracker_date
+    if len(aum_values) == 1 and None not in aum_values:
+        quote["aum"] = aum_values.pop()
+        quote["aum_as_of"] = tracker_date
+    if len(nav_values) == 1 and None not in nav_values:
+        quote["nav"] = nav_values.pop()
+        quote["nav_as_of"] = tracker_date
+
+    has_cash_row = any(row["asset_group"] == "cash" for row in holdings)
+    completeness = [
+        "holdings are every tracker row whose FUND NAME matches this fund, all dated "
+        f"{tracker_date}",
+        "the tracker URL is date-stamped and is rediscovered from the fund page on each "
+        "call; the newest published tracker date is used",
+        "the provider states weights as fractions of market value; the fixed conversion is "
+        "*100 and weight_raw keeps the provider value, with no sum gate because futures "
+        "exposure can push the total above 1",
+        "quantity units come from the provider's Security Master Asset Group: Fund shares, "
+        "Future contracts, Cash currency",
+        "the Notional Coverage column holds an uncalculated spreadsheet formula, so notional "
+        "stays null rather than being invented",
+        "no OHLC history is published on this route",
+    ]
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": tracker_date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate" if has_cash_row else "not_published",
+        "scope_note": "issuer publishes every tracker row for this fund in one dated EOD workbook",
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "simplify",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": tracker_date,
+        "holdings": holdings,
+        "quote": quote,
+        "history": [],
+        "classification": {"page_url": page_url, "worksheet": target},
+        "field_dates": {"holdings": tracker_date,
+                        **{key: tracker_date for key in ("shares_outstanding", "aum", "nav") if key in quote}},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"page_url": page_url, "tracker_url": url, "expanded_bytes": expanded},
+    }
+
+
+# --------------------------------------------------------------------------
 # public entry point
 # --------------------------------------------------------------------------
 
@@ -1764,6 +1991,8 @@ def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
         return _fetch_ssga(symbol, timeout)
     if symbol in _ISHARES_HOLDINGS_URLS:
         return _fetch_ishares(symbol, timeout)
+    if symbol in _SIMPLIFY_PAGE_URLS:
+        return _fetch_simplify(symbol, timeout)
     if symbol == "MWHS":
         return _fetch_skylar(symbol, timeout)
     return _fetch_twenty_one_shares(symbol, timeout)
