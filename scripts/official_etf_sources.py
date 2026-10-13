@@ -30,11 +30,14 @@ CLI: python3 official_etf_sources.py [TICKER ...]
 
 from __future__ import annotations
 
+import csv
 import gzip
+import io
 import json
 import math
 import re
 import sys
+import threading
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
@@ -48,11 +51,47 @@ SUPPORTED_TICKERS = (
     "KEYX",
     "LRNX",
     "ONDC",
+    "CIFC",
+    "EO",
+    "GMEC",
+    "IONC",
+    "MIC",
+    "ORAC",
+    "XQTM",
+    "ACII",
+    "BDEC",
+    "BJUL",
+    "BJUN",
+    "BNOV",
+    "BSTP",
+    "EBUF",
+    "EJAN",
+    "EJUL",
+    "IAPR",
+    "PMAR",
+    "PMAY",
+    "PSTP",
+    "QBUF",
+    "RBUF",
+    "TBJL",
     "MWHS",
     "THYP",
 )
 
-CORGI_TICKERS = ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "LRNX", "ONDC")
+CORGI_TICKERS = ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "LRNX", "ONDC",
+                 "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM")
+
+INNOVATOR_TICKERS = (
+    "ACII", "BDEC", "BJUL", "BJUN", "BNOV", "BSTP", "EBUF", "EJAN",
+    "EJUL", "IAPR", "PMAR", "PMAY", "PSTP", "QBUF", "RBUF", "TBJL",
+)
+
+_INNOVATOR_HOLDINGS_URL = "https://www.innovatoretfs.com/etf/xt_holdings.csv"
+# The all-funds CSV carries every Innovator fund, so one cached body serves all
+# sixteen members inside a single collector process.
+_INNOVATOR_CSV_CACHE: dict = {}
+_INNOVATOR_CSV_LOCK = threading.Lock()
+_PLAIN_TICKER = re.compile(r"^[A-Z][A-Z0-9.\-]{0,6}$")
 
 _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -736,6 +775,145 @@ def _fetch_twenty_one_shares(ticker: str, timeout: int) -> dict:
 
 
 # --------------------------------------------------------------------------
+# Innovator (one all-funds holdings CSV)
+# --------------------------------------------------------------------------
+
+
+def _innovator_csv(timeout: int) -> str:
+    """Return the all-funds holdings CSV, cached once per collector process."""
+    with _INNOVATOR_CSV_LOCK:
+        return _load_innovator_csv(timeout)
+
+
+def _load_innovator_csv(timeout: int) -> str:
+    cached = _INNOVATOR_CSV_CACHE.get(_INNOVATOR_HOLDINGS_URL)
+    if cached is None:
+        # The issuer answers 406 to an explicit text/csv Accept header, so the
+        # default wildcard Accept is required for this route.
+        body = _http_get(_INNOVATOR_HOLDINGS_URL, timeout)
+        try:
+            cached = body.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise OfficialEtfSourceError("Innovator holdings CSV is not UTF-8") from exc
+        _INNOVATOR_CSV_CACHE[_INNOVATOR_HOLDINGS_URL] = cached
+    return cached
+
+
+def _innovator_holding(raw: dict, ticker: str, date: str) -> dict:
+    provider_ticker = _text(raw.get("StockTicker"))
+    identifier = _text(raw.get("CUSIP"))
+    shares = _number(raw.get("Shares"))
+    market_value = _number(raw.get("MarketValue"))
+    weight = _number(raw.get("Weightings"))
+    name = _text(raw.get("SecurityName"))
+    if name is None or shares is None or market_value is None or weight is None:
+        raise OfficialEtfSourceError(
+            f"malformed Innovator holdings row for {ticker}: {raw.get('SecurityName')!r}"
+        )
+    symbol = provider_ticker if provider_ticker and _PLAIN_TICKER.fullmatch(provider_ticker) else None
+    return {
+        "name": name,
+        "symbol": symbol,
+        "identifier": identifier,
+        "identifier_type": "cusip" if identifier else None,
+        "weight_pct": weight,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": market_value,
+        "shares": shares,
+        "quantity": None,
+        "as_of_date": date,
+        "position_date": None,
+        "provider_ticker": provider_ticker,
+        "raw": raw,
+    }
+
+
+def _fetch_innovator(ticker: str, timeout: int) -> dict:
+    csv_text = _innovator_csv(timeout)
+    reader = csv.DictReader(io.StringIO(csv_text))
+    fieldnames = list(reader.fieldnames or [])
+    if "Account" not in fieldnames or "Date" not in fieldnames:
+        raise OfficialEtfSourceError("Innovator holdings CSV header is missing Account or Date")
+
+    selected = [
+        row for row in reader
+        if _text(row.get("Account")) and str(row["Account"]).strip().upper() == ticker.upper()
+    ]
+    if not selected:
+        raise OfficialEtfSourceError(f"no Innovator holdings rows for {ticker}")
+
+    dates = {_normalise_date(row.get("Date")) for row in selected}
+    if None in dates:
+        raise OfficialEtfSourceError(f"Innovator rows for {ticker} carry an unreadable Date")
+    if len(dates) != 1:
+        raise OfficialEtfSourceError(
+            f"Innovator rows for {ticker} carry conflicting dates: {sorted(dates)}"
+        )
+    date = dates.pop()
+
+    holdings = [_innovator_holding(row, ticker, date) for row in selected]
+
+    shares_values = {_number(row.get("SharesOutstanding")) for row in selected}
+    aum_values = {_number(row.get("NetAssets")) for row in selected}
+    quote = {}
+    if len(shares_values) == 1 and None not in shares_values:
+        quote["shares_outstanding"] = shares_values.pop()
+        quote["shares_outstanding_as_of"] = date
+    if len(aum_values) == 1 and None not in aum_values:
+        quote["aum"] = aum_values.pop()
+        quote["aum_as_of"] = date
+
+    field_dates = {
+        "holdings": date,
+        "shares_outstanding": quote.get("shares_outstanding_as_of"),
+        "aum": quote.get("aum_as_of"),
+    }
+
+    completeness = [
+        "holdings are every published row for this account in the issuer's all-funds "
+        "holdings CSV, and all of them share one Date",
+        "weights are the provider's signed Weightings values; long and short option legs, "
+        "money market and Cash & Other stay exactly as published with no sum-to-100 check",
+        "shares outstanding and AUM are published only when every selected row agrees on a "
+        "finite value; otherwise they are omitted rather than guessed",
+        "option legs carry a composite provider ticker, so symbol is set only for plain tickers",
+        "the CSV carries no dated history, no fund classification and no notional exposure",
+    ]
+
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate",
+        "scope_note": (
+            "issuer publishes every holdings row for this account in one dated all-funds CSV"
+        ),
+    }
+
+    return {
+        "ticker": ticker.upper(),
+        "provider": "innovator",
+        "source_url": _INNOVATOR_HOLDINGS_URL,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": quote,
+        "history": [],
+        "classification": {"provider_account": ticker.upper()},
+        "field_dates": field_dates,
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {
+            "holdings_url": _INNOVATOR_HOLDINGS_URL,
+            "csv_header": fieldnames,
+            "holdings_rows": selected,
+        },
+    }
+
+
+# --------------------------------------------------------------------------
 # public entry point
 # --------------------------------------------------------------------------
 
@@ -751,6 +929,8 @@ def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
         )
     if symbol in CORGI_TICKERS:
         return _fetch_corgi(symbol, timeout)
+    if symbol in INNOVATOR_TICKERS:
+        return _fetch_innovator(symbol, timeout)
     if symbol == "MWHS":
         return _fetch_skylar(symbol, timeout)
     return _fetch_twenty_one_shares(symbol, timeout)

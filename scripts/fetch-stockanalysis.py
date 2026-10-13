@@ -3501,11 +3501,21 @@ def collect_etf_payload(ticker: str, timeout: int, include_history: bool) -> dic
             payload["holdings_source"] = provenance
             normalized.update(holdings=issuer["holdings"], holding_count=len(issuer["holdings"]),
                               holdings_updated=holdings_date)
+            for issuer_key, overview_key in (("shares_outstanding", "sharesOut"), ("aum", "aum")):
+                value = (issuer.get("quote") or {}).get(issuer_key)
+                field_date = (issuer.get("field_dates") or {}).get(issuer_key)
+                if (isinstance(value, (int, float)) and not isinstance(value, bool)
+                        and math.isfinite(value) and value > 0 and field_date == holdings_date):
+                    normalized.setdefault("overview", {})[overview_key] = value
+                    payload.setdefault("field_sources", {})[overview_key] = {
+                        "provider": issuer["provider"], "source_as_of": field_date,
+                        "source_url": issuer["source_url"], "status": "available"}
             classification = issuer.get("classification") or {}
             if issuer["provider"] == "corgi" and classification.get("underlying_ticker"):
                 normalized["classification"] = {
                     "is_leveraged": True, "leverage_factor": float(classification["leverage_factor"]),
-                    "is_inverse": False, "is_single_stock": True,
+                    # XQTM references the issuer's CQTM ETF, not one equity.
+                    "is_inverse": False, "is_single_stock": ticker != "XQTM",
                     "underlying": classification["underlying_ticker"],
                     "source": issuer["source_url"], "confidence": "high"}
             elif ticker == "THYP" and "staking" in classification.get("product_category", []):
@@ -3531,11 +3541,11 @@ def collect_etf_payload(ticker: str, timeout: int, include_history: bool) -> dic
                 raise ValueError("issuer detail component source clocks are unavailable")
             payload["source_as_of"] = utc_iso(source)
         clocks = _etf_component_clocks(payload) or {}
-        payload["field_sources"] = {
+        payload.setdefault("field_sources", {}).update({
             component: {"provider": (payload.get("holdings_source") or {}).get("provider", "stockanalysis")
                         if component == "holdings" else "stockanalysis",
                         "source_as_of": utc_iso(stamp), "status": "available"}
-            for component, stamp in clocks.items()}
+            for component, stamp in clocks.items()})
         return payload
     return fetch_etf(
         ticker, timeout, include_history=False, include_quote=False,
@@ -3976,11 +3986,11 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
         if not clocks:
             raise ValueError("issuer detail has invalid component dates")
         payload["source_as_of"] = utc_iso(min(clocks.values()))
-        payload["field_sources"] = {
+        payload.setdefault("field_sources", {}).update({
             field: {"provider": (payload.get("holdings_source") or {}).get("provider", "stockanalysis")
                     if field == "holdings" else "yahoo_finance" if field == "history" and normalized.get("daily_history_selection")
                     else "stockanalysis", "source_as_of": utc_iso(stamp), "status": "available"}
-            for field, stamp in clocks.items()}
+            for field, stamp in clocks.items()})
     if not validate_etf_history_archive(payload):
         raise ValueError("StockAnalysis ETF history archive is invalid")
 

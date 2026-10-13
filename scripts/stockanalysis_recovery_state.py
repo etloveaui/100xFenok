@@ -507,7 +507,11 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
         return None
     ticker = payload.get("ticker")
     expected = ({symbol: f"https://corgiinvest.com/{symbol.lower()}"
-                 for symbol in ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "ONDC", "LRNX")}
+                 for symbol in ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "ONDC", "LRNX",
+                                "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM")}
+                | {symbol: "https://www.innovatoretfs.com/etf/xt_holdings.csv"
+                   for symbol in ("ACII", "BDEC", "BJUL", "BJUN", "BNOV", "BSTP", "EBUF", "EJAN",
+                                  "EJUL", "IAPR", "PMAR", "PMAY", "PSTP", "QBUF", "RBUF", "TBJL")}
                 | {"MWHS": "https://www.skylaretfs.com/mwhs",
                    "THYP": "https://api.primary.21shares.com/api/product_details/THYP"})
     if ticker not in expected or issuer.get("source_url") != expected[ticker]:

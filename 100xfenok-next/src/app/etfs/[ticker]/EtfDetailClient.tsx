@@ -1416,7 +1416,16 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
       ]
     : [];
 
-  const totalAssets = factNumber(marketFacts, "total_assets");
+  const detailAumSource = etfData?.field_sources?.aum;
+  const factsAumDate = factDate(marketFacts, "total_assets");
+  const preferDetailAum = isFiniteNumber(overview.aum) && Boolean(detailAumSource?.source_as_of)
+    && (!factsAumDate || Date.parse(detailAumSource!.source_as_of!) >= Date.parse(factsAumDate));
+  const totalAssets = preferDetailAum ? overview.aum as number : factNumber(marketFacts, "total_assets");
+  const sharesSource = etfData?.field_sources?.sharesOut;
+  const sharesNote = sharesSource?.source_as_of
+    ? `${sharesSource.provider ?? "발행사"} · ${formatDateish(sharesSource.source_as_of)}` : "현재 원장 기준";
+  const aumNote = preferDetailAum
+    ? `${detailAumSource?.provider ?? "발행사"} · ${formatDateish(detailAumSource?.source_as_of)}` : "총 운용자산";
   const expenseRatio = factNumber(marketFacts, "expense_ratio");
   const dividendYield = factNumber(marketFacts, "dividend_yield");
   const beta = factNumber(marketFacts, "beta");
@@ -1446,11 +1455,11 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const metrics = [
     { label: "가격", value: formatCurrency(price, currency as Currency), note: formatDateish(updateDate) },
     { label: "당일 변화", value: fmtSignedPercentPoints(changePct), note: metricValue(quote.ex, exchange) },
-    { label: "운용자산", value: totalAssets !== null ? formatCurrencyCompact(totalAssets, currency as Currency) : rawText(overview.aum), note: "총 운용자산" },
+    { label: "운용자산", value: totalAssets !== null ? formatCurrencyCompact(totalAssets, currency as Currency) : rawText(overview.aum), note: aumNote },
     { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
     { label: "배당률", value: dividendYield !== null ? fmtPercentPoints(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "상장일", value: inceptionDate, note: "상장 시작일" },
-    { label: "발행 주식 수", value: sharesOutstanding, note: "현재 원장 기준" },
+    { label: "발행 주식 수", value: sharesOutstanding, note: sharesNote },
     { label: "베타", value: beta !== null ? formatDecimal(beta, { digits: 2 }) : rawText(overview.beta), note: (beta !== null ? derivedBetaLabel(marketFacts?.facts?.beta) : null) ?? "시장 민감도" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
     { label: "PER", value: trailingPe !== null ? formatDecimal(trailingPe, { digits: 1 }) : rawText(overview.peRatio), note: "최근 실적 기준" },
