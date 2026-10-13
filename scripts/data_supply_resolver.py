@@ -246,15 +246,25 @@ class DataSupplyResolver:
                 else:
                     days = _etf_history_date_set(yahoo_data.get("history_1y"))
                     proven_source = _timestamp(max(days) + "T00:00:00Z") if days else None
+                # Same legacy-migration shape as fetch-stockanalysis.py: the
+                # prior selection's observed_at is the migration clock, so the
+                # immutable object's fetched_at cannot equal it.
+                legacy_collection_prior = (
+                    issuer_holdings_snapshot(payload) is not None
+                    and legacy_yahoo_collection_clock(yahoo))
+                legacy_migration_clock = (
+                    legacy_collection_prior
+                    and prior.get("reason_code") in {
+                        "legacy_migration_fallback_fresh", "legacy_migration_fallback_lkg"}
+                    and _timestamp(yahoo["fetched_at"]) <= prior_fetched)
                 if (yahoo.get("schema_version") != "yf-etf-detail/v1"
                         or yahoo.get("source_provider") != "yahoo_finance"
                         or str(info.get("symbol") or funds.get("symbol") or "").strip().upper() != row["entity"]
                         or str(info.get("quoteType") or funds.get("quote_type") or "").upper() not in {"ETF", "MUTUALFUND"}
                         or _timestamp(yahoo["source_as_of"]) != prior_source
-                        or (proven_source != prior_source and not (
-                            issuer_holdings_snapshot(payload) is not None
-                            and legacy_yahoo_collection_clock(yahoo)))
-                        or _timestamp(yahoo["fetched_at"]) != prior_fetched):
+                        or (proven_source != prior_source and not legacy_collection_prior)
+                        or (_timestamp(yahoo["fetched_at"]) != prior_fetched
+                            and not legacy_migration_clock)):
                     return False
             elif set(yahoo) - {"ticker", "suffix"}:
                 # Legacy metadata-only objects cannot provide unverified price history.

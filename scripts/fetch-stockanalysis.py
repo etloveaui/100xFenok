@@ -3732,7 +3732,11 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
     normalized = payload.get("normalized")
     if not isinstance(normalized, dict):
         return
-    selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
+    active = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")
+    selected = active["current"].get(ticker)
+    if selected is None and issuer_holdings_snapshot(payload) is not None:
+        # Expiration removes serving authority, not the historical preservation floor.
+        selected = active.get("lkg", {}).get(ticker)
     prior = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
     if issuer_holdings_snapshot(payload) is not None:
         previous = [prior] if isinstance(prior, dict) else []
@@ -3779,14 +3783,28 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
             raise ValueError("selected Yahoo ETF immutable object lost its hash binding")
         source = json.loads(object_bytes)
         yahoo_data = (source.get("raw") or {}).get("yf")
+        # A legacy-migrated selection keeps the immutable object's original
+        # collection clock while observed_at records the migration clock, so
+        # fetched_at and observed_at cannot be equal. The issuer snapshot plus
+        # the proven legacy collection clock carry the same identity and
+        # history guarantees the equality was standing in for.
+        legacy_collection_prior = (issuer_holdings_snapshot(payload) is not None
+                                   and legacy_yahoo_collection_clock(source))
+        legacy_migration_clock = (
+            legacy_collection_prior
+            and selected.get("reason_code") in {
+                "legacy_migration_fallback_fresh", "legacy_migration_fallback_lkg"}
+            and parse_iso_timestamp(source["fetched_at"])
+                <= parse_iso_timestamp(selected["observed_at"])
+                <= parse_iso_timestamp(payload["fetched_at"]))
         if (source.get("schema_version") != "yf-etf-detail/v1"
                 or source.get("ticker") != ticker or source.get("source_provider") != "yahoo_finance"
                 or source.get("source_as_of") != selected["source_as_of"]
-                or source.get("fetched_at") != selected["observed_at"]
+                or (source.get("fetched_at") != selected["observed_at"]
+                    and not legacy_migration_clock)
                 or not isinstance(yahoo_data, dict)
                 or (yahoo_detail_source_timestamp(source) != selected["source_as_of"]
-                    and not (issuer_holdings_snapshot(payload) is not None
-                             and legacy_yahoo_collection_clock(source)))):
+                    and not legacy_collection_prior)):
             raise ValueError("selected Yahoo ETF immutable source is invalid")
         yahoo_daily = yahoo_data.get("history_1y")
         if yahoo_daily:
