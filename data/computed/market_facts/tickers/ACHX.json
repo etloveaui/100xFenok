@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "ACHX",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T02:35:01Z",
-  "source_as_of": "2026-10-08",
+  "generated_at": "2026-10-13T04:09:50Z",
+  "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -18,9 +18,9 @@
   "facts": {
     "price": {
       "value": 20.3751,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-13T00:01:35Z",
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -32,20 +32,27 @@
       "candidates": [
         {
           "value": 20.3751,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 20.3751,
           "source": "yf",
           "as_of": "2026-10-08",
           "fetched_at": "2026-10-13T00:01:35Z",
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 23.0749,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-13T00:01:35Z",
+      "value": 23.07,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 23.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed"
+        },
         {
           "value": 23.0749,
           "source": "yf",
@@ -61,14 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -2.6998,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-13T00:01:35Z",
+      "value": -2.69,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": -2.69,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed"
+        },
         {
           "value": -2.6998,
           "source": "yf",
@@ -85,14 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -11.7002,
-      "source": "yf",
-      "as_of": "2026-10-08",
-      "fetched_at": "2026-10-13T00:01:35Z",
+      "value": -11.68,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": -11.68,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed"
+        },
+        {
           "value": -11.7002,
           "source": "yf",
           "as_of": "2026-10-08",
@@ -109,14 +137,60 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": "$313.25K",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": "$313.25K",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.45,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.45,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -22.14394,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T23:54:05Z",
+      "value": -31.25323,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +201,15 @@
       ],
       "candidates": [
         {
-          "value": -22.14394,
+          "value": -31.25323,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -31.25323,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T23:54:05Z",
@@ -135,24 +217,110 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -21.78713048017903,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T03:37:54Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -21.78713048017903,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T03:37:54Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 2,
+    "holdings_updated": "2026-10-12",
+    "top_holdings": [
+      {
+        "name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+        "symbol": null,
+        "identifier": "03945R102-TRS-07/30/27-L-MREX",
+        "identifier_type": "cusip_trs",
+        "weight_pct": 196.73,
+        "weight_basis": "market_value",
+        "market_value": 604536.31,
+        "shares": 128899.0,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
+        "raw": {
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+          "security_cusip": "03945R102-TRS-07/30/27-L-MREX",
+          "security_ticker": "03945R102-TRS-07/30/27-L-MREX",
+          "weight_pct": "196.7300",
+          "market_value": "604536.31",
+          "shares": "128899.00000000",
+          "net_assets": "307297.50",
+          "as_of_date": "2026-10-12"
+        }
+      },
+      {
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "issuer_identifier",
+        "weight_pct": -96.77,
+        "weight_basis": "market_value",
+        "market_value": -297375.25,
+        "shares": null,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
+        "raw": {
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "Cash & Other",
+          "security_cusip": "Cash&Other",
+          "security_ticker": "Cash&Other",
+          "weight_pct": "-96.7700",
+          "market_value": "-297375.25",
+          "shares": "-297375.25000000",
+          "net_assets": "307297.50",
+          "as_of_date": "2026-10-12"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": true,
+      "underlying": "ACHR",
+      "source": "https://corgiinvest.com/achx",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +328,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/ACHX.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/ACHX.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

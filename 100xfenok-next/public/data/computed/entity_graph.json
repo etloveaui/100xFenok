@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-10-13T03:13:25.137Z",
+  "generated_at": "2026-10-13T04:13:47.625Z",
   "source_as_of": {
     "stocks_analyzer": "2026-10-09",
     "stock_action_index": "2026-10-09",
@@ -131,8 +131,16 @@
         "skipped_source": "stocks_analyzer.companyName"
       }
     ],
-    "single_stock_etfs_unresolved": 135,
+    "single_stock_etfs_unresolved": 139,
     "single_stock_etfs_unresolved_list": [
+      {
+        "ticker": "ACHX",
+        "label": "Corgi ACHR 2x Daily ETF",
+        "raw_underlying": "ACHR",
+        "classification_source": "https://corgiinvest.com/achx",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
       {
         "ticker": "AEHG",
         "label": "Leverage Shares 2X Long AEHR Daily ETF",
@@ -344,8 +352,8 @@
       {
         "ticker": "CIFC",
         "label": "Corgi CIFR 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
+        "raw_underlying": "CIFR",
+        "classification_source": "https://corgiinvest.com/cifc",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
@@ -448,8 +456,8 @@
       {
         "ticker": "EO",
         "label": "Corgi EOSE 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
+        "raw_underlying": "EOSE",
+        "classification_source": "https://corgiinvest.com/eo",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
@@ -510,6 +518,14 @@
         "reason": "no_canonical_us_stock_match"
       },
       {
+        "ticker": "GMEC",
+        "label": "Corgi GME 2x Daily ETF",
+        "raw_underlying": "GME",
+        "classification_source": "https://corgiinvest.com/gmec",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
         "ticker": "GOGL",
         "label": "Corgi GOOGL 2x Daily ETF",
         "raw_underlying": "the publicly-traded common",
@@ -530,6 +546,14 @@
         "label": "Defiance Daily Target 2X Long INFQ ETF",
         "raw_underlying": "INFQ",
         "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
+        "ticker": "IONC",
+        "label": "Corgi IONQ 2x Daily ETF",
+        "raw_underlying": "IONQ",
+        "classification_source": "https://corgiinvest.com/ionc",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
@@ -618,6 +642,14 @@
         "label": "Direxion Daily SpaceX Bear 2X ETF",
         "raw_underlying": "SPACEX",
         "classification_source": "stockanalysis.overview.description",
+        "confidence": "high",
+        "reason": "no_canonical_us_stock_match"
+      },
+      {
+        "ticker": "LRNX",
+        "label": "Corgi LRN 2x Daily ETF",
+        "raw_underlying": "LRN",
+        "classification_source": "https://corgiinvest.com/lrnx",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
@@ -760,8 +792,8 @@
       {
         "ticker": "ONDC",
         "label": "Corgi ONDS 2x Daily ETF",
-        "raw_underlying": "the publicly-traded common",
-        "classification_source": "stockanalysis.overview.description",
+        "raw_underlying": "ONDS",
+        "classification_source": "https://corgiinvest.com/ondc",
         "confidence": "high",
         "reason": "no_canonical_us_stock_match"
       },
@@ -2230,7 +2262,7 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:AVGC",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/avgc",
             "raw_underlying": "AVGO",
             "canonical_underlying_ticker": "AVGO",
             "resolution_method": "direct",
@@ -2531,7 +2563,7 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:MIC",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/mic",
             "raw_underlying": "MU",
             "canonical_underlying_ticker": "MU",
             "resolution_method": "direct",
@@ -3920,7 +3952,7 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:ORAC",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/orac",
             "raw_underlying": "ORCL",
             "canonical_underlying_ticker": "ORCL",
             "resolution_method": "direct",
@@ -5349,7 +5381,7 @@
           {
             "type": "referenced_by_single_stock_etf",
             "target": "etf:ARMA",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/arma",
             "raw_underlying": "ARM",
             "canonical_underlying_ticker": "ARM",
             "resolution_method": "direct",
@@ -17459,6 +17491,17 @@
             "type": "referenced_by_single_stock_etf",
             "target": "etf:KEYG",
             "source": "stockanalysis.overview.description",
+            "raw_underlying": "KEYS",
+            "canonical_underlying_ticker": "KEYS",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "KEYS",
+            "resolution_note": null
+          },
+          {
+            "type": "referenced_by_single_stock_etf",
+            "target": "etf:KEYX",
+            "source": "https://corgiinvest.com/keyx",
             "raw_underlying": "KEYS",
             "canonical_underlying_ticker": "KEYS",
             "resolution_method": "direct",
@@ -56612,8 +56655,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "classification_source": "https://corgiinvest.com/achx",
+          "underlying_raw": "ACHR",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -56623,7 +56666,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-08"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -56632,7 +56675,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -65228,7 +65272,7 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
+          "classification_source": "https://corgiinvest.com/arma",
           "underlying_raw": "ARM",
           "canonical_underlying_ticker": "ARM",
           "canonical_underlying_key": "ticker:ARM",
@@ -65239,7 +65283,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-09"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -65260,7 +65304,7 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:ARM",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/arma",
             "raw_underlying": "ARM",
             "canonical_underlying_ticker": "ARM",
             "resolution_method": "direct",
@@ -67520,7 +67564,7 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
+          "classification_source": "https://corgiinvest.com/avgc",
           "underlying_raw": "AVGO",
           "canonical_underlying_ticker": "AVGO",
           "canonical_underlying_key": "ticker:AVGO",
@@ -67531,7 +67575,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-09"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -67552,7 +67596,7 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:AVGO",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/avgc",
             "raw_underlying": "AVGO",
             "canonical_underlying_ticker": "AVGO",
             "resolution_method": "direct",
@@ -72445,7 +72489,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-09"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -75517,7 +75561,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-09"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -75556,7 +75600,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-09"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -77868,7 +77912,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-09"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -88594,8 +88638,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "classification_source": "https://corgiinvest.com/cifc",
+          "underlying_raw": "CIFR",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -112898,8 +112942,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "classification_source": "https://corgiinvest.com/eo",
+          "underlying_raw": "EOSE",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -137174,8 +137218,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "classification_source": "https://corgiinvest.com/gmec",
+          "underlying_raw": "GME",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -137185,7 +137229,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-07"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -137194,7 +137238,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -156465,8 +156510,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "classification_source": "https://corgiinvest.com/ionc",
+          "underlying_raw": "IONQ",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -156485,7 +156530,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -168603,18 +168649,18 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
-          "canonical_underlying_ticker": null,
-          "canonical_underlying_key": null,
-          "resolution_method": null,
-          "resolution_source": null,
-          "matched_alias": null,
+          "classification_source": "https://corgiinvest.com/keyx",
+          "underlying_raw": "KEYS",
+          "canonical_underlying_ticker": "KEYS",
+          "canonical_underlying_key": "ticker:KEYS",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "KEYS",
           "resolution_note": null
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-01"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -168623,13 +168669,25 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
             "type": "belongs_to_etf_category",
             "target": "etf_category:Equity",
             "source": "stockanalysis/etf_universe"
+          },
+          {
+            "type": "tracks_underlying",
+            "target": "ticker:KEYS",
+            "source": "https://corgiinvest.com/keyx",
+            "raw_underlying": "KEYS",
+            "canonical_underlying_ticker": "KEYS",
+            "resolution_method": "direct",
+            "resolution_source": "raw_underlying.symbol",
+            "matched_alias": "KEYS",
+            "resolution_note": null
           }
         ]
       },
@@ -175599,8 +175657,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "classification_source": "https://corgiinvest.com/lrnx",
+          "underlying_raw": "LRN",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -175610,7 +175668,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-02"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -175619,7 +175677,8 @@
         },
         "service_flags": [
           "etf_center",
-          "leveraged"
+          "leveraged",
+          "single_stock"
         ],
         "relations": [
           {
@@ -180857,7 +180916,7 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
+          "classification_source": "https://corgiinvest.com/mic",
           "underlying_raw": "MU",
           "canonical_underlying_ticker": "MU",
           "canonical_underlying_key": "ticker:MU",
@@ -180889,7 +180948,7 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:MU",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/mic",
             "raw_underlying": "MU",
             "canonical_underlying_ticker": "MU",
             "resolution_method": "direct",
@@ -186921,7 +186980,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-21"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -196859,8 +196918,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": "the publicly-traded common",
+          "classification_source": "https://corgiinvest.com/ondc",
+          "underlying_raw": "ONDS",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -196870,7 +196929,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-09-29"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -197808,7 +197867,7 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
+          "classification_source": "https://corgiinvest.com/orac",
           "underlying_raw": "ORCL",
           "canonical_underlying_ticker": "ORCL",
           "canonical_underlying_key": "ticker:ORCL",
@@ -197840,7 +197899,7 @@
           {
             "type": "tracks_underlying",
             "target": "ticker:ORCL",
-            "source": "stockanalysis.overview.description",
+            "source": "https://corgiinvest.com/orac",
             "raw_underlying": "ORCL",
             "canonical_underlying_ticker": "ORCL",
             "resolution_method": "direct",
@@ -246800,7 +246859,7 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
+          "classification_source": "https://api.primary.21shares.com/api/product_details/THYP",
           "underlying_raw": null,
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
@@ -246811,7 +246870,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": null
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
@@ -246819,9 +246878,7 @@
           "classification": true
         },
         "service_flags": [
-          "etf_center",
-          "leveraged",
-          "inverse"
+          "etf_center"
         ],
         "relations": [
           {
@@ -275965,8 +276022,8 @@
         "confidence": {
           "label": "high",
           "rank": 3,
-          "classification_source": "stockanalysis.overview.description",
-          "underlying_raw": null,
+          "classification_source": "https://corgiinvest.com/xqtm",
+          "underlying_raw": "CQTM",
           "canonical_underlying_ticker": null,
           "canonical_underlying_key": null,
           "resolution_method": null,
@@ -275976,7 +276033,7 @@
         },
         "as_of": {
           "etf_universe": null,
-          "market_facts": "2026-10-08"
+          "market_facts": "2026-10-12"
         },
         "source_links": {
           "etf_universe": true,
