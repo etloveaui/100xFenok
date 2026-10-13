@@ -3,8 +3,8 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "IOSX",
-  "source_as_of": "2026-09-30T20:00:00Z",
-  "fetched_at": "2026-09-30T20:09:06Z",
+  "source_as_of": "2026-10-12T00:00:00Z",
+  "fetched_at": "2026-10-13T02:00:26Z",
   "endpoints": {
     "holdings": "/etf/iosx/holdings/__data.json",
     "overview": "/etf/iosx/__data.json",
@@ -25,9 +25,9 @@
       "contract": "etf_detail_overview/v1"
     },
     "holdings": {
-      "format": "svelte_devalue",
-      "decoder": "svelte_devalue_node/v1",
-      "contract": "etf_detail_holdings/v1"
+      "format": "issuer_payload",
+      "provider": "corgi",
+      "contract": "issuer_published_snapshot/v1"
     },
     "quote": {
       "format": "rest_json",
@@ -41,91 +41,83 @@
   "normalized": {
     "holdings": [
       {
-        "rank": 1,
         "name": "APPLE INC.-SWAP-CLST-L",
-        "weight_pct": 200.68,
-        "shares": 3073,
+        "symbol": null,
+        "identifier": "037833100-TRS-08/04/27-L-CLST",
+        "identifier_type": "cusip_trs",
+        "weight_pct": 199.0,
+        "weight_basis": "market_value",
+        "market_value": 1040640.44,
+        "shares": 3052.0,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "no": 1,
-          "n": "APPLE INC.-SWAP-CLST-L",
-          "as": "200.68%",
-          "sh": "3,073"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "APPLE INC.-SWAP-CLST-L",
+          "security_cusip": "037833100-TRS-08/04/27-L-CLST",
+          "security_ticker": "037833100-TRS-08/04/27-L-CLST",
+          "weight_pct": "199.0000",
+          "market_value": "1040640.44",
+          "shares": "3052.00000000",
+          "net_assets": "522942.00",
+          "as_of_date": "2026-10-12"
         }
       },
       {
-        "rank": 2,
-        "name": "US DOLLARS",
-        "weight_pct": 69.47,
-        "shares": 360000,
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "issuer_identifier",
+        "weight_pct": -99.02,
+        "weight_basis": "market_value",
+        "market_value": -517837.83,
+        "shares": null,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "no": 2,
-          "n": "US DOLLARS",
-          "as": "69.47%",
-          "sh": "360,000"
-        }
-      },
-      {
-        "rank": 3,
-        "symbol": "!MUTF/FGXXX",
-        "name": "First American Government Obligs X",
-        "weight_pct": 9.37,
-        "shares": 48559,
-        "raw": {
-          "no": 3,
-          "n": "First American Government Obligs X",
-          "s": "!mutf/FGXXX",
-          "as": "9.37%",
-          "sh": "48,559"
-        }
-      },
-      {
-        "rank": 4,
-        "name": "OTHER ASSETS AND LIABILITIES",
-        "weight_pct": -3.09,
-        "shares": 16030,
-        "raw": {
-          "no": 4,
-          "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-3.09%",
-          "sh": "16,030"
-        }
-      },
-      {
-        "rank": 5,
-        "name": "Cash Offset",
-        "weight_pct": -176.43,
-        "shares": 914237,
-        "raw": {
-          "no": 5,
-          "n": "Cash Offset",
-          "as": "-176.43%",
-          "sh": "914,237"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "Cash & Other",
+          "security_cusip": "Cash&Other",
+          "security_ticker": "Cash&Other",
+          "weight_pct": "-99.0200",
+          "market_value": "-517837.83",
+          "shares": "-517837.83000000",
+          "net_assets": "522942.00",
+          "as_of_date": "2026-10-12"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": 5,
-    "holdings_updated": "Sep 28, 2026",
+    "holding_count": 2,
+    "holdings_updated": "2026-10-12",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
       "is_inverse": false,
       "is_single_stock": true,
       "underlying": "AAPL",
-      "source": "stockanalysis.overview.description",
+      "source": "https://corgiinvest.com/iosx",
       "confidence": "high"
     },
     "overview": {
-      "aum": "$526.54K",
+      "aum": "$522.06K",
       "expenseRatio": "0.45%",
       "sharesOut": "15,000",
       "inception": "Jun 30, 2026",
       "etf_website": "https://corgifunds.com/iosx"
     },
     "performance": {
-      "tr1m": 4.677,
+      "tr1m": 3.894,
       "trYTD": null,
       "tr1y": null,
       "cagr5y": null,
@@ -133,49 +125,58 @@
       "cagrMAX": null
     },
     "quote": {
-      "p": 32.6811,
-      "pd": 32.68,
-      "c": 0,
-      "cp": 0,
-      "cl": 32.68,
-      "cdr": 0,
-      "o": 0,
-      "h": 0,
-      "l": 0,
-      "v": 33,
-      "ts": 1790798400000,
-      "u": "Sep 30, 2026, 4:00 PM EDT",
-      "td": "2026-09-30",
-      "h52": 36.08,
-      "l52": 26.18,
+      "c": 0.83,
+      "e": true,
+      "h": 34.83,
+      "l": 34.62,
+      "o": 34.62,
+      "p": 34.8339,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 212,
+      "cl": 34,
+      "cp": 2.45,
+      "ec": -0.1,
+      "ep": 34.73,
+      "es": "After-hours",
+      "eu": "Oct 12, 2026, 8:00 PM EDT",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
-      "ecp": 0,
-      "eu": null,
-      "es": null,
-      "ets": 1790793350556.4724,
-      "etd": null,
-      "epv": null,
+      "pd": 34.83,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": 1,
+      "ecp": -0.3,
+      "epd": 34.73,
+      "etd": "2026-10-12",
+      "ets": 1791849603743.2117,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 36.08,
+      "l52": 26.18,
+      "uid": "IOSX",
       "days": 0,
-      "exp": 1790798950902,
-      "symbol": "IOSX",
-      "uid": "IOSX"
+      "symbol": "IOSX"
     },
     "history": [
+      {
+        "t": "2026-10-01",
+        "o": 32.865,
+        "h": 34.83,
+        "l": 32.865,
+        "c": 34.834,
+        "v": 328,
+        "a": 34.834,
+        "ch": 4.02
+      },
       {
         "t": "2026-09-01",
         "o": 32.141,
         "h": 35.067,
         "l": 30.243,
-        "c": 32.681,
-        "v": 1103,
-        "a": 32.6811,
-        "ch": 6.68
+        "c": 33.487,
+        "v": 1140,
+        "a": 33.487,
+        "ch": 9.31
       },
       {
         "t": "2026-08-03",
@@ -200,6 +201,96 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 34.62,
+          "h": 34.83,
+          "l": 34.62,
+          "c": 34.834,
+          "v": 212,
+          "a": 34.834,
+          "ch": 2.45
+        },
+        {
+          "t": "2026-10-09",
+          "o": 34.002,
+          "h": 34.002,
+          "l": 34.002,
+          "c": 34.002,
+          "a": 34.0023,
+          "v": 26,
+          "ch": -2.31
+        },
+        {
+          "t": "2026-10-08",
+          "o": 34.806,
+          "h": 34.806,
+          "l": 34.806,
+          "c": 34.806,
+          "a": 34.8062,
+          "v": 20,
+          "ch": 2.21
+        },
+        {
+          "t": "2026-10-07",
+          "o": 34.053,
+          "h": 34.053,
+          "l": 34.053,
+          "c": 34.053,
+          "a": 34.053,
+          "v": 12,
+          "ch": 1.81
+        },
+        {
+          "t": "2026-10-06",
+          "o": 33.447,
+          "h": 33.447,
+          "l": 33.447,
+          "c": 33.447,
+          "a": 33.4472,
+          "v": 16,
+          "ch": 0.43
+        },
+        {
+          "t": "2026-10-05",
+          "o": 33.304,
+          "h": 33.304,
+          "l": 33.304,
+          "c": 33.304,
+          "a": 33.3037,
+          "v": 14,
+          "ch": -0.32
+        },
+        {
+          "t": "2026-10-02",
+          "o": 33.41,
+          "h": 33.41,
+          "l": 33.41,
+          "c": 33.41,
+          "a": 33.41,
+          "v": 13,
+          "ch": 1.66
+        },
+        {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 32.865,
+          "l": 32.865,
+          "c": 32.865,
+          "a": 32.8646,
+          "v": 15,
+          "ch": -1.86
+        },
+        {
+          "t": "2026-09-30",
+          "o": 33.487,
+          "h": 33.487,
+          "l": 33.487,
+          "c": 33.487,
+          "a": 33.487,
+          "v": 37,
+          "ch": 2.47
+        },
         {
           "t": "2026-09-29",
           "o": 32.681,
@@ -833,14 +924,34 @@
       ],
       "weekly_1y": [
         {
+          "t": "2026-10-12",
+          "o": 34.62,
+          "h": 34.83,
+          "l": 34.62,
+          "c": 34.834,
+          "v": 212,
+          "a": 34.834,
+          "ch": 2.45
+        },
+        {
+          "t": "2026-10-05",
+          "o": 33.304,
+          "h": 34.806,
+          "l": 33.304,
+          "c": 34.002,
+          "v": 88,
+          "a": 34.0023,
+          "ch": 1.77
+        },
+        {
           "t": "2026-09-28",
           "o": 34.558,
           "h": 34.558,
           "l": 32.681,
-          "c": 32.681,
-          "v": 50,
-          "a": 32.6811,
-          "ch": -6.8
+          "c": 33.41,
+          "v": 115,
+          "a": 33.41,
+          "ch": -4.72
         },
         {
           "t": "2026-09-21",
@@ -965,14 +1076,24 @@
       ],
       "monthly_1y": [
         {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 34.83,
+          "l": 32.865,
+          "c": 34.834,
+          "v": 328,
+          "a": 34.834,
+          "ch": 4.02
+        },
+        {
           "t": "2026-09-01",
           "o": 32.141,
           "h": 35.067,
           "l": 30.243,
-          "c": 32.681,
-          "v": 1103,
-          "a": 32.6811,
-          "ch": 6.68
+          "c": 33.487,
+          "v": 1140,
+          "a": 33.487,
+          "ch": 9.31
         },
         {
           "t": "2026-08-03",
@@ -997,14 +1118,34 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-10-12",
+          "o": 34.62,
+          "h": 34.83,
+          "l": 34.62,
+          "c": 34.834,
+          "v": 212,
+          "a": 34.834,
+          "ch": 2.45
+        },
+        {
+          "t": "2026-10-05",
+          "o": 33.304,
+          "h": 34.806,
+          "l": 33.304,
+          "c": 34.002,
+          "v": 88,
+          "a": 34.0023,
+          "ch": 1.77
+        },
+        {
           "t": "2026-09-28",
           "o": 34.558,
           "h": 34.558,
           "l": 32.681,
-          "c": 32.681,
-          "v": 50,
-          "a": 32.6811,
-          "ch": -6.8
+          "c": 33.41,
+          "v": 115,
+          "a": 33.41,
+          "ch": -4.72
         },
         {
           "t": "2026-09-21",
@@ -1129,14 +1270,24 @@
       ],
       "monthly_3y": [
         {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 34.83,
+          "l": 32.865,
+          "c": 34.834,
+          "v": 328,
+          "a": 34.834,
+          "ch": 4.02
+        },
+        {
           "t": "2026-09-01",
           "o": 32.141,
           "h": 35.067,
           "l": 30.243,
-          "c": 32.681,
-          "v": 1103,
-          "a": 32.6811,
-          "ch": 6.68
+          "c": 33.487,
+          "v": 1140,
+          "a": 33.487,
+          "ch": 9.31
         },
         {
           "t": "2026-08-03",
@@ -1161,14 +1312,24 @@
       ],
       "monthly_5y": [
         {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 34.83,
+          "l": 32.865,
+          "c": 34.834,
+          "v": 328,
+          "a": 34.834,
+          "ch": 4.02
+        },
+        {
           "t": "2026-09-01",
           "o": 32.141,
           "h": 35.067,
           "l": 30.243,
-          "c": 32.681,
-          "v": 1103,
-          "a": 32.6811,
-          "ch": 6.68
+          "c": 33.487,
+          "v": 1140,
+          "a": 33.487,
+          "ch": 9.31
         },
         {
           "t": "2026-08-03",
@@ -1191,7 +1352,78 @@
           "ch": 11.8
         }
       ]
-    }
+    },
+    "holdings_history": [
+      {
+        "provider": "stockanalysis",
+        "source_as_of": "Sep 28, 2026",
+        "holdings": [
+          {
+            "rank": 1,
+            "name": "APPLE INC.-SWAP-CLST-L",
+            "weight_pct": 200.68,
+            "shares": 3073,
+            "raw": {
+              "no": 1,
+              "n": "APPLE INC.-SWAP-CLST-L",
+              "as": "200.68%",
+              "sh": "3,073"
+            }
+          },
+          {
+            "rank": 2,
+            "name": "US DOLLARS",
+            "weight_pct": 69.47,
+            "shares": 360000,
+            "raw": {
+              "no": 2,
+              "n": "US DOLLARS",
+              "as": "69.47%",
+              "sh": "360,000"
+            }
+          },
+          {
+            "rank": 3,
+            "symbol": "!MUTF/FGXXX",
+            "name": "First American Government Obligs X",
+            "weight_pct": 9.37,
+            "shares": 48559,
+            "raw": {
+              "no": 3,
+              "n": "First American Government Obligs X",
+              "s": "!mutf/FGXXX",
+              "as": "9.37%",
+              "sh": "48,559"
+            }
+          },
+          {
+            "rank": 4,
+            "name": "OTHER ASSETS AND LIABILITIES",
+            "weight_pct": -3.09,
+            "shares": 16030,
+            "raw": {
+              "no": 4,
+              "n": "OTHER ASSETS AND LIABILITIES",
+              "as": "-3.09%",
+              "sh": "16,030"
+            }
+          },
+          {
+            "rank": 5,
+            "name": "Cash Offset",
+            "weight_pct": -176.43,
+            "shares": 914237,
+            "raw": {
+              "no": 5,
+              "n": "Cash Offset",
+              "as": "-176.43%",
+              "sh": "914,237"
+            }
+          }
+        ],
+        "holding_count": 5
+      }
+    ]
   },
   "raw": {
     "overview": {
@@ -1221,14 +1453,13 @@
         ],
         "topic": "overview",
         "ticker": "IOSX",
-        "lastChecked": 1790798892748,
+        "lastChecked": 1791851851284,
         "summary": {
           "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
         }
       },
       "type": "etf",
-      "aum": "$526.54K",
-      "nav": null,
+      "aum": "$522.06K",
       "expenseRatio": "0.45%",
       "peRatio": null,
       "sharesOut": "15,000",
@@ -1239,7 +1470,7 @@
       "ch1y": null,
       "payoutFrequency": "n/a",
       "beta": null,
-      "holdings": 5,
+      "holdings": 4,
       "inception": "Jun 30, 2026",
       "chart": {
         "expiration": null,
@@ -1261,7 +1492,7 @@
         ],
         [
           "Stock Exchange",
-          "BATS"
+          "Cboe BZX"
         ],
         [
           "Ticker Symbol",
@@ -1275,50 +1506,44 @@
       "etf_website": "https://corgifunds.com/iosx",
       "provider_page": null,
       "holdingsTable": {
-        "count": 5,
-        "updated": "Sep 28, 2026",
+        "count": 4,
+        "updated": "Oct 9, 2026",
         "top10": 100,
         "holdings": [
           {
             "n": "APPLE INC.-SWAP-CLST-L",
-            "as": "200.68%",
-            "sh": "3,073"
+            "as": "201.51%",
+            "sh": "3,053"
           },
           {
             "n": "US DOLLARS",
-            "as": "69.47%",
-            "sh": "360,000"
-          },
-          {
-            "n": "First American Government Obligs X",
-            "s": "!mutf/FGXXX",
-            "as": "9.37%",
-            "sh": "48,559"
+            "as": "101.53%",
+            "sh": "517,848"
           },
           {
             "n": "OTHER ASSETS AND LIABILITIES",
-            "as": "-3.09%",
-            "sh": "16,030"
+            "as": "-0.57%",
+            "sh": "2,930"
           },
           {
             "n": "Cash Offset",
-            "as": "-176.43%",
-            "sh": "914,237"
+            "as": "-202.46%",
+            "sh": "1,032,640"
           }
         ]
       },
       "dividendTable": null,
       "news": {
-        "exp": "1790799566893",
+        "exp": "1791862787732",
         "data": []
       },
       "config": {
         "no1d": true
       },
       "changes": {
-        "price1w": 34.853,
-        "price1m": 31.221,
-        "price3m": null,
+        "price1w": 33.304,
+        "price1m": 33.528,
+        "price3m": 31.052,
         "price6m": null,
         "priceYTD": null,
         "price1y": null,
@@ -1326,133 +1551,69 @@
         "priceMAX": 26.327
       },
       "performance": {
-        "tr1m": 4.677,
+        "tr1m": 3.894,
         "trYTD": null,
         "tr1y": null,
         "cagr5y": null,
         "cagr10y": null,
         "cagrMAX": null
-      }
-    },
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "APPLE INC.-SWAP-CLST-L",
-          "as": "200.68%",
-          "sh": "3,073"
-        },
-        {
-          "no": 2,
-          "n": "US DOLLARS",
-          "as": "69.47%",
-          "sh": "360,000"
-        },
-        {
-          "no": 3,
-          "n": "First American Government Obligs X",
-          "s": "!mutf/FGXXX",
-          "as": "9.37%",
-          "sh": "48,559"
-        },
-        {
-          "no": 4,
-          "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-3.09%",
-          "sh": "16,030"
-        },
-        {
-          "no": 5,
-          "n": "Cash Offset",
-          "as": "-176.43%",
-          "sh": "914,237"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": null,
-      "countries": null,
-      "allocationChartData": {
-        "sectors": [],
-        "assets": [],
-        "countries": []
       },
-      "infoBox": null,
-      "infoTable": {
-        "count": 5,
-        "top10": 100,
-        "assetClass": "Equity",
-        "category": "Trading--Leveraged Equity",
-        "categoryLabel": "ETF Category",
-        "aum": 526540,
-        "peRatio": null
-      },
-      "date": "Sep 28, 2026",
-      "count": 5,
-      "trust": {
-        "sources": [
-          {
-            "name": "Finnhub",
-            "short": "Finnhub",
-            "url": "https://finnhub.io/"
-          }
-        ],
-        "freshnessLag": "days",
-        "updateFrequency": "daily",
-        "lastUpdated": "Sep 28, 2026",
-        "lastChecked": 1790782409650,
-        "topic": "holdings",
-        "ticker": "IOSX",
-        "summary": {
-          "pre": "ETF holdings data is provided by ",
-          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
-        },
-        "extraSummaryLinks": null
-      }
+      "provider_holdings_available": false
     },
+    "holdings": {},
     "quote": {
-      "p": 32.6811,
-      "pd": 32.68,
-      "c": 0,
-      "cp": 0,
-      "cl": 32.68,
-      "cdr": 0,
-      "o": 0,
-      "h": 0,
-      "l": 0,
-      "v": 33,
-      "ts": 1790798400000,
-      "u": "Sep 30, 2026, 4:00 PM EDT",
-      "td": "2026-09-30",
-      "h52": 36.08,
-      "l52": 26.18,
+      "c": 0.83,
+      "e": true,
+      "h": 34.83,
+      "l": 34.62,
+      "o": 34.62,
+      "p": 34.8339,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 212,
+      "cl": 34,
+      "cp": 2.45,
+      "ec": -0.1,
+      "ep": 34.73,
+      "es": "After-hours",
+      "eu": "Oct 12, 2026, 8:00 PM EDT",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
-      "ecp": 0,
-      "eu": null,
-      "es": null,
-      "ets": 1790793350556.4724,
-      "etd": null,
-      "epv": null,
+      "pd": 34.83,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": 1,
+      "ecp": -0.3,
+      "epd": 34.73,
+      "etd": "2026-10-12",
+      "ets": 1791849603743.2117,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 36.08,
+      "l52": 26.18,
+      "uid": "IOSX",
       "days": 0,
-      "exp": 1790798950902,
-      "symbol": "IOSX",
-      "uid": "IOSX"
+      "symbol": "IOSX"
     },
     "history": [
+      {
+        "t": "2026-10-01",
+        "o": 32.865,
+        "h": 34.83,
+        "l": 32.865,
+        "c": 34.834,
+        "v": 328,
+        "a": 34.834,
+        "ch": 4.02
+      },
       {
         "t": "2026-09-01",
         "o": 32.141,
         "h": 35.067,
         "l": 30.243,
-        "c": 32.681,
-        "v": 1103,
-        "a": 32.6811,
-        "ch": 6.68
+        "c": 33.487,
+        "v": 1140,
+        "a": 33.487,
+        "ch": 9.31
       },
       {
         "t": "2026-08-03",
@@ -1477,6 +1638,96 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 34.62,
+          "h": 34.83,
+          "l": 34.62,
+          "c": 34.834,
+          "v": 212,
+          "a": 34.834,
+          "ch": 2.45
+        },
+        {
+          "t": "2026-10-09",
+          "o": 34.002,
+          "h": 34.002,
+          "l": 34.002,
+          "c": 34.002,
+          "a": 34.0023,
+          "v": 26,
+          "ch": -2.31
+        },
+        {
+          "t": "2026-10-08",
+          "o": 34.806,
+          "h": 34.806,
+          "l": 34.806,
+          "c": 34.806,
+          "a": 34.8062,
+          "v": 20,
+          "ch": 2.21
+        },
+        {
+          "t": "2026-10-07",
+          "o": 34.053,
+          "h": 34.053,
+          "l": 34.053,
+          "c": 34.053,
+          "a": 34.053,
+          "v": 12,
+          "ch": 1.81
+        },
+        {
+          "t": "2026-10-06",
+          "o": 33.447,
+          "h": 33.447,
+          "l": 33.447,
+          "c": 33.447,
+          "a": 33.4472,
+          "v": 16,
+          "ch": 0.43
+        },
+        {
+          "t": "2026-10-05",
+          "o": 33.304,
+          "h": 33.304,
+          "l": 33.304,
+          "c": 33.304,
+          "a": 33.3037,
+          "v": 14,
+          "ch": -0.32
+        },
+        {
+          "t": "2026-10-02",
+          "o": 33.41,
+          "h": 33.41,
+          "l": 33.41,
+          "c": 33.41,
+          "a": 33.41,
+          "v": 13,
+          "ch": 1.66
+        },
+        {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 32.865,
+          "l": 32.865,
+          "c": 32.865,
+          "a": 32.8646,
+          "v": 15,
+          "ch": -1.86
+        },
+        {
+          "t": "2026-09-30",
+          "o": 33.487,
+          "h": 33.487,
+          "l": 33.487,
+          "c": 33.487,
+          "a": 33.487,
+          "v": 37,
+          "ch": 2.47
+        },
         {
           "t": "2026-09-29",
           "o": 32.681,
@@ -2110,14 +2361,34 @@
       ],
       "weekly_1y": [
         {
+          "t": "2026-10-12",
+          "o": 34.62,
+          "h": 34.83,
+          "l": 34.62,
+          "c": 34.834,
+          "v": 212,
+          "a": 34.834,
+          "ch": 2.45
+        },
+        {
+          "t": "2026-10-05",
+          "o": 33.304,
+          "h": 34.806,
+          "l": 33.304,
+          "c": 34.002,
+          "v": 88,
+          "a": 34.0023,
+          "ch": 1.77
+        },
+        {
           "t": "2026-09-28",
           "o": 34.558,
           "h": 34.558,
           "l": 32.681,
-          "c": 32.681,
-          "v": 50,
-          "a": 32.6811,
-          "ch": -6.8
+          "c": 33.41,
+          "v": 115,
+          "a": 33.41,
+          "ch": -4.72
         },
         {
           "t": "2026-09-21",
@@ -2242,14 +2513,24 @@
       ],
       "monthly_1y": [
         {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 34.83,
+          "l": 32.865,
+          "c": 34.834,
+          "v": 328,
+          "a": 34.834,
+          "ch": 4.02
+        },
+        {
           "t": "2026-09-01",
           "o": 32.141,
           "h": 35.067,
           "l": 30.243,
-          "c": 32.681,
-          "v": 1103,
-          "a": 32.6811,
-          "ch": 6.68
+          "c": 33.487,
+          "v": 1140,
+          "a": 33.487,
+          "ch": 9.31
         },
         {
           "t": "2026-08-03",
@@ -2274,14 +2555,34 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-10-12",
+          "o": 34.62,
+          "h": 34.83,
+          "l": 34.62,
+          "c": 34.834,
+          "v": 212,
+          "a": 34.834,
+          "ch": 2.45
+        },
+        {
+          "t": "2026-10-05",
+          "o": 33.304,
+          "h": 34.806,
+          "l": 33.304,
+          "c": 34.002,
+          "v": 88,
+          "a": 34.0023,
+          "ch": 1.77
+        },
+        {
           "t": "2026-09-28",
           "o": 34.558,
           "h": 34.558,
           "l": 32.681,
-          "c": 32.681,
-          "v": 50,
-          "a": 32.6811,
-          "ch": -6.8
+          "c": 33.41,
+          "v": 115,
+          "a": 33.41,
+          "ch": -4.72
         },
         {
           "t": "2026-09-21",
@@ -2406,14 +2707,24 @@
       ],
       "monthly_3y": [
         {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 34.83,
+          "l": 32.865,
+          "c": 34.834,
+          "v": 328,
+          "a": 34.834,
+          "ch": 4.02
+        },
+        {
           "t": "2026-09-01",
           "o": 32.141,
           "h": 35.067,
           "l": 30.243,
-          "c": 32.681,
-          "v": 1103,
-          "a": 32.6811,
-          "ch": 6.68
+          "c": 33.487,
+          "v": 1140,
+          "a": 33.487,
+          "ch": 9.31
         },
         {
           "t": "2026-08-03",
@@ -2438,14 +2749,24 @@
       ],
       "monthly_5y": [
         {
+          "t": "2026-10-01",
+          "o": 32.865,
+          "h": 34.83,
+          "l": 32.865,
+          "c": 34.834,
+          "v": 328,
+          "a": 34.834,
+          "ch": 4.02
+        },
+        {
           "t": "2026-09-01",
           "o": 32.141,
           "h": 35.067,
           "l": 30.243,
-          "c": 32.681,
-          "v": 1103,
-          "a": 32.6811,
-          "ch": 6.68
+          "c": 33.487,
+          "v": 1140,
+          "a": 33.487,
+          "ch": 9.31
         },
         {
           "t": "2026-08-03",
@@ -2468,10 +2789,379 @@
           "ch": 11.8
         }
       ]
+    },
+    "official_issuer": {
+      "ticker": "IOSX",
+      "provider": "corgi",
+      "source_url": "https://corgiinvest.com/iosx",
+      "fetched_at": "2026-10-13T02:00:26Z",
+      "source_as_of": "2026-10-13",
+      "holdings": [
+        {
+          "name": "APPLE INC.-SWAP-CLST-L",
+          "symbol": null,
+          "identifier": "037833100-TRS-08/04/27-L-CLST",
+          "identifier_type": "cusip_trs",
+          "weight_pct": 199.0,
+          "weight_basis": "market_value",
+          "market_value": 1040640.44,
+          "shares": 3052.0,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "APPLE INC.-SWAP-CLST-L",
+            "security_cusip": "037833100-TRS-08/04/27-L-CLST",
+            "security_ticker": "037833100-TRS-08/04/27-L-CLST",
+            "weight_pct": "199.0000",
+            "market_value": "1040640.44",
+            "shares": "3052.00000000",
+            "net_assets": "522942.00",
+            "as_of_date": "2026-10-12"
+          }
+        },
+        {
+          "name": "Cash & Other",
+          "symbol": null,
+          "identifier": "Cash&Other",
+          "identifier_type": "issuer_identifier",
+          "weight_pct": -99.02,
+          "weight_basis": "market_value",
+          "market_value": -517837.83,
+          "shares": null,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-99.0200",
+            "market_value": "-517837.83",
+            "shares": "-517837.83000000",
+            "net_assets": "522942.00",
+            "as_of_date": "2026-10-12"
+          }
+        }
+      ],
+      "quote": {
+        "nav": 34.0026,
+        "nav_as_of": "2026-10-09",
+        "market_price": 34.0023,
+        "market_price_as_of": "2026-10-12",
+        "market_price_change_pct": -2.3096,
+        "premium_discount_pct": -0.0009,
+        "net_assets": 522942.0,
+        "net_assets_as_of": "2026-10-12"
+      },
+      "history": [],
+      "classification": {
+        "category": "2x Single Stock",
+        "fund_type": "leveraged",
+        "leverage_factor": 2,
+        "rebalance_frequency": "Daily",
+        "is_active_management": false,
+        "underlying_ticker": "AAPL",
+        "underlying_issuer": "Apple Inc.",
+        "underlying_listing": "NASDAQ",
+        "underlying_industry": "consumer electronics and technology",
+        "exchange": "Cboe BZX Exchange, Inc.",
+        "inception_date": "2026-06-30",
+        "cusip": "21874J 529",
+        "expense_ratio": "0.45%",
+        "distribution_frequency": "Annual",
+        "trust": "Corgi ETF Trust I"
+      },
+      "field_dates": {
+        "holdings": "2026-10-12",
+        "holdings_as_of": "2026-10-12",
+        "holdings_position_date": "2026-10-13",
+        "nav": "2026-10-09",
+        "market_price": "2026-10-12",
+        "net_assets": "2026-10-12"
+      },
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ],
+      "holdings_snapshot": {
+        "full_published_snapshot": true,
+        "identity": "IOSX",
+        "snapshot_date": "2026-10-12",
+        "position_date": "2026-10-13",
+        "row_count": 2,
+        "cash_treatment": "aggregated",
+        "scope_note": "issuer publishes the complete current position set for this fund: the swap leg plus one aggregated Cash & Other row"
+      },
+      "raw": {
+        "fund": {
+          "aboutUnderlying": "Apple Inc. (NASDAQ: AAPL) (\"Apple\") is a United States-based technology company engaged in the design, manufacture, and sale of consumer electronics, software, and services. The company's principal products include iPhone, iPad, Mac, and wearable devices, along with services such as digital content, cloud services, and payments. Apple operates globally and is headquartered in Cupertino, California, United States.",
+          "administrator": "U.S. Bancorp Fund Services",
+          "adviser": "Corgi Strategies, LLC",
+          "auditor": "Tait Weller",
+          "aum": null,
+          "aumAsOf": null,
+          "baseCurrency": "U.S. Dollar",
+          "baseExpenseRatio": null,
+          "category": "2x Single Stock",
+          "cusip": "21874J 529",
+          "custodian": "U.S. Bank N.A.",
+          "description": "The Corgi AAPL 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Apple Inc. (NASDAQ: AAPL) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.",
+          "disclosures": "Investment Objective. The Corgi AAPL 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Apple Inc. (NASDAQ: AAPL) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.\n\nInvestors should consider the investment objectives, risks, charges, and expenses of each Fund carefully before investing. This and other important information is contained in the prospectus for each Fund, which can be obtained without charge from corgiinvest.com or from the SEC at www.sec.gov. Read the applicable prospectus carefully before investing.\n\nThe Fund is newly organized and has limited operating history. There can be no assurance that the Fund will grow to or maintain an economically viable size. It may take time for the Fund to attract sufficient assets and for an active secondary market for its shares to develop or be sustained, which could result in wider bid-ask spreads, increased trading costs, or trading at a premium or discount to net asset value.\n\nThe information on this site is for informational purposes only and does not constitute investment, tax, or legal advice. Please consult your own investment, tax, and legal professionals regarding your specific situation.\n\nThe Funds’ shares are listed for trading on Cboe BZX Exchange, Inc. (the “Exchange”). The Funds are not sponsored, endorsed, sold, or promoted by the Exchange. The Exchange makes no representation regarding the advisability of investing in any Fund and is not responsible for, nor has it participated in, the determination of the timing of, prices of, or quantities of Fund shares to be issued or in the determination or calculation of the equation by which shares of any Fund are redeemable. The Exchange has no obligation or liability in connection with the administration, marketing, or trading of Fund shares.\n\nCorgi AAPL 2x Daily ETF Risk. The Corgi AAPL 2x Daily ETF seeks, for a single day, investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Apple Inc. (AAPL) (the “Underlying Security”). The Fund does not seek to achieve its objective for periods longer than a single trading day. Over periods longer than one day, the effects of daily compounding and the volatility of the Underlying Security will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying Security’s return for the same period. Single Issuer Risk. Because the Fund obtains exposure to a single issuer, performance is highly dependent on the price movements, earnings results, product developments, regulatory actions, litigation, executive transitions, and other idiosyncratic risks affecting Apple Inc.. A material adverse event at Apple Inc. could result in substantial or near-total losses to the Fund, magnified by 2x daily leverage. The Fund uses total return swaps and other equity-linked instruments, which increase volatility and magnify losses, and is subject to correlation risk, counterparty risk, rebalancing risk, and market disruption risk. The Fund is non-diversified and concentrates exposure in a single issuer. Please see the Fund’s prospectus for a more complete discussion of these and other risks.\n\nUnaffiliated Reference Issuer. Apple Inc. (AAPL) is not affiliated with, endorsed by, or sponsored by Corgi Strategies, LLC or any of its affiliates. Corgi Invest has no control over the business operations, capital allocation decisions, or securities filings of Apple Inc.. References to Apple Inc. and AAPL are for informational purposes only and do not imply any affiliation, sponsorship, or endorsement. Apple Inc. common stock is subject to its own risks independent of this Fund, including risks specific to its industry, products, competitive position, management, and regulatory environment.\n\nLeverage Risk. The Fund uses leverage to target approximately 2x the Underlying ETF’s daily return. Losses are magnified relative to the Underlying ETF. If the Underlying ETF declines by around 50% during a trading day, the Fund could experience a near-total or total loss. The use of leverage increases volatility and the risk of rapid losses. Costs of obtaining and maintaining leverage, including financing charges embedded in derivatives, will reduce return.\n\nDerivatives Risk. To the extent the Fund uses derivatives (e.g., total return swaps) to obtain exposure or for portfolio management, it is subject to counterparty, liquidity, valuation, leverage, and correlation risks. Derivatives can be more volatile than direct holdings and may increase exposure to certain market risks.\n\nCompounding and Daily Rebalancing Risk. The Fund seeks 2x the Underlying ETF’s return for a single day, measured from one NAV calculation to the next. Over periods longer than one day, the effects of daily compounding, the path of Underlying ETF returns, and Underlying ETF volatility will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying ETF return for the same period. During volatile or frequently reversing markets, returns may be lower than 2x the Underlying ETF return for the period, and you could lose money even if the Underlying ETF is flat or rises over the holding period.\n\nCorrelation Risk. The Fund seeks approximately 2x the daily performance of the Underlying ETF but may not achieve perfect leveraged correlation. Fees and expenses, transaction and financing costs, the use of derivatives, market disruptions, corporate actions, sampling, and limitations on rebalancing can all cause performance to deviate from the 2x Daily Objective.\n\nIn addition, the fund is subject to general equity market volatility and may experience amplified fluctuation due to its industry concentration.\n\nInvesting involves risk, including possible loss of principal. There is no guarantee that any investment strategy or any Fund will achieve its objectives. Shares of the Funds are bought and sold on an exchange at market price and are not individually redeemable from the Funds. Market price will fluctuate, sometimes materially, and may be higher or lower than net asset value (“NAV”). Brokerage commissions, bid-ask spreads and other trading costs will reduce returns. Performance data represents past performance and does not guarantee future results. Investment return and principal value will fluctuate so that shares, when sold, may be worth more or less than their original cost. Current performance may be lower or higher than the performance data quoted.\n\nPremium/discount data shows the relationship between the market price of a Fund’s shares and that Fund’s NAV. Historical premium/discount data may not be indicative of future premium/discount levels.\n\nThe Fund issues and redeems shares only in large blocks called “Creation Units” at NAV next determined after an order is accepted. Only authorized participants (“APs”) may transact in Creation Units directly with the Fund. Investors should contact their broker or financial intermediary to place trades.\n\nThis site is intended only for investors resident in the United States. Nothing on this website is an offer to sell, or a solicitation of an offer to buy, any security in any jurisdiction where such offer or solicitation would be unlawful.\n\nCorgi ETF Trust I. Investment adviser: Corgi Strategies, LLC. Distributor: Paralel Distributors LLC. Member Firm. Paralel is unaffiliated with Corgi Strategies, LLC, The Corgi Company. © 2026 Corgi Strategies, LLC. All rights reserved.",
+          "displayEnabled": false,
+          "displayOrder": 232,
+          "distributionFrequency": "Annual",
+          "distributor": "Paralel Distributors LLC",
+          "documents": {
+            "dailyHoldingsDate": "2026-05-21",
+            "factSheetDate": "2026-01-31",
+            "prospectusDate": "2026-02-01",
+            "prospectusUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm",
+            "saiDate": "2026-02-01",
+            "saiUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm"
+          },
+          "documentsText": "Prospectus (Updated Feb 01, 2026); Fact Sheet (Jan 31, 2026); SAI (Feb 01, 2026); Daily Holdings / Exposure (May 21, 2026); Annual Report (Unavailable)",
+          "ein": null,
+          "exchange": "Cboe BZX Exchange, Inc.",
+          "expenseGross": "0.45%",
+          "expenseRatio": "0.45%",
+          "factSheetEnabled": false,
+          "featuredOnHomepage": false,
+          "fullName": "Corgi AAPL 2x Daily ETF",
+          "fundType": "leveraged",
+          "hasLiveHoldings": false,
+          "heroTags": [
+            "2x Daily Exposure",
+            "Daily Reset",
+            "0.45% Expense Ratio",
+            "Inception [ ]"
+          ],
+          "holdingsCount": 1,
+          "id": "iosx",
+          "imageKeys": [
+            "funds/iosx/unsplash-20260814.jpg"
+          ],
+          "inceptionDate": "2026-06-30",
+          "indexInceptionDate": null,
+          "indexName": null,
+          "indexProvider": null,
+          "isActiveManagement": false,
+          "isLiveDevelopment": true,
+          "isLiveProduction": true,
+          "isLiveStaging": true,
+          "isin": null,
+          "lei": null,
+          "leverageFactor": 2,
+          "listDate": "2026-06-30",
+          "managementStyle": null,
+          "name": "Corgi AAPL 2x Daily ETF",
+          "ogImage": null,
+          "reasons": [],
+          "rebalanceFrequency": "Daily",
+          "sec30DayYield": null,
+          "seedDate": "2026-06-29",
+          "seoDescription": "The Corgi AAPL 2x Daily ETF (IOSX) seeks 2x the daily return of Apple Inc. (AAPL). See price, holdings, expense ratio, and the leverage risks.",
+          "seoTitle": "Apple 2x ETF (IOSX) | Corgi Invest",
+          "seriesSlug": null,
+          "showDailyNav": false,
+          "showHoldingsTable": false,
+          "showPerformanceChart": true,
+          "siteCategory": "Single-Stock 2x Daily ETF · AAPL",
+          "summary": null,
+          "theme": "Single-Stock — AAPL",
+          "ticker": "IOSX",
+          "transferAgent": "U.S. Bancorp Fund Services",
+          "trust": "Corgi ETF Trust I",
+          "twelvedataEnabled": false,
+          "twelvedataSymbol": "IOSX",
+          "underlyingHeadquarters": "Cupertino, California, United States",
+          "underlyingIndexSymbol": "AAPL",
+          "underlyingIndustry": "consumer electronics and technology",
+          "underlyingIssuer": "Apple Inc.",
+          "underlyingListing": "NASDAQ",
+          "underlyingTicker": "AAPL",
+          "whiteLabelRedirectUrl": null,
+          "whyInvest": [
+            {
+              "title": "Amplified Daily Exposure",
+              "description": "Seeks two times (2x) the daily performance of the common stock of Apple Inc. (NASDAQ: AAPL). Both gains and losses are magnified. The Fund is not designed to deliver 2x performance for any period other than a single trading day.",
+              "order": 1
+            },
+            {
+              "title": "ETF Wrapper Access",
+              "description": "Investors obtain leveraged exposure through a standard brokerage account, without a margin agreement, borrowing, or margin calls. Shares trade on Cboe BZX during regular market hours.",
+              "order": 2
+            },
+            {
+              "title": "Daily Reset Mechanic",
+              "description": "The Fund rebalances each trading day. Over periods longer than one day, returns will differ, sometimes significantly, from two times the underlying's cumulative return due to compounding and volatility.",
+              "order": 3
+            },
+            {
+              "title": "For Active Use Only",
+              "description": "Intended for sophisticated investors who actively monitor positions intraday. The Fund is not suitable as a long-term hold or as a substitute for unlevered exposure to the underlying market.",
+              "order": 4
+            }
+          ],
+          "latestNav": "34.0026",
+          "latestMarketPrice": "34.0023",
+          "latestMarketPriceChangePct": "-2.3096",
+          "latestPremiumDiscount": "-0.0009",
+          "sinceInceptionReturnPct": "36.010400000000004",
+          "quarterToDateReturnPct": "1.7685421573879738",
+          "navSparkline": [
+            0,
+            5.34,
+            8.98,
+            22.48,
+            20.88,
+            22.98,
+            25.17,
+            25.9,
+            23.91,
+            33.84,
+            38.51,
+            38.8,
+            33.71,
+            32.17,
+            28.72,
+            37.71,
+            43.52,
+            41.88,
+            37.85,
+            17.7,
+            13.4,
+            18.99,
+            20.03,
+            20.64,
+            16.91,
+            12.34,
+            14.53,
+            14.94,
+            14.65,
+            17.93,
+            18.74,
+            17.17,
+            17.88,
+            17.52,
+            20.17,
+            24.82,
+            22.57,
+            28.91,
+            28.74,
+            24.58,
+            21.63,
+            20.93,
+            29.47,
+            33.86,
+            33.05,
+            33.87,
+            37.51,
+            36.69,
+            39.55,
+            37.29,
+            36.36,
+            40.41,
+            38.19,
+            33.65,
+            31.44,
+            33.99,
+            33.31,
+            36.24,
+            39.22,
+            36.01
+          ],
+          "latestNetAssets": "522942.00",
+          "latestAsOfDate": "2026-10-12",
+          "latestAumAsOfDate": "2026-10-12",
+          "latestAumSource": "holdings",
+          "latestNavAsOfDate": "2026-10-09"
+        },
+        "holdings_rows": [
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "APPLE INC.-SWAP-CLST-L",
+            "security_cusip": "037833100-TRS-08/04/27-L-CLST",
+            "security_ticker": "037833100-TRS-08/04/27-L-CLST",
+            "weight_pct": "199.0000",
+            "market_value": "1040640.44",
+            "shares": "3052.00000000",
+            "net_assets": "522942.00",
+            "as_of_date": "2026-10-12"
+          },
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-99.0200",
+            "market_value": "-517837.83",
+            "shares": "-517837.83000000",
+            "net_assets": "522942.00",
+            "as_of_date": "2026-10-12"
+          }
+        ]
+      }
+    },
+    "official_holdings": {
+      "provider": "corgi",
+      "landing_page": "https://corgiinvest.com/iosx",
+      "source_as_of": "2026-10-12",
+      "position_scope": "issuer_published_snapshot",
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ]
     }
   },
-  "detail_status": "stockanalysis_partial",
-  "partial_reason_codes": [
-    "holdings_countries_unavailable"
-  ]
+  "holdings_source": {
+    "provider": "corgi",
+    "landing_page": "https://corgiinvest.com/iosx",
+    "source_as_of": "2026-10-12",
+    "position_scope": "issuer_published_snapshot",
+    "completeness": [
+      "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+      "navSparkline is undated and is intentionally not returned as history",
+      "weights are market-value weights; notional exposure is not published here",
+      "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+      "holdingsCount on the page counts the swap leg only and is not a holdings total"
+    ]
+  },
+  "field_sources": {
+    "holdings": {
+      "provider": "corgi",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
 }
