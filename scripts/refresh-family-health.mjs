@@ -78,7 +78,7 @@ export async function readCanonicalReference({ root = ROOT, ref = "origin/main" 
         assets.push({ path: current.path, sha256: sha256Bytes(body), bytes: body.length,
           source_as_of: source.perAsset.get(current.path.slice(PREFIX.length + 1)) });
         total += body.length;
-        if (total > 1_300_000_000) throw new Error("CANONICAL_TREE_SIZE_LIMIT");
+        if (total > FAMILIES[ETF_FAMILY].policy.max_total_bytes) throw new Error("CANONICAL_TREE_SIZE_LIMIT");
         buffer = buffer.subarray(current.bytes + 1);
         current = null;
         index += 1;
