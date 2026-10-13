@@ -10,13 +10,18 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 5,
+  "failure_count": 6,
   "last_result": {
-    "attempts_used": 3,
+    "attempts_used": 2,
     "error": "empty payload",
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
@@ -26,29 +31,25 @@
       },
       {
         "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 2,
         "error": "empty payload"
-      },
-      {
-        "attempt": 3,
-        "error": "KeyError=[redacted]",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 3,
-        "error": "empty payload"
       }
     ],
     "latency_ms": 0,
-    "observed_at": "2026-10-12T15:30:59Z",
+    "observed_at": "2026-10-13T06:45:05Z",
     "outcome": "failed"
   },
   "latest_failure": {
-    "attempts_used": 3,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
     "error": "empty payload",
@@ -56,6 +57,11 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
@@ -65,25 +71,21 @@
       },
       {
         "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 2,
         "error": "empty payload"
-      },
-      {
-        "attempt": 3,
-        "error": "KeyError=[redacted]",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 3,
-        "error": "empty payload"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-10-12T15:30:59Z"
+    "observed_at": "2026-10-13T06:45:05Z"
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:47:07Z",
@@ -92,6 +94,20 @@
     "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
     "quote_as_of": "2026-07-14T17:31:32Z",
     "source_as_of": "2026-07-14T17:31:32Z"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-13T06:45:05Z",
+    "last_history_as_of": "2026-07-21",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": null,
+        "http_status": null,
+        "observed_at": "2026-10-13T06:45:05Z",
+        "reason": "empty_payload"
+      }
+    ],
+    "was_terminal": false
   },
   "resolution_state": "lkg_primary",
   "retry": true,
@@ -106,5 +122,5 @@
     "source_as_of": "2026-07-14T17:31:32Z"
   },
   "ticker": "LEAD",
-  "updated_at": "2026-10-12T15:30:59Z"
+  "updated_at": "2026-10-13T06:45:05Z"
 }
