@@ -290,8 +290,7 @@ def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: lis
         source_stamp = _aware_archive_timestamp(source["source_as_of"])
         fetched_stamp = _aware_archive_timestamp(source["fetched_at"])
         if (source_stamp is None or fetched_stamp is None or source_stamp > fetched_stamp
-                or fetched_stamp > datetime.now(timezone.utc)
-                or _etf_provider_source(source) != source_stamp):
+                or fetched_stamp > datetime.now(timezone.utc)):
             return None
         normalized = source.get("normalized")
         raw = source.get("raw")
@@ -308,7 +307,8 @@ def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: lis
                 return None
             period_bounds = _etf_history_dates(rows)
             period_days = _etf_history_date_set(rows)
-            if period_bounds is None or period_days is None or period_bounds[1].date() > source_stamp.date():
+            history_bound = fetched_stamp if issuer_holdings_snapshot(source) else source_stamp
+            if period_bounds is None or period_days is None or period_bounds[1].date() > history_bound.date():
                 return None
             for row in rows:
                 if any(not isinstance(value, (int, float)) or isinstance(value, bool)
@@ -337,6 +337,8 @@ def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: lis
             return None
         original_bytes = (json.dumps(source, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         if _sha256(original_bytes) != archive["original_payload_sha256"]:
+            return None
+        if _etf_provider_source(source) != source_stamp:
             return None
         return date_set
     except (ValueError, TypeError, AttributeError, OverflowError, OSError, UnicodeError):

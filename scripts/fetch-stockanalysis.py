@@ -8140,6 +8140,9 @@ def _main() -> None:
                 args.max_universe_pages = max(
                     args.max_universe_pages, UNIVERSE_RECOVERY_MAX_PAGES
                 )
+    current_etfs = (selected_etf_state or {}).get("current", {})
+    issuer_retry_etfs = [ticker for ticker in issuer_retry_etfs
+                        if (current_etfs.get(ticker) or {}).get("provider") != "stockanalysis"]
     retry_etfs = unique_symbols(retry_etfs + issuer_retry_etfs)
 
     universe_payload = None
