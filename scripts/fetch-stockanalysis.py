@@ -3515,8 +3515,8 @@ def collect_etf_payload(ticker: str, timeout: int, include_history: bool) -> dic
             if issuer["provider"] == "corgi" and classification.get("underlying_ticker"):
                 normalized["classification"] = {
                     "is_leveraged": True, "leverage_factor": float(classification["leverage_factor"]),
-                    # XQTM references the issuer's CQTM ETF, not one equity.
-                    "is_inverse": False, "is_single_stock": ticker != "XQTM",
+                    # XQTM and BRZX reference CQTM and EWZ ETFs, not one equity.
+                    "is_inverse": False, "is_single_stock": ticker not in {"XQTM", "BRZX"},
                     "underlying": classification["underlying_ticker"],
                     "source": issuer["source_url"], "confidence": "high"}
             elif ticker == "THYP" and "staking" in classification.get("product_category", []):

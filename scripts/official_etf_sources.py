@@ -91,10 +91,17 @@ SUPPORTED_TICKERS = (
     "SPBC",
     "MWHS",
     "THYP",
+    "LQDW",
+    "IBGM",
+    "XLBI",
+    "XLCI",
+    "XLFI",
+    "BRZX",
 )
 
 CORGI_TICKERS = ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "LRNX", "ONDC",
-                 "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM")
+                 "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM",
+                 "BRZX")
 
 INNOVATOR_TICKERS = (
     "ACII", "BDEC", "BJUL", "BJUN", "BNOV", "BSTP", "EBUF", "EJAN",
@@ -134,6 +141,9 @@ _COUNTERPOINT_FUNDS = {
 _SSGA_HOLDINGS_URLS = {
     "BIL": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bil.xlsx",
     "BILS": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bils.xlsx",
+    "XLBI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlbi.xlsx",
+    "XLCI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlci.xlsx",
+    "XLFI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlfi.xlsx",
 }
 # Expanded xlsx content is bounded before any worksheet is parsed.
 _XLSX_EXPANDED_LIMIT = 20_000_000
@@ -149,7 +159,17 @@ _SIMPLIFY_QUANTITY_UNITS = {"fund": "shares", "future": "contracts", "cash": "cu
 _ISHARES_HOLDINGS_URLS = {
     "IWMW": ("https://www.ishares.com/us/products/336263/ishares-russell-2000-buywrite-etf/latest-holdings.csv",
              "iShares Russell 2000 BuyWrite ETF"),
+    "LQDW": ("https://www.ishares.com/us/products/329120/ishares-investment-grade-corporate-bond-buywrite-strategy-etf/latest-holdings.csv",
+             "iShares Investment Grade Corporate Bond BuyWrite Strategy ETF"),
+    "IBGM": ("https://www.ishares.com/us/products/350032/ishares-ibonds-dec-2056-term-treasury-etf/latest-holdings.csv",
+             "iShares\u00ae iBonds\u00ae Dec 2056 Term Treasury ETF"),
 }
+# These two publish a Name-headed first section and no provider ticker column. The first
+# section is the fund's own portfolio; the later table in the same file is index lookthrough
+# and is never read. Their quantity column is Par Value, not Quantity.
+_ISHARES_NAME_HEADER_TICKERS = {"LQDW", "IBGM"}
+# Identifier preference for a file that publishes no provider ticker.
+_ISHARES_IDENTIFIER_COLUMNS = (("CUSIP", "cusip"), ("ISIN", "isin"), ("SEDOL", "sedol"))
 
 _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -444,7 +464,8 @@ def _fetch_corgi(ticker: str, timeout: int) -> dict:
         "navSparkline is undated and is intentionally not returned as history",
         "weights are market-value weights; notional exposure is not published here",
         "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
-        "holdingsCount on the page counts the swap leg only and is not a holdings total",
+        "the published row list is the snapshot scope; the page's summary "
+        "holdingsCount is not used to infer unpublished rows",
     ]
 
     holdings_snapshot = {
@@ -1637,6 +1658,54 @@ _ISHARES_QUANTITY_UNITS = {
 }
 
 
+def _ishares_named_holding(raw: dict, ticker: str, as_of: str) -> dict:
+    """Row from an iShares first section that publishes no provider ticker column."""
+    name = _text(raw.get("Name"))
+    market_value = _number(raw.get("Market Value"))
+    weight = _number(raw.get("Weight (%)"))
+    if name is None or market_value is None or weight is None:
+        raise OfficialEtfSourceError(f"malformed holdings row for {ticker}: {name!r}")
+    kind = (_text(raw.get("Type")) or "").upper()
+    asset_class = _text(raw.get("Asset Class"))
+    identifier = None
+    identifier_type = None
+    for column, label in _ISHARES_IDENTIFIER_COLUMNS:
+        value = _text(raw.get(column))
+        if value:
+            identifier, identifier_type = value, label
+            break
+    fixed_income = (asset_class or "").lower() == "fixed income"
+    return {
+        "name": name,
+        "symbol": None,
+        "identifier": identifier,
+        "identifier_type": identifier_type,
+        "weight_pct": weight,
+        "weight_basis": "provider_weight_signed",
+        "market_value": market_value,
+        "notional_value": _number(raw.get("Notional Value")),
+        "shares": None,
+        "provider_quantity": _number(raw.get("Par Value")),
+        "provider_quantity_field": "Par Value",
+        "quantity_unit": (
+            "par_value" if fixed_income
+            else _ISHARES_QUANTITY_UNITS.get(kind, kind.lower() or None)
+        ),
+        "price": _number(raw.get("Price")),
+        "strike_price": _number(raw.get("Strike price")),
+        "location": _text(raw.get("Location")),
+        "exchange": _text(raw.get("Exchange")),
+        "currency": _text(raw.get("Currency")),
+        "maturity": _text(raw.get("Maturity")),
+        "sector": _text(raw.get("Sector")),
+        "asset_class": asset_class,
+        "as_of_date": as_of,
+        "position_date": None,
+        "instrument_type": kind or None,
+        "raw": raw,
+    }
+
+
 def _fetch_ishares(ticker: str, timeout: int) -> dict:
     """iShares latest-holdings csv: first section only, Type-aware quantities."""
     url, expected_name = _ISHARES_HOLDINGS_URLS[ticker]
@@ -1660,7 +1729,13 @@ def _fetch_ishares(ticker: str, timeout: int) -> dict:
 
     if as_of is None:
         raise OfficialEtfSourceError(f"holdings date is missing or invalid for {ticker}")
-    header_index = next((index for index, line in enumerate(lines) if line.startswith("Ticker,")), None)
+    # The two name-headed files carry no provider ticker column; their first section is the
+    # fund's own portfolio and the later lookthrough table is never read.
+    name_header = ticker in _ISHARES_NAME_HEADER_TICKERS
+    header_prefix = "Name," if name_header else "Ticker,"
+    header_index = next(
+        (index for index, line in enumerate(lines) if line.startswith(header_prefix)), None
+    )
     if header_index is None:
         raise OfficialEtfSourceError(f"holdings table not found for {ticker}")
     section = []
@@ -1674,6 +1749,9 @@ def _fetch_ishares(ticker: str, timeout: int) -> dict:
     reader = csv.DictReader(io.StringIO("\n".join([lines[header_index]] + section)))
     holdings = []
     for raw in reader:
+        if name_header:
+            holdings.append(_ishares_named_holding(raw, ticker, as_of))
+            continue
         name = _text(raw.get("Name"))
         provider_ticker = _text(raw.get("Ticker"))
         market_value = _number(raw.get("Market Value"))
@@ -1715,20 +1793,43 @@ def _fetch_ishares(ticker: str, timeout: int) -> dict:
         quote["shares_outstanding"] = shares_outstanding
         quote["shares_outstanding_as_of"] = as_of
 
-    has_cash_row = any((row["instrument_type"] or "") == "CASH" for row in holdings)
-    completeness = [
+    has_cash_row = any(
+        (row["instrument_type"] or "") == "CASH"
+        or (row.get("asset_class") or "").lower() == "cash"
+        for row in holdings
+    )
+    shared_completeness = [
         "holdings are the fund's own published portfolio section, dated "
         f"{as_of}; the later index-constituent section of the same file is deliberately "
         "not used",
-        "quantities keep the provider value with a Type-based unit: EQUITY shares, FUND "
-        "fund_units, CASH currency, OPTION contracts; normalized shares is set only for "
-        "EQUITY rows",
         "notional value is kept separate from market value",
         "weights are the provider's signed weights, so derivative rows may be negative "
         "with no sum-to-100 check",
         "shares outstanding carries the file's own explicit as-of date and no scaling "
         "guess is applied",
     ]
+    if name_header:
+        completeness = [
+            shared_completeness[0],
+            "this file publishes no provider ticker column, so symbol stays null and the "
+            "row identifier is the provider CUSIP, ISIN or SEDOL when present",
+            "the provider quantity is the file's Par Value column, named literally as its "
+            "source field; fixed-income rows carry unit par_value and no par value is "
+            "relabelled as shares",
+            shared_completeness[1],
+            shared_completeness[2],
+            shared_completeness[3],
+        ]
+    else:
+        completeness = [
+            shared_completeness[0],
+            "quantities keep the provider value with a Type-based unit: EQUITY shares, FUND "
+            "fund_units, CASH currency, OPTION contracts; normalized shares is set only for "
+            "EQUITY rows",
+            shared_completeness[1],
+            shared_completeness[2],
+            shared_completeness[3],
+        ]
     holdings_snapshot = {
         "full_published_snapshot": True,
         "identity": ticker.upper(),
