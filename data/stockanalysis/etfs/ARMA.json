@@ -3,8 +3,8 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ARMA",
-  "source_as_of": "2026-10-12T20:00:00Z",
-  "fetched_at": "2026-10-13T00:01:38Z",
+  "source_as_of": "2026-10-12T00:00:00Z",
+  "fetched_at": "2026-10-13T03:05:56Z",
   "endpoints": {
     "holdings": "/etf/arma/holdings/__data.json",
     "overview": "/etf/arma/__data.json",
@@ -25,9 +25,9 @@
       "contract": "etf_detail_overview/v1"
     },
     "holdings": {
-      "format": "svelte_devalue",
-      "decoder": "svelte_devalue_node/v1",
-      "contract": "etf_detail_holdings/v1"
+      "format": "issuer_payload",
+      "provider": "corgi",
+      "contract": "issuer_published_snapshot/v1"
     },
     "quote": {
       "format": "rest_json",
@@ -42,57 +42,71 @@
     "holdings": [
       {
         "name": "ARM HOLDINGS PLC-SWAP-CLST-L",
-        "weight_pct": 190.26,
-        "shares": 3499,
+        "symbol": null,
+        "identifier": "042068205-TRS-08/04/27-L-CLST",
+        "identifier_type": "cusip_trs",
+        "weight_pct": 199.12,
+        "weight_basis": "market_value",
+        "market_value": 768017.16,
+        "shares": 3009.0,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "n": "ARM HOLDINGS PLC-SWAP-CLST-L",
-          "as": "190.26%",
-          "sh": "3,499"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "ARM HOLDINGS PLC-SWAP-CLST-L",
+          "security_cusip": "042068205-TRS-08/04/27-L-CLST",
+          "security_ticker": "042068205-TRS-08/04/27-L-CLST",
+          "weight_pct": "199.1200",
+          "market_value": "768017.16",
+          "shares": "3009.00000000",
+          "net_assets": "385710.50",
+          "as_of_date": "2026-10-12"
         }
       },
       {
-        "name": "US DOLLARS",
-        "weight_pct": 148.07,
-        "shares": 837312,
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "issuer_identifier",
+        "weight_pct": -99.14,
+        "weight_basis": "market_value",
+        "market_value": -382401.59,
+        "shares": null,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "n": "US DOLLARS",
-          "as": "148.07%",
-          "sh": "837,312"
-        }
-      },
-      {
-        "name": "OTHER ASSETS AND LIABILITIES",
-        "weight_pct": -75.54,
-        "shares": 427158,
-        "raw": {
-          "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-75.54%",
-          "sh": "427,158"
-        }
-      },
-      {
-        "name": "Cash Offset",
-        "weight_pct": -162.79,
-        "shares": 920574,
-        "raw": {
-          "n": "Cash Offset",
-          "as": "-162.79%",
-          "sh": "920,574"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "Cash & Other",
+          "security_cusip": "Cash&Other",
+          "security_ticker": "Cash&Other",
+          "weight_pct": "-99.1400",
+          "market_value": "-382401.59",
+          "shares": "-382401.59000000",
+          "net_assets": "385710.50",
+          "as_of_date": "2026-10-12"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": 4,
-    "holdings_updated": "Oct 2, 2026",
+    "holding_count": 2,
+    "holdings_updated": "2026-10-12",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
       "is_inverse": false,
       "is_single_stock": true,
       "underlying": "ARM",
-      "source": "stockanalysis.overview.description",
+      "source": "https://corgiinvest.com/arma",
       "confidence": "high"
     },
     "overview": {
@@ -111,38 +125,34 @@
       "cagrMAX": null
     },
     "quote": {
-      "p": 10.98,
-      "pd": 10.98,
       "c": -1.04,
-      "cp": -8.68,
-      "cl": 12.02,
-      "cdr": -1,
-      "o": 11.59,
+      "e": false,
       "h": 11.59,
       "l": 10.98,
-      "v": 7905.266977,
-      "ts": 1791835200000,
+      "o": 11.59,
+      "p": 10.98,
       "u": "Oct 12, 2026, 4:00 PM EDT",
-      "td": "2026-10-12",
-      "h52": 28.98,
-      "l52": 9.545,
+      "v": 7905.266977,
+      "cl": 12.02,
+      "cp": -8.65,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 10.98,
-      "epd": 10.98,
-      "ec": 0,
+      "pd": 10.98,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": "Oct 12, 2026, 6:30 PM EDT",
-      "es": "After-hours",
-      "ets": 1791844200492.7498,
-      "etd": "2026-10-12",
-      "epv": null,
+      "epd": 0,
+      "ets": 1791849600534.838,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 28.98,
+      "l52": 9.545,
+      "uid": "ARMA",
       "days": 0,
-      "exp": 1791849702041,
-      "symbol": "ARMA",
-      "uid": "ARMA"
+      "symbol": "ARMA"
     },
     "history": [
       {
@@ -1339,7 +1349,87 @@
           "ch": -57.97
         }
       ]
-    }
+    },
+    "holdings_history": [
+      {
+        "provider": "stockanalysis",
+        "source_as_of": "Oct 2, 2026",
+        "holdings": [
+          {
+            "name": "ARM HOLDINGS PLC-SWAP-CLST-L",
+            "weight_pct": 190.26,
+            "shares": 3499,
+            "raw": {
+              "n": "ARM HOLDINGS PLC-SWAP-CLST-L",
+              "as": "190.26%",
+              "sh": "3,499"
+            }
+          },
+          {
+            "name": "US DOLLARS",
+            "weight_pct": 148.07,
+            "shares": 837312,
+            "raw": {
+              "n": "US DOLLARS",
+              "as": "148.07%",
+              "sh": "837,312"
+            }
+          },
+          {
+            "name": "OTHER ASSETS AND LIABILITIES",
+            "weight_pct": -75.54,
+            "shares": 427158,
+            "raw": {
+              "n": "OTHER ASSETS AND LIABILITIES",
+              "as": "-75.54%",
+              "sh": "427,158"
+            }
+          },
+          {
+            "name": "Cash Offset",
+            "weight_pct": -162.79,
+            "shares": 920574,
+            "raw": {
+              "n": "Cash Offset",
+              "as": "-162.79%",
+              "sh": "920,574"
+            }
+          }
+        ],
+        "holding_count": 4
+      },
+      {
+        "provider": "yahoo_finance",
+        "source_as_of": "2026-07-08T22:43:28Z",
+        "holdings": [
+          {
+            "rank": 1,
+            "symbol": "FGXXX",
+            "name": "First American Government Obligs X",
+            "weight_pct": 7.52324,
+            "raw": {
+              "_index": "FGXXX",
+              "Name": "First American Government Obligs X",
+              "Holding Percent": 0.0752324
+            }
+          }
+        ],
+        "holding_count": 1
+      }
+    ],
+    "history_archive": [
+      {
+        "provider": "yahoo_finance",
+        "price_basis": "yahoo_adjusted",
+        "source_payload": "{\n  \"schema_version\": \"yf-etf-detail/v1\",\n  \"source\": \"yahoo_finance\",\n  \"source_provider\": \"yahoo_finance\",\n  \"detail_status\": \"yf_fallback\",\n  \"asset_type\": \"etf\",\n  \"ticker\": \"ARMA\",\n  \"source_as_of\": \"2026-07-08T22:43:28Z\",\n  \"inceptionDate\": null,\n  \"fetched_at\": \"2026-07-08T22:43:28Z\",\n  \"role\": \"ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet\",\n  \"normalized\": {\n    \"holdings\": [\n      {\n        \"rank\": 1,\n        \"symbol\": \"FGXXX\",\n        \"name\": \"First American Government Obligs X\",\n        \"weight_pct\": 7.52324,\n        \"raw\": {\n          \"_index\": \"FGXXX\",\n          \"Name\": \"First American Government Obligs X\",\n          \"Holding Percent\": 0.0752324\n        }\n      }\n    ],\n    \"asset_allocation\": {\n      \"cashPosition\": -1.8834,\n      \"stockPosition\": 1.9433,\n      \"bondPosition\": 0.0,\n      \"preferredPosition\": 0.0,\n      \"convertiblePosition\": 0.0,\n      \"otherPosition\": 0.9401\n    },\n    \"sectors\": null,\n    \"countries\": null,\n    \"holding_count\": 1,\n    \"holdings_updated\": \"2026-07-08T22:43:28Z\",\n    \"classification\": {\n      \"is_leveraged\": true,\n      \"leverage_factor\": 2.0,\n      \"is_inverse\": false,\n      \"is_single_stock\": true,\n      \"underlying\": \"ARM\",\n      \"source\": \"stockanalysis.overview.description\",\n      \"confidence\": \"high\"\n    },\n    \"overview\": {\n      \"aum\": 265843.0,\n      \"nav\": 18.7793,\n      \"expenseRatio\": 0.45,\n      \"beta\": 0.0,\n      \"provider_page\": \"Corgi Funds\",\n      \"category\": \"Trading--Leveraged Equity\",\n      \"legalType\": \"Exchange Traded Fund\",\n      \"description\": \"Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.\"\n    },\n    \"quote\": {\n      \"p\": 18.75909996032715,\n      \"pd\": 18.7035,\n      \"c\": 0.0555999603271502,\n      \"cp\": 0.2972703522183025,\n      \"u\": \"2026-07-08T22:43:28Z\",\n      \"ex\": \"yahoo_finance\"\n    },\n    \"history\": [\n      {\n        \"date\": \"2026-06-30\",\n        \"Open\": 27.290000915527344,\n        \"High\": 27.290000915527344,\n        \"Low\": 26.770000457763672,\n        \"Close\": 26.770000457763672,\n        \"Volume\": 9100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-01\",\n        \"Open\": 28.979999542236328,\n        \"High\": 28.979999542236328,\n        \"Low\": 24.010000228881836,\n        \"Close\": 24.010000228881836,\n        \"Volume\": 700.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-02\",\n        \"Open\": 20.719999313354492,\n        \"High\": 20.719999313354492,\n        \"Low\": 20.719999313354492,\n        \"Close\": 20.719999313354492,\n        \"Volume\": 100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-06\",\n        \"Open\": 21.790000915527344,\n        \"High\": 21.790000915527344,\n        \"Low\": 21.790000915527344,\n        \"Close\": 21.790000915527344,\n        \"Volume\": 100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-07\",\n        \"Open\": 20.25,\n        \"High\": 20.25,\n        \"Low\": 18.469999313354492,\n        \"Close\": 18.700000762939453,\n        \"Volume\": 5000.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-08\",\n        \"Open\": 19.280000686645508,\n        \"High\": 19.65999984741211,\n        \"Low\": 17.850000381469727,\n        \"Close\": 18.75909996032715,\n        \"Volume\": 4145.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      }\n    ],\n    \"history_periods\": {\n      \"daily_1y\": [\n        {\n          \"date\": \"2026-06-30\",\n          \"Open\": 27.290000915527344,\n          \"High\": 27.290000915527344,\n          \"Low\": 26.770000457763672,\n          \"Close\": 26.770000457763672,\n          \"Volume\": 9100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-01\",\n          \"Open\": 28.979999542236328,\n          \"High\": 28.979999542236328,\n          \"Low\": 24.010000228881836,\n          \"Close\": 24.010000228881836,\n          \"Volume\": 700.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-02\",\n          \"Open\": 20.719999313354492,\n          \"High\": 20.719999313354492,\n          \"Low\": 20.719999313354492,\n          \"Close\": 20.719999313354492,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-06\",\n          \"Open\": 21.790000915527344,\n          \"High\": 21.790000915527344,\n          \"Low\": 21.790000915527344,\n          \"Close\": 21.790000915527344,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-07\",\n          \"Open\": 20.25,\n          \"High\": 20.25,\n          \"Low\": 18.469999313354492,\n          \"Close\": 18.700000762939453,\n          \"Volume\": 5000.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-08\",\n          \"Open\": 19.280000686645508,\n          \"High\": 19.65999984741211,\n          \"Low\": 17.850000381469727,\n          \"Close\": 18.75909996032715,\n          \"Volume\": 4145.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        }\n      ]\n    }\n  },\n  \"raw\": {\n    \"yf\": {\n      \"info\": {\n        \"quoteType\": \"ETF\",\n        \"shortName\": \"Corgi ARM 2x Daily ETF\",\n        \"longName\": \"Corgi ARM 2x Daily ETF\",\n        \"currency\": \"USD\",\n        \"exchange\": \"BTS\",\n        \"fundFamily\": \"Corgi Funds\",\n        \"category\": \"Trading--Leveraged Equity\",\n        \"legalType\": \"Exchange Traded Fund\",\n        \"totalAssets\": 265843,\n        \"netAssets\": 265843.0,\n        \"navPrice\": 18.7793,\n        \"beta3Year\": 0.0,\n        \"netExpenseRatio\": 0.45,\n        \"previousClose\": 18.7035,\n        \"fiftyTwoWeekHigh\": 28.98,\n        \"fiftyTwoWeekLow\": 17.85,\n        \"fiftyTwoWeekChangePercent\": -30.145687,\n        \"averageVolume\": 3000,\n        \"averageVolume10days\": 3000,\n        \"symbol\": \"ARMA\"\n      },\n      \"major_holders\": null,\n      \"institutional_holders\": null,\n      \"analyst_price_targets\": null,\n      \"recommendations\": null,\n      \"earnings_estimate\": null,\n      \"revenue_estimate\": null,\n      \"income_statement\": null,\n      \"quarterly_income_statement\": null,\n      \"balance_sheet\": null,\n      \"quarterly_balance_sheet\": null,\n      \"cash_flow\": null,\n      \"quarterly_cash_flow\": null,\n      \"recommendations_summary\": null,\n      \"upgrades_downgrades\": null,\n      \"earnings_dates\": null,\n      \"earnings_history\": null,\n      \"eps_trend\": null,\n      \"eps_revisions\": null,\n      \"growth_estimates\": null,\n      \"sustainability\": null,\n      \"mutualfund_holders\": null,\n      \"insider_transactions\": null,\n      \"insider_purchases\": null,\n      \"insider_roster_holders\": null,\n      \"sec_filings\": null,\n      \"news\": null,\n      \"dividends\": null,\n      \"fast_info\": {\n        \"currency\": \"USD\",\n        \"dayHigh\": 19.65999984741211,\n        \"dayLow\": 17.850000381469727,\n        \"exchange\": \"BTS\",\n        \"fiftyDayAverage\": 22.39800033569336,\n        \"lastPrice\": 18.75909996032715,\n        \"lastVolume\": 4145.0,\n        \"open\": 19.280000686645508,\n        \"previousClose\": 18.703500747680664,\n        \"quoteType\": \"ETF\",\n        \"regularMarketPreviousClose\": 18.700000762939453,\n        \"tenDayAverageVolume\": 3000.0,\n        \"threeMonthAverageVolume\": 3000.0,\n        \"timezone\": \"America/New_York\",\n        \"twoHundredDayAverage\": 22.39800033569336,\n        \"yearChange\": -0.3014568381332921,\n        \"yearHigh\": 28.979999542236328,\n        \"yearLow\": 18.469999313354492\n      },\n      \"actions\": null,\n      \"splits\": null,\n      \"capital_gains\": null,\n      \"funds_data\": {\n        \"quote_type\": \"ETF\",\n        \"description\": \"Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.\",\n        \"fund_overview\": {\n          \"categoryName\": \"Trading--Leveraged Equity\",\n          \"family\": \"Corgi Funds\",\n          \"legalType\": \"Exchange Traded Fund\"\n        },\n        \"fund_operations\": [\n          {\n            \"_index\": \"Annual Report Expense Ratio\",\n            \"ARMA\": 0.0045,\n            \"Category Average\": 0.0\n          },\n          {\n            \"_index\": \"Annual Holdings Turnover\",\n            \"ARMA\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Total Net Assets\",\n            \"ARMA\": 0.0,\n            \"Category Average\": 0.0\n          }\n        ],\n        \"asset_classes\": {\n          \"cashPosition\": -1.8834,\n          \"stockPosition\": 1.9433,\n          \"bondPosition\": 0.0,\n          \"preferredPosition\": 0.0,\n          \"convertiblePosition\": 0.0,\n          \"otherPosition\": 0.9401\n        },\n        \"top_holdings\": [\n          {\n            \"_index\": \"FGXXX\",\n            \"Name\": \"First American Government Obligs X\",\n            \"Holding Percent\": 0.0752324\n          }\n        ],\n        \"equity_holdings\": [\n          {\n            \"_index\": \"Price/Earnings\",\n            \"ARMA\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Book\",\n            \"ARMA\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Sales\",\n            \"ARMA\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Cashflow\",\n            \"ARMA\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Median Market Cap\",\n            \"ARMA\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"3 Year Earnings Growth\",\n            \"ARMA\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          }\n        ],\n        \"bond_holdings\": [\n          {\n            \"_index\": \"Duration\",\n            \"ARMA\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Maturity\",\n            \"ARMA\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Credit Quality\",\n            \"ARMA\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          }\n        ],\n        \"bond_ratings\": {\n          \"us_government\": 0.0\n        }\n      },\n      \"history_1y\": [\n        {\n          \"date\": \"2026-06-30\",\n          \"Open\": 27.290000915527344,\n          \"High\": 27.290000915527344,\n          \"Low\": 26.770000457763672,\n          \"Close\": 26.770000457763672,\n          \"Volume\": 9100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-01\",\n          \"Open\": 28.979999542236328,\n          \"High\": 28.979999542236328,\n          \"Low\": 24.010000228881836,\n          \"Close\": 24.010000228881836,\n          \"Volume\": 700.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-02\",\n          \"Open\": 20.719999313354492,\n          \"High\": 20.719999313354492,\n          \"Low\": 20.719999313354492,\n          \"Close\": 20.719999313354492,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-06\",\n          \"Open\": 21.790000915527344,\n          \"High\": 21.790000915527344,\n          \"Low\": 21.790000915527344,\n          \"Close\": 21.790000915527344,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-07\",\n          \"Open\": 20.25,\n          \"High\": 20.25,\n          \"Low\": 18.469999313354492,\n          \"Close\": 18.700000762939453,\n          \"Volume\": 5000.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-08\",\n          \"Open\": 19.280000686645508,\n          \"High\": 19.65999984741211,\n          \"Low\": 17.850000381469727,\n          \"Close\": 18.75909996032715,\n          \"Volume\": 4145.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        }\n      ]\n    }\n  }\n}\n",
+        "payload_sha256": "d052151ced970ba65c0be6ec2f0bf4fdd73f3c9ab2fad0ac7188f5908b7333d6",
+        "source_as_of": "2026-07-08T22:43:28Z",
+        "fetched_at": "2026-07-08T22:43:28Z",
+        "history_first": "2026-06-30",
+        "history_last": "2026-07-08",
+        "source_clock_basis": "legacy_collection_time"
+      }
+    ]
   },
   "raw": {
     "overview": {
@@ -1369,7 +1459,7 @@
         ],
         "topic": "overview",
         "ticker": "ARMA",
-        "lastChecked": 1791849551358,
+        "lastChecked": 1791852963584,
         "summary": {
           "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
         }
@@ -1389,7 +1479,7 @@
       "holdings": 4,
       "inception": "Jun 30, 2026",
       "chart": {
-        "expiration": 1791853151078,
+        "expiration": 1791898200000,
         "data": [
           {
             "t": 1791797400
@@ -3026,38 +3116,34 @@
     },
     "holdings": {},
     "quote": {
-      "p": 10.98,
-      "pd": 10.98,
       "c": -1.04,
-      "cp": -8.68,
-      "cl": 12.02,
-      "cdr": -1,
-      "o": 11.59,
+      "e": false,
       "h": 11.59,
       "l": 10.98,
-      "v": 7905.266977,
-      "ts": 1791835200000,
+      "o": 11.59,
+      "p": 10.98,
       "u": "Oct 12, 2026, 4:00 PM EDT",
-      "td": "2026-10-12",
-      "h52": 28.98,
-      "l52": 9.545,
+      "v": 7905.266977,
+      "cl": 12.02,
+      "cp": -8.65,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 10.98,
-      "epd": 10.98,
-      "ec": 0,
+      "pd": 10.98,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": "Oct 12, 2026, 6:30 PM EDT",
-      "es": "After-hours",
-      "ets": 1791844200492.7498,
-      "etd": "2026-10-12",
-      "epv": null,
+      "epd": 0,
+      "ets": 1791849600534.838,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 28.98,
+      "l52": 9.545,
+      "uid": "ARMA",
       "days": 0,
-      "exp": 1791849702041,
-      "symbol": "ARMA",
-      "uid": "ARMA"
+      "symbol": "ARMA"
     },
     "history": [
       {
@@ -4254,13 +4340,376 @@
           "ch": -57.97
         }
       ]
+    },
+    "official_issuer": {
+      "ticker": "ARMA",
+      "provider": "corgi",
+      "source_url": "https://corgiinvest.com/arma",
+      "fetched_at": "2026-10-13T03:05:56Z",
+      "source_as_of": "2026-10-13",
+      "holdings": [
+        {
+          "name": "ARM HOLDINGS PLC-SWAP-CLST-L",
+          "symbol": null,
+          "identifier": "042068205-TRS-08/04/27-L-CLST",
+          "identifier_type": "cusip_trs",
+          "weight_pct": 199.12,
+          "weight_basis": "market_value",
+          "market_value": 768017.16,
+          "shares": 3009.0,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "ARM HOLDINGS PLC-SWAP-CLST-L",
+            "security_cusip": "042068205-TRS-08/04/27-L-CLST",
+            "security_ticker": "042068205-TRS-08/04/27-L-CLST",
+            "weight_pct": "199.1200",
+            "market_value": "768017.16",
+            "shares": "3009.00000000",
+            "net_assets": "385710.50",
+            "as_of_date": "2026-10-12"
+          }
+        },
+        {
+          "name": "Cash & Other",
+          "symbol": null,
+          "identifier": "Cash&Other",
+          "identifier_type": "issuer_identifier",
+          "weight_pct": -99.14,
+          "weight_basis": "market_value",
+          "market_value": -382401.59,
+          "shares": null,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-99.1400",
+            "market_value": "-382401.59",
+            "shares": "-382401.59000000",
+            "net_assets": "385710.50",
+            "as_of_date": "2026-10-12"
+          }
+        }
+      ],
+      "quote": {
+        "nav": 12.0194,
+        "nav_as_of": "2026-10-09",
+        "market_price": 12.024,
+        "market_price_as_of": "2026-10-12",
+        "market_price_change_pct": -6.428,
+        "premium_discount_pct": 0.0383,
+        "net_assets": 385710.5,
+        "net_assets_as_of": "2026-10-12"
+      },
+      "history": [],
+      "classification": {
+        "category": "2x Single Stock",
+        "fund_type": "leveraged",
+        "leverage_factor": 2,
+        "rebalance_frequency": "Daily",
+        "is_active_management": false,
+        "underlying_ticker": "ARM",
+        "underlying_issuer": "Arm Holdings plc",
+        "underlying_listing": "NASDAQ",
+        "underlying_industry": "semiconductor",
+        "exchange": "Cboe BZX Exchange, Inc.",
+        "inception_date": "2026-06-30",
+        "cusip": "21874J 131",
+        "expense_ratio": "0.45%",
+        "trust": "Corgi ETF Trust I"
+      },
+      "field_dates": {
+        "holdings": "2026-10-12",
+        "holdings_as_of": "2026-10-12",
+        "holdings_position_date": "2026-10-13",
+        "nav": "2026-10-09",
+        "market_price": "2026-10-12",
+        "net_assets": "2026-10-12"
+      },
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ],
+      "holdings_snapshot": {
+        "full_published_snapshot": true,
+        "identity": "ARMA",
+        "snapshot_date": "2026-10-12",
+        "position_date": "2026-10-13",
+        "row_count": 2,
+        "cash_treatment": "aggregated",
+        "scope_note": "issuer publishes the complete current position set for this fund: the swap leg plus one aggregated Cash & Other row"
+      },
+      "raw": {
+        "fund": {
+          "aboutUnderlying": "Arm Holdings plc (NASDAQ: ARM) (\"Arm\") is a United Kingdom-based semiconductor and software design company that develops processor architectures and related technologies used in mobile devices, consumer electronics, data centers, and embedded systems. Arm licenses its intellectual property to semiconductor companies and device manufacturers worldwide. Arm operates globally and is headquartered in Cambridge, England, United Kingdom.",
+          "administrator": "U.S. Bancorp Fund Services",
+          "adviser": "Corgi Strategies, LLC",
+          "auditor": "Tait Weller",
+          "aum": null,
+          "aumAsOf": null,
+          "baseCurrency": "U.S. Dollar",
+          "baseExpenseRatio": null,
+          "category": "2x Single Stock",
+          "cusip": "21874J 131",
+          "custodian": "U.S. Bank N.A.",
+          "description": "The Corgi ARM 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Arm Holdings plc (NASDAQ: ARM) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.",
+          "disclosures": "Investment Objective. The Corgi ARM 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Arm Holdings plc (NASDAQ: ARM) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.\n\nInvestors should consider the investment objectives, risks, charges, and expenses of each Fund carefully before investing. This and other important information is contained in the prospectus for each Fund, which can be obtained without charge from corgiinvest.com or from the SEC at www.sec.gov. Read the applicable prospectus carefully before investing.\n\nThe Fund is newly organized and has limited operating history. There can be no assurance that the Fund will grow to or maintain an economically viable size. It may take time for the Fund to attract sufficient assets and for an active secondary market for its shares to develop or be sustained, which could result in wider bid-ask spreads, increased trading costs, or trading at a premium or discount to net asset value.\n\nThe information on this site is for informational purposes only and does not constitute investment, tax, or legal advice. Please consult your own investment, tax, and legal professionals regarding your specific situation.\n\nThe Funds’ shares are listed for trading on Cboe BZX Exchange, Inc. (the “Exchange”). The Funds are not sponsored, endorsed, sold, or promoted by the Exchange. The Exchange makes no representation regarding the advisability of investing in any Fund and is not responsible for, nor has it participated in, the determination of the timing of, prices of, or quantities of Fund shares to be issued or in the determination or calculation of the equation by which shares of any Fund are redeemable. The Exchange has no obligation or liability in connection with the administration, marketing, or trading of Fund shares.\n\nCorgi ARM 2x Daily ETF Risk. The Corgi ARM 2x Daily ETF seeks, for a single day, investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Arm Holdings plc (ARM) (the “Underlying Security”). The Fund does not seek to achieve its objective for periods longer than a single trading day. Over periods longer than one day, the effects of daily compounding and the volatility of the Underlying Security will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying Security’s return for the same period. Single Issuer Risk. Because the Fund obtains exposure to a single issuer, performance is highly dependent on the price movements, earnings results, product developments, regulatory actions, litigation, executive transitions, and other idiosyncratic risks affecting Arm Holdings plc. A material adverse event at Arm Holdings plc could result in substantial or near-total losses to the Fund, magnified by 2x daily leverage. The Fund uses total return swaps and other equity-linked instruments, which increase volatility and magnify losses, and is subject to correlation risk, counterparty risk, rebalancing risk, and market disruption risk. The Fund is non-diversified and concentrates exposure in a single issuer. Please see the Fund’s prospectus for a more complete discussion of these and other risks.\n\nUnaffiliated Reference Issuer. Arm Holdings plc (ARM) is not affiliated with, endorsed by, or sponsored by Corgi Strategies, LLC or any of its affiliates. Corgi Invest has no control over the business operations, capital allocation decisions, or securities filings of Arm Holdings plc. References to Arm Holdings plc and ARM are for informational purposes only and do not imply any affiliation, sponsorship, or endorsement. Arm Holdings plc common stock is subject to its own risks independent of this Fund, including risks specific to its industry, products, competitive position, management, and regulatory environment.\n\nLeverage Risk. The Fund uses leverage to target approximately 2x the Underlying ETF’s daily return. Losses are magnified relative to the Underlying ETF. If the Underlying ETF declines by around 50% during a trading day, the Fund could experience a near-total or total loss. The use of leverage increases volatility and the risk of rapid losses. Costs of obtaining and maintaining leverage, including financing charges embedded in derivatives, will reduce return.\n\nDerivatives Risk. To the extent the Fund uses derivatives (e.g., total return swaps) to obtain exposure or for portfolio management, it is subject to counterparty, liquidity, valuation, leverage, and correlation risks. Derivatives can be more volatile than direct holdings and may increase exposure to certain market risks.\n\nCompounding and Daily Rebalancing Risk. The Fund seeks 2x the Underlying ETF’s return for a single day, measured from one NAV calculation to the next. Over periods longer than one day, the effects of daily compounding, the path of Underlying ETF returns, and Underlying ETF volatility will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying ETF return for the same period. During volatile or frequently reversing markets, returns may be lower than 2x the Underlying ETF return for the period, and you could lose money even if the Underlying ETF is flat or rises over the holding period.\n\nCorrelation Risk. The Fund seeks approximately 2x the daily performance of the Underlying ETF but may not achieve perfect leveraged correlation. Fees and expenses, transaction and financing costs, the use of derivatives, market disruptions, corporate actions, sampling, and limitations on rebalancing can all cause performance to deviate from the 2x Daily Objective.\n\nIn addition, the fund is subject to general equity market volatility and may experience amplified fluctuation due to its industry concentration.\n\nInvesting involves risk, including possible loss of principal. There is no guarantee that any investment strategy or any Fund will achieve its objectives. Shares of the Funds are bought and sold on an exchange at market price and are not individually redeemable from the Funds. Market price will fluctuate, sometimes materially, and may be higher or lower than net asset value (“NAV”). Brokerage commissions, bid-ask spreads and other trading costs will reduce returns. Performance data represents past performance and does not guarantee future results. Investment return and principal value will fluctuate so that shares, when sold, may be worth more or less than their original cost. Current performance may be lower or higher than the performance data quoted.\n\nPremium/discount data shows the relationship between the market price of a Fund’s shares and that Fund’s NAV. Historical premium/discount data may not be indicative of future premium/discount levels.\n\nThe Fund issues and redeems shares only in large blocks called “Creation Units” at NAV next determined after an order is accepted. Only authorized participants (“APs”) may transact in Creation Units directly with the Fund. Investors should contact their broker or financial intermediary to place trades.\n\nThis site is intended only for investors resident in the United States. Nothing on this website is an offer to sell, or a solicitation of an offer to buy, any security in any jurisdiction where such offer or solicitation would be unlawful.\n\nCorgi ETF Trust I. Investment adviser: Corgi Strategies, LLC. Distributor: Paralel Distributors LLC. Member Firm. Paralel is unaffiliated with Corgi Strategies, LLC, The Corgi Company. © 2026 Corgi Strategies, LLC. All rights reserved.",
+          "displayEnabled": false,
+          "displayOrder": 133,
+          "distributionFrequency": null,
+          "distributor": "Paralel Distributors LLC",
+          "documents": {
+            "dailyHoldingsDate": "2026-05-21",
+            "factSheetDate": "2026-01-31",
+            "prospectusDate": "2026-02-01",
+            "prospectusUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm",
+            "saiDate": "2026-02-01",
+            "saiUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm"
+          },
+          "documentsText": "Prospectus (Updated Feb 01, 2026); Fact Sheet (Jan 31, 2026); SAI (Feb 01, 2026); Daily Holdings / Exposure (May 21, 2026); Annual Report (Unavailable)",
+          "ein": null,
+          "exchange": "Cboe BZX Exchange, Inc.",
+          "expenseGross": "0.45%",
+          "expenseRatio": "0.45%",
+          "factSheetEnabled": false,
+          "featuredOnHomepage": false,
+          "fullName": "Corgi ARM 2x Daily ETF",
+          "fundType": "leveraged",
+          "hasLiveHoldings": false,
+          "heroTags": [
+            "2x Daily Exposure",
+            "Daily Reset",
+            "0.45% Expense Ratio",
+            "Inception [ ]"
+          ],
+          "holdingsCount": 1,
+          "id": "arma",
+          "imageKeys": [
+            "funds/arma/unsplash-20260814.jpg"
+          ],
+          "inceptionDate": "2026-06-30",
+          "indexInceptionDate": null,
+          "indexName": null,
+          "indexProvider": null,
+          "isActiveManagement": false,
+          "isLiveDevelopment": true,
+          "isLiveProduction": true,
+          "isLiveStaging": true,
+          "isin": null,
+          "lei": null,
+          "leverageFactor": 2,
+          "managementStyle": null,
+          "name": "Corgi ARM 2x Daily ETF",
+          "ogImage": null,
+          "reasons": [],
+          "rebalanceFrequency": "Daily",
+          "sec30DayYield": null,
+          "seoDescription": "The Corgi ARM 2x Daily ETF (ARMA) seeks 2x the daily return of Arm Holdings plc (ARM). See price, holdings, expense ratio, and the leverage risks.",
+          "seoTitle": "Arm Holdings 2x ETF (ARMA) | Corgi Invest",
+          "seriesSlug": null,
+          "showDailyNav": false,
+          "showHoldingsTable": false,
+          "showPerformanceChart": true,
+          "siteCategory": "Single-Stock 2x Daily ETF · ARM",
+          "summary": null,
+          "theme": "Single-Stock — ARM",
+          "ticker": "ARMA",
+          "transferAgent": "U.S. Bancorp Fund Services",
+          "trust": "Corgi ETF Trust I",
+          "twelvedataEnabled": false,
+          "twelvedataSymbol": "ARMA",
+          "underlyingHeadquarters": "Cambridge, England, United Kingdom",
+          "underlyingIndexSymbol": "ARM",
+          "underlyingIndustry": "semiconductor",
+          "underlyingIssuer": "Arm Holdings plc",
+          "underlyingListing": "NASDAQ",
+          "underlyingTicker": "ARM",
+          "whiteLabelRedirectUrl": null,
+          "whyInvest": [
+            {
+              "title": "Amplified Daily Exposure",
+              "description": "Seeks two times (2x) the daily performance of the common stock of Arm Holdings plc (NASDAQ: ARM). Both gains and losses are magnified. The Fund is not designed to deliver 2x performance for any period other than a single trading day.",
+              "order": 1
+            },
+            {
+              "title": "ETF Wrapper Access",
+              "description": "Investors obtain leveraged exposure through a standard brokerage account, without a margin agreement, borrowing, or margin calls. Shares trade on Cboe BZX during regular market hours.",
+              "order": 2
+            },
+            {
+              "title": "Daily Reset Mechanic",
+              "description": "The Fund rebalances each trading day. Over periods longer than one day, returns will differ, sometimes significantly, from two times the underlying's cumulative return due to compounding and volatility.",
+              "order": 3
+            },
+            {
+              "title": "For Active Use Only",
+              "description": "Intended for sophisticated investors who actively monitor positions intraday. The Fund is not suitable as a long-term hold or as a substitute for unlevered exposure to the underlying market.",
+              "order": 4
+            }
+          ],
+          "latestNav": "12.0194",
+          "latestMarketPrice": "12.0240",
+          "latestMarketPriceChangePct": "-6.4280",
+          "latestPremiumDiscount": "0.0383",
+          "sinceInceptionReturnPct": "-51.9224",
+          "quarterToDateReturnPct": "-16.49483103601601",
+          "navSparkline": [
+            0,
+            6.34,
+            -3.97,
+            -13.08,
+            -24.88,
+            -25.01,
+            -11.2,
+            -26.69,
+            -35.47,
+            -37.33,
+            -44.13,
+            -41.99,
+            -32.16,
+            -35.15,
+            -35.34,
+            -45.94,
+            -52.54,
+            -60.26,
+            -54.37,
+            -55.09,
+            -55.37,
+            -42.53,
+            -37.49,
+            -39.33,
+            -45.64,
+            -44.04,
+            -41.27,
+            -40.99,
+            -44.38,
+            -51.79,
+            -52.82,
+            -55.64,
+            -57.31,
+            -56.33,
+            -52.93,
+            -57.55,
+            -56.55,
+            -59.1,
+            -59.11,
+            -53.11,
+            -49.63,
+            -48.61,
+            -52.51,
+            -48.61,
+            -57.62,
+            -56.88,
+            -49.56,
+            -45.54,
+            -22.33,
+            -22.65,
+            -34.79,
+            -33.17,
+            -44.8,
+            -42.43,
+            -41.38,
+            -35.37,
+            -37.32,
+            -40.85,
+            -48.51,
+            -51.92
+          ],
+          "latestNetAssets": "385710.50",
+          "latestAsOfDate": "2026-10-12",
+          "latestAumAsOfDate": "2026-10-12",
+          "latestAumSource": "holdings",
+          "latestNavAsOfDate": "2026-10-09"
+        },
+        "holdings_rows": [
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "ARM HOLDINGS PLC-SWAP-CLST-L",
+            "security_cusip": "042068205-TRS-08/04/27-L-CLST",
+            "security_ticker": "042068205-TRS-08/04/27-L-CLST",
+            "weight_pct": "199.1200",
+            "market_value": "768017.16",
+            "shares": "3009.00000000",
+            "net_assets": "385710.50",
+            "as_of_date": "2026-10-12"
+          },
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-99.1400",
+            "market_value": "-382401.59",
+            "shares": "-382401.59000000",
+            "net_assets": "385710.50",
+            "as_of_date": "2026-10-12"
+          }
+        ]
+      }
+    },
+    "official_holdings": {
+      "provider": "corgi",
+      "landing_page": "https://corgiinvest.com/arma",
+      "source_as_of": "2026-10-12",
+      "position_scope": "issuer_published_snapshot",
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ]
     }
   },
-  "detail_status": "stockanalysis_partial",
-  "partial_reason_codes": [
-    "holdings_unavailable",
-    "holdings_count_unavailable",
-    "holdings_date_unavailable",
-    "holdings_countries_unavailable"
-  ]
+  "holdings_source": {
+    "provider": "corgi",
+    "landing_page": "https://corgiinvest.com/arma",
+    "source_as_of": "2026-10-12",
+    "position_scope": "issuer_published_snapshot",
+    "completeness": [
+      "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+      "navSparkline is undated and is intentionally not returned as history",
+      "weights are market-value weights; notional exposure is not published here",
+      "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+      "holdingsCount on the page counts the swap leg only and is not a holdings total"
+    ]
+  },
+  "field_sources": {
+    "holdings": {
+      "provider": "corgi",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
 }

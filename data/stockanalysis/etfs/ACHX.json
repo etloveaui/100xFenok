@@ -3,8 +3,8 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ACHX",
-  "source_as_of": "2026-10-12T20:00:00Z",
-  "fetched_at": "2026-10-13T00:01:35Z",
+  "source_as_of": "2026-10-12T00:00:00Z",
+  "fetched_at": "2026-10-13T03:05:36Z",
   "endpoints": {
     "holdings": "/etf/achx/holdings/__data.json",
     "overview": "/etf/achx/__data.json",
@@ -25,9 +25,9 @@
       "contract": "etf_detail_overview/v1"
     },
     "holdings": {
-      "format": "svelte_devalue",
-      "decoder": "svelte_devalue_node/v1",
-      "contract": "etf_detail_holdings/v1"
+      "format": "issuer_payload",
+      "provider": "corgi",
+      "contract": "issuer_published_snapshot/v1"
     },
     "quote": {
       "format": "rest_json",
@@ -42,57 +42,71 @@
     "holdings": [
       {
         "name": "ARCHER AVIATION INC.-SWAP-MREX-L",
-        "weight_pct": 190.05,
-        "shares": 132027,
+        "symbol": null,
+        "identifier": "03945R102-TRS-07/30/27-L-MREX",
+        "identifier_type": "cusip_trs",
+        "weight_pct": 196.73,
+        "weight_basis": "market_value",
+        "market_value": 604536.31,
+        "shares": 128899.0,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "n": "ARCHER AVIATION INC.-SWAP-MREX-L",
-          "as": "190.05%",
-          "sh": "132,027"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+          "security_cusip": "03945R102-TRS-07/30/27-L-MREX",
+          "security_ticker": "03945R102-TRS-07/30/27-L-MREX",
+          "weight_pct": "196.7300",
+          "market_value": "604536.31",
+          "shares": "128899.00000000",
+          "net_assets": "307297.50",
+          "as_of_date": "2026-10-12"
         }
       },
       {
-        "name": "US DOLLARS",
-        "weight_pct": 97.8,
-        "shares": 337001,
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "issuer_identifier",
+        "weight_pct": -96.77,
+        "weight_basis": "market_value",
+        "market_value": -297375.25,
+        "shares": null,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "n": "US DOLLARS",
-          "as": "97.80%",
-          "sh": "337,001"
-        }
-      },
-      {
-        "name": "OTHER ASSETS AND LIABILITIES",
-        "weight_pct": -0.62,
-        "shares": 2143,
-        "raw": {
-          "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-0.62%",
-          "sh": "2,143"
-        }
-      },
-      {
-        "name": "Cash Offset",
-        "weight_pct": -187.23,
-        "shares": 645146,
-        "raw": {
-          "n": "Cash Offset",
-          "as": "-187.23%",
-          "sh": "645,146"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "Cash & Other",
+          "security_cusip": "Cash&Other",
+          "security_ticker": "Cash&Other",
+          "weight_pct": "-96.7700",
+          "market_value": "-297375.25",
+          "shares": "-297375.25000000",
+          "net_assets": "307297.50",
+          "as_of_date": "2026-10-12"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": 4,
-    "holdings_updated": "Oct 8, 2026",
+    "holding_count": 2,
+    "holdings_updated": "2026-10-12",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
       "is_inverse": false,
-      "is_single_stock": false,
-      "underlying": null,
-      "source": "stockanalysis.overview.description",
+      "is_single_stock": true,
+      "underlying": "ACHR",
+      "source": "https://corgiinvest.com/achx",
       "confidence": "high"
     },
     "overview": {
@@ -103,7 +117,7 @@
       "etf_website": "https://corgifunds.com/achx"
     },
     "performance": {
-      "tr1m": -22.14394,
+      "tr1m": -31.25323,
       "trYTD": null,
       "tr1y": null,
       "cagr5y": null,
@@ -111,38 +125,34 @@
       "cagrMAX": null
     },
     "quote": {
-      "p": 20.3751,
-      "pd": 20.38,
-      "c": -2.7,
-      "cp": -11.7,
-      "cl": 23.07,
-      "cdr": -1,
-      "o": 20.38,
+      "c": -2.69,
+      "e": false,
       "h": 20.38,
       "l": 20.38,
-      "v": 164,
-      "ts": 1791835200000,
+      "o": 20.38,
+      "p": 20.3751,
       "u": "Oct 12, 2026, 4:00 PM EDT",
-      "td": "2026-10-12",
-      "h52": 48.57,
-      "l52": 19.9,
+      "v": 166,
+      "cl": 23.07,
+      "cp": -11.68,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 19.68,
-      "epd": 19.68,
-      "ec": -0.7,
-      "ecp": -3.41,
-      "eu": "Oct 12, 2026, 7:42 PM EDT",
-      "es": "After-hours",
-      "ets": 1791848520421.2158,
-      "etd": "2026-10-12",
-      "epv": null,
+      "pd": 20.38,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1791849600241.1436,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 48.57,
+      "l52": 19.9,
+      "uid": "ACHX",
       "days": 0,
-      "exp": 1791849699283,
-      "symbol": "ACHX",
-      "uid": "ACHX"
+      "symbol": "ACHX"
     },
     "history": [
       {
@@ -151,7 +161,7 @@
         "h": 24.02,
         "l": 19.97,
         "c": 20.375,
-        "v": 6292,
+        "v": 6294,
         "a": 20.375,
         "ch": -13.26
       },
@@ -194,7 +204,7 @@
           "h": 20.38,
           "l": 20.38,
           "c": 20.375,
-          "v": 164,
+          "v": 166,
           "a": 20.375,
           "ch": -11.7
         },
@@ -916,7 +926,7 @@
           "h": 20.38,
           "l": 20.38,
           "c": 20.375,
-          "v": 164,
+          "v": 166,
           "a": 20.375,
           "ch": -11.7
         },
@@ -1068,7 +1078,7 @@
           "h": 24.02,
           "l": 19.97,
           "c": 20.375,
-          "v": 6292,
+          "v": 6294,
           "a": 20.375,
           "ch": -13.26
         },
@@ -1110,7 +1120,7 @@
           "h": 20.38,
           "l": 20.38,
           "c": 20.375,
-          "v": 164,
+          "v": 166,
           "a": 20.375,
           "ch": -11.7
         },
@@ -1262,7 +1272,7 @@
           "h": 24.02,
           "l": 19.97,
           "c": 20.375,
-          "v": 6292,
+          "v": 6294,
           "a": 20.375,
           "ch": -13.26
         },
@@ -1304,7 +1314,7 @@
           "h": 24.02,
           "l": 19.97,
           "c": 20.375,
-          "v": 6292,
+          "v": 6294,
           "a": 20.375,
           "ch": -13.26
         },
@@ -1339,7 +1349,87 @@
           "ch": -10.37
         }
       ]
-    }
+    },
+    "holdings_history": [
+      {
+        "provider": "stockanalysis",
+        "source_as_of": "Oct 8, 2026",
+        "holdings": [
+          {
+            "name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+            "weight_pct": 190.05,
+            "shares": 132027,
+            "raw": {
+              "n": "ARCHER AVIATION INC.-SWAP-MREX-L",
+              "as": "190.05%",
+              "sh": "132,027"
+            }
+          },
+          {
+            "name": "US DOLLARS",
+            "weight_pct": 97.8,
+            "shares": 337001,
+            "raw": {
+              "n": "US DOLLARS",
+              "as": "97.80%",
+              "sh": "337,001"
+            }
+          },
+          {
+            "name": "OTHER ASSETS AND LIABILITIES",
+            "weight_pct": -0.62,
+            "shares": 2143,
+            "raw": {
+              "n": "OTHER ASSETS AND LIABILITIES",
+              "as": "-0.62%",
+              "sh": "2,143"
+            }
+          },
+          {
+            "name": "Cash Offset",
+            "weight_pct": -187.23,
+            "shares": 645146,
+            "raw": {
+              "n": "Cash Offset",
+              "as": "-187.23%",
+              "sh": "645,146"
+            }
+          }
+        ],
+        "holding_count": 4
+      },
+      {
+        "provider": "yahoo_finance",
+        "source_as_of": "2026-07-08T22:43:26Z",
+        "holdings": [
+          {
+            "rank": 1,
+            "symbol": "FGXXX",
+            "name": "First American Government Obligs X",
+            "weight_pct": 20.346439,
+            "raw": {
+              "_index": "FGXXX",
+              "Name": "First American Government Obligs X",
+              "Holding Percent": 0.20346439
+            }
+          }
+        ],
+        "holding_count": 1
+      }
+    ],
+    "history_archive": [
+      {
+        "provider": "yahoo_finance",
+        "price_basis": "yahoo_adjusted",
+        "source_payload": "{\n  \"schema_version\": \"yf-etf-detail/v1\",\n  \"source\": \"yahoo_finance\",\n  \"source_provider\": \"yahoo_finance\",\n  \"detail_status\": \"yf_fallback\",\n  \"asset_type\": \"etf\",\n  \"ticker\": \"ACHX\",\n  \"source_as_of\": \"2026-07-08T22:43:26Z\",\n  \"inceptionDate\": null,\n  \"fetched_at\": \"2026-07-08T22:43:26Z\",\n  \"role\": \"ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet\",\n  \"normalized\": {\n    \"holdings\": [\n      {\n        \"rank\": 1,\n        \"symbol\": \"FGXXX\",\n        \"name\": \"First American Government Obligs X\",\n        \"weight_pct\": 20.346439,\n        \"raw\": {\n          \"_index\": \"FGXXX\",\n          \"Name\": \"First American Government Obligs X\",\n          \"Holding Percent\": 0.20346439\n        }\n      }\n    ],\n    \"asset_allocation\": {\n      \"cashPosition\": -1.9417,\n      \"stockPosition\": 1.962,\n      \"bondPosition\": 0.0,\n      \"preferredPosition\": 0.0,\n      \"convertiblePosition\": 0.0,\n      \"otherPosition\": 0.9796\n    },\n    \"sectors\": null,\n    \"countries\": null,\n    \"holding_count\": 1,\n    \"holdings_updated\": \"2026-07-08T22:43:26Z\",\n    \"classification\": {\n      \"is_leveraged\": true,\n      \"leverage_factor\": 2.0,\n      \"is_inverse\": false,\n      \"is_single_stock\": false,\n      \"underlying\": null,\n      \"source\": \"stockanalysis.overview.description\",\n      \"confidence\": \"high\"\n    },\n    \"overview\": {\n      \"aum\": 255105.0,\n      \"nav\": 27.265,\n      \"expenseRatio\": 0.45,\n      \"beta\": 0.0,\n      \"provider_page\": \"Corgi Funds\",\n      \"category\": \"Trading--Leveraged Equity\",\n      \"legalType\": \"Exchange Traded Fund\",\n      \"description\": \"Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.\"\n    },\n    \"quote\": {\n      \"p\": 26.205,\n      \"pd\": 27.1991,\n      \"c\": -0.9941000000000031,\n      \"cp\": -3.6549003459673406,\n      \"u\": \"2026-07-08T22:43:26Z\",\n      \"ex\": \"yahoo_finance\"\n    },\n    \"history\": [\n      {\n        \"date\": \"2026-06-30\",\n        \"Open\": 25.469999313354492,\n        \"High\": 25.559999465942383,\n        \"Low\": 25.149999618530273,\n        \"Close\": 25.559999465942383,\n        \"Volume\": 9600.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-01\",\n        \"Open\": 27.760000228881836,\n        \"High\": 27.760000228881836,\n        \"Low\": 27.760000228881836,\n        \"Close\": 27.760000228881836,\n        \"Volume\": 100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-02\",\n        \"Open\": 28.0,\n        \"High\": 28.0,\n        \"Low\": 28.0,\n        \"Close\": 28.0,\n        \"Volume\": 100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-06\",\n        \"Open\": 32.619998931884766,\n        \"High\": 32.619998931884766,\n        \"Low\": 32.619998931884766,\n        \"Close\": 32.619998931884766,\n        \"Volume\": 100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-07\",\n        \"Open\": 27.200000762939453,\n        \"High\": 27.200000762939453,\n        \"Low\": 27.200000762939453,\n        \"Close\": 27.200000762939453,\n        \"Volume\": 100.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      }\n    ],\n    \"history_periods\": {\n      \"daily_1y\": [\n        {\n          \"date\": \"2026-06-30\",\n          \"Open\": 25.469999313354492,\n          \"High\": 25.559999465942383,\n          \"Low\": 25.149999618530273,\n          \"Close\": 25.559999465942383,\n          \"Volume\": 9600.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-01\",\n          \"Open\": 27.760000228881836,\n          \"High\": 27.760000228881836,\n          \"Low\": 27.760000228881836,\n          \"Close\": 27.760000228881836,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-02\",\n          \"Open\": 28.0,\n          \"High\": 28.0,\n          \"Low\": 28.0,\n          \"Close\": 28.0,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-06\",\n          \"Open\": 32.619998931884766,\n          \"High\": 32.619998931884766,\n          \"Low\": 32.619998931884766,\n          \"Close\": 32.619998931884766,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-07\",\n          \"Open\": 27.200000762939453,\n          \"High\": 27.200000762939453,\n          \"Low\": 27.200000762939453,\n          \"Close\": 27.200000762939453,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        }\n      ]\n    }\n  },\n  \"raw\": {\n    \"yf\": {\n      \"info\": {\n        \"quoteType\": \"ETF\",\n        \"shortName\": \"Corgi ACHR 2x Daily ETF\",\n        \"longName\": \"Corgi ACHR 2x Daily ETF\",\n        \"currency\": \"USD\",\n        \"exchange\": \"BTS\",\n        \"fundFamily\": \"Corgi Funds\",\n        \"category\": \"Trading--Leveraged Equity\",\n        \"legalType\": \"Exchange Traded Fund\",\n        \"totalAssets\": 255105,\n        \"netAssets\": 255105.0,\n        \"navPrice\": 27.265,\n        \"beta3Year\": 0.0,\n        \"netExpenseRatio\": 0.45,\n        \"previousClose\": 27.1991,\n        \"fiftyTwoWeekHigh\": 32.62,\n        \"fiftyTwoWeekLow\": 25.15,\n        \"fiftyTwoWeekChangePercent\": 6.416273,\n        \"averageVolume\": 2000,\n        \"averageVolume10days\": 2000,\n        \"symbol\": \"ACHX\"\n      },\n      \"major_holders\": null,\n      \"institutional_holders\": null,\n      \"analyst_price_targets\": null,\n      \"recommendations\": null,\n      \"earnings_estimate\": null,\n      \"revenue_estimate\": null,\n      \"income_statement\": null,\n      \"quarterly_income_statement\": null,\n      \"balance_sheet\": null,\n      \"quarterly_balance_sheet\": null,\n      \"cash_flow\": null,\n      \"quarterly_cash_flow\": null,\n      \"recommendations_summary\": null,\n      \"upgrades_downgrades\": null,\n      \"earnings_dates\": null,\n      \"earnings_history\": null,\n      \"eps_trend\": null,\n      \"eps_revisions\": null,\n      \"growth_estimates\": null,\n      \"sustainability\": null,\n      \"mutualfund_holders\": null,\n      \"insider_transactions\": null,\n      \"insider_purchases\": null,\n      \"insider_roster_holders\": null,\n      \"sec_filings\": null,\n      \"news\": null,\n      \"dividends\": null,\n      \"fast_info\": {\n        \"currency\": \"USD\",\n        \"exchange\": \"BTS\",\n        \"fiftyDayAverage\": 28.227999877929687,\n        \"lastPrice\": 26.205,\n        \"lastVolume\": 0.0,\n        \"previousClose\": 32.62,\n        \"quoteType\": \"ETF\",\n        \"regularMarketPreviousClose\": 27.200000762939453,\n        \"tenDayAverageVolume\": 2000.0,\n        \"threeMonthAverageVolume\": 2000.0,\n        \"timezone\": \"America/New_York\",\n        \"twoHundredDayAverage\": 28.227999877929687,\n        \"yearChange\": 0.06416280638746893,\n        \"yearHigh\": 32.619998931884766,\n        \"yearLow\": 25.149999618530273\n      },\n      \"actions\": null,\n      \"splits\": null,\n      \"capital_gains\": null,\n      \"funds_data\": {\n        \"quote_type\": \"ETF\",\n        \"description\": \"Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.\",\n        \"fund_overview\": {\n          \"categoryName\": \"Trading--Leveraged Equity\",\n          \"family\": \"Corgi Funds\",\n          \"legalType\": \"Exchange Traded Fund\"\n        },\n        \"fund_operations\": [\n          {\n            \"_index\": \"Annual Report Expense Ratio\",\n            \"ACHX\": 0.0045,\n            \"Category Average\": 0.0\n          },\n          {\n            \"_index\": \"Annual Holdings Turnover\",\n            \"ACHX\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Total Net Assets\",\n            \"ACHX\": 0.0,\n            \"Category Average\": 0.0\n          }\n        ],\n        \"asset_classes\": {\n          \"cashPosition\": -1.9417,\n          \"stockPosition\": 1.962,\n          \"bondPosition\": 0.0,\n          \"preferredPosition\": 0.0,\n          \"convertiblePosition\": 0.0,\n          \"otherPosition\": 0.9796\n        },\n        \"top_holdings\": [\n          {\n            \"_index\": \"FGXXX\",\n            \"Name\": \"First American Government Obligs X\",\n            \"Holding Percent\": 0.20346439\n          }\n        ],\n        \"equity_holdings\": [\n          {\n            \"_index\": \"Price/Earnings\",\n            \"ACHX\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Book\",\n            \"ACHX\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Sales\",\n            \"ACHX\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Cashflow\",\n            \"ACHX\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Median Market Cap\",\n            \"ACHX\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"3 Year Earnings Growth\",\n            \"ACHX\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          }\n        ],\n        \"bond_holdings\": [\n          {\n            \"_index\": \"Duration\",\n            \"ACHX\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Maturity\",\n            \"ACHX\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Credit Quality\",\n            \"ACHX\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          }\n        ],\n        \"bond_ratings\": {\n          \"us_government\": 0.0\n        }\n      },\n      \"history_1y\": [\n        {\n          \"date\": \"2026-06-30\",\n          \"Open\": 25.469999313354492,\n          \"High\": 25.559999465942383,\n          \"Low\": 25.149999618530273,\n          \"Close\": 25.559999465942383,\n          \"Volume\": 9600.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-01\",\n          \"Open\": 27.760000228881836,\n          \"High\": 27.760000228881836,\n          \"Low\": 27.760000228881836,\n          \"Close\": 27.760000228881836,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-02\",\n          \"Open\": 28.0,\n          \"High\": 28.0,\n          \"Low\": 28.0,\n          \"Close\": 28.0,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-06\",\n          \"Open\": 32.619998931884766,\n          \"High\": 32.619998931884766,\n          \"Low\": 32.619998931884766,\n          \"Close\": 32.619998931884766,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-07\",\n          \"Open\": 27.200000762939453,\n          \"High\": 27.200000762939453,\n          \"Low\": 27.200000762939453,\n          \"Close\": 27.200000762939453,\n          \"Volume\": 100.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        }\n      ]\n    }\n  }\n}\n",
+        "payload_sha256": "7ba0153abc1a706a797f6f47a490ec9faf7b4031d83382ff35918a06202b2603",
+        "source_as_of": "2026-07-08T22:43:26Z",
+        "fetched_at": "2026-07-08T22:43:26Z",
+        "history_first": "2026-06-30",
+        "history_last": "2026-07-07",
+        "source_clock_basis": "legacy_collection_time"
+      }
+    ]
   },
   "raw": {
     "overview": {
@@ -1369,7 +1459,7 @@
         ],
         "topic": "overview",
         "ticker": "ACHX",
-        "lastChecked": 1791849365797,
+        "lastChecked": 1791851998601,
         "summary": {
           "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
         }
@@ -1389,7 +1479,7 @@
       "holdings": 4,
       "inception": "Jun 30, 2026",
       "chart": {
-        "expiration": 1791852965325,
+        "expiration": 1791898200000,
         "data": [
           {
             "t": 1791797400
@@ -2658,7 +2748,7 @@
         "no1d": false
       },
       "changes": {
-        "price1w": 22.219,
+        "price1w": 21.024,
         "price1m": 29.638,
         "price3m": 24.923,
         "price6m": null,
@@ -2668,7 +2758,7 @@
         "priceMAX": 25.563
       },
       "performance": {
-        "tr1m": -22.14394,
+        "tr1m": -31.25323,
         "trYTD": null,
         "tr1y": null,
         "cagr5y": null,
@@ -2679,38 +2769,34 @@
     },
     "holdings": {},
     "quote": {
-      "p": 20.3751,
-      "pd": 20.38,
-      "c": -2.7,
-      "cp": -11.7,
-      "cl": 23.07,
-      "cdr": -1,
-      "o": 20.38,
+      "c": -2.69,
+      "e": false,
       "h": 20.38,
       "l": 20.38,
-      "v": 164,
-      "ts": 1791835200000,
+      "o": 20.38,
+      "p": 20.3751,
       "u": "Oct 12, 2026, 4:00 PM EDT",
-      "td": "2026-10-12",
-      "h52": 48.57,
-      "l52": 19.9,
+      "v": 166,
+      "cl": 23.07,
+      "cp": -11.68,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 19.68,
-      "epd": 19.68,
-      "ec": -0.7,
-      "ecp": -3.41,
-      "eu": "Oct 12, 2026, 7:42 PM EDT",
-      "es": "After-hours",
-      "ets": 1791848520421.2158,
-      "etd": "2026-10-12",
-      "epv": null,
+      "pd": 20.38,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1791849600241.1436,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 48.57,
+      "l52": 19.9,
+      "uid": "ACHX",
       "days": 0,
-      "exp": 1791849699283,
-      "symbol": "ACHX",
-      "uid": "ACHX"
+      "symbol": "ACHX"
     },
     "history": [
       {
@@ -2719,7 +2805,7 @@
         "h": 24.02,
         "l": 19.97,
         "c": 20.375,
-        "v": 6292,
+        "v": 6294,
         "a": 20.375,
         "ch": -13.26
       },
@@ -2762,7 +2848,7 @@
           "h": 20.38,
           "l": 20.38,
           "c": 20.375,
-          "v": 164,
+          "v": 166,
           "a": 20.375,
           "ch": -11.7
         },
@@ -3484,7 +3570,7 @@
           "h": 20.38,
           "l": 20.38,
           "c": 20.375,
-          "v": 164,
+          "v": 166,
           "a": 20.375,
           "ch": -11.7
         },
@@ -3636,7 +3722,7 @@
           "h": 24.02,
           "l": 19.97,
           "c": 20.375,
-          "v": 6292,
+          "v": 6294,
           "a": 20.375,
           "ch": -13.26
         },
@@ -3678,7 +3764,7 @@
           "h": 20.38,
           "l": 20.38,
           "c": 20.375,
-          "v": 164,
+          "v": 166,
           "a": 20.375,
           "ch": -11.7
         },
@@ -3830,7 +3916,7 @@
           "h": 24.02,
           "l": 19.97,
           "c": 20.375,
-          "v": 6292,
+          "v": 6294,
           "a": 20.375,
           "ch": -13.26
         },
@@ -3872,7 +3958,7 @@
           "h": 24.02,
           "l": 19.97,
           "c": 20.375,
-          "v": 6292,
+          "v": 6294,
           "a": 20.375,
           "ch": -13.26
         },
@@ -3907,13 +3993,376 @@
           "ch": -10.37
         }
       ]
+    },
+    "official_issuer": {
+      "ticker": "ACHX",
+      "provider": "corgi",
+      "source_url": "https://corgiinvest.com/achx",
+      "fetched_at": "2026-10-13T03:05:36Z",
+      "source_as_of": "2026-10-13",
+      "holdings": [
+        {
+          "name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+          "symbol": null,
+          "identifier": "03945R102-TRS-07/30/27-L-MREX",
+          "identifier_type": "cusip_trs",
+          "weight_pct": 196.73,
+          "weight_basis": "market_value",
+          "market_value": 604536.31,
+          "shares": 128899.0,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+            "security_cusip": "03945R102-TRS-07/30/27-L-MREX",
+            "security_ticker": "03945R102-TRS-07/30/27-L-MREX",
+            "weight_pct": "196.7300",
+            "market_value": "604536.31",
+            "shares": "128899.00000000",
+            "net_assets": "307297.50",
+            "as_of_date": "2026-10-12"
+          }
+        },
+        {
+          "name": "Cash & Other",
+          "symbol": null,
+          "identifier": "Cash&Other",
+          "identifier_type": "issuer_identifier",
+          "weight_pct": -96.77,
+          "weight_basis": "market_value",
+          "market_value": -297375.25,
+          "shares": null,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-96.7700",
+            "market_value": "-297375.25",
+            "shares": "-297375.25000000",
+            "net_assets": "307297.50",
+            "as_of_date": "2026-10-12"
+          }
+        }
+      ],
+      "quote": {
+        "nav": 22.9711,
+        "nav_as_of": "2026-10-09",
+        "market_price": 23.0749,
+        "market_price_as_of": "2026-10-12",
+        "market_price_change_pct": 9.9695,
+        "premium_discount_pct": 0.4519,
+        "net_assets": 307297.5,
+        "net_assets_as_of": "2026-10-12"
+      },
+      "history": [],
+      "classification": {
+        "category": "2x Single Stock",
+        "fund_type": "leveraged",
+        "leverage_factor": 2,
+        "rebalance_frequency": "Daily",
+        "is_active_management": false,
+        "underlying_ticker": "ACHR",
+        "underlying_issuer": "Archer Aviation Inc.",
+        "underlying_listing": "NYSE",
+        "underlying_industry": "aerospace and space technology",
+        "exchange": "Cboe BZX Exchange, Inc.",
+        "inception_date": "2026-06-30",
+        "cusip": "21874K 302",
+        "expense_ratio": "0.45%",
+        "trust": "Corgi ETF Trust I"
+      },
+      "field_dates": {
+        "holdings": "2026-10-12",
+        "holdings_as_of": "2026-10-12",
+        "holdings_position_date": "2026-10-13",
+        "nav": "2026-10-09",
+        "market_price": "2026-10-12",
+        "net_assets": "2026-10-12"
+      },
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ],
+      "holdings_snapshot": {
+        "full_published_snapshot": true,
+        "identity": "ACHX",
+        "snapshot_date": "2026-10-12",
+        "position_date": "2026-10-13",
+        "row_count": 2,
+        "cash_treatment": "aggregated",
+        "scope_note": "issuer publishes the complete current position set for this fund: the swap leg plus one aggregated Cash & Other row"
+      },
+      "raw": {
+        "fund": {
+          "aboutUnderlying": "Archer Aviation Inc. (NYSE: ACHR) (\"Archer\") is a United States-based aviation company developing electric vertical takeoff and landing (eVTOL) aircraft and related air mobility services. The company is focused on commercializing urban air mobility solutions. Archer is headquartered in San Jose, California, United States.",
+          "administrator": "U.S. Bancorp Fund Services",
+          "adviser": "Corgi Strategies, LLC",
+          "auditor": "Tait Weller",
+          "aum": null,
+          "aumAsOf": null,
+          "baseCurrency": "U.S. Dollar",
+          "baseExpenseRatio": null,
+          "category": "2x Single Stock",
+          "cusip": "21874K 302",
+          "custodian": "U.S. Bank N.A.",
+          "description": "The Corgi ACHR 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Archer Aviation Inc. (NYSE: ACHR) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.",
+          "disclosures": "Investment Objective. The Corgi ACHR 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Archer Aviation Inc. (NYSE: ACHR) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.\n\nInvestors should consider the investment objectives, risks, charges, and expenses of each Fund carefully before investing. This and other important information is contained in the prospectus for each Fund, which can be obtained without charge from corgiinvest.com or from the SEC at www.sec.gov. Read the applicable prospectus carefully before investing.\n\nThe Fund is newly organized and has limited operating history. There can be no assurance that the Fund will grow to or maintain an economically viable size. It may take time for the Fund to attract sufficient assets and for an active secondary market for its shares to develop or be sustained, which could result in wider bid-ask spreads, increased trading costs, or trading at a premium or discount to net asset value.\n\nThe information on this site is for informational purposes only and does not constitute investment, tax, or legal advice. Please consult your own investment, tax, and legal professionals regarding your specific situation.\n\nThe Funds’ shares are listed for trading on Cboe BZX Exchange, Inc. (the “Exchange”). The Funds are not sponsored, endorsed, sold, or promoted by the Exchange. The Exchange makes no representation regarding the advisability of investing in any Fund and is not responsible for, nor has it participated in, the determination of the timing of, prices of, or quantities of Fund shares to be issued or in the determination or calculation of the equation by which shares of any Fund are redeemable. The Exchange has no obligation or liability in connection with the administration, marketing, or trading of Fund shares.\n\nCorgi ACHR 2x Daily ETF Risk. The Corgi ACHR 2x Daily ETF seeks, for a single day, investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Archer Aviation Inc. (ACHR) (the “Underlying Security”). The Fund does not seek to achieve its objective for periods longer than a single trading day. Over periods longer than one day, the effects of daily compounding and the volatility of the Underlying Security will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying Security’s return for the same period. Single Issuer Risk. Because the Fund obtains exposure to a single issuer, performance is highly dependent on the price movements, earnings results, product developments, regulatory actions, litigation, executive transitions, and other idiosyncratic risks affecting Archer Aviation Inc.. A material adverse event at Archer Aviation Inc. could result in substantial or near-total losses to the Fund, magnified by 2x daily leverage. The Fund uses total return swaps and other equity-linked instruments, which increase volatility and magnify losses, and is subject to correlation risk, counterparty risk, rebalancing risk, and market disruption risk. The Fund is non-diversified and concentrates exposure in a single issuer. Please see the Fund’s prospectus for a more complete discussion of these and other risks.\n\nUnaffiliated Reference Issuer. Archer Aviation Inc. (ACHR) is not affiliated with, endorsed by, or sponsored by Corgi Strategies, LLC or any of its affiliates. Corgi Invest has no control over the business operations, capital allocation decisions, or securities filings of Archer Aviation Inc.. References to Archer Aviation Inc. and ACHR are for informational purposes only and do not imply any affiliation, sponsorship, or endorsement. Archer Aviation Inc. common stock is subject to its own risks independent of this Fund, including risks specific to its industry, products, competitive position, management, and regulatory environment.\n\nLeverage Risk. The Fund uses leverage to target approximately 2x the Underlying ETF’s daily return. Losses are magnified relative to the Underlying ETF. If the Underlying ETF declines by around 50% during a trading day, the Fund could experience a near-total or total loss. The use of leverage increases volatility and the risk of rapid losses. Costs of obtaining and maintaining leverage, including financing charges embedded in derivatives, will reduce return.\n\nDerivatives Risk. To the extent the Fund uses derivatives (e.g., total return swaps) to obtain exposure or for portfolio management, it is subject to counterparty, liquidity, valuation, leverage, and correlation risks. Derivatives can be more volatile than direct holdings and may increase exposure to certain market risks.\n\nCompounding and Daily Rebalancing Risk. The Fund seeks 2x the Underlying ETF’s return for a single day, measured from one NAV calculation to the next. Over periods longer than one day, the effects of daily compounding, the path of Underlying ETF returns, and Underlying ETF volatility will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying ETF return for the same period. During volatile or frequently reversing markets, returns may be lower than 2x the Underlying ETF return for the period, and you could lose money even if the Underlying ETF is flat or rises over the holding period.\n\nCorrelation Risk. The Fund seeks approximately 2x the daily performance of the Underlying ETF but may not achieve perfect leveraged correlation. Fees and expenses, transaction and financing costs, the use of derivatives, market disruptions, corporate actions, sampling, and limitations on rebalancing can all cause performance to deviate from the 2x Daily Objective.\n\nIn addition, the fund is subject to general equity market volatility and may experience amplified fluctuation due to its industry concentration.\n\nInvesting involves risk, including possible loss of principal. There is no guarantee that any investment strategy or any Fund will achieve its objectives. Shares of the Funds are bought and sold on an exchange at market price and are not individually redeemable from the Funds. Market price will fluctuate, sometimes materially, and may be higher or lower than net asset value (“NAV”). Brokerage commissions, bid-ask spreads and other trading costs will reduce returns. Performance data represents past performance and does not guarantee future results. Investment return and principal value will fluctuate so that shares, when sold, may be worth more or less than their original cost. Current performance may be lower or higher than the performance data quoted.\n\nPremium/discount data shows the relationship between the market price of a Fund’s shares and that Fund’s NAV. Historical premium/discount data may not be indicative of future premium/discount levels.\n\nThe Fund issues and redeems shares only in large blocks called “Creation Units” at NAV next determined after an order is accepted. Only authorized participants (“APs”) may transact in Creation Units directly with the Fund. Investors should contact their broker or financial intermediary to place trades.\n\nThis site is intended only for investors resident in the United States. Nothing on this website is an offer to sell, or a solicitation of an offer to buy, any security in any jurisdiction where such offer or solicitation would be unlawful.\n\nCorgi ETF Trust I. Investment adviser: Corgi Strategies, LLC. Distributor: Paralel Distributors LLC. Member Firm. Paralel is unaffiliated with Corgi Strategies, LLC, The Corgi Company. © 2026 Corgi Strategies, LLC. All rights reserved.",
+          "displayEnabled": false,
+          "displayOrder": 183,
+          "distributionFrequency": null,
+          "distributor": "Paralel Distributors LLC",
+          "documents": {
+            "dailyHoldingsDate": "2026-05-21",
+            "factSheetDate": "2026-01-31",
+            "prospectusDate": "2026-02-01",
+            "prospectusUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm",
+            "saiDate": "2026-02-01",
+            "saiUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm"
+          },
+          "documentsText": "Prospectus (Updated Feb 01, 2026); Fact Sheet (Jan 31, 2026); SAI (Feb 01, 2026); Daily Holdings / Exposure (May 21, 2026); Annual Report (Unavailable)",
+          "ein": null,
+          "exchange": "Cboe BZX Exchange, Inc.",
+          "expenseGross": "0.45%",
+          "expenseRatio": "0.45%",
+          "factSheetEnabled": false,
+          "featuredOnHomepage": false,
+          "fullName": "Corgi ACHR 2x Daily ETF",
+          "fundType": "leveraged",
+          "hasLiveHoldings": false,
+          "heroTags": [
+            "2x Daily Exposure",
+            "Daily Reset",
+            "0.45% Expense Ratio",
+            "Inception [ ]"
+          ],
+          "holdingsCount": 1,
+          "id": "achx",
+          "imageKeys": [
+            "funds/achx/unsplash-20260814.jpg"
+          ],
+          "inceptionDate": "2026-06-30",
+          "indexInceptionDate": null,
+          "indexName": null,
+          "indexProvider": null,
+          "isActiveManagement": false,
+          "isLiveDevelopment": true,
+          "isLiveProduction": true,
+          "isLiveStaging": false,
+          "isin": null,
+          "lei": null,
+          "leverageFactor": 2,
+          "managementStyle": null,
+          "name": "Corgi ACHR 2x Daily ETF",
+          "ogImage": null,
+          "reasons": [],
+          "rebalanceFrequency": "Daily",
+          "sec30DayYield": null,
+          "seoDescription": "The Corgi ACHR 2x Daily ETF (ACHX) seeks 2x the daily return of Archer Aviation Inc. (ACHR). See price, holdings, expense ratio, and the leverage risks.",
+          "seoTitle": "Archer Aviation 2x ETF (ACHX) | Corgi Invest",
+          "seriesSlug": null,
+          "showDailyNav": false,
+          "showHoldingsTable": false,
+          "showPerformanceChart": true,
+          "siteCategory": "Single-Stock 2x Daily ETF · ACHR",
+          "summary": null,
+          "theme": "Single-Stock — ACHR",
+          "ticker": "ACHX",
+          "transferAgent": "U.S. Bancorp Fund Services",
+          "trust": "Corgi ETF Trust I",
+          "twelvedataEnabled": false,
+          "twelvedataSymbol": "ACHX",
+          "underlyingHeadquarters": "San Jose, California, United States",
+          "underlyingIndexSymbol": "ACHR",
+          "underlyingIndustry": "aerospace and space technology",
+          "underlyingIssuer": "Archer Aviation Inc.",
+          "underlyingListing": "NYSE",
+          "underlyingTicker": "ACHR",
+          "whiteLabelRedirectUrl": null,
+          "whyInvest": [
+            {
+              "title": "Amplified Daily Exposure",
+              "description": "Seeks two times (2x) the daily performance of the common stock of Archer Aviation Inc. (NYSE: ACHR). Both gains and losses are magnified. The Fund is not designed to deliver 2x performance for any period other than a single trading day.",
+              "order": 1
+            },
+            {
+              "title": "ETF Wrapper Access",
+              "description": "Investors obtain leveraged exposure through a standard brokerage account, without a margin agreement, borrowing, or margin calls. Shares trade on Cboe BZX during regular market hours.",
+              "order": 2
+            },
+            {
+              "title": "Daily Reset Mechanic",
+              "description": "The Fund rebalances each trading day. Over periods longer than one day, returns will differ, sometimes significantly, from two times the underlying's cumulative return due to compounding and volatility.",
+              "order": 3
+            },
+            {
+              "title": "For Active Use Only",
+              "description": "Intended for sophisticated investors who actively monitor positions intraday. The Fund is not suitable as a long-term hold or as a substitute for unlevered exposure to the underlying market.",
+              "order": 4
+            }
+          ],
+          "latestNav": "22.9711",
+          "latestMarketPrice": "23.0749",
+          "latestMarketPriceChangePct": "9.9695",
+          "latestPremiumDiscount": "0.4519",
+          "sinceInceptionReturnPct": "-8.1156",
+          "quarterToDateReturnPct": "-1.1217431354571563",
+          "navSparkline": [
+            0,
+            2.04,
+            10.29,
+            30.44,
+            9.06,
+            5.03,
+            5.43,
+            -7.54,
+            4.57,
+            1.51,
+            -10.95,
+            -13.04,
+            19.82,
+            15.25,
+            12.1,
+            -3.17,
+            -1.36,
+            -15.19,
+            -5.26,
+            -9.24,
+            -1.46,
+            12.62,
+            13.87,
+            29.11,
+            59.59,
+            58.3,
+            91.84,
+            72.7,
+            60.86,
+            57.26,
+            45.5,
+            55.25,
+            43.75,
+            38.52,
+            35.72,
+            28.57,
+            29.86,
+            19.95,
+            23.76,
+            26.09,
+            31.27,
+            16.44,
+            14.28,
+            19.61,
+            14.89,
+            4.48,
+            11.51,
+            5.6,
+            23.05,
+            23.86,
+            23.81,
+            19.35,
+            1.87,
+            -7.07,
+            -4.85,
+            -10.22,
+            -16.35,
+            -18.18,
+            -16.47,
+            -8.12
+          ],
+          "latestNetAssets": "307297.50",
+          "latestAsOfDate": "2026-10-12",
+          "latestAumAsOfDate": "2026-10-12",
+          "latestAumSource": "holdings",
+          "latestNavAsOfDate": "2026-10-09"
+        },
+        "holdings_rows": [
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "ARCHER AVIATION INC.-SWAP-MREX-L",
+            "security_cusip": "03945R102-TRS-07/30/27-L-MREX",
+            "security_ticker": "03945R102-TRS-07/30/27-L-MREX",
+            "weight_pct": "196.7300",
+            "market_value": "604536.31",
+            "shares": "128899.00000000",
+            "net_assets": "307297.50",
+            "as_of_date": "2026-10-12"
+          },
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-96.7700",
+            "market_value": "-297375.25",
+            "shares": "-297375.25000000",
+            "net_assets": "307297.50",
+            "as_of_date": "2026-10-12"
+          }
+        ]
+      }
+    },
+    "official_holdings": {
+      "provider": "corgi",
+      "landing_page": "https://corgiinvest.com/achx",
+      "source_as_of": "2026-10-12",
+      "position_scope": "issuer_published_snapshot",
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ]
     }
   },
-  "detail_status": "stockanalysis_partial",
-  "partial_reason_codes": [
-    "holdings_unavailable",
-    "holdings_count_unavailable",
-    "holdings_date_unavailable",
-    "holdings_countries_unavailable"
-  ]
+  "holdings_source": {
+    "provider": "corgi",
+    "landing_page": "https://corgiinvest.com/achx",
+    "source_as_of": "2026-10-12",
+    "position_scope": "issuer_published_snapshot",
+    "completeness": [
+      "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+      "navSparkline is undated and is intentionally not returned as history",
+      "weights are market-value weights; notional exposure is not published here",
+      "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+      "holdingsCount on the page counts the swap leg only and is not a holdings total"
+    ]
+  },
+  "field_sources": {
+    "holdings": {
+      "provider": "corgi",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
 }

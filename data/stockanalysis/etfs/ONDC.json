@@ -3,8 +3,8 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ONDC",
-  "source_as_of": "2026-09-30T20:00:00Z",
-  "fetched_at": "2026-09-30T20:05:20Z",
+  "source_as_of": "2026-10-12T00:00:00Z",
+  "fetched_at": "2026-10-13T03:06:01Z",
   "endpoints": {
     "holdings": "/etf/ondc/holdings/__data.json",
     "overview": "/etf/ondc/__data.json",
@@ -25,9 +25,9 @@
       "contract": "etf_detail_overview/v1"
     },
     "holdings": {
-      "format": "svelte_devalue",
-      "decoder": "svelte_devalue_node/v1",
-      "contract": "etf_detail_holdings/v1"
+      "format": "issuer_payload",
+      "provider": "corgi",
+      "contract": "issuer_published_snapshot/v1"
     },
     "quote": {
       "format": "rest_json",
@@ -41,91 +41,83 @@
   "normalized": {
     "holdings": [
       {
-        "rank": 1,
         "name": "ONDAS INC.-SWAP-CANT-L",
-        "weight_pct": 194.68,
-        "shares": 72747,
+        "symbol": null,
+        "identifier": "68236H204-TRS-12/01/27-L-CANT",
+        "identifier_type": "cusip_trs",
+        "weight_pct": 198.42,
+        "weight_basis": "market_value",
+        "market_value": 423264.86,
+        "shares": 63458.0,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "no": 1,
-          "n": "ONDAS INC.-SWAP-CANT-L",
-          "as": "194.68%",
-          "sh": "72,747"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "ONDAS INC.-SWAP-CANT-L",
+          "security_cusip": "68236H204-TRS-12/01/27-L-CANT",
+          "security_ticker": "68236H204-TRS-12/01/27-L-CANT",
+          "weight_pct": "198.4200",
+          "market_value": "423264.86",
+          "shares": "63458.00000000",
+          "net_assets": "213316.50",
+          "as_of_date": "2026-10-12"
         }
       },
       {
-        "rank": 2,
-        "name": "US DOLLARS",
-        "weight_pct": 100.1,
-        "shares": 284293,
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "issuer_identifier",
+        "weight_pct": -98.5,
+        "weight_basis": "market_value",
+        "market_value": -210118.34,
+        "shares": null,
+        "quantity": null,
+        "as_of_date": "2026-10-12",
+        "position_date": "2026-10-13",
         "raw": {
-          "no": 2,
-          "n": "US DOLLARS",
-          "as": "100.10%",
-          "sh": "284,293"
-        }
-      },
-      {
-        "rank": 3,
-        "symbol": "!MUTF/FGXXX",
-        "name": "First American Government Obligs X",
-        "weight_pct": 0.2,
-        "shares": 556,
-        "raw": {
-          "no": 3,
-          "n": "First American Government Obligs X",
-          "s": "!mutf/FGXXX",
-          "as": "0.20%",
-          "sh": "556"
-        }
-      },
-      {
-        "rank": 4,
-        "name": "OTHER ASSETS AND LIABILITIES",
-        "weight_pct": -6.41,
-        "shares": 18211,
-        "raw": {
-          "no": 4,
-          "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-6.41%",
-          "sh": "18,211"
-        }
-      },
-      {
-        "rank": 5,
-        "name": "Cash Offset",
-        "weight_pct": -188.56,
-        "shares": 535518,
-        "raw": {
-          "no": 5,
-          "n": "Cash Offset",
-          "as": "-188.56%",
-          "sh": "535,518"
+          "canonical_fund_id": null,
+          "canonical_holding_id": null,
+          "instrument_id": null,
+          "position_date": "2026-10-13",
+          "security_name": "Cash & Other",
+          "security_cusip": "Cash&Other",
+          "security_ticker": "Cash&Other",
+          "weight_pct": "-98.5000",
+          "market_value": "-210118.34",
+          "shares": "-210118.34000000",
+          "net_assets": "213316.50",
+          "as_of_date": "2026-10-12"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": 5,
-    "holdings_updated": "Sep 24, 2026",
+    "holding_count": 2,
+    "holdings_updated": "2026-10-12",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
       "is_inverse": false,
       "is_single_stock": true,
-      "underlying": "the publicly-traded common",
-      "source": "stockanalysis.overview.description",
+      "underlying": "ONDS",
+      "source": "https://corgiinvest.com/ondc",
       "confidence": "high"
     },
     "overview": {
-      "aum": "$286.06K",
+      "aum": "$226.06K",
       "expenseRatio": "0.45%",
       "sharesOut": "15,000",
       "inception": "Jul 7, 2026",
       "etf_website": "https://corgifunds.com/ondc"
     },
     "performance": {
-      "tr1m": -15.50009,
+      "tr1m": -18.75351,
       "trYTD": null,
       "tr1y": null,
       "cagr5y": null,
@@ -133,49 +125,55 @@
       "cagrMAX": null
     },
     "quote": {
-      "p": 18.2764,
-      "pd": 18.28,
-      "c": 0,
-      "cp": 0,
-      "cl": 18.28,
-      "cdr": 0,
-      "o": 0,
-      "h": 0,
-      "l": 0,
-      "v": 11,
-      "ts": 1790798400000,
-      "u": "Sep 30, 2026, 4:00 PM EDT",
-      "td": "2026-09-30",
-      "h52": 34.202,
-      "l52": 16.831,
+      "c": -0.3,
+      "e": false,
+      "h": 14.17,
+      "l": 14.17,
+      "o": 14.17,
+      "p": 14.165,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 102,
+      "cl": 14.46,
+      "cp": -2.04,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
+      "pd": 14.17,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": null,
-      "es": null,
-      "ets": 1790789090243.82,
-      "etd": null,
-      "epv": null,
+      "epd": 0,
+      "ets": 1791849605255.8372,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 34.202,
+      "l52": 14.165,
+      "uid": "ONDC",
       "days": 0,
-      "exp": 1790798724926,
-      "symbol": "ONDC",
-      "uid": "ONDC"
+      "symbol": "ONDC"
     },
     "history": [
+      {
+        "t": "2026-10-01",
+        "o": 16.522,
+        "h": 17.809,
+        "l": 14.17,
+        "c": 14.165,
+        "v": 341,
+        "a": 14.165,
+        "ch": -19.11
+      },
       {
         "t": "2026-09-01",
         "o": 17.33,
         "h": 20.24,
         "l": 16.831,
-        "c": 18.276,
-        "v": 11357,
-        "a": 18.2764,
-        "ch": -9.57
+        "c": 17.512,
+        "v": 11375,
+        "a": 17.5118,
+        "ch": -13.35
       },
       {
         "t": "2026-08-03",
@@ -190,6 +188,96 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 14.17,
+          "h": 14.17,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 102,
+          "a": 14.165,
+          "ch": -2.01
+        },
+        {
+          "t": "2026-10-09",
+          "o": 14.455,
+          "h": 14.455,
+          "l": 14.455,
+          "c": 14.455,
+          "a": 14.4551,
+          "v": 8,
+          "ch": -4.85
+        },
+        {
+          "t": "2026-10-08",
+          "o": 15.192,
+          "h": 15.192,
+          "l": 15.192,
+          "c": 15.192,
+          "a": 15.1916,
+          "v": 94,
+          "ch": -8.69
+        },
+        {
+          "t": "2026-10-07",
+          "o": 16.637,
+          "h": 16.637,
+          "l": 16.637,
+          "c": 16.637,
+          "a": 16.6371,
+          "v": 16,
+          "ch": -6.41
+        },
+        {
+          "t": "2026-10-06",
+          "o": 17.776,
+          "h": 17.776,
+          "l": 17.776,
+          "c": 17.776,
+          "a": 17.776,
+          "v": 11,
+          "ch": -0.19
+        },
+        {
+          "t": "2026-10-05",
+          "o": 17.809,
+          "h": 17.809,
+          "l": 17.809,
+          "c": 17.809,
+          "a": 17.809,
+          "v": 31,
+          "ch": 5.43
+        },
+        {
+          "t": "2026-10-02",
+          "o": 16.892,
+          "h": 16.892,
+          "l": 16.892,
+          "c": 16.892,
+          "a": 16.892,
+          "v": 59,
+          "ch": 2.24
+        },
+        {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 16.522,
+          "l": 16.522,
+          "c": 16.522,
+          "a": 16.5219,
+          "v": 20,
+          "ch": -5.65
+        },
+        {
+          "t": "2026-09-30",
+          "o": 17.512,
+          "h": 17.512,
+          "l": 17.512,
+          "c": 17.512,
+          "a": 17.5118,
+          "v": 14,
+          "ch": -4.18
+        },
         {
           "t": "2026-09-29",
           "o": 19.69,
@@ -217,7 +305,7 @@
           "l": 19.088,
           "c": 19.088,
           "a": 19.0877,
-          "v": 574,
+          "v": 578,
           "ch": 0.94
         },
         {
@@ -783,14 +871,34 @@
       ],
       "weekly_1y": [
         {
+          "t": "2026-10-12",
+          "o": 14.17,
+          "h": 14.17,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 102,
+          "a": 14.165,
+          "ch": -2.01
+        },
+        {
+          "t": "2026-10-05",
+          "o": 17.809,
+          "h": 17.809,
+          "l": 14.455,
+          "c": 14.455,
+          "v": 160,
+          "a": 14.4551,
+          "ch": -14.43
+        },
+        {
           "t": "2026-09-28",
           "o": 19.245,
           "h": 19.76,
-          "l": 18.276,
-          "c": 18.276,
-          "v": 1436,
-          "a": 18.2764,
-          "ch": -4.25
+          "l": 16.522,
+          "c": 16.892,
+          "v": 1529,
+          "a": 16.892,
+          "ch": -11.5
         },
         {
           "t": "2026-09-21",
@@ -798,7 +906,7 @@
           "h": 20,
           "l": 17.94,
           "c": 19.088,
-          "v": 2918,
+          "v": 2922,
           "a": 19.0877,
           "ch": 5.34
         },
@@ -905,14 +1013,24 @@
       ],
       "monthly_1y": [
         {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 17.809,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 341,
+          "a": 14.165,
+          "ch": -19.11
+        },
+        {
           "t": "2026-09-01",
           "o": 17.33,
           "h": 20.24,
           "l": 16.831,
-          "c": 18.276,
-          "v": 11357,
-          "a": 18.2764,
-          "ch": -9.57
+          "c": 17.512,
+          "v": 11375,
+          "a": 17.5118,
+          "ch": -13.35
         },
         {
           "t": "2026-08-03",
@@ -927,14 +1045,34 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-10-12",
+          "o": 14.17,
+          "h": 14.17,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 102,
+          "a": 14.165,
+          "ch": -2.01
+        },
+        {
+          "t": "2026-10-05",
+          "o": 17.809,
+          "h": 17.809,
+          "l": 14.455,
+          "c": 14.455,
+          "v": 160,
+          "a": 14.4551,
+          "ch": -14.43
+        },
+        {
           "t": "2026-09-28",
           "o": 19.245,
           "h": 19.76,
-          "l": 18.276,
-          "c": 18.276,
-          "v": 1436,
-          "a": 18.2764,
-          "ch": -4.25
+          "l": 16.522,
+          "c": 16.892,
+          "v": 1529,
+          "a": 16.892,
+          "ch": -11.5
         },
         {
           "t": "2026-09-21",
@@ -942,7 +1080,7 @@
           "h": 20,
           "l": 17.94,
           "c": 19.088,
-          "v": 2918,
+          "v": 2922,
           "a": 19.0877,
           "ch": 5.34
         },
@@ -1049,14 +1187,24 @@
       ],
       "monthly_3y": [
         {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 17.809,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 341,
+          "a": 14.165,
+          "ch": -19.11
+        },
+        {
           "t": "2026-09-01",
           "o": 17.33,
           "h": 20.24,
           "l": 16.831,
-          "c": 18.276,
-          "v": 11357,
-          "a": 18.2764,
-          "ch": -9.57
+          "c": 17.512,
+          "v": 11375,
+          "a": 17.5118,
+          "ch": -13.35
         },
         {
           "t": "2026-08-03",
@@ -1071,14 +1219,24 @@
       ],
       "monthly_5y": [
         {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 17.809,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 341,
+          "a": 14.165,
+          "ch": -19.11
+        },
+        {
           "t": "2026-09-01",
           "o": 17.33,
           "h": 20.24,
           "l": 16.831,
-          "c": 18.276,
-          "v": 11357,
-          "a": 18.2764,
-          "ch": -9.57
+          "c": 17.512,
+          "v": 11375,
+          "a": 17.5118,
+          "ch": -13.35
         },
         {
           "t": "2026-08-03",
@@ -1091,7 +1249,91 @@
           "ch": -3.66
         }
       ]
-    }
+    },
+    "holdings_history": [
+      {
+        "provider": "stockanalysis",
+        "source_as_of": "Sep 24, 2026",
+        "holdings": [
+          {
+            "rank": 1,
+            "name": "ONDAS INC.-SWAP-CANT-L",
+            "weight_pct": 194.68,
+            "shares": 72747,
+            "raw": {
+              "no": 1,
+              "n": "ONDAS INC.-SWAP-CANT-L",
+              "as": "194.68%",
+              "sh": "72,747"
+            }
+          },
+          {
+            "rank": 2,
+            "name": "US DOLLARS",
+            "weight_pct": 100.1,
+            "shares": 284293,
+            "raw": {
+              "no": 2,
+              "n": "US DOLLARS",
+              "as": "100.10%",
+              "sh": "284,293"
+            }
+          },
+          {
+            "rank": 3,
+            "symbol": "!MUTF/FGXXX",
+            "name": "First American Government Obligs X",
+            "weight_pct": 0.2,
+            "shares": 556,
+            "raw": {
+              "no": 3,
+              "n": "First American Government Obligs X",
+              "s": "!mutf/FGXXX",
+              "as": "0.20%",
+              "sh": "556"
+            }
+          },
+          {
+            "rank": 4,
+            "name": "OTHER ASSETS AND LIABILITIES",
+            "weight_pct": -6.41,
+            "shares": 18211,
+            "raw": {
+              "no": 4,
+              "n": "OTHER ASSETS AND LIABILITIES",
+              "as": "-6.41%",
+              "sh": "18,211"
+            }
+          },
+          {
+            "rank": 5,
+            "name": "Cash Offset",
+            "weight_pct": -188.56,
+            "shares": 535518,
+            "raw": {
+              "no": 5,
+              "n": "Cash Offset",
+              "as": "-188.56%",
+              "sh": "535,518"
+            }
+          }
+        ],
+        "holding_count": 5
+      }
+    ],
+    "history_archive": [
+      {
+        "provider": "yahoo_finance",
+        "price_basis": "yahoo_adjusted",
+        "source_payload": "{\n  \"schema_version\": \"yf-etf-detail/v1\",\n  \"source\": \"yahoo_finance\",\n  \"source_provider\": \"yahoo_finance\",\n  \"detail_status\": \"yf_fallback\",\n  \"asset_type\": \"etf\",\n  \"ticker\": \"ONDC\",\n  \"source_as_of\": \"2026-07-08T22:42:37Z\",\n  \"inceptionDate\": null,\n  \"fetched_at\": \"2026-07-08T22:42:37Z\",\n  \"role\": \"ETF detail fallback while StockAnalysis ETF REST endpoints are not indexed yet\",\n  \"normalized\": {\n    \"holdings\": [],\n    \"asset_allocation\": null,\n    \"sectors\": null,\n    \"countries\": null,\n    \"holding_count\": null,\n    \"holdings_updated\": \"2026-07-08T22:42:37Z\",\n    \"classification\": {\n      \"is_leveraged\": true,\n      \"leverage_factor\": 2.0,\n      \"is_inverse\": false,\n      \"is_single_stock\": false,\n      \"underlying\": null,\n      \"source\": \"stockanalysis.overview.description\",\n      \"confidence\": \"high\"\n    },\n    \"overview\": {\n      \"nav\": 21.968,\n      \"expenseRatio\": 0.45,\n      \"provider_page\": \"Corgi Funds\",\n      \"category\": \"Trading--Leveraged Equity\",\n      \"legalType\": \"Exchange Traded Fund\",\n      \"description\": \"Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.\"\n    },\n    \"quote\": {\n      \"p\": 23.134899139404297,\n      \"pd\": 21.9493,\n      \"c\": 1.185599139404296,\n      \"cp\": 5.40153508040938,\n      \"u\": \"2026-07-08T22:42:37Z\",\n      \"ex\": \"yahoo_finance\"\n    },\n    \"history\": [\n      {\n        \"date\": \"2026-07-07\",\n        \"Open\": 22.989999771118164,\n        \"High\": 23.1200008392334,\n        \"Low\": 21.950000762939453,\n        \"Close\": 21.950000762939453,\n        \"Volume\": 10700.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      },\n      {\n        \"date\": \"2026-07-08\",\n        \"Open\": 22.489999771118164,\n        \"High\": 23.134899139404297,\n        \"Low\": 23.134899139404297,\n        \"Close\": 23.134899139404297,\n        \"Volume\": 916.0,\n        \"Dividends\": 0.0,\n        \"Stock Splits\": 0.0\n      }\n    ],\n    \"history_periods\": {\n      \"daily_1y\": [\n        {\n          \"date\": \"2026-07-07\",\n          \"Open\": 22.989999771118164,\n          \"High\": 23.1200008392334,\n          \"Low\": 21.950000762939453,\n          \"Close\": 21.950000762939453,\n          \"Volume\": 10700.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-08\",\n          \"Open\": 22.489999771118164,\n          \"High\": 23.134899139404297,\n          \"Low\": 23.134899139404297,\n          \"Close\": 23.134899139404297,\n          \"Volume\": 916.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        }\n      ]\n    }\n  },\n  \"raw\": {\n    \"yf\": {\n      \"info\": {\n        \"quoteType\": \"ETF\",\n        \"shortName\": \"Corgi ONDS 2x Daily ETF\",\n        \"currency\": \"USD\",\n        \"exchange\": \"BTS\",\n        \"fundFamily\": \"Corgi Funds\",\n        \"category\": \"Trading--Leveraged Equity\",\n        \"legalType\": \"Exchange Traded Fund\",\n        \"navPrice\": 21.968,\n        \"netExpenseRatio\": 0.45,\n        \"previousClose\": 21.9493,\n        \"fiftyTwoWeekHigh\": 23.1349,\n        \"fiftyTwoWeekLow\": 21.95,\n        \"fiftyTwoWeekChangePercent\": 0.0,\n        \"averageVolume\": 10700,\n        \"averageVolume10days\": 10700,\n        \"symbol\": \"ONDC\"\n      },\n      \"major_holders\": null,\n      \"institutional_holders\": null,\n      \"analyst_price_targets\": null,\n      \"recommendations\": null,\n      \"earnings_estimate\": null,\n      \"revenue_estimate\": null,\n      \"income_statement\": null,\n      \"quarterly_income_statement\": null,\n      \"balance_sheet\": null,\n      \"quarterly_balance_sheet\": null,\n      \"cash_flow\": null,\n      \"quarterly_cash_flow\": null,\n      \"recommendations_summary\": null,\n      \"upgrades_downgrades\": null,\n      \"earnings_dates\": null,\n      \"earnings_history\": null,\n      \"eps_trend\": null,\n      \"eps_revisions\": null,\n      \"growth_estimates\": null,\n      \"sustainability\": null,\n      \"mutualfund_holders\": null,\n      \"insider_transactions\": null,\n      \"insider_purchases\": null,\n      \"insider_roster_holders\": null,\n      \"sec_filings\": null,\n      \"news\": null,\n      \"dividends\": null,\n      \"fast_info\": {\n        \"currency\": \"USD\",\n        \"dayHigh\": 23.134899139404297,\n        \"dayLow\": 23.134899139404297,\n        \"exchange\": \"BTS\",\n        \"fiftyDayAverage\": 21.950000762939453,\n        \"lastPrice\": 23.134899139404297,\n        \"lastVolume\": 916.0,\n        \"open\": 22.489999771118164,\n        \"previousClose\": 21.94930076599121,\n        \"quoteType\": \"ETF\",\n        \"regularMarketPreviousClose\": 21.950000762939453,\n        \"tenDayAverageVolume\": 10700.0,\n        \"threeMonthAverageVolume\": 10700.0,\n        \"timezone\": \"America/New_York\",\n        \"twoHundredDayAverage\": 21.950000762939453,\n        \"yearHigh\": 23.1200008392334,\n        \"yearLow\": 21.950000762939453\n      },\n      \"actions\": null,\n      \"splits\": null,\n      \"capital_gains\": null,\n      \"funds_data\": {\n        \"quote_type\": \"ETF\",\n        \"description\": \"Under normal circumstances, the fund will invest at least 80% of the value of its net assets, plus any borrowings for investment purposes, in financial instruments (for example, swaps and futures) that, in the aggregate, provide leveraged exposure to the Underlying Security equal to approximately two times its daily performance. It is non-diversified.\",\n        \"fund_overview\": {\n          \"categoryName\": \"Trading--Leveraged Equity\",\n          \"family\": \"Corgi Funds\",\n          \"legalType\": \"Exchange Traded Fund\"\n        },\n        \"fund_operations\": [\n          {\n            \"_index\": \"Annual Report Expense Ratio\",\n            \"ONDC\": 0.0045,\n            \"Category Average\": 0.0\n          },\n          {\n            \"_index\": \"Annual Holdings Turnover\",\n            \"ONDC\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Total Net Assets\",\n            \"ONDC\": 0.0,\n            \"Category Average\": 0.0\n          }\n        ],\n        \"equity_holdings\": [\n          {\n            \"_index\": \"Price/Earnings\",\n            \"ONDC\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Book\",\n            \"ONDC\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Sales\",\n            \"ONDC\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Price/Cashflow\",\n            \"ONDC\": 0.0,\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Median Market Cap\",\n            \"ONDC\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"3 Year Earnings Growth\",\n            \"ONDC\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          }\n        ],\n        \"bond_holdings\": [\n          {\n            \"_index\": \"Duration\",\n            \"ONDC\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Maturity\",\n            \"ONDC\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          },\n          {\n            \"_index\": \"Credit Quality\",\n            \"ONDC\": \"<NA>\",\n            \"Category Average\": \"<NA>\"\n          }\n        ]\n      },\n      \"history_1y\": [\n        {\n          \"date\": \"2026-07-07\",\n          \"Open\": 22.989999771118164,\n          \"High\": 23.1200008392334,\n          \"Low\": 21.950000762939453,\n          \"Close\": 21.950000762939453,\n          \"Volume\": 10700.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        },\n        {\n          \"date\": \"2026-07-08\",\n          \"Open\": 22.489999771118164,\n          \"High\": 23.134899139404297,\n          \"Low\": 23.134899139404297,\n          \"Close\": 23.134899139404297,\n          \"Volume\": 916.0,\n          \"Dividends\": 0.0,\n          \"Stock Splits\": 0.0\n        }\n      ]\n    }\n  }\n}\n",
+        "payload_sha256": "8726bab92f07a1728dc9f15ba5ca0315c2696116ceb5011a8bea63340703ebf1",
+        "source_as_of": "2026-07-08T22:42:37Z",
+        "fetched_at": "2026-07-08T22:42:37Z",
+        "history_first": "2026-07-07",
+        "history_last": "2026-07-08",
+        "source_clock_basis": "legacy_collection_time"
+      }
+    ]
   },
   "raw": {
     "overview": {
@@ -1121,14 +1363,13 @@
         ],
         "topic": "overview",
         "ticker": "ONDC",
-        "lastChecked": 1790798651549,
+        "lastChecked": 1791851606605,
         "summary": {
           "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
         }
       },
       "type": "etf",
-      "aum": "$286.06K",
-      "nav": null,
+      "aum": "$226.06K",
       "expenseRatio": "0.45%",
       "peRatio": null,
       "sharesOut": "15,000",
@@ -1139,1251 +1380,1204 @@
       "ch1y": null,
       "payoutFrequency": "n/a",
       "beta": null,
-      "holdings": 5,
+      "holdings": 4,
       "inception": "Jul 7, 2026",
       "chart": {
-        "expiration": 1790775000000,
+        "expiration": 1791898200000,
         "data": [
           {
-            "t": 1790674200
-          },
-          {
-            "t": 1790674260
-          },
-          {
-            "t": 1790674320
-          },
-          {
-            "t": 1790674380
-          },
-          {
-            "t": 1790674440
-          },
-          {
-            "t": 1790674500
-          },
-          {
-            "t": 1790674560
-          },
-          {
-            "t": 1790674620
-          },
-          {
-            "t": 1790674680
-          },
-          {
-            "t": 1790674740
-          },
-          {
-            "t": 1790674800
-          },
-          {
-            "t": 1790674860
-          },
-          {
-            "t": 1790674920
-          },
-          {
-            "t": 1790674980
-          },
-          {
-            "t": 1790675040
-          },
-          {
-            "t": 1790675100
-          },
-          {
-            "c": 19.76,
-            "o": 19.24,
-            "t": 1790675160
+            "c": 15.66,
+            "o": 15.66,
+            "t": 1791797400
           },
           {
             "c": null,
-            "t": 1790675220
+            "t": 1791797460
           },
           {
             "c": null,
-            "t": 1790675280
+            "t": 1791797520
           },
           {
             "c": null,
-            "t": 1790675340
+            "t": 1791797580
           },
           {
             "c": null,
-            "t": 1790675400
+            "t": 1791797640
           },
           {
             "c": null,
-            "t": 1790675460
+            "t": 1791797700
           },
           {
             "c": null,
-            "t": 1790675520
+            "t": 1791797760
           },
           {
             "c": null,
-            "t": 1790675580
+            "t": 1791797820
           },
           {
             "c": null,
-            "t": 1790675640
+            "t": 1791797880
           },
           {
             "c": null,
-            "t": 1790675700
+            "t": 1791797940
           },
           {
             "c": null,
-            "t": 1790675760
+            "t": 1791798000
           },
           {
             "c": null,
-            "t": 1790675820
+            "t": 1791798060
           },
           {
             "c": null,
-            "t": 1790675880
-          },
-          {
-            "c": 19.22,
-            "t": 1790675940
-          },
-          {
-            "c": 19.245,
-            "t": 1790676000
+            "t": 1791798120
           },
           {
             "c": null,
-            "t": 1790676060
+            "t": 1791798180
           },
           {
             "c": null,
-            "t": 1790676120
+            "t": 1791798240
           },
           {
             "c": null,
-            "t": 1790676180
+            "t": 1791798300
           },
           {
-            "c": null,
-            "t": 1790676240
+            "c": 14.46,
+            "t": 1791798360
           },
           {
-            "c": null,
-            "t": 1790676300
+            "t": 1791798419
           },
           {
-            "c": null,
-            "t": 1790676360
+            "t": 1791798479
           },
           {
-            "c": null,
-            "t": 1790676420
+            "t": 1791798539
           },
           {
-            "c": null,
-            "t": 1790676480
+            "t": 1791798599
           },
           {
-            "c": null,
-            "t": 1790676540
+            "t": 1791798659
           },
           {
-            "c": null,
-            "t": 1790676600
+            "t": 1791798719
           },
           {
-            "c": null,
-            "t": 1790676660
+            "t": 1791798779
           },
           {
-            "c": null,
-            "t": 1790676720
+            "t": 1791798839
           },
           {
-            "c": null,
-            "t": 1790676780
+            "t": 1791798899
           },
           {
-            "c": null,
-            "t": 1790676840
+            "t": 1791798959
           },
           {
-            "c": null,
-            "t": 1790676900
+            "t": 1791799019
           },
           {
-            "c": 19.76,
-            "t": 1790676960
+            "t": 1791799079
           },
           {
-            "c": null,
-            "t": 1790677020
+            "t": 1791799139
           },
           {
-            "c": null,
-            "t": 1790677080
+            "t": 1791799199
           },
           {
-            "c": null,
-            "t": 1790677140
+            "t": 1791799259
           },
           {
-            "c": null,
-            "t": 1790677200
+            "t": 1791799319
           },
           {
-            "c": null,
-            "t": 1790677260
+            "t": 1791799379
           },
           {
-            "c": null,
-            "t": 1790677320
+            "t": 1791799439
           },
           {
-            "c": null,
-            "t": 1790677380
+            "t": 1791799499
           },
           {
-            "c": null,
-            "t": 1790677440
+            "t": 1791799559
           },
           {
-            "c": null,
-            "t": 1790677500
+            "t": 1791799619
           },
           {
-            "c": null,
-            "t": 1790677560
+            "t": 1791799679
           },
           {
-            "c": null,
-            "t": 1790677620
+            "t": 1791799739
           },
           {
-            "c": null,
-            "t": 1790677680
+            "t": 1791799799
           },
           {
-            "c": null,
-            "t": 1790677740
+            "t": 1791799859
           },
           {
-            "c": null,
-            "t": 1790677800
+            "t": 1791799919
           },
           {
-            "c": null,
-            "t": 1790677860
+            "t": 1791799979
           },
           {
-            "c": null,
-            "t": 1790677920
+            "t": 1791800039
           },
           {
-            "c": null,
-            "t": 1790677980
+            "t": 1791800099
           },
           {
-            "c": null,
-            "t": 1790678040
+            "t": 1791800159
           },
           {
-            "c": null,
-            "t": 1790678100
+            "t": 1791800219
           },
           {
-            "c": null,
-            "t": 1790678160
+            "t": 1791800279
           },
           {
-            "c": null,
-            "t": 1790678220
+            "t": 1791800339
           },
           {
-            "c": null,
-            "t": 1790678280
+            "t": 1791800399
           },
           {
-            "c": null,
-            "t": 1790678340
+            "t": 1791800459
           },
           {
-            "c": 18.89,
-            "t": 1790678400
+            "t": 1791800519
           },
           {
-            "c": null,
-            "t": 1790678460
+            "t": 1791800579
           },
           {
-            "c": null,
-            "t": 1790678520
+            "t": 1791800639
           },
           {
-            "c": null,
-            "t": 1790678580
+            "t": 1791800699
           },
           {
-            "c": null,
-            "t": 1790678640
+            "t": 1791800759
           },
           {
-            "c": null,
-            "t": 1790678700
+            "t": 1791800819
           },
           {
-            "c": null,
-            "t": 1790678760
+            "t": 1791800879
           },
           {
-            "c": null,
-            "t": 1790678820
+            "t": 1791800939
           },
           {
-            "c": null,
-            "t": 1790678880
+            "t": 1791800999
           },
           {
-            "c": 18.89,
-            "t": 1790678940
+            "t": 1791801059
           },
           {
-            "t": 1790678999
+            "t": 1791801119
           },
           {
-            "t": 1790679059
+            "t": 1791801179
           },
           {
-            "t": 1790679119
+            "t": 1791801239
           },
           {
-            "t": 1790679179
+            "t": 1791801299
           },
           {
-            "t": 1790679239
+            "t": 1791801359
           },
           {
-            "t": 1790679299
+            "t": 1791801419
           },
           {
-            "t": 1790679359
+            "t": 1791801479
           },
           {
-            "t": 1790679419
+            "t": 1791801539
           },
           {
-            "t": 1790679479
+            "t": 1791801599
           },
           {
-            "t": 1790679539
+            "t": 1791801659
           },
           {
-            "t": 1790679599
+            "t": 1791801719
           },
           {
-            "t": 1790679659
+            "t": 1791801779
           },
           {
-            "t": 1790679719
+            "t": 1791801839
           },
           {
-            "t": 1790679779
+            "t": 1791801899
           },
           {
-            "t": 1790679839
+            "t": 1791801959
           },
           {
-            "t": 1790679899
+            "t": 1791802019
           },
           {
-            "t": 1790679959
+            "t": 1791802079
           },
           {
-            "t": 1790680019
+            "t": 1791802139
           },
           {
-            "t": 1790680079
+            "t": 1791802199
           },
           {
-            "t": 1790680139
+            "t": 1791802259
           },
           {
-            "t": 1790680199
+            "t": 1791802319
           },
           {
-            "t": 1790680259
+            "t": 1791802379
           },
           {
-            "t": 1790680319
+            "t": 1791802439
           },
           {
-            "t": 1790680379
+            "t": 1791802499
           },
           {
-            "t": 1790680439
+            "t": 1791802559
           },
           {
-            "t": 1790680499
+            "t": 1791802619
           },
           {
-            "t": 1790680559
+            "t": 1791802679
           },
           {
-            "t": 1790680619
+            "t": 1791802739
           },
           {
-            "t": 1790680679
+            "t": 1791802799
           },
           {
-            "t": 1790680739
+            "t": 1791802859
           },
           {
-            "t": 1790680799
+            "t": 1791802919
           },
           {
-            "t": 1790680859
+            "t": 1791802979
           },
           {
-            "t": 1790680919
+            "t": 1791803039
           },
           {
-            "t": 1790680979
+            "t": 1791803099
           },
           {
-            "t": 1790681039
+            "t": 1791803159
           },
           {
-            "t": 1790681099
+            "t": 1791803219
           },
           {
-            "t": 1790681159
+            "t": 1791803279
           },
           {
-            "t": 1790681219
+            "t": 1791803339
           },
           {
-            "t": 1790681279
+            "t": 1791803399
           },
           {
-            "t": 1790681339
+            "t": 1791803459
           },
           {
-            "t": 1790681399
+            "t": 1791803519
           },
           {
-            "t": 1790681459
+            "t": 1791803579
           },
           {
-            "t": 1790681519
+            "t": 1791803639
           },
           {
-            "t": 1790681579
+            "t": 1791803699
           },
           {
-            "t": 1790681639
+            "t": 1791803759
           },
           {
-            "t": 1790681699
+            "t": 1791803819
           },
           {
-            "t": 1790681759
+            "t": 1791803879
           },
           {
-            "t": 1790681819
+            "t": 1791803939
           },
           {
-            "t": 1790681879
+            "t": 1791803999
           },
           {
-            "t": 1790681939
+            "t": 1791804059
           },
           {
-            "t": 1790681999
+            "t": 1791804119
           },
           {
-            "t": 1790682059
+            "t": 1791804179
           },
           {
-            "t": 1790682119
+            "t": 1791804239
           },
           {
-            "t": 1790682179
+            "t": 1791804299
           },
           {
-            "t": 1790682239
+            "t": 1791804359
           },
           {
-            "t": 1790682299
+            "t": 1791804419
           },
           {
-            "t": 1790682359
+            "t": 1791804479
           },
           {
-            "t": 1790682419
+            "t": 1791804539
           },
           {
-            "t": 1790682479
+            "t": 1791804599
           },
           {
-            "t": 1790682539
+            "t": 1791804659
           },
           {
-            "t": 1790682599
+            "t": 1791804719
           },
           {
-            "t": 1790682659
+            "t": 1791804779
           },
           {
-            "t": 1790682719
+            "t": 1791804839
           },
           {
-            "t": 1790682779
+            "t": 1791804899
           },
           {
-            "t": 1790682839
+            "t": 1791804959
           },
           {
-            "t": 1790682899
+            "t": 1791805019
           },
           {
-            "t": 1790682959
+            "t": 1791805079
           },
           {
-            "t": 1790683019
+            "t": 1791805139
           },
           {
-            "t": 1790683079
+            "t": 1791805199
           },
           {
-            "t": 1790683139
+            "t": 1791805259
           },
           {
-            "t": 1790683199
+            "t": 1791805319
           },
           {
-            "t": 1790683259
+            "t": 1791805379
           },
           {
-            "t": 1790683319
+            "t": 1791805439
           },
           {
-            "t": 1790683379
+            "t": 1791805499
           },
           {
-            "t": 1790683439
+            "t": 1791805559
           },
           {
-            "t": 1790683499
+            "t": 1791805619
           },
           {
-            "t": 1790683559
+            "t": 1791805679
           },
           {
-            "t": 1790683619
+            "t": 1791805739
           },
           {
-            "t": 1790683679
+            "t": 1791805799
           },
           {
-            "t": 1790683739
+            "t": 1791805859
           },
           {
-            "t": 1790683799
+            "t": 1791805919
           },
           {
-            "t": 1790683859
+            "t": 1791805979
           },
           {
-            "t": 1790683919
+            "t": 1791806039
           },
           {
-            "t": 1790683979
+            "t": 1791806099
           },
           {
-            "t": 1790684039
+            "t": 1791806159
           },
           {
-            "t": 1790684099
+            "t": 1791806219
           },
           {
-            "t": 1790684159
+            "t": 1791806279
           },
           {
-            "t": 1790684219
+            "t": 1791806339
           },
           {
-            "t": 1790684279
+            "t": 1791806399
           },
           {
-            "t": 1790684339
+            "t": 1791806459
           },
           {
-            "t": 1790684399
+            "t": 1791806519
           },
           {
-            "t": 1790684459
+            "t": 1791806579
           },
           {
-            "t": 1790684519
+            "t": 1791806639
           },
           {
-            "t": 1790684579
+            "t": 1791806699
           },
           {
-            "t": 1790684639
+            "t": 1791806759
           },
           {
-            "t": 1790684699
+            "t": 1791806819
           },
           {
-            "t": 1790684759
+            "t": 1791806879
           },
           {
-            "t": 1790684819
+            "t": 1791806939
           },
           {
-            "t": 1790684879
+            "t": 1791806999
           },
           {
-            "t": 1790684939
+            "t": 1791807059
           },
           {
-            "t": 1790684999
+            "t": 1791807119
           },
           {
-            "t": 1790685059
+            "t": 1791807179
           },
           {
-            "t": 1790685119
+            "t": 1791807239
           },
           {
-            "t": 1790685179
+            "t": 1791807299
           },
           {
-            "t": 1790685239
+            "t": 1791807359
           },
           {
-            "t": 1790685299
+            "t": 1791807419
           },
           {
-            "t": 1790685359
+            "t": 1791807479
           },
           {
-            "t": 1790685419
+            "t": 1791807539
           },
           {
-            "t": 1790685479
+            "t": 1791807599
           },
           {
-            "t": 1790685539
+            "t": 1791807659
           },
           {
-            "t": 1790685599
+            "t": 1791807719
           },
           {
-            "t": 1790685659
+            "t": 1791807779
           },
           {
-            "t": 1790685719
+            "t": 1791807839
           },
           {
-            "t": 1790685779
+            "t": 1791807899
           },
           {
-            "t": 1790685839
+            "t": 1791807959
           },
           {
-            "t": 1790685899
+            "t": 1791808019
           },
           {
-            "t": 1790685959
+            "t": 1791808079
           },
           {
-            "t": 1790686019
+            "t": 1791808139
           },
           {
-            "t": 1790686079
+            "t": 1791808199
           },
           {
-            "t": 1790686139
+            "t": 1791808259
           },
           {
-            "t": 1790686199
+            "t": 1791808319
           },
           {
-            "t": 1790686259
+            "t": 1791808379
           },
           {
-            "t": 1790686319
+            "t": 1791808439
           },
           {
-            "t": 1790686379
+            "t": 1791808499
           },
           {
-            "t": 1790686439
+            "t": 1791808559
           },
           {
-            "t": 1790686499
+            "t": 1791808619
           },
           {
-            "t": 1790686559
+            "t": 1791808679
           },
           {
-            "t": 1790686619
+            "t": 1791808739
           },
           {
-            "t": 1790686679
+            "t": 1791808799
           },
           {
-            "t": 1790686739
+            "t": 1791808859
           },
           {
-            "t": 1790686799
+            "t": 1791808919
           },
           {
-            "t": 1790686859
+            "t": 1791808979
           },
           {
-            "t": 1790686919
+            "t": 1791809039
           },
           {
-            "t": 1790686979
+            "t": 1791809099
           },
           {
-            "t": 1790687039
+            "t": 1791809159
           },
           {
-            "t": 1790687099
+            "t": 1791809219
           },
           {
-            "t": 1790687159
+            "t": 1791809279
           },
           {
-            "t": 1790687219
+            "t": 1791809339
           },
           {
-            "t": 1790687279
+            "t": 1791809399
           },
           {
-            "t": 1790687339
+            "t": 1791809459
           },
           {
-            "t": 1790687399
+            "t": 1791809519
           },
           {
-            "t": 1790687459
+            "t": 1791809579
           },
           {
-            "t": 1790687519
+            "t": 1791809639
           },
           {
-            "t": 1790687579
+            "t": 1791809699
           },
           {
-            "t": 1790687639
+            "t": 1791809759
           },
           {
-            "t": 1790687699
+            "t": 1791809819
           },
           {
-            "t": 1790687759
+            "t": 1791809879
           },
           {
-            "t": 1790687819
+            "t": 1791809939
           },
           {
-            "t": 1790687879
+            "t": 1791809999
           },
           {
-            "t": 1790687939
+            "t": 1791810059
           },
           {
-            "t": 1790687999
+            "t": 1791810119
           },
           {
-            "t": 1790688059
+            "t": 1791810179
           },
           {
-            "t": 1790688119
+            "t": 1791810239
           },
           {
-            "t": 1790688179
+            "t": 1791810299
           },
           {
-            "t": 1790688239
+            "t": 1791810359
           },
           {
-            "t": 1790688299
+            "t": 1791810419
           },
           {
-            "t": 1790688359
+            "t": 1791810479
           },
           {
-            "t": 1790688419
+            "t": 1791810539
           },
           {
-            "t": 1790688479
+            "t": 1791810599
           },
           {
-            "t": 1790688539
+            "t": 1791810659
           },
           {
-            "t": 1790688599
+            "t": 1791810719
           },
           {
-            "t": 1790688659
+            "t": 1791810779
           },
           {
-            "t": 1790688719
+            "t": 1791810839
           },
           {
-            "t": 1790688779
+            "t": 1791810899
           },
           {
-            "t": 1790688839
+            "t": 1791810959
           },
           {
-            "t": 1790688899
+            "t": 1791811019
           },
           {
-            "t": 1790688959
+            "t": 1791811079
           },
           {
-            "t": 1790689019
+            "t": 1791811139
           },
           {
-            "t": 1790689079
+            "t": 1791811199
           },
           {
-            "t": 1790689139
+            "t": 1791811259
           },
           {
-            "t": 1790689199
+            "t": 1791811319
           },
           {
-            "t": 1790689259
+            "t": 1791811379
           },
           {
-            "t": 1790689319
+            "t": 1791811439
           },
           {
-            "t": 1790689379
+            "t": 1791811499
           },
           {
-            "t": 1790689439
+            "t": 1791811559
           },
           {
-            "t": 1790689499
+            "t": 1791811619
           },
           {
-            "t": 1790689559
+            "t": 1791811679
           },
           {
-            "t": 1790689619
+            "t": 1791811739
           },
           {
-            "t": 1790689679
+            "t": 1791811799
           },
           {
-            "t": 1790689739
+            "t": 1791811859
           },
           {
-            "t": 1790689799
+            "t": 1791811919
           },
           {
-            "t": 1790689859
+            "t": 1791811979
           },
           {
-            "t": 1790689919
+            "t": 1791812039
           },
           {
-            "t": 1790689979
+            "t": 1791812099
           },
           {
-            "t": 1790690039
+            "t": 1791812159
           },
           {
-            "t": 1790690099
+            "t": 1791812219
           },
           {
-            "t": 1790690159
+            "t": 1791812279
           },
           {
-            "t": 1790690219
+            "t": 1791812339
           },
           {
-            "t": 1790690279
+            "t": 1791812399
           },
           {
-            "t": 1790690339
+            "t": 1791812459
           },
           {
-            "t": 1790690399
+            "t": 1791812519
           },
           {
-            "t": 1790690459
+            "t": 1791812579
           },
           {
-            "t": 1790690519
+            "t": 1791812639
           },
           {
-            "t": 1790690579
+            "t": 1791812699
           },
           {
-            "t": 1790690639
+            "t": 1791812759
           },
           {
-            "t": 1790690699
+            "t": 1791812819
           },
           {
-            "t": 1790690759
+            "t": 1791812879
           },
           {
-            "t": 1790690819
+            "t": 1791812939
           },
           {
-            "t": 1790690879
+            "t": 1791812999
           },
           {
-            "t": 1790690939
+            "t": 1791813059
           },
           {
-            "t": 1790690999
+            "t": 1791813119
           },
           {
-            "t": 1790691059
+            "t": 1791813179
           },
           {
-            "t": 1790691119
+            "t": 1791813239
           },
           {
-            "t": 1790691179
+            "t": 1791813299
           },
           {
-            "t": 1790691239
+            "t": 1791813359
           },
           {
-            "t": 1790691299
+            "t": 1791813419
           },
           {
-            "t": 1790691359
+            "t": 1791813479
           },
           {
-            "t": 1790691419
+            "t": 1791813539
           },
           {
-            "t": 1790691479
+            "t": 1791813599
           },
           {
-            "t": 1790691539
+            "t": 1791813659
           },
           {
-            "t": 1790691599
+            "t": 1791813719
           },
           {
-            "t": 1790691659
+            "t": 1791813779
           },
           {
-            "t": 1790691719
+            "t": 1791813839
           },
           {
-            "t": 1790691779
+            "t": 1791813899
           },
           {
-            "t": 1790691839
+            "t": 1791813959
           },
           {
-            "t": 1790691899
+            "t": 1791814019
           },
           {
-            "t": 1790691959
+            "t": 1791814079
           },
           {
-            "t": 1790692019
+            "t": 1791814139
           },
           {
-            "t": 1790692079
+            "t": 1791814199
           },
           {
-            "t": 1790692139
+            "t": 1791814259
           },
           {
-            "t": 1790692199
+            "t": 1791814319
           },
           {
-            "t": 1790692259
+            "t": 1791814379
           },
           {
-            "t": 1790692319
+            "t": 1791814439
           },
           {
-            "t": 1790692379
+            "t": 1791814499
           },
           {
-            "t": 1790692439
+            "t": 1791814559
           },
           {
-            "t": 1790692499
+            "t": 1791814619
           },
           {
-            "t": 1790692559
+            "t": 1791814679
           },
           {
-            "t": 1790692619
+            "t": 1791814739
           },
           {
-            "t": 1790692679
+            "t": 1791814799
           },
           {
-            "t": 1790692739
+            "t": 1791814859
           },
           {
-            "t": 1790692799
+            "t": 1791814919
           },
           {
-            "t": 1790692859
+            "t": 1791814979
           },
           {
-            "t": 1790692919
+            "t": 1791815039
           },
           {
-            "t": 1790692979
+            "t": 1791815099
           },
           {
-            "t": 1790693039
+            "t": 1791815159
           },
           {
-            "t": 1790693099
+            "t": 1791815219
           },
           {
-            "t": 1790693159
+            "t": 1791815279
           },
           {
-            "t": 1790693219
+            "t": 1791815339
           },
           {
-            "t": 1790693279
+            "t": 1791815399
           },
           {
-            "t": 1790693339
+            "t": 1791815459
           },
           {
-            "t": 1790693399
+            "t": 1791815519
           },
           {
-            "t": 1790693459
+            "t": 1791815579
           },
           {
-            "t": 1790693519
+            "t": 1791815639
           },
           {
-            "t": 1790693579
+            "t": 1791815699
           },
           {
-            "t": 1790693639
+            "t": 1791815759
           },
           {
-            "t": 1790693699
+            "t": 1791815819
           },
           {
-            "t": 1790693759
+            "t": 1791815879
           },
           {
-            "t": 1790693819
+            "t": 1791815939
           },
           {
-            "t": 1790693879
+            "t": 1791815999
           },
           {
-            "t": 1790693939
+            "t": 1791816059
           },
           {
-            "t": 1790693999
+            "t": 1791816119
           },
           {
-            "t": 1790694059
+            "t": 1791816179
           },
           {
-            "t": 1790694119
+            "t": 1791816239
           },
           {
-            "t": 1790694179
+            "t": 1791816299
           },
           {
-            "t": 1790694239
+            "t": 1791816359
           },
           {
-            "t": 1790694299
+            "t": 1791816419
           },
           {
-            "t": 1790694359
+            "t": 1791816479
           },
           {
-            "t": 1790694419
+            "t": 1791816539
           },
           {
-            "t": 1790694479
+            "t": 1791816599
           },
           {
-            "t": 1790694539
+            "t": 1791816659
           },
           {
-            "t": 1790694599
+            "t": 1791816719
           },
           {
-            "t": 1790694659
+            "t": 1791816779
           },
           {
-            "t": 1790694719
+            "t": 1791816839
           },
           {
-            "t": 1790694779
+            "t": 1791816899
           },
           {
-            "t": 1790694839
+            "t": 1791816959
           },
           {
-            "t": 1790694899
+            "t": 1791817019
           },
           {
-            "t": 1790694959
+            "t": 1791817079
           },
           {
-            "t": 1790695019
+            "t": 1791817139
           },
           {
-            "t": 1790695079
+            "t": 1791817199
           },
           {
-            "t": 1790695139
+            "t": 1791817259
           },
           {
-            "t": 1790695199
+            "t": 1791817319
           },
           {
-            "t": 1790695259
+            "t": 1791817379
           },
           {
-            "t": 1790695319
+            "t": 1791817439
           },
           {
-            "t": 1790695379
+            "t": 1791817499
           },
           {
-            "t": 1790695439
+            "t": 1791817559
           },
           {
-            "t": 1790695499
+            "t": 1791817619
           },
           {
-            "t": 1790695559
+            "t": 1791817679
           },
           {
-            "t": 1790695619
+            "t": 1791817739
           },
           {
-            "t": 1790695679
+            "t": 1791817799
           },
           {
-            "t": 1790695739
+            "t": 1791817859
           },
           {
-            "t": 1790695799
+            "t": 1791817919
           },
           {
-            "t": 1790695859
+            "t": 1791817979
           },
           {
-            "t": 1790695919
+            "t": 1791818039
           },
           {
-            "t": 1790695979
+            "t": 1791818099
           },
           {
-            "t": 1790696039
+            "t": 1791818159
           },
           {
-            "t": 1790696099
+            "t": 1791818219
           },
           {
-            "t": 1790696159
+            "t": 1791818279
           },
           {
-            "t": 1790696219
+            "t": 1791818339
           },
           {
-            "t": 1790696279
+            "t": 1791818399
           },
           {
-            "t": 1790696339
+            "t": 1791818459
           },
           {
-            "t": 1790696399
+            "t": 1791818519
           },
           {
-            "t": 1790696459
+            "t": 1791818579
           },
           {
-            "t": 1790696519
+            "t": 1791818639
           },
           {
-            "t": 1790696579
+            "t": 1791818699
           },
           {
-            "t": 1790696639
+            "t": 1791818759
           },
           {
-            "t": 1790696699
+            "t": 1791818819
           },
           {
-            "t": 1790696759
+            "t": 1791818879
           },
           {
-            "t": 1790696819
+            "t": 1791818939
           },
           {
-            "t": 1790696879
+            "t": 1791818999
           },
           {
-            "t": 1790696939
+            "t": 1791819059
           },
           {
-            "t": 1790696999
+            "t": 1791819119
           },
           {
-            "t": 1790697059
+            "t": 1791819179
           },
           {
-            "t": 1790697119
+            "t": 1791819239
           },
           {
-            "t": 1790697179
+            "t": 1791819299
           },
           {
-            "t": 1790697239
+            "t": 1791819359
           },
           {
-            "t": 1790697299
+            "t": 1791819419
           },
           {
-            "t": 1790697359
+            "t": 1791819479
           },
           {
-            "t": 1790697419
+            "t": 1791819539
           },
           {
-            "t": 1790697479
+            "t": 1791819599
           },
           {
-            "t": 1790697539
+            "t": 1791819659
           },
           {
-            "t": 1790697599
+            "t": 1791819719
           },
           {
-            "t": 1790697600
+            "t": 1791819779
+          },
+          {
+            "t": 1791819839
+          },
+          {
+            "t": 1791819899
+          },
+          {
+            "t": 1791819959
+          },
+          {
+            "t": 1791820019
+          },
+          {
+            "t": 1791820079
+          },
+          {
+            "t": 1791820139
+          },
+          {
+            "t": 1791820199
+          },
+          {
+            "t": 1791820259
+          },
+          {
+            "t": 1791820319
+          },
+          {
+            "t": 1791820379
+          },
+          {
+            "t": 1791820439
+          },
+          {
+            "t": 1791820499
+          },
+          {
+            "t": 1791820559
+          },
+          {
+            "t": 1791820619
+          },
+          {
+            "t": 1791820679
+          },
+          {
+            "t": 1791820739
+          },
+          {
+            "t": 1791820799
+          },
+          {
+            "t": 1791820800
           }
         ]
       },
@@ -2399,7 +2593,7 @@
         ],
         [
           "Stock Exchange",
-          "BATS"
+          "Cboe BZX"
         ],
         [
           "Ticker Symbol",
@@ -2413,50 +2607,44 @@
       "etf_website": "https://corgifunds.com/ondc",
       "provider_page": null,
       "holdingsTable": {
-        "count": 5,
-        "updated": "Sep 24, 2026",
+        "count": 4,
+        "updated": "Oct 8, 2026",
         "top10": 100,
         "holdings": [
           {
             "n": "ONDAS INC.-SWAP-CANT-L",
-            "as": "194.68%",
-            "sh": "72,747"
+            "as": "204.29%",
+            "sh": "65,998"
           },
           {
             "n": "US DOLLARS",
-            "as": "100.10%",
-            "sh": "284,293"
-          },
-          {
-            "n": "First American Government Obligs X",
-            "s": "!mutf/FGXXX",
-            "as": "0.20%",
-            "sh": "556"
+            "as": "120.96%",
+            "sh": "263,003"
           },
           {
             "n": "OTHER ASSETS AND LIABILITIES",
-            "as": "-6.41%",
-            "sh": "18,211"
+            "as": "-3.68%",
+            "sh": "7,991"
           },
           {
             "n": "Cash Offset",
-            "as": "-188.56%",
-            "sh": "535,518"
+            "as": "-221.58%",
+            "sh": "481,756"
           }
         ]
       },
       "dividendTable": null,
       "news": {
-        "exp": "1790804214478",
+        "exp": "1791870340459",
         "data": []
       },
       "config": {
         "no1d": false
       },
       "changes": {
-        "price1w": 19.583,
-        "price1m": 21.629,
-        "price3m": null,
+        "price1w": 17.809,
+        "price1m": 17.435,
+        "price3m": 21.217,
         "price6m": null,
         "priceYTD": null,
         "price1y": null,
@@ -2464,133 +2652,66 @@
         "priceMAX": 21.949
       },
       "performance": {
-        "tr1m": -15.50009,
+        "tr1m": -18.75351,
         "trYTD": null,
         "tr1y": null,
         "cagr5y": null,
         "cagr10y": null,
         "cagrMAX": null
-      }
-    },
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "ONDAS INC.-SWAP-CANT-L",
-          "as": "194.68%",
-          "sh": "72,747"
-        },
-        {
-          "no": 2,
-          "n": "US DOLLARS",
-          "as": "100.10%",
-          "sh": "284,293"
-        },
-        {
-          "no": 3,
-          "n": "First American Government Obligs X",
-          "s": "!mutf/FGXXX",
-          "as": "0.20%",
-          "sh": "556"
-        },
-        {
-          "no": 4,
-          "n": "OTHER ASSETS AND LIABILITIES",
-          "as": "-6.41%",
-          "sh": "18,211"
-        },
-        {
-          "no": 5,
-          "n": "Cash Offset",
-          "as": "-188.56%",
-          "sh": "535,518"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": null,
-      "countries": null,
-      "allocationChartData": {
-        "sectors": [],
-        "assets": [],
-        "countries": []
       },
-      "infoBox": null,
-      "infoTable": {
-        "count": 5,
-        "top10": 100,
-        "assetClass": "Equity",
-        "category": "Trading--Leveraged Equity",
-        "categoryLabel": "ETF Category",
-        "aum": 286063,
-        "peRatio": null
-      },
-      "date": "Sep 24, 2026",
-      "count": 5,
-      "trust": {
-        "sources": [
-          {
-            "name": "Finnhub",
-            "short": "Finnhub",
-            "url": "https://finnhub.io/"
-          }
-        ],
-        "freshnessLag": "days",
-        "updateFrequency": "daily",
-        "lastUpdated": "Sep 24, 2026",
-        "lastChecked": 1790773291585,
-        "topic": "holdings",
-        "ticker": "ONDC",
-        "summary": {
-          "pre": "ETF holdings data is provided by ",
-          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
-        },
-        "extraSummaryLinks": null
-      }
+      "provider_holdings_available": false
     },
+    "holdings": {},
     "quote": {
-      "p": 18.2764,
-      "pd": 18.28,
-      "c": 0,
-      "cp": 0,
-      "cl": 18.28,
-      "cdr": 0,
-      "o": 0,
-      "h": 0,
-      "l": 0,
-      "v": 11,
-      "ts": 1790798400000,
-      "u": "Sep 30, 2026, 4:00 PM EDT",
-      "td": "2026-09-30",
-      "h52": 34.202,
-      "l52": 16.831,
+      "c": -0.3,
+      "e": false,
+      "h": 14.17,
+      "l": 14.17,
+      "o": 14.17,
+      "p": 14.165,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 102,
+      "cl": 14.46,
+      "cp": -2.04,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "BATS",
       "ms": "closed",
-      "fms": "post",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
+      "pd": 14.17,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": null,
-      "es": null,
-      "ets": 1790789090243.82,
-      "etd": null,
-      "epv": null,
+      "epd": 0,
+      "ets": 1791849605255.8372,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 34.202,
+      "l52": 14.165,
+      "uid": "ONDC",
       "days": 0,
-      "exp": 1790798724926,
-      "symbol": "ONDC",
-      "uid": "ONDC"
+      "symbol": "ONDC"
     },
     "history": [
+      {
+        "t": "2026-10-01",
+        "o": 16.522,
+        "h": 17.809,
+        "l": 14.17,
+        "c": 14.165,
+        "v": 341,
+        "a": 14.165,
+        "ch": -19.11
+      },
       {
         "t": "2026-09-01",
         "o": 17.33,
         "h": 20.24,
         "l": 16.831,
-        "c": 18.276,
-        "v": 11357,
-        "a": 18.2764,
-        "ch": -9.57
+        "c": 17.512,
+        "v": 11375,
+        "a": 17.5118,
+        "ch": -13.35
       },
       {
         "t": "2026-08-03",
@@ -2605,6 +2726,96 @@
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 14.17,
+          "h": 14.17,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 102,
+          "a": 14.165,
+          "ch": -2.01
+        },
+        {
+          "t": "2026-10-09",
+          "o": 14.455,
+          "h": 14.455,
+          "l": 14.455,
+          "c": 14.455,
+          "a": 14.4551,
+          "v": 8,
+          "ch": -4.85
+        },
+        {
+          "t": "2026-10-08",
+          "o": 15.192,
+          "h": 15.192,
+          "l": 15.192,
+          "c": 15.192,
+          "a": 15.1916,
+          "v": 94,
+          "ch": -8.69
+        },
+        {
+          "t": "2026-10-07",
+          "o": 16.637,
+          "h": 16.637,
+          "l": 16.637,
+          "c": 16.637,
+          "a": 16.6371,
+          "v": 16,
+          "ch": -6.41
+        },
+        {
+          "t": "2026-10-06",
+          "o": 17.776,
+          "h": 17.776,
+          "l": 17.776,
+          "c": 17.776,
+          "a": 17.776,
+          "v": 11,
+          "ch": -0.19
+        },
+        {
+          "t": "2026-10-05",
+          "o": 17.809,
+          "h": 17.809,
+          "l": 17.809,
+          "c": 17.809,
+          "a": 17.809,
+          "v": 31,
+          "ch": 5.43
+        },
+        {
+          "t": "2026-10-02",
+          "o": 16.892,
+          "h": 16.892,
+          "l": 16.892,
+          "c": 16.892,
+          "a": 16.892,
+          "v": 59,
+          "ch": 2.24
+        },
+        {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 16.522,
+          "l": 16.522,
+          "c": 16.522,
+          "a": 16.5219,
+          "v": 20,
+          "ch": -5.65
+        },
+        {
+          "t": "2026-09-30",
+          "o": 17.512,
+          "h": 17.512,
+          "l": 17.512,
+          "c": 17.512,
+          "a": 17.5118,
+          "v": 14,
+          "ch": -4.18
+        },
         {
           "t": "2026-09-29",
           "o": 19.69,
@@ -2632,7 +2843,7 @@
           "l": 19.088,
           "c": 19.088,
           "a": 19.0877,
-          "v": 574,
+          "v": 578,
           "ch": 0.94
         },
         {
@@ -3198,14 +3409,34 @@
       ],
       "weekly_1y": [
         {
+          "t": "2026-10-12",
+          "o": 14.17,
+          "h": 14.17,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 102,
+          "a": 14.165,
+          "ch": -2.01
+        },
+        {
+          "t": "2026-10-05",
+          "o": 17.809,
+          "h": 17.809,
+          "l": 14.455,
+          "c": 14.455,
+          "v": 160,
+          "a": 14.4551,
+          "ch": -14.43
+        },
+        {
           "t": "2026-09-28",
           "o": 19.245,
           "h": 19.76,
-          "l": 18.276,
-          "c": 18.276,
-          "v": 1436,
-          "a": 18.2764,
-          "ch": -4.25
+          "l": 16.522,
+          "c": 16.892,
+          "v": 1529,
+          "a": 16.892,
+          "ch": -11.5
         },
         {
           "t": "2026-09-21",
@@ -3213,7 +3444,7 @@
           "h": 20,
           "l": 17.94,
           "c": 19.088,
-          "v": 2918,
+          "v": 2922,
           "a": 19.0877,
           "ch": 5.34
         },
@@ -3320,14 +3551,24 @@
       ],
       "monthly_1y": [
         {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 17.809,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 341,
+          "a": 14.165,
+          "ch": -19.11
+        },
+        {
           "t": "2026-09-01",
           "o": 17.33,
           "h": 20.24,
           "l": 16.831,
-          "c": 18.276,
-          "v": 11357,
-          "a": 18.2764,
-          "ch": -9.57
+          "c": 17.512,
+          "v": 11375,
+          "a": 17.5118,
+          "ch": -13.35
         },
         {
           "t": "2026-08-03",
@@ -3342,14 +3583,34 @@
       ],
       "weekly_3y": [
         {
+          "t": "2026-10-12",
+          "o": 14.17,
+          "h": 14.17,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 102,
+          "a": 14.165,
+          "ch": -2.01
+        },
+        {
+          "t": "2026-10-05",
+          "o": 17.809,
+          "h": 17.809,
+          "l": 14.455,
+          "c": 14.455,
+          "v": 160,
+          "a": 14.4551,
+          "ch": -14.43
+        },
+        {
           "t": "2026-09-28",
           "o": 19.245,
           "h": 19.76,
-          "l": 18.276,
-          "c": 18.276,
-          "v": 1436,
-          "a": 18.2764,
-          "ch": -4.25
+          "l": 16.522,
+          "c": 16.892,
+          "v": 1529,
+          "a": 16.892,
+          "ch": -11.5
         },
         {
           "t": "2026-09-21",
@@ -3357,7 +3618,7 @@
           "h": 20,
           "l": 17.94,
           "c": 19.088,
-          "v": 2918,
+          "v": 2922,
           "a": 19.0877,
           "ch": 5.34
         },
@@ -3464,14 +3725,24 @@
       ],
       "monthly_3y": [
         {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 17.809,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 341,
+          "a": 14.165,
+          "ch": -19.11
+        },
+        {
           "t": "2026-09-01",
           "o": 17.33,
           "h": 20.24,
           "l": 16.831,
-          "c": 18.276,
-          "v": 11357,
-          "a": 18.2764,
-          "ch": -9.57
+          "c": 17.512,
+          "v": 11375,
+          "a": 17.5118,
+          "ch": -13.35
         },
         {
           "t": "2026-08-03",
@@ -3486,14 +3757,24 @@
       ],
       "monthly_5y": [
         {
+          "t": "2026-10-01",
+          "o": 16.522,
+          "h": 17.809,
+          "l": 14.17,
+          "c": 14.165,
+          "v": 341,
+          "a": 14.165,
+          "ch": -19.11
+        },
+        {
           "t": "2026-09-01",
           "o": 17.33,
           "h": 20.24,
           "l": 16.831,
-          "c": 18.276,
-          "v": 11357,
-          "a": 18.2764,
-          "ch": -9.57
+          "c": 17.512,
+          "v": 11375,
+          "a": 17.5118,
+          "ch": -13.35
         },
         {
           "t": "2026-08-03",
@@ -3506,10 +3787,374 @@
           "ch": -3.66
         }
       ]
+    },
+    "official_issuer": {
+      "ticker": "ONDC",
+      "provider": "corgi",
+      "source_url": "https://corgiinvest.com/ondc",
+      "fetched_at": "2026-10-13T03:06:01Z",
+      "source_as_of": "2026-10-13",
+      "holdings": [
+        {
+          "name": "ONDAS INC.-SWAP-CANT-L",
+          "symbol": null,
+          "identifier": "68236H204-TRS-12/01/27-L-CANT",
+          "identifier_type": "cusip_trs",
+          "weight_pct": 198.42,
+          "weight_basis": "market_value",
+          "market_value": 423264.86,
+          "shares": 63458.0,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "ONDAS INC.-SWAP-CANT-L",
+            "security_cusip": "68236H204-TRS-12/01/27-L-CANT",
+            "security_ticker": "68236H204-TRS-12/01/27-L-CANT",
+            "weight_pct": "198.4200",
+            "market_value": "423264.86",
+            "shares": "63458.00000000",
+            "net_assets": "213316.50",
+            "as_of_date": "2026-10-12"
+          }
+        },
+        {
+          "name": "Cash & Other",
+          "symbol": null,
+          "identifier": "Cash&Other",
+          "identifier_type": "issuer_identifier",
+          "weight_pct": -98.5,
+          "weight_basis": "market_value",
+          "market_value": -210118.34,
+          "shares": null,
+          "quantity": null,
+          "as_of_date": "2026-10-12",
+          "position_date": "2026-10-13",
+          "raw": {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-98.5000",
+            "market_value": "-210118.34",
+            "shares": "-210118.34000000",
+            "net_assets": "213316.50",
+            "as_of_date": "2026-10-12"
+          }
+        }
+      ],
+      "quote": {
+        "nav": 14.4949,
+        "nav_as_of": "2026-10-09",
+        "market_price": 14.4551,
+        "market_price_as_of": "2026-10-12",
+        "market_price_change_pct": -4.8481,
+        "premium_discount_pct": -0.2746,
+        "net_assets": 213316.5,
+        "net_assets_as_of": "2026-10-12"
+      },
+      "history": [],
+      "classification": {
+        "category": "2x Single Stock",
+        "fund_type": "leveraged",
+        "leverage_factor": 2,
+        "rebalance_frequency": "Daily",
+        "is_active_management": false,
+        "underlying_ticker": "ONDS",
+        "underlying_issuer": "Ondas Holdings Inc.",
+        "underlying_listing": "NASDAQ",
+        "underlying_industry": "wireless and drone technology",
+        "exchange": "Cboe BZX Exchange, Inc.",
+        "inception_date": "2026-07-07",
+        "cusip": "21874K 708",
+        "expense_ratio": "0.45%",
+        "trust": "Corgi ETF Trust I"
+      },
+      "field_dates": {
+        "holdings": "2026-10-12",
+        "holdings_as_of": "2026-10-12",
+        "holdings_position_date": "2026-10-13",
+        "nav": "2026-10-09",
+        "market_price": "2026-10-12",
+        "net_assets": "2026-10-12"
+      },
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ],
+      "holdings_snapshot": {
+        "full_published_snapshot": true,
+        "identity": "ONDC",
+        "snapshot_date": "2026-10-12",
+        "position_date": "2026-10-13",
+        "row_count": 2,
+        "cash_treatment": "aggregated",
+        "scope_note": "issuer publishes the complete current position set for this fund: the swap leg plus one aggregated Cash & Other row"
+      },
+      "raw": {
+        "fund": {
+          "aboutUnderlying": "Ondas Holdings Inc. (NASDAQ: ONDS) (\"Ondas\") is a United States-based technology company providing wireless connectivity and drone solutions. The company develops private wireless networks and aerial data solutions for industrial and government customers. Ondas operates primarily in the United States and is headquartered in Boston, Massachusetts, United States.",
+          "administrator": "U.S. Bancorp Fund Services",
+          "adviser": "Corgi Strategies, LLC",
+          "auditor": "Tait Weller",
+          "aum": null,
+          "aumAsOf": null,
+          "baseCurrency": "U.S. Dollar",
+          "baseExpenseRatio": null,
+          "category": "2x Single Stock",
+          "cusip": "21874K 708",
+          "custodian": "U.S. Bank N.A.",
+          "description": "The Corgi ONDS 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Ondas Holdings Inc. (NASDAQ: ONDS) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.",
+          "disclosures": "Investment Objective. The Corgi ONDS 2x Daily ETF (the \"Fund\") seeks daily investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Ondas Holdings Inc. (NASDAQ: ONDS) (the \"Underlying Security\"). The Fund does not seek to achieve its stated investment objective over a period of time greater than one trading day.\n\nInvestors should consider the investment objectives, risks, charges, and expenses of each Fund carefully before investing. This and other important information is contained in the prospectus for each Fund, which can be obtained without charge from corgiinvest.com or from the SEC at www.sec.gov. Read the applicable prospectus carefully before investing.\n\nThe Fund is newly organized and has limited operating history. There can be no assurance that the Fund will grow to or maintain an economically viable size. It may take time for the Fund to attract sufficient assets and for an active secondary market for its shares to develop or be sustained, which could result in wider bid-ask spreads, increased trading costs, or trading at a premium or discount to net asset value.\n\nThe information on this site is for informational purposes only and does not constitute investment, tax, or legal advice. Please consult your own investment, tax, and legal professionals regarding your specific situation.\n\nThe Funds’ shares are listed for trading on Cboe BZX Exchange, Inc. (the “Exchange”). The Funds are not sponsored, endorsed, sold, or promoted by the Exchange. The Exchange makes no representation regarding the advisability of investing in any Fund and is not responsible for, nor has it participated in, the determination of the timing of, prices of, or quantities of Fund shares to be issued or in the determination or calculation of the equation by which shares of any Fund are redeemable. The Exchange has no obligation or liability in connection with the administration, marketing, or trading of Fund shares.\n\nCorgi ONDS 2x Daily ETF Risk. The Corgi ONDS 2x Daily ETF seeks, for a single day, investment results, before fees and expenses, that correspond to two times (2x) the daily performance of the publicly-traded common stock of Ondas Holdings Inc. (ONDS) (the “Underlying Security”). The Fund does not seek to achieve its objective for periods longer than a single trading day. Over periods longer than one day, the effects of daily compounding and the volatility of the Underlying Security will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying Security’s return for the same period. Single Issuer Risk. Because the Fund obtains exposure to a single issuer, performance is highly dependent on the price movements, earnings results, product developments, regulatory actions, litigation, executive transitions, and other idiosyncratic risks affecting Ondas Holdings Inc.. A material adverse event at Ondas Holdings Inc. could result in substantial or near-total losses to the Fund, magnified by 2x daily leverage. The Fund uses total return swaps and other equity-linked instruments, which increase volatility and magnify losses, and is subject to correlation risk, counterparty risk, rebalancing risk, and market disruption risk. The Fund is non-diversified and concentrates exposure in a single issuer. Please see the Fund’s prospectus for a more complete discussion of these and other risks.\n\nUnaffiliated Reference Issuer. Ondas Holdings Inc. (ONDS) is not affiliated with, endorsed by, or sponsored by Corgi Strategies, LLC or any of its affiliates. Corgi Invest has no control over the business operations, capital allocation decisions, or securities filings of Ondas Holdings Inc.. References to Ondas Holdings Inc. and ONDS are for informational purposes only and do not imply any affiliation, sponsorship, or endorsement. Ondas Holdings Inc. common stock is subject to its own risks independent of this Fund, including risks specific to its industry, products, competitive position, management, and regulatory environment.\n\nLeverage Risk. The Fund uses leverage to target approximately 2x the Underlying ETF’s daily return. Losses are magnified relative to the Underlying ETF. If the Underlying ETF declines by around 50% during a trading day, the Fund could experience a near-total or total loss. The use of leverage increases volatility and the risk of rapid losses. Costs of obtaining and maintaining leverage, including financing charges embedded in derivatives, will reduce return.\n\nDerivatives Risk. To the extent the Fund uses derivatives (e.g., total return swaps) to obtain exposure or for portfolio management, it is subject to counterparty, liquidity, valuation, leverage, and correlation risks. Derivatives can be more volatile than direct holdings and may increase exposure to certain market risks.\n\nCompounding and Daily Rebalancing Risk. The Fund seeks 2x the Underlying ETF’s return for a single day, measured from one NAV calculation to the next. Over periods longer than one day, the effects of daily compounding, the path of Underlying ETF returns, and Underlying ETF volatility will likely cause the Fund’s performance to differ, sometimes significantly, from 2x the Underlying ETF return for the same period. During volatile or frequently reversing markets, returns may be lower than 2x the Underlying ETF return for the period, and you could lose money even if the Underlying ETF is flat or rises over the holding period.\n\nCorrelation Risk. The Fund seeks approximately 2x the daily performance of the Underlying ETF but may not achieve perfect leveraged correlation. Fees and expenses, transaction and financing costs, the use of derivatives, market disruptions, corporate actions, sampling, and limitations on rebalancing can all cause performance to deviate from the 2x Daily Objective.\n\nIn addition, the fund is subject to general equity market volatility and may experience amplified fluctuation due to its industry concentration.\n\nInvesting involves risk, including possible loss of principal. There is no guarantee that any investment strategy or any Fund will achieve its objectives. Shares of the Funds are bought and sold on an exchange at market price and are not individually redeemable from the Funds. Market price will fluctuate, sometimes materially, and may be higher or lower than net asset value (“NAV”). Brokerage commissions, bid-ask spreads and other trading costs will reduce returns. Performance data represents past performance and does not guarantee future results. Investment return and principal value will fluctuate so that shares, when sold, may be worth more or less than their original cost. Current performance may be lower or higher than the performance data quoted.\n\nPremium/discount data shows the relationship between the market price of a Fund’s shares and that Fund’s NAV. Historical premium/discount data may not be indicative of future premium/discount levels.\n\nThe Fund issues and redeems shares only in large blocks called “Creation Units” at NAV next determined after an order is accepted. Only authorized participants (“APs”) may transact in Creation Units directly with the Fund. Investors should contact their broker or financial intermediary to place trades.\n\nThis site is intended only for investors resident in the United States. Nothing on this website is an offer to sell, or a solicitation of an offer to buy, any security in any jurisdiction where such offer or solicitation would be unlawful.\n\nCorgi ETF Trust I. Investment adviser: Corgi Strategies, LLC. Distributor: Paralel Distributors LLC. Member Firm. Paralel is unaffiliated with Corgi Strategies, LLC, The Corgi Company. © 2026 Corgi Strategies, LLC. All rights reserved.",
+          "displayEnabled": false,
+          "displayOrder": 184,
+          "distributionFrequency": null,
+          "distributor": "Paralel Distributors LLC",
+          "documents": {
+            "dailyHoldingsDate": "2026-05-21",
+            "factSheetDate": "2026-01-31",
+            "prospectusDate": "2026-02-01",
+            "prospectusUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm",
+            "saiDate": "2026-02-01",
+            "saiUrl": "https://www.sec.gov/ix?doc=/Archives/edgar/data/0002078265/000207826526000295/497c.htm"
+          },
+          "documentsText": "Prospectus (Updated Feb 01, 2026); Fact Sheet (Jan 31, 2026); SAI (Feb 01, 2026); Daily Holdings / Exposure (May 21, 2026); Annual Report (Unavailable)",
+          "exchange": "Cboe BZX Exchange, Inc.",
+          "expenseGross": null,
+          "expenseRatio": "0.45%",
+          "factSheetEnabled": false,
+          "featuredOnHomepage": false,
+          "fullName": "Corgi ONDS 2x Daily ETF",
+          "fundType": "leveraged",
+          "hasLiveHoldings": false,
+          "heroTags": [
+            "2x Daily Exposure",
+            "Daily Reset",
+            "0.45% Expense Ratio",
+            "Inception [ ]"
+          ],
+          "holdingsCount": 1,
+          "id": "ondc",
+          "imageKeys": [
+            "funds/ondc/unsplash-20260814.jpg"
+          ],
+          "inceptionDate": "2026-07-07",
+          "indexInceptionDate": null,
+          "indexName": null,
+          "indexProvider": null,
+          "isActiveManagement": false,
+          "isLiveDevelopment": false,
+          "isLiveProduction": true,
+          "isLiveStaging": false,
+          "isin": null,
+          "leverageFactor": 2,
+          "managementStyle": null,
+          "name": "Corgi ONDS 2x Daily ETF",
+          "ogImage": null,
+          "reasons": [],
+          "rebalanceFrequency": "Daily",
+          "sec30DayYield": null,
+          "seoDescription": "The Corgi ONDS 2x Daily ETF (ONDC) seeks 2x the daily return of Ondas Holdings Inc. (ONDS). See price, holdings, expense ratio, and the leverage risks.",
+          "seoTitle": "Ondas Holdings 2x ETF (ONDC) | Corgi Invest",
+          "seriesSlug": null,
+          "showDailyNav": false,
+          "showHoldingsTable": false,
+          "showPerformanceChart": false,
+          "siteCategory": "Single-Stock 2x Daily ETF · ONDS",
+          "summary": null,
+          "theme": "Single-Stock — ONDS",
+          "ticker": "ONDC",
+          "transferAgent": "U.S. Bancorp Fund Services",
+          "trust": "Corgi ETF Trust I",
+          "twelvedataEnabled": false,
+          "twelvedataSymbol": null,
+          "underlyingHeadquarters": "Boston, Massachusetts, United States",
+          "underlyingIndexSymbol": "ONDS",
+          "underlyingIndustry": "wireless and drone technology",
+          "underlyingIssuer": "Ondas Holdings Inc.",
+          "underlyingListing": "NASDAQ",
+          "underlyingTicker": "ONDS",
+          "whiteLabelRedirectUrl": null,
+          "whyInvest": [
+            {
+              "title": "Amplified Daily Exposure",
+              "description": "Seeks two times (2x) the daily performance of the common stock of Ondas Holdings Inc. (NASDAQ: ONDS). Both gains and losses are magnified. The Fund is not designed to deliver 2x performance for any period other than a single trading day.",
+              "order": 1
+            },
+            {
+              "title": "ETF Wrapper Access",
+              "description": "Investors obtain leveraged exposure through a standard brokerage account, without a margin agreement, borrowing, or margin calls. Shares trade on Cboe BZX during regular market hours.",
+              "order": 2
+            },
+            {
+              "title": "Daily Reset Mechanic",
+              "description": "The Fund rebalances each trading day. Over periods longer than one day, returns will differ, sometimes significantly, from two times the underlying's cumulative return due to compounding and volatility.",
+              "order": 3
+            },
+            {
+              "title": "For Active Use Only",
+              "description": "Intended for sophisticated investors who actively monitor positions intraday. The Fund is not suitable as a long-term hold or as a substitute for unlevered exposure to the underlying market.",
+              "order": 4
+            }
+          ],
+          "latestNav": "14.4949",
+          "latestMarketPrice": "14.4551",
+          "latestMarketPriceChangePct": "-4.8481",
+          "latestPremiumDiscount": "-0.2746",
+          "sinceInceptionReturnPct": "-42.0204",
+          "quarterToDateReturnPct": "-17.0867177668459",
+          "navSparkline": [
+            0,
+            -12.13,
+            -8.09,
+            -4.93,
+            -21.85,
+            -12.88,
+            -20.25,
+            -29.34,
+            -32.06,
+            -24.91,
+            0.49,
+            -1.29,
+            -4.64,
+            0.5,
+            -3.62,
+            -29.83,
+            -13.82,
+            3.53,
+            15.5,
+            15.64,
+            12.14,
+            21.27,
+            26.44,
+            38.64,
+            14.23,
+            22.28,
+            15.84,
+            17.23,
+            12.99,
+            -0.31,
+            -4.44,
+            -4.55,
+            -5.11,
+            6.97,
+            -14.19,
+            -19.63,
+            -32.53,
+            -21.4,
+            -21.93,
+            -22.02,
+            -28.8,
+            -29.66,
+            -30.27,
+            -30.22,
+            -31.06,
+            -27.52,
+            -27.75,
+            -28.03,
+            -21.49,
+            -28.07,
+            -23.72,
+            -23,
+            -27.08,
+            -30.07,
+            -34.14,
+            -32.14,
+            -29.11,
+            -33.39,
+            -39.72,
+            -42.02
+          ],
+          "latestNetAssets": "213316.50",
+          "latestAsOfDate": "2026-10-12",
+          "latestAumAsOfDate": "2026-10-12",
+          "latestAumSource": "holdings",
+          "latestNavAsOfDate": "2026-10-09"
+        },
+        "holdings_rows": [
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "ONDAS INC.-SWAP-CANT-L",
+            "security_cusip": "68236H204-TRS-12/01/27-L-CANT",
+            "security_ticker": "68236H204-TRS-12/01/27-L-CANT",
+            "weight_pct": "198.4200",
+            "market_value": "423264.86",
+            "shares": "63458.00000000",
+            "net_assets": "213316.50",
+            "as_of_date": "2026-10-12"
+          },
+          {
+            "canonical_fund_id": null,
+            "canonical_holding_id": null,
+            "instrument_id": null,
+            "position_date": "2026-10-13",
+            "security_name": "Cash & Other",
+            "security_cusip": "Cash&Other",
+            "security_ticker": "Cash&Other",
+            "weight_pct": "-98.5000",
+            "market_value": "-210118.34",
+            "shares": "-210118.34000000",
+            "net_assets": "213316.50",
+            "as_of_date": "2026-10-12"
+          }
+        ]
+      }
+    },
+    "official_holdings": {
+      "provider": "corgi",
+      "landing_page": "https://corgiinvest.com/ondc",
+      "source_as_of": "2026-10-12",
+      "position_scope": "issuer_published_snapshot",
+      "completeness": [
+        "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+        "navSparkline is undated and is intentionally not returned as history",
+        "weights are market-value weights; notional exposure is not published here",
+        "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+        "holdingsCount on the page counts the swap leg only and is not a holdings total"
+      ]
     }
   },
-  "detail_status": "stockanalysis_partial",
-  "partial_reason_codes": [
-    "holdings_countries_unavailable"
-  ]
+  "holdings_source": {
+    "provider": "corgi",
+    "landing_page": "https://corgiinvest.com/ondc",
+    "source_as_of": "2026-10-12",
+    "position_scope": "issuer_published_snapshot",
+    "completeness": [
+      "holdings are the issuer's current position rows (swap leg plus Cash & Other); this route publishes no dated holdings history",
+      "navSparkline is undated and is intentionally not returned as history",
+      "weights are market-value weights; notional exposure is not published here",
+      "rows carry a CUSIP-TRS composite identifier, so symbol stays null",
+      "holdingsCount on the page counts the swap leg only and is not a holdings total"
+    ]
+  },
+  "field_sources": {
+    "holdings": {
+      "provider": "corgi",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
 }
