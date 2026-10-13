@@ -166,6 +166,50 @@ jobs:
     # maximum without treating six hours as a completion guarantee.
     timeout-minutes: 360
     steps:
+      - name: Wait for preceding StockAnalysis Git publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 -u - <<'PY'
+          import json
+          import os
+          import subprocess
+          import time
+          from urllib.parse import quote
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          current_id = int(os.environ["GITHUB_RUN_ID"])
+          branch = quote(os.environ["GITHUB_REF_NAME"], safe="")
+
+          def api(path):
+              return json.loads(subprocess.check_output(["gh", "api", path], text=True))
+
+          current = api(f"repos/{repository}/actions/runs/{current_id}")
+          deadline = time.monotonic() + 90 * 60
+          while True:
+              runs = api(f"repos/{repository}/actions/workflows/fetch-stockanalysis.yml/runs"
+                         f"?branch={branch}&per_page=100")["workflow_runs"]
+              waiting = []
+              for run in runs:
+                  if run["run_number"] >= current["run_number"] or run["status"] == "completed":
+                      continue
+                  jobs = api(f"repos/{repository}/actions/runs/{run['id']}/jobs?per_page=100")["jobs"]
+                  acquisition = next((job for job in jobs if job["name"] == "acquire-stockanalysis"), None)
+                  # Older queued acquisitions have not taken a source snapshot.
+                  # Waiting on them while holding the acquisition lock deadlocks.
+                  if not acquisition or acquisition.get("conclusion") != "success":
+                      continue
+                  publisher = next((job for job in jobs if job["name"] == "publish-stockanalysis"), None)
+                  if publisher is None or publisher["status"] != "completed":
+                      waiting.append(run["id"])
+              if not waiting:
+                  break
+              if time.monotonic() >= deadline:
+                  raise SystemExit(f"preceding StockAnalysis Git publication has not settled: {waiting}")
+              print(f"Waiting for preceding Git publication: {waiting}", flush=True)
+              time.sleep(30)
+          PY
+
       - uses: actions/checkout@v7
 
       - name: Start from latest main
