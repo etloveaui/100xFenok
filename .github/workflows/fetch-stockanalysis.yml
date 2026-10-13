@@ -881,7 +881,16 @@ jobs:
                   return
               baseline, baseline_source, baseline_complete, legacy_unclassified = checked_payload(
                   baseline_bytes, ticker, label, legacy_baseline=True)
-              if baseline_source and (candidate_source is None or candidate_source < baseline_source):
+              if fetcher.issuer_holdings_snapshot(candidate_payload) is not None:
+                  # Native aggregates may represent the latest quote, whereas
+                  # issuer composites use the oldest required component. Compare
+                  # the same components before applying the detail-loss checks.
+                  before = fetcher._etf_component_clocks(baseline)
+                  after = fetcher._etf_component_clocks(candidate_payload)
+                  if (not before or not after or not before.keys() <= after.keys()
+                          or any(after[key] < before[key] for key in before)):
+                      raise MemberRefusal(f"ETF {ticker} artifact component date regresses {label}")
+              elif baseline_source and (candidate_source is None or candidate_source < baseline_source):
                   raise MemberRefusal(f"ETF {ticker} artifact source date regresses {label}")
               old_normalized = baseline.get("normalized") or {}
               new_normalized = candidate_payload.get("normalized") or {}
