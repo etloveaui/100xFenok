@@ -1,0 +1,1557 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "GCLO",
+  "source_as_of": "2026-10-12T20:00:00Z",
+  "fetched_at": "2026-10-13T04:14:09Z",
+  "endpoints": {
+    "holdings": "/etf/gclo/holdings/__data.json",
+    "overview": "/etf/gclo/__data.json",
+    "quote": "/api/quotes/e/GCLO",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/GCLO/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/GCLO/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/GCLO/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/GCLO/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/GCLO/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/GCLO/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$60.14M",
+      "expenseRatio": "0.35%",
+      "sharesOut": "1.20M",
+      "dividendYield": "0.40%",
+      "inception": "Aug 20, 2026",
+      "etf_website": "https://portal.guggenheiminvestments.com/etf/fund/gclo"
+    },
+    "performance": {
+      "tr1m": 0.3387,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "c": 0.01,
+      "e": false,
+      "h": 0,
+      "l": 0,
+      "o": 0,
+      "p": 50.19,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 0,
+      "cl": 50.18,
+      "cp": 0.02,
+      "ec": 0,
+      "ep": 50.19,
+      "eu": "Oct 13, 2026, 12:54 AM EDT",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 50.19,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1791849600017.42,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 50.4,
+      "l52": 50.01,
+      "uid": "GCLO",
+      "days": 0,
+      "symbol": "gclo"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 50.27,
+        "h": 50.33,
+        "l": 50.15,
+        "c": 50.19,
+        "v": 385,
+        "a": 50.19,
+        "ch": 0.14
+      },
+      {
+        "t": "2026-09-01",
+        "o": 50.13,
+        "h": 50.4,
+        "l": 50.08,
+        "c": 50.26,
+        "v": 868075,
+        "a": 50.120293,
+        "ch": 0.38
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 50.19,
+          "h": 50.19,
+          "l": 50.19,
+          "c": 50.19,
+          "a": 50.19,
+          "v": 21,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-09",
+          "o": 50.18,
+          "h": 50.18,
+          "l": 50.18,
+          "c": 50.18,
+          "a": 50.1799,
+          "v": 52,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-10-08",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.16,
+          "v": 26,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-07",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.16,
+          "v": 63,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-06",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.16,
+          "v": 26,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-05",
+          "o": 50.15,
+          "h": 50.15,
+          "l": 50.15,
+          "c": 50.15,
+          "a": 50.15,
+          "v": 47,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-02",
+          "o": 50.33,
+          "h": 50.33,
+          "l": 50.29,
+          "c": 50.29,
+          "a": 50.15021,
+          "v": 119,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.27,
+          "l": 50.27,
+          "c": 50.27,
+          "a": 50.130166,
+          "v": 31,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-30",
+          "o": 50.31,
+          "h": 50.31,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.120293,
+          "v": 1476,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-29",
+          "o": 50.4,
+          "h": 50.4,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.120293,
+          "v": 151,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-28",
+          "o": 50.28,
+          "h": 50.28,
+          "l": 50.28,
+          "c": 50.28,
+          "a": 50.140238,
+          "v": 42,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-25",
+          "o": 50.29,
+          "h": 50.29,
+          "l": 50.28,
+          "c": 50.28,
+          "a": 50.140238,
+          "v": 48980,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-24",
+          "o": 50.26,
+          "h": 50.26,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.119895,
+          "v": 36,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-23",
+          "o": 50.27,
+          "h": 50.28,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.120293,
+          "v": 50199,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-22",
+          "o": 50.26,
+          "h": 50.26,
+          "l": 50.24,
+          "c": 50.24,
+          "a": 50.100349,
+          "v": 125053,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-21",
+          "o": 50.23,
+          "h": 50.23,
+          "l": 50.23,
+          "c": 50.23,
+          "a": 50.090377,
+          "v": 21,
+          "ch": 0.05
+        },
+        {
+          "t": "2026-09-18",
+          "o": 50.25,
+          "h": 50.25,
+          "l": 50.205,
+          "c": 50.205,
+          "a": 50.065446,
+          "v": 75203,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-09-17",
+          "o": 50.23,
+          "h": 50.23,
+          "l": 50.23,
+          "c": 50.23,
+          "a": 50.090277,
+          "v": 48,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-09-16",
+          "o": 50.18,
+          "h": 50.19,
+          "l": 50.18,
+          "c": 50.19,
+          "a": 50.050388,
+          "v": 25027,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-15",
+          "o": 50.21,
+          "h": 50.21,
+          "l": 50.18,
+          "c": 50.18,
+          "a": 50.040516,
+          "v": 75244,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-14",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.15,
+          "c": 50.15,
+          "a": 50.010599,
+          "v": 50024,
+          "ch": -0.02
+        },
+        {
+          "t": "2026-09-11",
+          "o": 50.17,
+          "h": 50.17,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.020571,
+          "v": 25010,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-10",
+          "o": 50.12,
+          "h": 50.13,
+          "l": 50.12,
+          "c": 50.13,
+          "a": 49.990655,
+          "v": 25038,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-09",
+          "o": 50.13,
+          "h": 50.13,
+          "l": 50.11,
+          "c": 50.11,
+          "a": 49.97071,
+          "v": 325044,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-08",
+          "o": 50.13,
+          "h": 50.13,
+          "l": 50.13,
+          "c": 50.13,
+          "a": 49.990655,
+          "v": 67,
+          "ch": 0.03
+        },
+        {
+          "t": "2026-09-04",
+          "o": 50.115,
+          "h": 50.115,
+          "l": 50.115,
+          "c": 50.115,
+          "a": 49.975696,
+          "v": 121,
+          "ch": 0.07
+        },
+        {
+          "t": "2026-09-03",
+          "o": 50.09,
+          "h": 50.09,
+          "l": 50.08,
+          "c": 50.08,
+          "a": 49.940794,
+          "v": 40011,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-02",
+          "o": 50.14,
+          "h": 50.14,
+          "l": 50.11,
+          "c": 50.11,
+          "a": 49.911585,
+          "v": 220,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.13,
+          "l": 50.13,
+          "c": 50.13,
+          "a": 49.931606,
+          "v": 1060,
+          "ch": 0
+        },
+        {
+          "t": "2026-08-31",
+          "o": 50.12,
+          "h": 50.13,
+          "l": 50.12,
+          "c": 50.13,
+          "a": 49.931606,
+          "v": 51521,
+          "ch": 0.01
+        },
+        {
+          "t": "2026-08-28",
+          "o": 50.125,
+          "h": 50.125,
+          "l": 50.125,
+          "c": 50.125,
+          "a": 49.926625,
+          "v": 38,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-08-27",
+          "o": 50.085,
+          "h": 50.085,
+          "l": 50.085,
+          "c": 50.085,
+          "a": 49.886784,
+          "v": 8,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-08-26",
+          "o": 50.075,
+          "h": 50.075,
+          "l": 50.075,
+          "c": 50.075,
+          "a": 49.876823,
+          "v": 25144,
+          "ch": 0.03
+        },
+        {
+          "t": "2026-08-25",
+          "o": 50.07,
+          "h": 50.07,
+          "l": 50.06,
+          "c": 50.06,
+          "a": 49.861883,
+          "v": 80283,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-08-24",
+          "o": 50.04,
+          "h": 50.04,
+          "l": 50.04,
+          "c": 50.04,
+          "a": 49.841962,
+          "v": 26,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-08-21",
+          "o": 50.01,
+          "h": 50.01,
+          "l": 50.01,
+          "c": 50.01,
+          "a": 49.812081,
+          "v": 9,
+          "ch": -0.11
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 50.19,
+          "h": 50.19,
+          "l": 50.19,
+          "c": 50.19,
+          "v": 21,
+          "a": 50.19,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-05",
+          "o": 50.15,
+          "h": 50.18,
+          "l": 50.15,
+          "c": 50.18,
+          "v": 214,
+          "a": 50.1799,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-28",
+          "o": 50.28,
+          "h": 50.4,
+          "l": 50.26,
+          "c": 50.29,
+          "v": 1819,
+          "a": 50.15021,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-21",
+          "o": 50.23,
+          "h": 50.29,
+          "l": 50.23,
+          "c": 50.28,
+          "v": 224289,
+          "a": 50.140238,
+          "ch": 0.15
+        },
+        {
+          "t": "2026-09-14",
+          "o": 50.16,
+          "h": 50.25,
+          "l": 50.15,
+          "c": 50.205,
+          "v": 225546,
+          "a": 50.065446,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-09-08",
+          "o": 50.13,
+          "h": 50.17,
+          "l": 50.11,
+          "c": 50.16,
+          "v": 375159,
+          "a": 50.020571,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-08-31",
+          "o": 50.12,
+          "h": 50.14,
+          "l": 50.08,
+          "c": 50.115,
+          "v": 92933,
+          "a": 49.975696,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-08-24",
+          "o": 50.04,
+          "h": 50.125,
+          "l": 50.04,
+          "c": 50.125,
+          "v": 105499,
+          "a": 49.926625,
+          "ch": 0.23
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.33,
+          "l": 50.15,
+          "c": 50.19,
+          "v": 385,
+          "a": 50.19,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.4,
+          "l": 50.08,
+          "c": 50.26,
+          "v": 868075,
+          "a": 50.120293,
+          "ch": 0.38
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 50.19,
+          "h": 50.19,
+          "l": 50.19,
+          "c": 50.19,
+          "v": 21,
+          "a": 50.19,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-05",
+          "o": 50.15,
+          "h": 50.18,
+          "l": 50.15,
+          "c": 50.18,
+          "v": 214,
+          "a": 50.1799,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-28",
+          "o": 50.28,
+          "h": 50.4,
+          "l": 50.26,
+          "c": 50.29,
+          "v": 1819,
+          "a": 50.15021,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-21",
+          "o": 50.23,
+          "h": 50.29,
+          "l": 50.23,
+          "c": 50.28,
+          "v": 224289,
+          "a": 50.140238,
+          "ch": 0.15
+        },
+        {
+          "t": "2026-09-14",
+          "o": 50.16,
+          "h": 50.25,
+          "l": 50.15,
+          "c": 50.205,
+          "v": 225546,
+          "a": 50.065446,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-09-08",
+          "o": 50.13,
+          "h": 50.17,
+          "l": 50.11,
+          "c": 50.16,
+          "v": 375159,
+          "a": 50.020571,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-08-31",
+          "o": 50.12,
+          "h": 50.14,
+          "l": 50.08,
+          "c": 50.115,
+          "v": 92933,
+          "a": 49.975696,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-08-24",
+          "o": 50.04,
+          "h": 50.125,
+          "l": 50.04,
+          "c": 50.125,
+          "v": 105499,
+          "a": 49.926625,
+          "ch": 0.23
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.33,
+          "l": 50.15,
+          "c": 50.19,
+          "v": 385,
+          "a": 50.19,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.4,
+          "l": 50.08,
+          "c": 50.26,
+          "v": 868075,
+          "a": 50.120293,
+          "ch": 0.38
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.33,
+          "l": 50.15,
+          "c": 50.19,
+          "v": 385,
+          "a": 50.19,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.4,
+          "l": 50.08,
+          "c": 50.26,
+          "v": 868075,
+          "a": 50.120293,
+          "ch": 0.38
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "GCLO",
+        "lastChecked": 1791852849101,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$60.14M",
+      "expenseRatio": "0.35%",
+      "peRatio": null,
+      "sharesOut": "1.20M",
+      "dps": "$0.20",
+      "dividendYield": "0.40%",
+      "payoutRatio": null,
+      "exDivDate": "Oct 5, 2026",
+      "ch1y": null,
+      "payoutFrequency": "Monthly",
+      "beta": null,
+      "holdings": null,
+      "inception": "Aug 20, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Guggenheim Investment Grade CLO ETF (GCLO) is an exchange-traded fund that mostly invests in investment grade fixed income. The fund targets USD-denominated investment grade credit loan obligations of any maturity. The actively managed fund uses a combination of top-down, macroeconomic-driven approach and a fundamental bottom-up investment approach to select investments. GCLO was launched on Aug 20, 2026 and is issued by Guggenheim.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Fixed Income"
+        ],
+        [
+          "Category",
+          "Securitized Bond - Focused"
+        ],
+        [
+          "Stock Exchange",
+          "NYSE Arca"
+        ],
+        [
+          "Ticker Symbol",
+          "GCLO"
+        ],
+        [
+          "Provider",
+          "Guggenheim"
+        ]
+      ],
+      "etf_website": "https://portal.guggenheiminvestments.com/etf/fund/gclo",
+      "provider_page": null,
+      "holdingsTable": null,
+      "dividendTable": [
+        {
+          "dt": "2026-10-05",
+          "amt": 0.13979,
+          "pay": "2026-10-09"
+        },
+        {
+          "dt": "2026-09-03",
+          "amt": 0.05919,
+          "pay": "2026-09-10"
+        }
+      ],
+      "news": {
+        "exp": "1791883771808",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/fixed-income-content-hub/why-active-clo-etfs-shine-pce-data-cools/",
+            "img": "https://cdn.snapi.dev/images/v1/l/8/f/etf18-3951019.jpg",
+            "title": "Why Active CLO ETFs Can Shine as PCE Data Cools",
+            "text": "Given that the Federal Reserve raised interest rates earlier in September, inflation data that was already crucial has taken on a new meaning. These reports could now serve as a barometer for what is ...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 30, 2026, 3:42 PM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/fixed-income-content-hub/navigate-interest-rate-uncertainty-clo-exposure/",
+            "img": "https://cdn.snapi.dev/images/v1/7/p/o/etf33-3903484.jpg",
+            "title": "Navigate Interest Rate Uncertainty With CLO Exposure",
+            "text": "With inflation and interest rates dominating market discourse these days, it may be a good time for investors to consider how they go about building fixed income exposure. After all, there are certain...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 2, 2026, 2:07 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.etftrends.com/fixed-income-content-hub/guggenheim-expands-income-etf-suite-2-active-funds/",
+            "img": "https://cdn.snapi.dev/images/v1/k/c/j/bank17-3887005.jpg",
+            "title": "Guggenheim Expands Income ETF Suite With 2 New Active Funds",
+            "text": "Last week, on Thursday, August 20, Guggenheim Investments bolstered its library of active ETFs with the launch of two new funds. Both of the new ETFs offer their own distinct approaches to fostering i...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$FUND",
+              "#GEEQ",
+              "#GISC"
+            ],
+            "time": "Aug 24, 2026, 2:31 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/08/20/3348515/16530/en/guggenheim-investments-expands-active-etf-platform-with-launch-of-two-new-etfs.html",
+            "img": "https://cdn.snapi.dev/images/v1/v/7/o/press13-3881674.jpg",
+            "title": "Guggenheim Investments Expands Active ETF Platform with Launch of Two New ETFs",
+            "text": "GEEQ and GCLO extend Guggenheim's active ETF lineup into enhanced equity income and investment grade CLOs GEEQ and GCLO extend Guggenheim's active ETF lineup into enhanced equity income and investment...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#GCSH",
+              "#GEEQ",
+              "#GISC"
+            ],
+            "time": "Aug 20, 2026, 10:00 AM EDT",
+            "ago": "7 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 50.15,
+        "price1m": 50.16,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 50.065
+      },
+      "performance": {
+        "tr1m": 0.3387,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "c": 0.01,
+      "e": false,
+      "h": 0,
+      "l": 0,
+      "o": 0,
+      "p": 50.19,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 0,
+      "cl": 50.18,
+      "cp": 0.02,
+      "ec": 0,
+      "ep": 50.19,
+      "eu": "Oct 13, 2026, 12:54 AM EDT",
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 50.19,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 0,
+      "ets": 1791849600017.42,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 50.4,
+      "l52": 50.01,
+      "uid": "GCLO",
+      "days": 0,
+      "symbol": "gclo"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 50.27,
+        "h": 50.33,
+        "l": 50.15,
+        "c": 50.19,
+        "v": 385,
+        "a": 50.19,
+        "ch": 0.14
+      },
+      {
+        "t": "2026-09-01",
+        "o": 50.13,
+        "h": 50.4,
+        "l": 50.08,
+        "c": 50.26,
+        "v": 868075,
+        "a": 50.120293,
+        "ch": 0.38
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 50.19,
+          "h": 50.19,
+          "l": 50.19,
+          "c": 50.19,
+          "a": 50.19,
+          "v": 21,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-09",
+          "o": 50.18,
+          "h": 50.18,
+          "l": 50.18,
+          "c": 50.18,
+          "a": 50.1799,
+          "v": 52,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-10-08",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.16,
+          "v": 26,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-07",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.16,
+          "v": 63,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-06",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.16,
+          "v": 26,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-05",
+          "o": 50.15,
+          "h": 50.15,
+          "l": 50.15,
+          "c": 50.15,
+          "a": 50.15,
+          "v": 47,
+          "ch": 0
+        },
+        {
+          "t": "2026-10-02",
+          "o": 50.33,
+          "h": 50.33,
+          "l": 50.29,
+          "c": 50.29,
+          "a": 50.15021,
+          "v": 119,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.27,
+          "l": 50.27,
+          "c": 50.27,
+          "a": 50.130166,
+          "v": 31,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-30",
+          "o": 50.31,
+          "h": 50.31,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.120293,
+          "v": 1476,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-29",
+          "o": 50.4,
+          "h": 50.4,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.120293,
+          "v": 151,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-28",
+          "o": 50.28,
+          "h": 50.28,
+          "l": 50.28,
+          "c": 50.28,
+          "a": 50.140238,
+          "v": 42,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-25",
+          "o": 50.29,
+          "h": 50.29,
+          "l": 50.28,
+          "c": 50.28,
+          "a": 50.140238,
+          "v": 48980,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-24",
+          "o": 50.26,
+          "h": 50.26,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.119895,
+          "v": 36,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-23",
+          "o": 50.27,
+          "h": 50.28,
+          "l": 50.26,
+          "c": 50.26,
+          "a": 50.120293,
+          "v": 50199,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-22",
+          "o": 50.26,
+          "h": 50.26,
+          "l": 50.24,
+          "c": 50.24,
+          "a": 50.100349,
+          "v": 125053,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-21",
+          "o": 50.23,
+          "h": 50.23,
+          "l": 50.23,
+          "c": 50.23,
+          "a": 50.090377,
+          "v": 21,
+          "ch": 0.05
+        },
+        {
+          "t": "2026-09-18",
+          "o": 50.25,
+          "h": 50.25,
+          "l": 50.205,
+          "c": 50.205,
+          "a": 50.065446,
+          "v": 75203,
+          "ch": -0.05
+        },
+        {
+          "t": "2026-09-17",
+          "o": 50.23,
+          "h": 50.23,
+          "l": 50.23,
+          "c": 50.23,
+          "a": 50.090277,
+          "v": 48,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-09-16",
+          "o": 50.18,
+          "h": 50.19,
+          "l": 50.18,
+          "c": 50.19,
+          "a": 50.050388,
+          "v": 25027,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-15",
+          "o": 50.21,
+          "h": 50.21,
+          "l": 50.18,
+          "c": 50.18,
+          "a": 50.040516,
+          "v": 75244,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-14",
+          "o": 50.16,
+          "h": 50.16,
+          "l": 50.15,
+          "c": 50.15,
+          "a": 50.010599,
+          "v": 50024,
+          "ch": -0.02
+        },
+        {
+          "t": "2026-09-11",
+          "o": 50.17,
+          "h": 50.17,
+          "l": 50.16,
+          "c": 50.16,
+          "a": 50.020571,
+          "v": 25010,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-10",
+          "o": 50.12,
+          "h": 50.13,
+          "l": 50.12,
+          "c": 50.13,
+          "a": 49.990655,
+          "v": 25038,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-09-09",
+          "o": 50.13,
+          "h": 50.13,
+          "l": 50.11,
+          "c": 50.11,
+          "a": 49.97071,
+          "v": 325044,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-08",
+          "o": 50.13,
+          "h": 50.13,
+          "l": 50.13,
+          "c": 50.13,
+          "a": 49.990655,
+          "v": 67,
+          "ch": 0.03
+        },
+        {
+          "t": "2026-09-04",
+          "o": 50.115,
+          "h": 50.115,
+          "l": 50.115,
+          "c": 50.115,
+          "a": 49.975696,
+          "v": 121,
+          "ch": 0.07
+        },
+        {
+          "t": "2026-09-03",
+          "o": 50.09,
+          "h": 50.09,
+          "l": 50.08,
+          "c": 50.08,
+          "a": 49.940794,
+          "v": 40011,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-02",
+          "o": 50.14,
+          "h": 50.14,
+          "l": 50.11,
+          "c": 50.11,
+          "a": 49.911585,
+          "v": 220,
+          "ch": -0.04
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.13,
+          "l": 50.13,
+          "c": 50.13,
+          "a": 49.931606,
+          "v": 1060,
+          "ch": 0
+        },
+        {
+          "t": "2026-08-31",
+          "o": 50.12,
+          "h": 50.13,
+          "l": 50.12,
+          "c": 50.13,
+          "a": 49.931606,
+          "v": 51521,
+          "ch": 0.01
+        },
+        {
+          "t": "2026-08-28",
+          "o": 50.125,
+          "h": 50.125,
+          "l": 50.125,
+          "c": 50.125,
+          "a": 49.926625,
+          "v": 38,
+          "ch": 0.08
+        },
+        {
+          "t": "2026-08-27",
+          "o": 50.085,
+          "h": 50.085,
+          "l": 50.085,
+          "c": 50.085,
+          "a": 49.886784,
+          "v": 8,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-08-26",
+          "o": 50.075,
+          "h": 50.075,
+          "l": 50.075,
+          "c": 50.075,
+          "a": 49.876823,
+          "v": 25144,
+          "ch": 0.03
+        },
+        {
+          "t": "2026-08-25",
+          "o": 50.07,
+          "h": 50.07,
+          "l": 50.06,
+          "c": 50.06,
+          "a": 49.861883,
+          "v": 80283,
+          "ch": 0.04
+        },
+        {
+          "t": "2026-08-24",
+          "o": 50.04,
+          "h": 50.04,
+          "l": 50.04,
+          "c": 50.04,
+          "a": 49.841962,
+          "v": 26,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-08-21",
+          "o": 50.01,
+          "h": 50.01,
+          "l": 50.01,
+          "c": 50.01,
+          "a": 49.812081,
+          "v": 9,
+          "ch": -0.11
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-12",
+          "o": 50.19,
+          "h": 50.19,
+          "l": 50.19,
+          "c": 50.19,
+          "v": 21,
+          "a": 50.19,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-05",
+          "o": 50.15,
+          "h": 50.18,
+          "l": 50.15,
+          "c": 50.18,
+          "v": 214,
+          "a": 50.1799,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-28",
+          "o": 50.28,
+          "h": 50.4,
+          "l": 50.26,
+          "c": 50.29,
+          "v": 1819,
+          "a": 50.15021,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-21",
+          "o": 50.23,
+          "h": 50.29,
+          "l": 50.23,
+          "c": 50.28,
+          "v": 224289,
+          "a": 50.140238,
+          "ch": 0.15
+        },
+        {
+          "t": "2026-09-14",
+          "o": 50.16,
+          "h": 50.25,
+          "l": 50.15,
+          "c": 50.205,
+          "v": 225546,
+          "a": 50.065446,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-09-08",
+          "o": 50.13,
+          "h": 50.17,
+          "l": 50.11,
+          "c": 50.16,
+          "v": 375159,
+          "a": 50.020571,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-08-31",
+          "o": 50.12,
+          "h": 50.14,
+          "l": 50.08,
+          "c": 50.115,
+          "v": 92933,
+          "a": 49.975696,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-08-24",
+          "o": 50.04,
+          "h": 50.125,
+          "l": 50.04,
+          "c": 50.125,
+          "v": 105499,
+          "a": 49.926625,
+          "ch": 0.23
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.33,
+          "l": 50.15,
+          "c": 50.19,
+          "v": 385,
+          "a": 50.19,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.4,
+          "l": 50.08,
+          "c": 50.26,
+          "v": 868075,
+          "a": 50.120293,
+          "ch": 0.38
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-12",
+          "o": 50.19,
+          "h": 50.19,
+          "l": 50.19,
+          "c": 50.19,
+          "v": 21,
+          "a": 50.19,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-10-05",
+          "o": 50.15,
+          "h": 50.18,
+          "l": 50.15,
+          "c": 50.18,
+          "v": 214,
+          "a": 50.1799,
+          "ch": 0.06
+        },
+        {
+          "t": "2026-09-28",
+          "o": 50.28,
+          "h": 50.4,
+          "l": 50.26,
+          "c": 50.29,
+          "v": 1819,
+          "a": 50.15021,
+          "ch": 0.02
+        },
+        {
+          "t": "2026-09-21",
+          "o": 50.23,
+          "h": 50.29,
+          "l": 50.23,
+          "c": 50.28,
+          "v": 224289,
+          "a": 50.140238,
+          "ch": 0.15
+        },
+        {
+          "t": "2026-09-14",
+          "o": 50.16,
+          "h": 50.25,
+          "l": 50.15,
+          "c": 50.205,
+          "v": 225546,
+          "a": 50.065446,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-09-08",
+          "o": 50.13,
+          "h": 50.17,
+          "l": 50.11,
+          "c": 50.16,
+          "v": 375159,
+          "a": 50.020571,
+          "ch": 0.09
+        },
+        {
+          "t": "2026-08-31",
+          "o": 50.12,
+          "h": 50.14,
+          "l": 50.08,
+          "c": 50.115,
+          "v": 92933,
+          "a": 49.975696,
+          "ch": 0.1
+        },
+        {
+          "t": "2026-08-24",
+          "o": 50.04,
+          "h": 50.125,
+          "l": 50.04,
+          "c": 50.125,
+          "v": 105499,
+          "a": 49.926625,
+          "ch": 0.23
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.33,
+          "l": 50.15,
+          "c": 50.19,
+          "v": 385,
+          "a": 50.19,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.4,
+          "l": 50.08,
+          "c": 50.26,
+          "v": 868075,
+          "a": 50.120293,
+          "ch": 0.38
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 50.27,
+          "h": 50.33,
+          "l": 50.15,
+          "c": 50.19,
+          "v": 385,
+          "a": 50.19,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-01",
+          "o": 50.13,
+          "h": 50.4,
+          "l": 50.08,
+          "c": 50.26,
+          "v": 868075,
+          "a": 50.120293,
+          "ch": 0.38
+        }
+      ]
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ],
+  "field_sources": {
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
+}

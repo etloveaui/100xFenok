@@ -1,0 +1,677 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "MNGB",
+  "source_as_of": "2026-10-12T20:00:00Z",
+  "fetched_at": "2026-10-13T04:11:33Z",
+  "endpoints": {
+    "holdings": "/etf/mngb/holdings/__data.json",
+    "overview": "/etf/mngb/__data.json",
+    "quote": "/api/quotes/e/MNGB",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/MNGB/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/MNGB/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/MNGB/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/MNGB/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/MNGB/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/MNGB/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "expenseRatio": "0.90%",
+      "sharesOut": "10,000",
+      "inception": "Sep 22, 2026"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "c": 3.18,
+      "e": false,
+      "h": 0,
+      "l": 0,
+      "o": 0,
+      "p": 28.51,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 7,
+      "cl": 25.33,
+      "cp": 12.55,
+      "ec": 0,
+      "ep": 28.51,
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 28.51,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 28.51,
+      "ets": 1791814503031.277,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 28.51,
+      "l52": 24.1,
+      "uid": "MNGB",
+      "days": 0,
+      "symbol": "MNGB"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 25.421,
+        "h": 25.421,
+        "l": 24.1,
+        "c": 25.326,
+        "v": 36,
+        "a": 25.326,
+        "ch": -0.37
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-09",
+          "o": 25.326,
+          "h": 25.326,
+          "l": 25.326,
+          "c": 25.326,
+          "a": 25.326,
+          "v": 7,
+          "ch": -0.23
+        },
+        {
+          "t": "2026-10-08",
+          "o": 25.384,
+          "h": 25.384,
+          "l": 25.384,
+          "c": 25.384,
+          "a": 25.3837,
+          "v": 9,
+          "ch": 5.33
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.1,
+          "h": 24.1,
+          "l": 24.1,
+          "c": 24.1,
+          "a": 24.0998,
+          "v": 8,
+          "ch": -2.7
+        },
+        {
+          "t": "2026-10-02",
+          "o": 24.769,
+          "h": 24.769,
+          "l": 24.769,
+          "c": 24.769,
+          "a": 24.769,
+          "v": 6,
+          "ch": -2.56
+        },
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 25.421,
+          "c": 25.421,
+          "a": 25.421,
+          "v": 6,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-30",
+          "o": 25.22,
+          "h": 25.421,
+          "l": 25.15,
+          "c": 25.421,
+          "a": 25.4207,
+          "v": 406,
+          "ch": -0.7
+        },
+        {
+          "t": "2026-09-29",
+          "o": 25.601,
+          "h": 25.601,
+          "l": 25.601,
+          "c": 25.601,
+          "a": 25.6007,
+          "v": 7,
+          "ch": -2.17
+        },
+        {
+          "t": "2026-09-28",
+          "o": 26.169,
+          "h": 26.169,
+          "l": 26.169,
+          "c": 26.169,
+          "a": 26.1691,
+          "v": 16,
+          "ch": 4.41
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.063,
+          "h": 25.063,
+          "l": 25.063,
+          "c": 25.063,
+          "a": 25.063,
+          "v": 8,
+          "ch": 0.46
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.33,
+          "h": 25.33,
+          "l": 24.948,
+          "c": 24.948,
+          "a": 24.9479,
+          "v": 208,
+          "ch": -1.79
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25.402,
+          "h": 25.402,
+          "l": 25.402,
+          "c": 25.402,
+          "a": 25.4022,
+          "v": 9,
+          "ch": 3.68
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-07",
+          "o": 24.1,
+          "h": 25.384,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 24,
+          "a": 25.326,
+          "ch": 2.25
+        },
+        {
+          "t": "2026-09-28",
+          "o": 26.169,
+          "h": 26.169,
+          "l": 24.769,
+          "c": 24.769,
+          "v": 441,
+          "a": 24.769,
+          "ch": -1.17
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 36,
+          "a": 25.326,
+          "ch": -0.37
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-07",
+          "o": 24.1,
+          "h": 25.384,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 24,
+          "a": 25.326,
+          "ch": 2.25
+        },
+        {
+          "t": "2026-09-28",
+          "o": 26.169,
+          "h": 26.169,
+          "l": 24.769,
+          "c": 24.769,
+          "v": 441,
+          "a": 24.769,
+          "ch": -1.17
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 36,
+          "a": 25.326,
+          "ch": -0.37
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 36,
+          "a": 25.326,
+          "ch": -0.37
+        }
+      ]
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MNGB",
+        "lastChecked": 1791853334008,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "expenseRatio": "0.90%",
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Sep 22, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "Yorkville America Investment Trust - Yorkville America 2X Inverse MANGOS Plus Daily Target ETF is an exchange traded fund launched by and managed by Yorkville America Equities, LLC. It invests in public equity markets. The fund invests directly, through derivatives and through other funds in stocks of companies operating across information technology, software, services, system software, software research, artificial intelligence software, technology hardware and equipment, storage, peripherals, data storage, development, commercialization and infrastructure buildout of artificial intelligence and related technologies sectors. It uses derivatives such as swaps and options to create its portfolio. It invests in growth and value stocks of companies across diversified market capitalization. Yorkville America Investment Trust - Yorkville America 2X Inverse MANGOS Plus Daily Target ETF was formed on September 22, 2026 and is domiciled in the United States.",
+      "infoTable": [
+        [
+          "Category",
+          "Trading--Inverse Equity"
+        ],
+        [
+          "Stock Exchange",
+          "NYSE Arca"
+        ],
+        [
+          "Ticker Symbol",
+          "MNGB"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1791874934733",
+        "data": [
+          {
+            "url": "https://www.prnewswire.com/news-releases/yorkville-america-launches-2x-inverse-mangos-plus-daily-target-etf-mngb-302884658.html",
+            "img": "https://cdn.snapi.dev/images/v1/g/x/o/press15-3934529.jpg",
+            "title": "Yorkville America Launches 2X Inverse MANGOS Plus Daily Target ETF (MNGB)",
+            "text": "MNGB offers sophisticated, actively-monitoring traders daily inverse exposure to Yorkville America MANGOS Plus Index ETF (FRUT) MOUNTAINSIDE, N.J., Sept. 21, 2026 /PRNewswire/ -- Yorkville America Equ...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 21, 2026, 8:00 AM EDT",
+            "ago": "21 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 24.1,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.5
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "c": 3.18,
+      "e": false,
+      "h": 0,
+      "l": 0,
+      "o": 0,
+      "p": 28.51,
+      "u": "Oct 12, 2026, 4:00 PM EDT",
+      "v": 7,
+      "cl": 25.33,
+      "cp": 12.55,
+      "ec": 0,
+      "ep": 28.51,
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "pd": 28.51,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": 1,
+      "ecp": 0,
+      "epd": 28.51,
+      "ets": 1791814503031.277,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 28.51,
+      "l52": 24.1,
+      "uid": "MNGB",
+      "days": 0,
+      "symbol": "MNGB"
+    },
+    "history": [
+      {
+        "t": "2026-10-01",
+        "o": 25.421,
+        "h": 25.421,
+        "l": 24.1,
+        "c": 25.326,
+        "v": 36,
+        "a": 25.326,
+        "ch": -0.37
+      }
+    ],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-10-09",
+          "o": 25.326,
+          "h": 25.326,
+          "l": 25.326,
+          "c": 25.326,
+          "a": 25.326,
+          "v": 7,
+          "ch": -0.23
+        },
+        {
+          "t": "2026-10-08",
+          "o": 25.384,
+          "h": 25.384,
+          "l": 25.384,
+          "c": 25.384,
+          "a": 25.3837,
+          "v": 9,
+          "ch": 5.33
+        },
+        {
+          "t": "2026-10-07",
+          "o": 24.1,
+          "h": 24.1,
+          "l": 24.1,
+          "c": 24.1,
+          "a": 24.0998,
+          "v": 8,
+          "ch": -2.7
+        },
+        {
+          "t": "2026-10-02",
+          "o": 24.769,
+          "h": 24.769,
+          "l": 24.769,
+          "c": 24.769,
+          "a": 24.769,
+          "v": 6,
+          "ch": -2.56
+        },
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 25.421,
+          "c": 25.421,
+          "a": 25.421,
+          "v": 6,
+          "ch": 0
+        },
+        {
+          "t": "2026-09-30",
+          "o": 25.22,
+          "h": 25.421,
+          "l": 25.15,
+          "c": 25.421,
+          "a": 25.4207,
+          "v": 406,
+          "ch": -0.7
+        },
+        {
+          "t": "2026-09-29",
+          "o": 25.601,
+          "h": 25.601,
+          "l": 25.601,
+          "c": 25.601,
+          "a": 25.6007,
+          "v": 7,
+          "ch": -2.17
+        },
+        {
+          "t": "2026-09-28",
+          "o": 26.169,
+          "h": 26.169,
+          "l": 26.169,
+          "c": 26.169,
+          "a": 26.1691,
+          "v": 16,
+          "ch": 4.41
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.063,
+          "h": 25.063,
+          "l": 25.063,
+          "c": 25.063,
+          "a": 25.063,
+          "v": 8,
+          "ch": 0.46
+        },
+        {
+          "t": "2026-09-24",
+          "o": 25.33,
+          "h": 25.33,
+          "l": 24.948,
+          "c": 24.948,
+          "a": 24.9479,
+          "v": 208,
+          "ch": -1.79
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25.402,
+          "h": 25.402,
+          "l": 25.402,
+          "c": 25.402,
+          "a": 25.4022,
+          "v": 9,
+          "ch": 3.68
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-10-07",
+          "o": 24.1,
+          "h": 25.384,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 24,
+          "a": 25.326,
+          "ch": 2.25
+        },
+        {
+          "t": "2026-09-28",
+          "o": 26.169,
+          "h": 26.169,
+          "l": 24.769,
+          "c": 24.769,
+          "v": 441,
+          "a": 24.769,
+          "ch": -1.17
+        }
+      ],
+      "monthly_1y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 36,
+          "a": 25.326,
+          "ch": -0.37
+        }
+      ],
+      "weekly_3y": [
+        {
+          "t": "2026-10-07",
+          "o": 24.1,
+          "h": 25.384,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 24,
+          "a": 25.326,
+          "ch": 2.25
+        },
+        {
+          "t": "2026-09-28",
+          "o": 26.169,
+          "h": 26.169,
+          "l": 24.769,
+          "c": 24.769,
+          "v": 441,
+          "a": 24.769,
+          "ch": -1.17
+        }
+      ],
+      "monthly_3y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 36,
+          "a": 25.326,
+          "ch": -0.37
+        }
+      ],
+      "monthly_5y": [
+        {
+          "t": "2026-10-01",
+          "o": 25.421,
+          "h": 25.421,
+          "l": 24.1,
+          "c": 25.326,
+          "v": 36,
+          "a": 25.326,
+          "ch": -0.37
+        }
+      ]
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ],
+  "field_sources": {
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-09T00:00:00Z",
+      "status": "available"
+    }
+  }
+}

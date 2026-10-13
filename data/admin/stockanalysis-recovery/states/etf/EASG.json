@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "EASG",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-13T03:59:19Z",
+    "error": "ValueError: provider_ticker_redirect:EASG:DMXU",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "a7d73a4741076b1b004879268d5449b6e584374f4eaa2cb2797df9ec79bf9111",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-13T03:59:19Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/EASG.json",
+    "payload_sha256": "a7d73a4741076b1b004879268d5449b6e584374f4eaa2cb2797df9ec79bf9111",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:52:06Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/EASG.json",
+    "payload_sha256": "a7d73a4741076b1b004879268d5449b6e584374f4eaa2cb2797df9ec79bf9111",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T08:52:06Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-13T03:59:19Z",
+    "last_probe_at": "2026-10-13T03:59:19Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-06-18",
+    "status": "unresolved",
+    "attempts": []
+  }
+}

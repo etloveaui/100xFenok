@@ -2,12 +2,26 @@
   "schema_version": "stockanalysis-recovery-state/v1",
   "artifact_kind": "etf",
   "entity": "HBIL",
-  "resolution_state": "fresh_primary",
-  "retry": false,
-  "updated_at": "2026-10-04T16:01:06Z",
-  "failure_count": 0,
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "updated_at": "2026-10-13T03:59:19Z",
+  "failure_count": 1,
   "current": {
-    "path": "data/stockanalysis/etfs/HBIL.json",
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/HBIL.json",
+    "payload_sha256": "784b58602aff055b90893d76ac7004b7a8b73c760f479456df0c2450f5f14efa",
+    "source_as_of": "2026-10-01T00:00:00Z",
+    "fetched_at": "2026-10-04T16:01:09Z"
+  },
+  "latest_failure": {
+    "observed_at": "2026-10-13T03:59:19Z",
+    "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "784b58602aff055b90893d76ac7004b7a8b73c760f479456df0c2450f5f14efa",
+    "data_loss": false
+  },
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/HBIL.json",
     "payload_sha256": "784b58602aff055b90893d76ac7004b7a8b73c760f479456df0c2450f5f14efa",
     "source_as_of": "2026-10-01T00:00:00Z",
     "fetched_at": "2026-10-04T16:01:09Z"

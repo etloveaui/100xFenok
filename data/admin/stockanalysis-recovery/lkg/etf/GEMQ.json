@@ -1,0 +1,1695 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "GEMQ",
+  "source_as_of": "2026-09-30T14:32:14Z",
+  "fetched_at": "2026-09-30T15:16:20Z",
+  "endpoints": {
+    "holdings": "/etf/gemq/holdings/__data.json",
+    "overview": "/etf/gemq/__data.json",
+    "quote": "/api/quotes/e/GEMQ",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/GEMQ/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/GEMQ/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/GEMQ/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/GEMQ/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/GEMQ/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/GEMQ/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "symbol": "!TPE/2330",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 15.97,
+        "shares": 20000,
+        "raw": {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "15.97%",
+          "sh": "20,000"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "!KRX/005930",
+        "name": "Samsung Electronics Co., Ltd.",
+        "weight_pct": 8.89,
+        "shares": 4376,
+        "raw": {
+          "no": 2,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "8.89%",
+          "sh": "4,376"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!KRX/000660",
+        "name": "SK hynix Inc.",
+        "weight_pct": 6.0,
+        "shares": 451,
+        "raw": {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "6.00%",
+          "sh": "451"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!HKG/0700",
+        "name": "Tencent Holdings Limited",
+        "weight_pct": 2.82,
+        "shares": 4900,
+        "raw": {
+          "no": 4,
+          "n": "Tencent Holdings Limited",
+          "s": "!hkg/0700",
+          "as": "2.82%",
+          "sh": "4,900"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "!HKG/9988",
+        "name": "Alibaba Group Holding Limited",
+        "weight_pct": 1.9,
+        "shares": 13500,
+        "raw": {
+          "no": 5,
+          "n": "Alibaba Group Holding Limited",
+          "s": "!hkg/9988",
+          "as": "1.90%",
+          "sh": "13,500"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "!TPE/2454",
+        "name": "MediaTek Inc.",
+        "weight_pct": 1.71,
+        "shares": 1000,
+        "raw": {
+          "no": 6,
+          "n": "MediaTek Inc.",
+          "s": "!tpe/2454",
+          "as": "1.71%",
+          "sh": "1,000"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "!HKG/1398",
+        "name": "Industrial and Commercial Bank of China Limited",
+        "weight_pct": 1.29,
+        "shares": 128000,
+        "raw": {
+          "no": 7,
+          "n": "Industrial and Commercial Bank of China Limited",
+          "s": "!hkg/1398",
+          "as": "1.29%",
+          "sh": "128,000"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "!TPE/2308",
+        "name": "Delta Electronics, Inc.",
+        "weight_pct": 1.23,
+        "shares": 2000,
+        "raw": {
+          "no": 8,
+          "n": "Delta Electronics, Inc.",
+          "s": "!tpe/2308",
+          "as": "1.23%",
+          "sh": "2,000"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "!TPE/3017",
+        "name": "Asia Vital Components Co., Ltd.",
+        "weight_pct": 1.15,
+        "shares": 1000,
+        "raw": {
+          "no": 9,
+          "n": "Asia Vital Components Co., Ltd.",
+          "s": "!tpe/3017",
+          "as": "1.15%",
+          "sh": "1,000"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "!TADAWUL/1180",
+        "name": "The Saudi National Bank",
+        "weight_pct": 0.99,
+        "shares": 8934,
+        "raw": {
+          "no": 10,
+          "n": "The Saudi National Bank",
+          "s": "!tadawul/1180",
+          "as": "0.99%",
+          "sh": "8,934"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "!HKG/3988",
+        "name": "Bank of China Limited",
+        "weight_pct": 0.94,
+        "shares": 118000,
+        "raw": {
+          "no": 11,
+          "n": "Bank of China Limited",
+          "s": "!hkg/3988",
+          "as": "0.94%",
+          "sh": "118,000"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "!TADAWUL/2222",
+        "name": "Saudi Arabian Oil Company",
+        "weight_pct": 0.89,
+        "shares": 12784,
+        "raw": {
+          "no": 12,
+          "n": "Saudi Arabian Oil Company",
+          "s": "!tadawul/2222",
+          "as": "0.89%",
+          "sh": "12,784"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "!HKG/9618",
+        "name": "JD.com, Inc.",
+        "weight_pct": 0.83,
+        "shares": 6050,
+        "raw": {
+          "no": 13,
+          "n": "JD.com, Inc.",
+          "s": "!hkg/9618",
+          "as": "0.83%",
+          "sh": "6,050"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "!HKG/2628",
+        "name": "China Life Insurance Company Limited",
+        "weight_pct": 0.77,
+        "shares": 21000,
+        "raw": {
+          "no": 14,
+          "n": "China Life Insurance Company Limited",
+          "s": "!hkg/2628",
+          "as": "0.77%",
+          "sh": "21,000"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "!KWSE/KFH",
+        "name": "Kuwait Finance House K.S.C.P.",
+        "weight_pct": 0.76,
+        "shares": 29625,
+        "raw": {
+          "no": 15,
+          "n": "Kuwait Finance House K.S.C.P.",
+          "s": "!kwse/KFH",
+          "as": "0.76%",
+          "sh": "29,625"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "!KRX/402340",
+        "name": "SK Square Co., Ltd.",
+        "weight_pct": 0.75,
+        "shares": 91,
+        "raw": {
+          "no": 16,
+          "n": "SK Square Co., Ltd.",
+          "s": "!krx/402340",
+          "as": "0.75%",
+          "sh": "91"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "!TPE/2360",
+        "name": "Chroma ATE Inc.",
+        "weight_pct": 0.74,
+        "shares": 1000,
+        "raw": {
+          "no": 17,
+          "n": "Chroma ATE Inc.",
+          "s": "!tpe/2360",
+          "as": "0.74%",
+          "sh": "1,000"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "!TPE/2317",
+        "name": "Hon Hai Precision Industry Co., Ltd.",
+        "weight_pct": 0.73,
+        "shares": 9000,
+        "raw": {
+          "no": 18,
+          "n": "Hon Hai Precision Industry Co., Ltd.",
+          "s": "!tpe/2317",
+          "as": "0.73%",
+          "sh": "9,000"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "!KRX/086790",
+        "name": "Hana Financial Group Inc.",
+        "weight_pct": 0.71,
+        "shares": 702,
+        "raw": {
+          "no": 19,
+          "n": "Hana Financial Group Inc.",
+          "s": "!krx/086790",
+          "as": "0.71%",
+          "sh": "702"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "EMIRATESNBD.DB",
+        "name": "EMIRATES NBD (P.J.S.C.)",
+        "weight_pct": 0.7,
+        "shares": 7954,
+        "raw": {
+          "no": 20,
+          "n": "EMIRATES NBD (P.J.S.C.)",
+          "s": "EMIRATESNBD.DB",
+          "as": "0.70%",
+          "sh": "7,954"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "!HKG/9999",
+        "name": "NetEase, Inc.",
+        "weight_pct": 0.7,
+        "shares": 2800,
+        "raw": {
+          "no": 21,
+          "n": "NetEase, Inc.",
+          "s": "!hkg/9999",
+          "as": "0.70%",
+          "sh": "2,800"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "!NSE/TATASTEEL",
+        "name": "Tata Steel Limited",
+        "weight_pct": 0.7,
+        "shares": 34956,
+        "raw": {
+          "no": 22,
+          "n": "Tata Steel Limited",
+          "s": "!nse/TATASTEEL",
+          "as": "0.70%",
+          "sh": "34,956"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "!KRX/316140",
+        "name": "Woori Financial Group Inc.",
+        "weight_pct": 0.7,
+        "shares": 2544,
+        "raw": {
+          "no": 23,
+          "n": "Woori Financial Group Inc.",
+          "s": "!krx/316140",
+          "as": "0.70%",
+          "sh": "2,544"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "ADVANC.F.BK",
+        "name": "ADVANCED INFO SERVICE PUBLIC COMPANY LIMITED",
+        "weight_pct": 0.69,
+        "shares": 6500,
+        "raw": {
+          "no": 24,
+          "n": "ADVANCED INFO SERVICE PUBLIC COMPANY LIMITED",
+          "s": "ADVANC.F.BK",
+          "as": "0.69%",
+          "sh": "6,500"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "!KRX/055550",
+        "name": "Shinhan Financial Group Co., Ltd.",
+        "weight_pct": 0.68,
+        "shares": 813,
+        "raw": {
+          "no": 25,
+          "n": "Shinhan Financial Group Co., Ltd.",
+          "s": "!krx/055550",
+          "as": "0.68%",
+          "sh": "813"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": [
+      {
+        "n": "Technology",
+        "w": 44.77
+      },
+      {
+        "n": "Financials",
+        "w": 15.81
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 9.24
+      },
+      {
+        "n": "Materials",
+        "w": 6.49
+      },
+      {
+        "n": "Industrials",
+        "w": 5.8
+      },
+      {
+        "n": "Healthcare",
+        "w": 4.39
+      },
+      {
+        "n": "Communication Services",
+        "w": 4.12
+      },
+      {
+        "n": "Energy",
+        "w": 3.88
+      },
+      {
+        "n": "Real Estate",
+        "w": 2.54
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 2.2
+      },
+      {
+        "n": "Utilities",
+        "w": 0.75
+      }
+    ],
+    "countries": [
+      {
+        "code": "TW",
+        "weight": 28.97,
+        "country": "Taiwan"
+      },
+      {
+        "code": "KR",
+        "weight": 22.62,
+        "country": "South Korea"
+      },
+      {
+        "code": "IN",
+        "weight": 10.76,
+        "country": "India"
+      },
+      {
+        "code": "KY",
+        "weight": 10.19,
+        "country": "Cayman Islands"
+      },
+      {
+        "code": "CN",
+        "weight": 8.6,
+        "country": "China"
+      },
+      {
+        "code": "BR",
+        "weight": 3.72,
+        "country": "Brazil"
+      },
+      {
+        "code": "SA",
+        "weight": 2.91,
+        "country": "Saudi Arabia"
+      },
+      {
+        "code": "MX",
+        "weight": 2.17,
+        "country": "Mexico"
+      },
+      {
+        "code": "ZA",
+        "weight": 1.98,
+        "country": "South Africa"
+      },
+      {
+        "code": "PL",
+        "weight": 1.66,
+        "country": "Poland"
+      },
+      {
+        "code": "HK",
+        "weight": 1.45,
+        "country": "Hong Kong"
+      },
+      {
+        "code": "KW",
+        "weight": 1.06,
+        "country": "Kuwait"
+      },
+      {
+        "code": "GR",
+        "weight": 0.86,
+        "country": "Greece"
+      },
+      {
+        "code": "GB",
+        "weight": 0.65,
+        "country": "United Kingdom"
+      },
+      {
+        "code": "AE",
+        "weight": 0.61,
+        "country": "United Arab Emirates"
+      },
+      {
+        "code": "CH",
+        "weight": 0.49,
+        "country": "Switzerland"
+      },
+      {
+        "code": "ID",
+        "weight": 0.45,
+        "country": "Indonesia"
+      },
+      {
+        "code": "US",
+        "weight": 0.43,
+        "country": "United States"
+      },
+      {
+        "code": "CL",
+        "weight": 0.42,
+        "country": "Chile"
+      }
+    ],
+    "holding_count": 158,
+    "holdings_updated": "Sep 28, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$9.86M",
+      "expenseRatio": "0.40%",
+      "sharesOut": "400,000",
+      "inception": "Sep 9, 2026",
+      "provider_page": "goldman-sachs",
+      "etf_website": "https://am.gs.com/en-us/institutions/funds/detail/PV110439/38149W390/goldman-sachs-data-enhanced-emerging-markets-equity-etf"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 24.39,
+      "pd": 24.39,
+      "c": -0.14,
+      "cp": -0.56,
+      "cl": 24.53,
+      "cdr": -1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778734928.3933,
+      "u": "Sep 30, 2026, 10:32 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.084,
+      "l52": 23.769,
+      "ex": "NASDAQ",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778734928.3933,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781384735,
+      "symbol": "GEMQ",
+      "uid": "GEMQ"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 24.528,
+          "h": 24.528,
+          "l": 24.528,
+          "c": 24.528,
+          "a": 24.5281,
+          "v": 8,
+          "ch": 0.33
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.449,
+          "h": 24.449,
+          "l": 24.449,
+          "c": 24.449,
+          "a": 24.4486,
+          "v": 8,
+          "ch": -1.07
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.713,
+          "h": 24.713,
+          "l": 24.713,
+          "c": 24.713,
+          "a": 24.7128,
+          "v": 11,
+          "ch": 1.11
+        },
+        {
+          "t": "2026-09-24",
+          "o": 24.442,
+          "h": 24.442,
+          "l": 24.442,
+          "c": 24.442,
+          "a": 24.4423,
+          "v": 8,
+          "ch": -0.57
+        },
+        {
+          "t": "2026-09-23",
+          "o": 24.583,
+          "h": 24.583,
+          "l": 24.583,
+          "c": 24.583,
+          "a": 24.5831,
+          "v": 35,
+          "ch": -2
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.084,
+          "h": 25.084,
+          "l": 25.084,
+          "c": 25.084,
+          "a": 25.084,
+          "v": 37,
+          "ch": 0.41
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.982,
+          "h": 24.982,
+          "l": 24.982,
+          "c": 24.982,
+          "a": 24.9818,
+          "v": 79,
+          "ch": 2.87
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.285,
+          "h": 24.285,
+          "l": 24.285,
+          "c": 24.285,
+          "a": 24.2851,
+          "v": 8,
+          "ch": 0.19
+        },
+        {
+          "t": "2026-09-17",
+          "o": 24.239,
+          "h": 24.239,
+          "l": 24.239,
+          "c": 24.239,
+          "a": 24.2385,
+          "v": 35,
+          "ch": 1.98
+        },
+        {
+          "t": "2026-09-16",
+          "o": 23.98,
+          "h": 23.98,
+          "l": 23.769,
+          "c": 23.769,
+          "a": 23.7688,
+          "v": 506.99999999999994,
+          "ch": -0.01
+        },
+        {
+          "t": "2026-09-15",
+          "o": 23.771,
+          "h": 23.771,
+          "l": 23.771,
+          "c": 23.771,
+          "a": 23.7712,
+          "v": 13,
+          "ch": -0.73
+        },
+        {
+          "t": "2026-09-14",
+          "o": 23.945,
+          "h": 23.945,
+          "l": 23.945,
+          "c": 23.945,
+          "a": 23.9451,
+          "v": 7,
+          "ch": -2.52
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.449,
+          "h": 24.528,
+          "l": 24.449,
+          "c": 24.528,
+          "v": 16,
+          "a": 24.5281,
+          "ch": -0.75
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.982,
+          "h": 25.084,
+          "l": 24.442,
+          "c": 24.713,
+          "v": 170,
+          "a": 24.7128,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-09-14",
+          "o": 23.945,
+          "h": 24.285,
+          "l": 23.769,
+          "c": 24.285,
+          "v": 570,
+          "a": 24.2851,
+          "ch": -1.13
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.449,
+          "h": 24.528,
+          "l": 24.449,
+          "c": 24.528,
+          "v": 16,
+          "a": 24.5281,
+          "ch": -0.75
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.982,
+          "h": 25.084,
+          "l": 24.442,
+          "c": 24.713,
+          "v": 170,
+          "a": 24.7128,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-09-14",
+          "o": 23.945,
+          "h": 24.285,
+          "l": 23.769,
+          "c": 24.285,
+          "v": 570,
+          "a": 24.2851,
+          "ch": -1.13
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "GEMQ",
+        "lastChecked": 1790781312062,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$9.86M",
+      "nav": null,
+      "expenseRatio": "0.40%",
+      "peRatio": null,
+      "sharesOut": "400,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 158,
+      "inception": "Sep 9, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Goldman Sachs Data Enhanced Emerging Markets Equity ETF (GEMQ) is an exchange-traded fund that mostly invests in total market equity. The Goldman Sachs Data Enhanced Emerging Markets Equity ETF (the Fund) seeks long-term growth of capital. GEMQ was launched on Sep 9, 2026 and is issued by Goldman Sachs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "GEMQ"
+        ],
+        [
+          "Provider",
+          "Goldman Sachs"
+        ]
+      ],
+      "etf_website": "https://am.gs.com/en-us/institutions/funds/detail/PV110439/38149W390/goldman-sachs-data-enhanced-emerging-markets-equity-etf",
+      "provider_page": "goldman-sachs",
+      "holdingsTable": {
+        "count": 158,
+        "updated": "Sep 28, 2026",
+        "top10": 41.95,
+        "holdings": [
+          {
+            "n": "Taiwan Semiconductor Manufacturing Company Limited",
+            "s": "!tpe/2330",
+            "as": "15.97%",
+            "sh": "20,000"
+          },
+          {
+            "n": "Samsung Electronics Co., Ltd.",
+            "s": "!krx/005930",
+            "as": "8.89%",
+            "sh": "4,376"
+          },
+          {
+            "n": "SK hynix Inc.",
+            "s": "!krx/000660",
+            "as": "6.00%",
+            "sh": "451"
+          },
+          {
+            "n": "Tencent Holdings Limited",
+            "s": "!hkg/0700",
+            "as": "2.82%",
+            "sh": "4,900"
+          },
+          {
+            "n": "Alibaba Group Holding Limited",
+            "s": "!hkg/9988",
+            "as": "1.90%",
+            "sh": "13,500"
+          },
+          {
+            "n": "MediaTek Inc.",
+            "s": "!tpe/2454",
+            "as": "1.71%",
+            "sh": "1,000"
+          },
+          {
+            "n": "Industrial and Commercial Bank of China Limited",
+            "s": "!hkg/1398",
+            "as": "1.29%",
+            "sh": "128,000"
+          },
+          {
+            "n": "Delta Electronics, Inc.",
+            "s": "!tpe/2308",
+            "as": "1.23%",
+            "sh": "2,000"
+          },
+          {
+            "n": "Asia Vital Components Co., Ltd.",
+            "s": "!tpe/3017",
+            "as": "1.15%",
+            "sh": "1,000"
+          },
+          {
+            "n": "The Saudi National Bank",
+            "s": "!tadawul/1180",
+            "as": "0.99%",
+            "sh": "8,934"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790790784225",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/future-etfs-content-hub/goldman-sachs-launches-2-emerging-international-equities-etfs/",
+            "img": "https://cdn.snapi.dev/images/v1/i/8/o/etf42-3922498.jpg",
+            "title": "Goldman Sachs Launches Emerging, International Equities ETFs",
+            "text": "Goldman Sachs Asset Management launched two new ETFs Monday, expanding exposure to emerging and international equities. The ETF duo includes the Goldman Sachs Data Enhanced Emerging Markets Equity ETF...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#GEM",
+              "#GIEQ"
+            ],
+            "time": "Sep 14, 2026, 5:26 PM EDT",
+            "ago": "15 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.084,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.563
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "!tpe/2330",
+          "as": "15.97%",
+          "sh": "20,000"
+        },
+        {
+          "no": 2,
+          "n": "Samsung Electronics Co., Ltd.",
+          "s": "!krx/005930",
+          "as": "8.89%",
+          "sh": "4,376"
+        },
+        {
+          "no": 3,
+          "n": "SK hynix Inc.",
+          "s": "!krx/000660",
+          "as": "6.00%",
+          "sh": "451"
+        },
+        {
+          "no": 4,
+          "n": "Tencent Holdings Limited",
+          "s": "!hkg/0700",
+          "as": "2.82%",
+          "sh": "4,900"
+        },
+        {
+          "no": 5,
+          "n": "Alibaba Group Holding Limited",
+          "s": "!hkg/9988",
+          "as": "1.90%",
+          "sh": "13,500"
+        },
+        {
+          "no": 6,
+          "n": "MediaTek Inc.",
+          "s": "!tpe/2454",
+          "as": "1.71%",
+          "sh": "1,000"
+        },
+        {
+          "no": 7,
+          "n": "Industrial and Commercial Bank of China Limited",
+          "s": "!hkg/1398",
+          "as": "1.29%",
+          "sh": "128,000"
+        },
+        {
+          "no": 8,
+          "n": "Delta Electronics, Inc.",
+          "s": "!tpe/2308",
+          "as": "1.23%",
+          "sh": "2,000"
+        },
+        {
+          "no": 9,
+          "n": "Asia Vital Components Co., Ltd.",
+          "s": "!tpe/3017",
+          "as": "1.15%",
+          "sh": "1,000"
+        },
+        {
+          "no": 10,
+          "n": "The Saudi National Bank",
+          "s": "!tadawul/1180",
+          "as": "0.99%",
+          "sh": "8,934"
+        },
+        {
+          "no": 11,
+          "n": "Bank of China Limited",
+          "s": "!hkg/3988",
+          "as": "0.94%",
+          "sh": "118,000"
+        },
+        {
+          "no": 12,
+          "n": "Saudi Arabian Oil Company",
+          "s": "!tadawul/2222",
+          "as": "0.89%",
+          "sh": "12,784"
+        },
+        {
+          "no": 13,
+          "n": "JD.com, Inc.",
+          "s": "!hkg/9618",
+          "as": "0.83%",
+          "sh": "6,050"
+        },
+        {
+          "no": 14,
+          "n": "China Life Insurance Company Limited",
+          "s": "!hkg/2628",
+          "as": "0.77%",
+          "sh": "21,000"
+        },
+        {
+          "no": 15,
+          "n": "Kuwait Finance House K.S.C.P.",
+          "s": "!kwse/KFH",
+          "as": "0.76%",
+          "sh": "29,625"
+        },
+        {
+          "no": 16,
+          "n": "SK Square Co., Ltd.",
+          "s": "!krx/402340",
+          "as": "0.75%",
+          "sh": "91"
+        },
+        {
+          "no": 17,
+          "n": "Chroma ATE Inc.",
+          "s": "!tpe/2360",
+          "as": "0.74%",
+          "sh": "1,000"
+        },
+        {
+          "no": 18,
+          "n": "Hon Hai Precision Industry Co., Ltd.",
+          "s": "!tpe/2317",
+          "as": "0.73%",
+          "sh": "9,000"
+        },
+        {
+          "no": 19,
+          "n": "Hana Financial Group Inc.",
+          "s": "!krx/086790",
+          "as": "0.71%",
+          "sh": "702"
+        },
+        {
+          "no": 20,
+          "n": "EMIRATES NBD (P.J.S.C.)",
+          "s": "EMIRATESNBD.DB",
+          "as": "0.70%",
+          "sh": "7,954"
+        },
+        {
+          "no": 21,
+          "n": "NetEase, Inc.",
+          "s": "!hkg/9999",
+          "as": "0.70%",
+          "sh": "2,800"
+        },
+        {
+          "no": 22,
+          "n": "Tata Steel Limited",
+          "s": "!nse/TATASTEEL",
+          "as": "0.70%",
+          "sh": "34,956"
+        },
+        {
+          "no": 23,
+          "n": "Woori Financial Group Inc.",
+          "s": "!krx/316140",
+          "as": "0.70%",
+          "sh": "2,544"
+        },
+        {
+          "no": 24,
+          "n": "ADVANCED INFO SERVICE PUBLIC COMPANY LIMITED",
+          "s": "ADVANC.F.BK",
+          "as": "0.69%",
+          "sh": "6,500"
+        },
+        {
+          "no": 25,
+          "n": "Shinhan Financial Group Co., Ltd.",
+          "s": "!krx/055550",
+          "as": "0.68%",
+          "sh": "813"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": [
+        {
+          "n": "Technology",
+          "w": 44.77
+        },
+        {
+          "n": "Financials",
+          "w": 15.81
+        },
+        {
+          "n": "Consumer Discretionary",
+          "w": 9.24
+        },
+        {
+          "n": "Materials",
+          "w": 6.49
+        },
+        {
+          "n": "Industrials",
+          "w": 5.8
+        },
+        {
+          "n": "Healthcare",
+          "w": 4.39
+        },
+        {
+          "n": "Communication Services",
+          "w": 4.12
+        },
+        {
+          "n": "Energy",
+          "w": 3.88
+        },
+        {
+          "n": "Real Estate",
+          "w": 2.54
+        },
+        {
+          "n": "Consumer Staples",
+          "w": 2.2
+        },
+        {
+          "n": "Utilities",
+          "w": 0.75
+        }
+      ],
+      "countries": [
+        {
+          "code": "TW",
+          "weight": 28.97,
+          "country": "Taiwan"
+        },
+        {
+          "code": "KR",
+          "weight": 22.62,
+          "country": "South Korea"
+        },
+        {
+          "code": "IN",
+          "weight": 10.76,
+          "country": "India"
+        },
+        {
+          "code": "KY",
+          "weight": 10.19,
+          "country": "Cayman Islands"
+        },
+        {
+          "code": "CN",
+          "weight": 8.6,
+          "country": "China"
+        },
+        {
+          "code": "BR",
+          "weight": 3.72,
+          "country": "Brazil"
+        },
+        {
+          "code": "SA",
+          "weight": 2.91,
+          "country": "Saudi Arabia"
+        },
+        {
+          "code": "MX",
+          "weight": 2.17,
+          "country": "Mexico"
+        },
+        {
+          "code": "ZA",
+          "weight": 1.98,
+          "country": "South Africa"
+        },
+        {
+          "code": "PL",
+          "weight": 1.66,
+          "country": "Poland"
+        },
+        {
+          "code": "HK",
+          "weight": 1.45,
+          "country": "Hong Kong"
+        },
+        {
+          "code": "KW",
+          "weight": 1.06,
+          "country": "Kuwait"
+        },
+        {
+          "code": "GR",
+          "weight": 0.86,
+          "country": "Greece"
+        },
+        {
+          "code": "GB",
+          "weight": 0.65,
+          "country": "United Kingdom"
+        },
+        {
+          "code": "AE",
+          "weight": 0.61,
+          "country": "United Arab Emirates"
+        },
+        {
+          "code": "CH",
+          "weight": 0.49,
+          "country": "Switzerland"
+        },
+        {
+          "code": "ID",
+          "weight": 0.45,
+          "country": "Indonesia"
+        },
+        {
+          "code": "US",
+          "weight": 0.43,
+          "country": "United States"
+        },
+        {
+          "code": "CL",
+          "weight": 0.42,
+          "country": "Chile"
+        }
+      ],
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 44.77
+          },
+          {
+            "name": "Financials",
+            "y": 15.81
+          },
+          {
+            "name": "Consumer Discretionary",
+            "y": 9.24
+          },
+          {
+            "name": "Materials",
+            "y": 6.49
+          },
+          {
+            "name": "Industrials",
+            "y": 5.8
+          },
+          {
+            "name": "Healthcare",
+            "y": 4.39
+          },
+          {
+            "name": "Communication Services",
+            "y": 4.12
+          },
+          {
+            "name": "Energy",
+            "y": 3.88
+          },
+          {
+            "name": "Real Estate",
+            "y": 2.54
+          },
+          {
+            "name": "Consumer Staples",
+            "y": 2.2
+          },
+          {
+            "name": "Utilities",
+            "y": 0.75
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "Taiwan",
+            "y": 28.97
+          },
+          {
+            "name": "South Korea",
+            "y": 22.62
+          },
+          {
+            "name": "India",
+            "y": 10.76
+          },
+          {
+            "name": "Cayman Islands",
+            "y": 10.19
+          },
+          {
+            "name": "China",
+            "y": 8.6
+          },
+          {
+            "name": "Brazil",
+            "y": 3.72
+          },
+          {
+            "name": "Saudi Arabia",
+            "y": 2.91
+          },
+          {
+            "name": "Mexico",
+            "y": 2.17
+          },
+          {
+            "name": "South Africa",
+            "y": 1.98
+          },
+          {
+            "name": "Poland",
+            "y": 1.66
+          },
+          {
+            "name": "Hong Kong",
+            "y": 1.45
+          },
+          {
+            "name": "Kuwait",
+            "y": 1.06
+          },
+          {
+            "name": "Greece",
+            "y": 0.86
+          },
+          {
+            "name": "United Kingdom",
+            "y": 0.65
+          },
+          {
+            "name": "United Arab Emirates",
+            "y": 0.61
+          },
+          {
+            "name": "Switzerland",
+            "y": 0.49
+          },
+          {
+            "name": "Indonesia",
+            "y": 0.45
+          },
+          {
+            "name": "United States",
+            "y": 0.43
+          },
+          {
+            "name": "Chile",
+            "y": 0.42
+          }
+        ]
+      },
+      "news": [
+        {
+          "t": "Goldman Sachs Launches Emerging, International Equities ETFs",
+          "u": "https://www.etftrends.com/future-etfs-content-hub/goldman-sachs-launches-2-emerging-international-equities-etfs/",
+          "n": "ETF Trends",
+          "d": "15 days ago"
+        }
+      ],
+      "infoBox": "GEMQ is an equity ETF with a total of 158 individual holdings. The top holdings are Taiwan Semiconductor Manufacturing Company stock at 15.97%, Samsung Electronics at 8.89%, SK hynix at 6.00%, Tencent Holdings at 2.82%, and Alibaba Group Holding at 1.90%.",
+      "infoTable": {
+        "count": 158,
+        "top10": 41.95,
+        "assetClass": "Equity",
+        "category": null,
+        "categoryLabel": "ETF Category",
+        "aum": 9856000,
+        "peRatio": null
+      },
+      "date": "Sep 28, 2026",
+      "count": 158,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Sep 28, 2026",
+        "lastChecked": 1790754437413,
+        "topic": "holdings",
+        "ticker": "GEMQ",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 24.39,
+      "pd": 24.39,
+      "c": -0.14,
+      "cp": -0.56,
+      "cl": 24.53,
+      "cdr": -1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778734928.3933,
+      "u": "Sep 30, 2026, 10:32 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.084,
+      "l52": 23.769,
+      "ex": "NASDAQ",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778734928.3933,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781384735,
+      "symbol": "GEMQ",
+      "uid": "GEMQ"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 24.528,
+          "h": 24.528,
+          "l": 24.528,
+          "c": 24.528,
+          "a": 24.5281,
+          "v": 8,
+          "ch": 0.33
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.449,
+          "h": 24.449,
+          "l": 24.449,
+          "c": 24.449,
+          "a": 24.4486,
+          "v": 8,
+          "ch": -1.07
+        },
+        {
+          "t": "2026-09-25",
+          "o": 24.713,
+          "h": 24.713,
+          "l": 24.713,
+          "c": 24.713,
+          "a": 24.7128,
+          "v": 11,
+          "ch": 1.11
+        },
+        {
+          "t": "2026-09-24",
+          "o": 24.442,
+          "h": 24.442,
+          "l": 24.442,
+          "c": 24.442,
+          "a": 24.4423,
+          "v": 8,
+          "ch": -0.57
+        },
+        {
+          "t": "2026-09-23",
+          "o": 24.583,
+          "h": 24.583,
+          "l": 24.583,
+          "c": 24.583,
+          "a": 24.5831,
+          "v": 35,
+          "ch": -2
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.084,
+          "h": 25.084,
+          "l": 25.084,
+          "c": 25.084,
+          "a": 25.084,
+          "v": 37,
+          "ch": 0.41
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.982,
+          "h": 24.982,
+          "l": 24.982,
+          "c": 24.982,
+          "a": 24.9818,
+          "v": 79,
+          "ch": 2.87
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.285,
+          "h": 24.285,
+          "l": 24.285,
+          "c": 24.285,
+          "a": 24.2851,
+          "v": 8,
+          "ch": 0.19
+        },
+        {
+          "t": "2026-09-17",
+          "o": 24.239,
+          "h": 24.239,
+          "l": 24.239,
+          "c": 24.239,
+          "a": 24.2385,
+          "v": 35,
+          "ch": 1.98
+        },
+        {
+          "t": "2026-09-16",
+          "o": 23.98,
+          "h": 23.98,
+          "l": 23.769,
+          "c": 23.769,
+          "a": 23.7688,
+          "v": 506.99999999999994,
+          "ch": -0.01
+        },
+        {
+          "t": "2026-09-15",
+          "o": 23.771,
+          "h": 23.771,
+          "l": 23.771,
+          "c": 23.771,
+          "a": 23.7712,
+          "v": 13,
+          "ch": -0.73
+        },
+        {
+          "t": "2026-09-14",
+          "o": 23.945,
+          "h": 23.945,
+          "l": 23.945,
+          "c": 23.945,
+          "a": 23.9451,
+          "v": 7,
+          "ch": -2.52
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.449,
+          "h": 24.528,
+          "l": 24.449,
+          "c": 24.528,
+          "v": 16,
+          "a": 24.5281,
+          "ch": -0.75
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.982,
+          "h": 25.084,
+          "l": 24.442,
+          "c": 24.713,
+          "v": 170,
+          "a": 24.7128,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-09-14",
+          "o": 23.945,
+          "h": 24.285,
+          "l": 23.769,
+          "c": 24.285,
+          "v": 570,
+          "a": 24.2851,
+          "ch": -1.13
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.449,
+          "h": 24.528,
+          "l": 24.449,
+          "c": 24.528,
+          "v": 16,
+          "a": 24.5281,
+          "ch": -0.75
+        },
+        {
+          "t": "2026-09-21",
+          "o": 24.982,
+          "h": 25.084,
+          "l": 24.442,
+          "c": 24.713,
+          "v": 170,
+          "a": 24.7128,
+          "ch": 1.76
+        },
+        {
+          "t": "2026-09-14",
+          "o": 23.945,
+          "h": 24.285,
+          "l": 23.769,
+          "c": 24.285,
+          "v": 570,
+          "a": 24.2851,
+          "ch": -1.13
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  }
+}

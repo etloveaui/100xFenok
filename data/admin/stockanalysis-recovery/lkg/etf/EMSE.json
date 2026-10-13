@@ -1,0 +1,786 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "EMSE",
+  "source_as_of": "2026-09-30T14:28:41Z",
+  "fetched_at": "2026-09-30T15:16:19Z",
+  "endpoints": {
+    "holdings": "/etf/emse/holdings/__data.json",
+    "overview": "/etf/emse/__data.json",
+    "quote": "/api/quotes/e/EMSE",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/EMSE/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/EMSE/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/EMSE/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/EMSE/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/EMSE/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/EMSE/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "Option On Ishares Msci Emerging Markets Etf Aug27",
+        "weight_pct": 162.22,
+        "shares": 151,
+        "raw": {
+          "no": 1,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "162.22%",
+          "sh": "151"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "T.3.625 08.31.27",
+        "name": "United States Treasury Notes 3.63%",
+        "weight_pct": 15.78,
+        "shares": 160000,
+        "raw": {
+          "no": 2,
+          "n": "United States Treasury Notes 3.63%",
+          "s": "T.3.625 08.31.27",
+          "as": "15.78%",
+          "sh": "160,000"
+        }
+      },
+      {
+        "rank": 3,
+        "name": "Option On Ishares Msci Emerging Markets Etf Aug27",
+        "weight_pct": 15.06,
+        "shares": 151,
+        "raw": {
+          "no": 3,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "15.06%",
+          "sh": "151"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 1.28,
+        "shares": 12825,
+        "raw": {
+          "no": 4,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "1.28%",
+          "sh": "12,825"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 0.03,
+        "shares": 346,
+        "raw": {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "0.03%",
+          "sh": "346"
+        }
+      },
+      {
+        "rank": 6,
+        "name": "Option On Ishares Msci Emerging Markets Etf Aug27",
+        "weight_pct": -5.36,
+        "shares": 151,
+        "raw": {
+          "no": 6,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "-5.36%",
+          "sh": "151"
+        }
+      },
+      {
+        "rank": 7,
+        "name": "Option On Ishares Msci Emerging Markets Etf Aug27",
+        "weight_pct": -6.65,
+        "shares": 151,
+        "raw": {
+          "no": 7,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "-6.65%",
+          "sh": "151"
+        }
+      },
+      {
+        "rank": 8,
+        "name": "Cash Offset",
+        "weight_pct": -82.36,
+        "shares": 828084,
+        "raw": {
+          "no": 8,
+          "n": "Cash Offset",
+          "as": "-82.36%",
+          "sh": "828,084"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 8,
+    "holdings_updated": "Sep 23, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "sharesOut": "45,000",
+      "inception": "Sep 14, 2026",
+      "etf_website": "https://corgiinvest.com/emse"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 24.88,
+      "pd": 24.88,
+      "c": -0.2,
+      "cp": -0.78,
+      "cl": 25.08,
+      "cdr": -1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778521316.8245,
+      "u": "Sep 30, 2026, 10:28 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.46,
+      "l52": 24.648,
+      "ex": "BATS",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778521316.8245,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781383315,
+      "symbol": "EMSE",
+      "uid": "EMSE"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 25.077,
+          "h": 25.077,
+          "l": 25.077,
+          "c": 25.077,
+          "a": 25.0766,
+          "v": 95,
+          "ch": 0.75
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.889,
+          "h": 24.889,
+          "l": 24.889,
+          "c": 24.889,
+          "a": 24.8887,
+          "v": 6,
+          "ch": -0.61
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.041,
+          "h": 25.041,
+          "l": 25.041,
+          "c": 25.041,
+          "a": 25.0414,
+          "v": 6,
+          "ch": 0.35
+        },
+        {
+          "t": "2026-09-24",
+          "o": 24.954,
+          "h": 24.954,
+          "l": 24.954,
+          "c": 24.954,
+          "a": 24.9536,
+          "v": 835,
+          "ch": -0.84
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25.2,
+          "h": 25.2,
+          "l": 25.165,
+          "c": 25.165,
+          "a": 25.1652,
+          "v": 111,
+          "ch": -1.12
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.46,
+          "h": 25.46,
+          "l": 25.45,
+          "c": 25.45,
+          "a": 25.4498,
+          "v": 799,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.39,
+          "h": 25.395,
+          "l": 25.39,
+          "c": 25.395,
+          "a": 25.3949,
+          "v": 796,
+          "ch": 1.72
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.964,
+          "h": 24.964,
+          "l": 24.964,
+          "c": 24.964,
+          "a": 24.9644,
+          "v": 6,
+          "ch": -0.11
+        },
+        {
+          "t": "2026-09-17",
+          "o": 24.993,
+          "h": 24.993,
+          "l": 24.993,
+          "c": 24.993,
+          "a": 24.9925,
+          "v": 8,
+          "ch": 1.4
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.648,
+          "h": 24.648,
+          "l": 24.648,
+          "c": 24.648,
+          "a": 24.648,
+          "v": 8,
+          "ch": -1.56
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.889,
+          "h": 25.077,
+          "l": 24.889,
+          "c": 25.077,
+          "v": 101,
+          "a": 25.0766,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.39,
+          "h": 25.46,
+          "l": 24.954,
+          "c": 25.041,
+          "v": 2547,
+          "a": 25.0414,
+          "ch": 0.31
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.889,
+          "h": 25.077,
+          "l": 24.889,
+          "c": 25.077,
+          "v": 101,
+          "a": 25.0766,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.39,
+          "h": 25.46,
+          "l": 24.954,
+          "c": 25.041,
+          "v": 2547,
+          "a": 25.0414,
+          "ch": 0.31
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "EMSE",
+        "lastChecked": 1790781312062,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "45,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 8,
+      "inception": "Sep 14, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Corgi Emerging Markets Equities 15% Structured Buffer ETF - September Series (EMSE) is an exchange-traded fund that mostly invests in downside hedge alternatives. The fund seeks to provide investors with returns that generally match the price return (excluding dividends) of the iShares MSCI Emerging Markets ETF, up to the upside cap of 29.20% while providing a buffer against the first 15% of iShares MSCI Emerging Markets ETF losses, over the period from September 1, 2026 to August 31, 2027. EMSE was launched on Sep 14, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Alternatives"
+        ],
+        [
+          "Region",
+          "Emerging Markets"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "EMSE"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgiinvest.com/emse",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 8,
+        "updated": "Sep 23, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+            "as": "162.22%",
+            "sh": "151"
+          },
+          {
+            "n": "United States Treasury Notes 3.63%",
+            "s": "T.3.625 08.31.27",
+            "as": "15.78%",
+            "sh": "160,000"
+          },
+          {
+            "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+            "as": "15.06%",
+            "sh": "151"
+          },
+          {
+            "n": "First American Government Obligs X",
+            "s": "!mutf/FGXXX",
+            "as": "1.28%",
+            "sh": "12,825"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "0.03%",
+            "sh": "346"
+          },
+          {
+            "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+            "as": "-5.36%",
+            "sh": "151"
+          },
+          {
+            "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+            "as": "-6.65%",
+            "sh": "151"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-82.36%",
+            "sh": "828,084"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1790858005070",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.45,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.038
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "162.22%",
+          "sh": "151"
+        },
+        {
+          "no": 2,
+          "n": "United States Treasury Notes 3.63%",
+          "s": "T.3.625 08.31.27",
+          "as": "15.78%",
+          "sh": "160,000"
+        },
+        {
+          "no": 3,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "15.06%",
+          "sh": "151"
+        },
+        {
+          "no": 4,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "1.28%",
+          "sh": "12,825"
+        },
+        {
+          "no": 5,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "0.03%",
+          "sh": "346"
+        },
+        {
+          "no": 6,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "-5.36%",
+          "sh": "151"
+        },
+        {
+          "no": 7,
+          "n": "Option On Ishares Msci Emerging Markets Etf Aug27",
+          "as": "-6.65%",
+          "sh": "151"
+        },
+        {
+          "no": 8,
+          "n": "Cash Offset",
+          "as": "-82.36%",
+          "sh": "828,084"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "date": "Sep 23, 2026",
+      "count": 8,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Sep 23, 2026",
+        "lastChecked": 1790763863482,
+        "topic": "holdings",
+        "ticker": "EMSE",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": {
+      "p": 24.88,
+      "pd": 24.88,
+      "c": -0.2,
+      "cp": -0.78,
+      "cl": 25.08,
+      "cdr": -1,
+      "o": 0,
+      "h": 0,
+      "l": 0,
+      "v": 6,
+      "ts": 1790778521316.8245,
+      "u": "Sep 30, 2026, 10:28 AM EDT",
+      "td": "2026-09-30",
+      "h52": 25.46,
+      "l52": 24.648,
+      "ex": "BATS",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1790778521316.8245,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1790781383315,
+      "symbol": "EMSE",
+      "uid": "EMSE"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-09-29",
+          "o": 25.077,
+          "h": 25.077,
+          "l": 25.077,
+          "c": 25.077,
+          "a": 25.0766,
+          "v": 95,
+          "ch": 0.75
+        },
+        {
+          "t": "2026-09-28",
+          "o": 24.889,
+          "h": 24.889,
+          "l": 24.889,
+          "c": 24.889,
+          "a": 24.8887,
+          "v": 6,
+          "ch": -0.61
+        },
+        {
+          "t": "2026-09-25",
+          "o": 25.041,
+          "h": 25.041,
+          "l": 25.041,
+          "c": 25.041,
+          "a": 25.0414,
+          "v": 6,
+          "ch": 0.35
+        },
+        {
+          "t": "2026-09-24",
+          "o": 24.954,
+          "h": 24.954,
+          "l": 24.954,
+          "c": 24.954,
+          "a": 24.9536,
+          "v": 835,
+          "ch": -0.84
+        },
+        {
+          "t": "2026-09-23",
+          "o": 25.2,
+          "h": 25.2,
+          "l": 25.165,
+          "c": 25.165,
+          "a": 25.1652,
+          "v": 111,
+          "ch": -1.12
+        },
+        {
+          "t": "2026-09-22",
+          "o": 25.46,
+          "h": 25.46,
+          "l": 25.45,
+          "c": 25.45,
+          "a": 25.4498,
+          "v": 799,
+          "ch": 0.22
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.39,
+          "h": 25.395,
+          "l": 25.39,
+          "c": 25.395,
+          "a": 25.3949,
+          "v": 796,
+          "ch": 1.72
+        },
+        {
+          "t": "2026-09-18",
+          "o": 24.964,
+          "h": 24.964,
+          "l": 24.964,
+          "c": 24.964,
+          "a": 24.9644,
+          "v": 6,
+          "ch": -0.11
+        },
+        {
+          "t": "2026-09-17",
+          "o": 24.993,
+          "h": 24.993,
+          "l": 24.993,
+          "c": 24.993,
+          "a": 24.9925,
+          "v": 8,
+          "ch": 1.4
+        },
+        {
+          "t": "2026-09-16",
+          "o": 24.648,
+          "h": 24.648,
+          "l": 24.648,
+          "c": 24.648,
+          "a": 24.648,
+          "v": 8,
+          "ch": -1.56
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.889,
+          "h": 25.077,
+          "l": 24.889,
+          "c": 25.077,
+          "v": 101,
+          "a": 25.0766,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.39,
+          "h": 25.46,
+          "l": 24.954,
+          "c": 25.041,
+          "v": 2547,
+          "a": 25.0414,
+          "ch": 0.31
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-09-28",
+          "o": 24.889,
+          "h": 25.077,
+          "l": 24.889,
+          "c": 25.077,
+          "v": 101,
+          "a": 25.0766,
+          "ch": 0.14
+        },
+        {
+          "t": "2026-09-21",
+          "o": 25.39,
+          "h": 25.46,
+          "l": 24.954,
+          "c": 25.041,
+          "v": 2547,
+          "a": 25.0414,
+          "ch": 0.31
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ]
+}
