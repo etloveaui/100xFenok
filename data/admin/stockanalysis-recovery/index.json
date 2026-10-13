@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-13T03:05:32Z",
+  "generated_at": "2026-10-13T03:37:33Z",
   "counts": {
-    "tracked": 1037,
+    "tracked": 1043,
     "fresh": 926,
-    "lkg": 97,
+    "lkg": 103,
     "unavailable": 14,
-    "retry": 111,
-    "failed": 0
+    "retry": 117,
+    "failed": 6
   },
   "counts_by_kind": {
     "stock": {
@@ -25,11 +25,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 919,
+      "tracked": 925,
       "fresh": 808,
-      "lkg": 97,
+      "lkg": 103,
       "unavailable": 14,
-      "retry": 111
+      "retry": 117
     },
     "surface": {
       "tracked": 25,
@@ -237,6 +237,14 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "EBUF"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "EJUL"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EJUN"
     },
     {
@@ -302,6 +310,10 @@
     {
       "artifact_kind": "etf",
       "entity": "HYSA"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IAPR"
     },
     {
       "artifact_kind": "etf",
@@ -389,6 +401,14 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "PMAY"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "QBUF"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "QULL"
     },
     {
@@ -398,6 +418,10 @@
     {
       "artifact_kind": "etf",
       "entity": "RAAY"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "RBUF"
     },
     {
       "artifact_kind": "etf",
@@ -1059,6 +1083,30 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "EBUF",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T17:03:49Z",
+      "failure_observed_at": "2026-10-13T03:37:33Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "EJUL",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T14:48:58Z",
+      "failure_observed_at": "2026-10-13T03:37:33Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EJUN",
       "resolution_state": "unavailable",
       "source_as_of": null,
@@ -1258,6 +1306,18 @@
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "provider_contract_drift",
       "failure_count": 2,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IAPR",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T20:00:00Z",
+      "failure_observed_at": "2026-10-13T03:37:33Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1515,6 +1575,30 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "PMAY",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T16:27:11Z",
+      "failure_observed_at": "2026-10-13T03:37:33Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "QBUF",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T16:22:29Z",
+      "failure_observed_at": "2026-10-13T03:37:33Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "QULL",
       "resolution_state": "lkg_primary",
       "source_as_of": "2025-10-27T00:00:00Z",
@@ -1546,6 +1630,18 @@
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "provider_contract_drift",
       "failure_count": 3,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "RBUF",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-24T16:48:20Z",
+      "failure_observed_at": "2026-10-13T03:37:33Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1846,6 +1942,14 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "EBUF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "EJUL"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "ESUM"
       },
       {
@@ -1854,11 +1958,27 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "IAPR"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "IAUM"
       },
       {
         "artifact_kind": "etf",
         "entity": "PFRX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PMAY"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "QBUF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RBUF"
       }
     ],
     "provider_ticker_redirect": [
@@ -2287,17 +2407,54 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-13T03:05:32Z",
-    "attempted": 8,
+    "observed_at": "2026-10-13T03:37:33Z",
+    "attempted": 14,
     "successes": 8,
-    "failed": 0,
-    "errors": [],
+    "failed": 6,
+    "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "EBUF",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "EJUL",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "IAPR",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "PMAY",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "QBUF",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RBUF",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical countries",
+        "data_loss": false
+      }
+    ],
     "by_kind": {
       "etf": {
-        "observed_at": "2026-10-13T03:05:32Z",
-        "attempted": 8,
+        "observed_at": "2026-10-13T03:37:33Z",
+        "attempted": 14,
         "successes": 8,
-        "failed": 0
+        "failed": 6
       }
     }
   },
@@ -2350,6 +2507,8 @@
     "DVXP",
     "DVXV",
     "DVXY",
+    "EBUF",
+    "EJUL",
     "EJUN",
     "ERUS",
     "ESUM",
@@ -2367,6 +2526,7 @@
     "HYGU",
     "HYGW",
     "HYSA",
+    "IAPR",
     "IAUM",
     "IBGM",
     "IWDL",
@@ -2388,9 +2548,12 @@
     "OPER",
     "PFRX",
     "PLOO",
+    "PMAY",
+    "QBUF",
     "QULL",
     "RAAR",
     "RAAY",
+    "RBUF",
     "RCLR",
     "RCLY",
     "RMHY",

@@ -3,8 +3,8 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "ACII",
-  "source_as_of": "2026-10-12T20:00:00Z",
-  "fetched_at": "2026-10-13T00:00:04Z",
+  "source_as_of": "2026-10-12T00:00:00Z",
+  "fetched_at": "2026-10-13T03:39:24Z",
   "endpoints": {
     "holdings": "/etf/acii/holdings/__data.json",
     "overview": "/etf/acii/__data.json",
@@ -25,9 +25,9 @@
       "contract": "etf_detail_overview/v1"
     },
     "holdings": {
-      "format": "svelte_devalue",
-      "decoder": "svelte_devalue_node/v1",
-      "contract": "etf_detail_holdings/v1"
+      "format": "issuer_payload",
+      "provider": "innovator",
+      "contract": "issuer_published_snapshot/v1"
     },
     "quote": {
       "format": "rest_json",
@@ -41,64 +41,177 @@
   "normalized": {
     "holdings": [
       {
-        "symbol": "B.0 10.29.26",
-        "name": "United States Treasury Bills",
-        "weight_pct": 98.83,
-        "shares": 145424000,
+        "name": "US BANK MMDA - USBGFS 9 09/01/2037",
+        "symbol": null,
+        "identifier": "8AMMF0JA0",
+        "identifier_type": "cusip",
+        "weight_pct": 1.0,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 1461599.87,
+        "shares": 1461599.87,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "8AMMF0JA0",
         "raw": {
-          "n": "United States Treasury Bills",
-          "s": "B.0 10.29.26",
-          "as": "98.83%",
-          "sh": "145,424,000"
+          "Date": "10/13/2026",
+          "Account": "ACII",
+          "StockTicker": "8AMMF0JA0",
+          "CUSIP": "8AMMF0JA0",
+          "SecurityName": "US BANK MMDA - USBGFS 9 09/01/2037",
+          "Shares": "1461599.87000000",
+          "Price": "100.000000",
+          "MarketValue": "1461599.87",
+          "Weightings": "1.00%",
+          "NetAssets": "146748120.00",
+          "SharesOutstanding": "5800000",
+          "CreationUnits": "232.000000000000",
+          "MoneyMarketFlag": "Y"
         }
       },
       {
-        "name": "Us Bank Mmda - Usbgfs 9",
-        "weight_pct": 0.98,
-        "shares": 1435133,
+        "name": "United States Treasury Bill 10/29/2026",
+        "symbol": null,
+        "identifier": "912797SK4",
+        "identifier_type": "cusip",
+        "weight_pct": 98.93,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 145176029.82,
+        "shares": 145424000.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797SK4",
         "raw": {
-          "n": "Us Bank Mmda - Usbgfs 9",
-          "as": "0.98%",
-          "sh": "1,435,133"
+          "Date": "10/13/2026",
+          "Account": "ACII",
+          "StockTicker": "912797SK4",
+          "CUSIP": "912797SK4",
+          "SecurityName": "United States Treasury Bill 10/29/2026",
+          "Shares": "145424000.00000000",
+          "Price": "99.829485",
+          "MarketValue": "145176029.82",
+          "Weightings": "98.93%",
+          "NetAssets": "146748120.00",
+          "SharesOutstanding": "5800000",
+          "CreationUnits": "232.000000000000",
+          "MoneyMarketFlag": ""
         }
       },
       {
-        "name": "Worst Of Spy Qqq Iwm 2029",
-        "weight_pct": 0.17,
-        "shares": 48333300,
+        "name": "Worst of SPY QQQ IWM 2029",
+        "symbol": null,
+        "identifier": "SPY QQQ IWM TRS 04302029",
+        "identifier_type": "cusip",
+        "weight_pct": 0.18,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 260999.82,
+        "shares": 48333300.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "SPY QQQ IWM TRS 04302029",
         "raw": {
-          "n": "Worst Of Spy Qqq Iwm 2029",
-          "as": "0.17%",
-          "sh": "48,333,300"
+          "Date": "10/13/2026",
+          "Account": "ACII",
+          "StockTicker": "SPY QQQ IWM TRS 04302029",
+          "CUSIP": "SPY QQQ IWM TRS 04302029",
+          "SecurityName": "Worst of SPY QQQ IWM 2029",
+          "Shares": "48333300.00000000",
+          "Price": "0.005400",
+          "MarketValue": "260999.82",
+          "Weightings": "0.18%",
+          "NetAssets": "146748120.00",
+          "SharesOutstanding": "5800000",
+          "CreationUnits": "232.000000000000",
+          "MoneyMarketFlag": ""
         }
       },
       {
-        "name": "Deposits With Broker For Short Positions",
-        "weight_pct": 0.13,
+        "name": "Worst of SPY QQQ IWM 2030",
+        "symbol": null,
+        "identifier": "SPY QQQ IWM TRS 05312030",
+        "identifier_type": "cusip",
+        "weight_pct": 0.04,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 59401.63,
+        "shares": 48333300.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "SPY QQQ IWM TRS 05312030",
         "raw": {
-          "n": "Deposits With Broker For Short Positions",
-          "as": "0.13%",
-          "sh": "n/a"
+          "Date": "10/13/2026",
+          "Account": "ACII",
+          "StockTicker": "SPY QQQ IWM TRS 05312030",
+          "CUSIP": "SPY QQQ IWM TRS 05312030",
+          "SecurityName": "Worst of SPY QQQ IWM 2030",
+          "Shares": "48333300.00000000",
+          "Price": "0.001229",
+          "MarketValue": "59401.63",
+          "Weightings": "0.04%",
+          "NetAssets": "146748120.00",
+          "SharesOutstanding": "5800000",
+          "CreationUnits": "232.000000000000",
+          "MoneyMarketFlag": ""
         }
       },
       {
-        "name": "Worst Of Spy Qqq Iwm 2030",
-        "weight_pct": 0.01,
-        "shares": 48333300,
+        "name": "Worst of SPY QQQ IWM 2028",
+        "symbol": null,
+        "identifier": "SPY QQQ IWM TRS 06302028",
+        "identifier_type": "cusip",
+        "weight_pct": -0.12,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": -179993.21,
+        "shares": 48333300.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "SPY QQQ IWM TRS 06302028",
         "raw": {
-          "n": "Worst Of Spy Qqq Iwm 2030",
-          "as": "0.01%",
-          "sh": "48,333,300"
+          "Date": "10/13/2026",
+          "Account": "ACII",
+          "StockTicker": "SPY QQQ IWM TRS 06302028",
+          "CUSIP": "SPY QQQ IWM TRS 06302028",
+          "SecurityName": "Worst of SPY QQQ IWM 2028",
+          "Shares": "48333300.00000000",
+          "Price": "-0.003724",
+          "MarketValue": "-179993.21",
+          "Weightings": "-0.12%",
+          "NetAssets": "146748120.00",
+          "SharesOutstanding": "5800000",
+          "CreationUnits": "232.000000000000",
+          "MoneyMarketFlag": ""
         }
       },
       {
-        "name": "Worst Of Spy Qqq Iwm 2028",
-        "weight_pct": -0.13,
-        "shares": 48333300,
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "cusip",
+        "weight_pct": -0.02,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": -32937.78,
+        "shares": -32937.78,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "Cash&Other",
         "raw": {
-          "n": "Worst Of Spy Qqq Iwm 2028",
-          "as": "-0.13%",
-          "sh": "48,333,300"
+          "Date": "10/13/2026",
+          "Account": "ACII",
+          "StockTicker": "Cash&Other",
+          "CUSIP": "Cash&Other",
+          "SecurityName": "Cash & Other",
+          "Shares": "-32937.78000000",
+          "Price": "1.000000",
+          "MarketValue": "-32937.78",
+          "Weightings": "-0.02%",
+          "NetAssets": "146748120.00",
+          "SharesOutstanding": "5800000",
+          "CreationUnits": "232.000000000000",
+          "MoneyMarketFlag": "Y"
         }
       }
     ],
@@ -106,7 +219,7 @@
     "sectors": null,
     "countries": null,
     "holding_count": 6,
-    "holdings_updated": "Oct 9, 2026",
+    "holdings_updated": "2026-10-13",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -117,9 +230,9 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": "$146.40M",
+      "aum": 146748120.0,
       "expenseRatio": "0.79%",
-      "sharesOut": "5.80M",
+      "sharesOut": 5800000.0,
       "dividendYield": "8.39%",
       "inception": "Sep 25, 2025",
       "provider_page": "innovator",
@@ -134,38 +247,35 @@
       "cagrMAX": 9.357
     },
     "quote": {
-      "p": 25.36,
-      "pd": 25.36,
       "c": -0.05,
-      "cp": -0.2,
-      "cl": 25.41,
-      "cdr": -1,
-      "o": 25.35,
-      "h": 25.48,
-      "l": 25.34,
-      "v": 31274,
-      "ts": 1791835200000,
+      "e": false,
+      "h": 25.39,
+      "l": 25.37,
+      "o": 25.39,
+      "p": 25.36,
       "u": "Oct 12, 2026, 4:00 PM EDT",
-      "td": "2026-10-12",
-      "h52": 26.87,
-      "l52": 24.35,
+      "v": 31274,
+      "cl": 25.41,
+      "cp": -0.2,
+      "ec": 0,
+      "ep": 25.37,
+      "eu": "Oct 13, 2026, 1:30 AM EDT",
       "ex": "NYSEARCA",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 25.36,
-      "epd": 25.36,
-      "ec": 0,
+      "pd": 25.36,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": "Oct 12, 2026, 7:30 PM EDT",
-      "es": "After-hours",
-      "ets": 1791847802395.3801,
-      "etd": "2026-10-12",
-      "epv": null,
+      "epd": 25.37,
+      "ets": 1791849600049.798,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 26.87,
+      "l52": 24.35,
+      "uid": "ACII",
       "days": 0,
-      "exp": 1791849607845,
-      "symbol": "ACII",
-      "uid": "ACII"
+      "symbol": "acii"
     },
     "history": [
       {
@@ -293,9 +403,9 @@
       "daily_1y": [
         {
           "t": "2026-10-12",
-          "o": 25.35,
-          "h": 25.48,
-          "l": 25.34,
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.37,
           "c": 25.36,
           "v": 31274,
           "a": 25.36,
@@ -2795,9 +2905,9 @@
       "weekly_1y": [
         {
           "t": "2026-10-12",
-          "o": 25.35,
-          "h": 25.48,
-          "l": 25.34,
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.37,
           "c": 25.36,
           "v": 31274,
           "a": 25.36,
@@ -3439,9 +3549,9 @@
       "weekly_3y": [
         {
           "t": "2026-10-12",
-          "o": 25.35,
-          "h": 25.48,
-          "l": 25.34,
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.37,
           "c": 25.36,
           "v": 31274,
           "a": 25.36,
@@ -4212,7 +4322,77 @@
           "ch": 1.04
         }
       ]
-    }
+    },
+    "holdings_history": [
+      {
+        "provider": "stockanalysis",
+        "source_as_of": "Oct 9, 2026",
+        "holdings": [
+          {
+            "symbol": "B.0 10.29.26",
+            "name": "United States Treasury Bills",
+            "weight_pct": 98.83,
+            "shares": 145424000,
+            "raw": {
+              "n": "United States Treasury Bills",
+              "s": "B.0 10.29.26",
+              "as": "98.83%",
+              "sh": "145,424,000"
+            }
+          },
+          {
+            "name": "Us Bank Mmda - Usbgfs 9",
+            "weight_pct": 0.98,
+            "shares": 1435133,
+            "raw": {
+              "n": "Us Bank Mmda - Usbgfs 9",
+              "as": "0.98%",
+              "sh": "1,435,133"
+            }
+          },
+          {
+            "name": "Worst Of Spy Qqq Iwm 2029",
+            "weight_pct": 0.17,
+            "shares": 48333300,
+            "raw": {
+              "n": "Worst Of Spy Qqq Iwm 2029",
+              "as": "0.17%",
+              "sh": "48,333,300"
+            }
+          },
+          {
+            "name": "Deposits With Broker For Short Positions",
+            "weight_pct": 0.13,
+            "raw": {
+              "n": "Deposits With Broker For Short Positions",
+              "as": "0.13%",
+              "sh": "n/a"
+            }
+          },
+          {
+            "name": "Worst Of Spy Qqq Iwm 2030",
+            "weight_pct": 0.01,
+            "shares": 48333300,
+            "raw": {
+              "n": "Worst Of Spy Qqq Iwm 2030",
+              "as": "0.01%",
+              "sh": "48,333,300"
+            }
+          },
+          {
+            "name": "Worst Of Spy Qqq Iwm 2028",
+            "weight_pct": -0.13,
+            "shares": 48333300,
+            "raw": {
+              "n": "Worst Of Spy Qqq Iwm 2028",
+              "as": "-0.13%",
+              "sh": "48,333,300"
+            }
+          }
+        ],
+        "holding_count": 6
+      }
+    ]
   },
   "raw": {
     "overview": {
@@ -4242,7 +4422,7 @@
         ],
         "topic": "overview",
         "ticker": "ACII",
-        "lastChecked": 1791849510957,
+        "lastChecked": 1791855027395,
         "summary": {
           "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
         }
@@ -4262,7 +4442,7 @@
       "holdings": 6,
       "inception": "Sep 25, 2025",
       "chart": {
-        "expiration": 1791851723003,
+        "expiration": 1791898200000,
         "data": [
           {
             "t": 1791797400
@@ -6007,38 +6187,35 @@
     },
     "holdings": {},
     "quote": {
-      "p": 25.36,
-      "pd": 25.36,
       "c": -0.05,
-      "cp": -0.2,
-      "cl": 25.41,
-      "cdr": -1,
-      "o": 25.35,
-      "h": 25.48,
-      "l": 25.34,
-      "v": 31274,
-      "ts": 1791835200000,
+      "e": false,
+      "h": 25.39,
+      "l": 25.37,
+      "o": 25.39,
+      "p": 25.36,
       "u": "Oct 12, 2026, 4:00 PM EDT",
-      "td": "2026-10-12",
-      "h52": 26.87,
-      "l52": 24.35,
+      "v": 31274,
+      "cl": 25.41,
+      "cp": -0.2,
+      "ec": 0,
+      "ep": 25.37,
+      "eu": "Oct 13, 2026, 1:30 AM EDT",
       "ex": "NYSEARCA",
       "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 25.36,
-      "epd": 25.36,
-      "ec": 0,
+      "pd": 25.36,
+      "td": "2026-10-12",
+      "ts": 1791835200000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": "Oct 12, 2026, 7:30 PM EDT",
-      "es": "After-hours",
-      "ets": 1791847802395.3801,
-      "etd": "2026-10-12",
-      "epv": null,
+      "epd": 25.37,
+      "ets": 1791849600049.798,
+      "exp": 1791879300000,
+      "fms": "closed",
+      "h52": 26.87,
+      "l52": 24.35,
+      "uid": "ACII",
       "days": 0,
-      "exp": 1791849607845,
-      "symbol": "ACII",
-      "uid": "ACII"
+      "symbol": "acii"
     },
     "history": [
       {
@@ -6166,9 +6343,9 @@
       "daily_1y": [
         {
           "t": "2026-10-12",
-          "o": 25.35,
-          "h": 25.48,
-          "l": 25.34,
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.37,
           "c": 25.36,
           "v": 31274,
           "a": 25.36,
@@ -8668,9 +8845,9 @@
       "weekly_1y": [
         {
           "t": "2026-10-12",
-          "o": 25.35,
-          "h": 25.48,
-          "l": 25.34,
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.37,
           "c": 25.36,
           "v": 31274,
           "a": 25.36,
@@ -9312,9 +9489,9 @@
       "weekly_3y": [
         {
           "t": "2026-10-12",
-          "o": 25.35,
-          "h": 25.48,
-          "l": 25.34,
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.37,
           "c": 25.36,
           "v": 31274,
           "a": 25.36,
@@ -10085,13 +10262,385 @@
           "ch": 1.04
         }
       ]
+    },
+    "official_issuer": {
+      "ticker": "ACII",
+      "provider": "innovator",
+      "source_url": "https://www.innovatoretfs.com/etf/xt_holdings.csv",
+      "fetched_at": "2026-10-13T03:39:24Z",
+      "source_as_of": "2026-10-13",
+      "holdings": [
+        {
+          "name": "US BANK MMDA - USBGFS 9 09/01/2037",
+          "symbol": null,
+          "identifier": "8AMMF0JA0",
+          "identifier_type": "cusip",
+          "weight_pct": 1.0,
+          "weight_basis": "provider_weightings_signed",
+          "market_value": 1461599.87,
+          "shares": 1461599.87,
+          "quantity": null,
+          "as_of_date": "2026-10-13",
+          "position_date": null,
+          "provider_ticker": "8AMMF0JA0",
+          "raw": {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "8AMMF0JA0",
+            "CUSIP": "8AMMF0JA0",
+            "SecurityName": "US BANK MMDA - USBGFS 9 09/01/2037",
+            "Shares": "1461599.87000000",
+            "Price": "100.000000",
+            "MarketValue": "1461599.87",
+            "Weightings": "1.00%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": "Y"
+          }
+        },
+        {
+          "name": "United States Treasury Bill 10/29/2026",
+          "symbol": null,
+          "identifier": "912797SK4",
+          "identifier_type": "cusip",
+          "weight_pct": 98.93,
+          "weight_basis": "provider_weightings_signed",
+          "market_value": 145176029.82,
+          "shares": 145424000.0,
+          "quantity": null,
+          "as_of_date": "2026-10-13",
+          "position_date": null,
+          "provider_ticker": "912797SK4",
+          "raw": {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "912797SK4",
+            "CUSIP": "912797SK4",
+            "SecurityName": "United States Treasury Bill 10/29/2026",
+            "Shares": "145424000.00000000",
+            "Price": "99.829485",
+            "MarketValue": "145176029.82",
+            "Weightings": "98.93%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          }
+        },
+        {
+          "name": "Worst of SPY QQQ IWM 2029",
+          "symbol": null,
+          "identifier": "SPY QQQ IWM TRS 04302029",
+          "identifier_type": "cusip",
+          "weight_pct": 0.18,
+          "weight_basis": "provider_weightings_signed",
+          "market_value": 260999.82,
+          "shares": 48333300.0,
+          "quantity": null,
+          "as_of_date": "2026-10-13",
+          "position_date": null,
+          "provider_ticker": "SPY QQQ IWM TRS 04302029",
+          "raw": {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "SPY QQQ IWM TRS 04302029",
+            "CUSIP": "SPY QQQ IWM TRS 04302029",
+            "SecurityName": "Worst of SPY QQQ IWM 2029",
+            "Shares": "48333300.00000000",
+            "Price": "0.005400",
+            "MarketValue": "260999.82",
+            "Weightings": "0.18%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          }
+        },
+        {
+          "name": "Worst of SPY QQQ IWM 2030",
+          "symbol": null,
+          "identifier": "SPY QQQ IWM TRS 05312030",
+          "identifier_type": "cusip",
+          "weight_pct": 0.04,
+          "weight_basis": "provider_weightings_signed",
+          "market_value": 59401.63,
+          "shares": 48333300.0,
+          "quantity": null,
+          "as_of_date": "2026-10-13",
+          "position_date": null,
+          "provider_ticker": "SPY QQQ IWM TRS 05312030",
+          "raw": {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "SPY QQQ IWM TRS 05312030",
+            "CUSIP": "SPY QQQ IWM TRS 05312030",
+            "SecurityName": "Worst of SPY QQQ IWM 2030",
+            "Shares": "48333300.00000000",
+            "Price": "0.001229",
+            "MarketValue": "59401.63",
+            "Weightings": "0.04%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          }
+        },
+        {
+          "name": "Worst of SPY QQQ IWM 2028",
+          "symbol": null,
+          "identifier": "SPY QQQ IWM TRS 06302028",
+          "identifier_type": "cusip",
+          "weight_pct": -0.12,
+          "weight_basis": "provider_weightings_signed",
+          "market_value": -179993.21,
+          "shares": 48333300.0,
+          "quantity": null,
+          "as_of_date": "2026-10-13",
+          "position_date": null,
+          "provider_ticker": "SPY QQQ IWM TRS 06302028",
+          "raw": {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "SPY QQQ IWM TRS 06302028",
+            "CUSIP": "SPY QQQ IWM TRS 06302028",
+            "SecurityName": "Worst of SPY QQQ IWM 2028",
+            "Shares": "48333300.00000000",
+            "Price": "-0.003724",
+            "MarketValue": "-179993.21",
+            "Weightings": "-0.12%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          }
+        },
+        {
+          "name": "Cash & Other",
+          "symbol": null,
+          "identifier": "Cash&Other",
+          "identifier_type": "cusip",
+          "weight_pct": -0.02,
+          "weight_basis": "provider_weightings_signed",
+          "market_value": -32937.78,
+          "shares": -32937.78,
+          "quantity": null,
+          "as_of_date": "2026-10-13",
+          "position_date": null,
+          "provider_ticker": "Cash&Other",
+          "raw": {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "Cash&Other",
+            "CUSIP": "Cash&Other",
+            "SecurityName": "Cash & Other",
+            "Shares": "-32937.78000000",
+            "Price": "1.000000",
+            "MarketValue": "-32937.78",
+            "Weightings": "-0.02%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": "Y"
+          }
+        }
+      ],
+      "quote": {
+        "shares_outstanding": 5800000.0,
+        "shares_outstanding_as_of": "2026-10-13",
+        "aum": 146748120.0,
+        "aum_as_of": "2026-10-13"
+      },
+      "history": [],
+      "classification": {
+        "provider_account": "ACII"
+      },
+      "field_dates": {
+        "holdings": "2026-10-13",
+        "shares_outstanding": "2026-10-13",
+        "aum": "2026-10-13"
+      },
+      "completeness": [
+        "holdings are every published row for this account in the issuer's all-funds holdings CSV, and all of them share one Date",
+        "weights are the provider's signed Weightings values; long and short option legs, money market and Cash & Other stay exactly as published with no sum-to-100 check",
+        "shares outstanding and AUM are published only when every selected row agrees on a finite value; otherwise they are omitted rather than guessed",
+        "option legs carry a composite provider ticker, so symbol is set only for plain tickers",
+        "the CSV carries no dated history, no fund classification and no notional exposure"
+      ],
+      "holdings_snapshot": {
+        "full_published_snapshot": true,
+        "identity": "ACII",
+        "snapshot_date": "2026-10-13",
+        "position_date": null,
+        "row_count": 6,
+        "cash_treatment": "separate",
+        "scope_note": "issuer publishes every holdings row for this account in one dated all-funds CSV"
+      },
+      "raw": {
+        "holdings_url": "https://www.innovatoretfs.com/etf/xt_holdings.csv",
+        "csv_header": [
+          "Date",
+          "Account",
+          "StockTicker",
+          "CUSIP",
+          "SecurityName",
+          "Shares",
+          "Price",
+          "MarketValue",
+          "Weightings",
+          "NetAssets",
+          "SharesOutstanding",
+          "CreationUnits",
+          "MoneyMarketFlag"
+        ],
+        "holdings_rows": [
+          {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "8AMMF0JA0",
+            "CUSIP": "8AMMF0JA0",
+            "SecurityName": "US BANK MMDA - USBGFS 9 09/01/2037",
+            "Shares": "1461599.87000000",
+            "Price": "100.000000",
+            "MarketValue": "1461599.87",
+            "Weightings": "1.00%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": "Y"
+          },
+          {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "912797SK4",
+            "CUSIP": "912797SK4",
+            "SecurityName": "United States Treasury Bill 10/29/2026",
+            "Shares": "145424000.00000000",
+            "Price": "99.829485",
+            "MarketValue": "145176029.82",
+            "Weightings": "98.93%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          },
+          {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "SPY QQQ IWM TRS 04302029",
+            "CUSIP": "SPY QQQ IWM TRS 04302029",
+            "SecurityName": "Worst of SPY QQQ IWM 2029",
+            "Shares": "48333300.00000000",
+            "Price": "0.005400",
+            "MarketValue": "260999.82",
+            "Weightings": "0.18%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          },
+          {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "SPY QQQ IWM TRS 05312030",
+            "CUSIP": "SPY QQQ IWM TRS 05312030",
+            "SecurityName": "Worst of SPY QQQ IWM 2030",
+            "Shares": "48333300.00000000",
+            "Price": "0.001229",
+            "MarketValue": "59401.63",
+            "Weightings": "0.04%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          },
+          {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "SPY QQQ IWM TRS 06302028",
+            "CUSIP": "SPY QQQ IWM TRS 06302028",
+            "SecurityName": "Worst of SPY QQQ IWM 2028",
+            "Shares": "48333300.00000000",
+            "Price": "-0.003724",
+            "MarketValue": "-179993.21",
+            "Weightings": "-0.12%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": ""
+          },
+          {
+            "Date": "10/13/2026",
+            "Account": "ACII",
+            "StockTicker": "Cash&Other",
+            "CUSIP": "Cash&Other",
+            "SecurityName": "Cash & Other",
+            "Shares": "-32937.78000000",
+            "Price": "1.000000",
+            "MarketValue": "-32937.78",
+            "Weightings": "-0.02%",
+            "NetAssets": "146748120.00",
+            "SharesOutstanding": "5800000",
+            "CreationUnits": "232.000000000000",
+            "MoneyMarketFlag": "Y"
+          }
+        ]
+      }
+    },
+    "official_holdings": {
+      "provider": "innovator",
+      "landing_page": "https://www.innovatoretfs.com/etf/xt_holdings.csv",
+      "source_as_of": "2026-10-13",
+      "position_scope": "issuer_published_snapshot",
+      "completeness": [
+        "holdings are every published row for this account in the issuer's all-funds holdings CSV, and all of them share one Date",
+        "weights are the provider's signed Weightings values; long and short option legs, money market and Cash & Other stay exactly as published with no sum-to-100 check",
+        "shares outstanding and AUM are published only when every selected row agrees on a finite value; otherwise they are omitted rather than guessed",
+        "option legs carry a composite provider ticker, so symbol is set only for plain tickers",
+        "the CSV carries no dated history, no fund classification and no notional exposure"
+      ]
     }
   },
-  "detail_status": "stockanalysis_partial",
-  "partial_reason_codes": [
-    "holdings_unavailable",
-    "holdings_count_unavailable",
-    "holdings_date_unavailable",
-    "holdings_countries_unavailable"
-  ]
+  "holdings_source": {
+    "provider": "innovator",
+    "landing_page": "https://www.innovatoretfs.com/etf/xt_holdings.csv",
+    "source_as_of": "2026-10-13",
+    "position_scope": "issuer_published_snapshot",
+    "completeness": [
+      "holdings are every published row for this account in the issuer's all-funds holdings CSV, and all of them share one Date",
+      "weights are the provider's signed Weightings values; long and short option legs, money market and Cash & Other stay exactly as published with no sum-to-100 check",
+      "shares outstanding and AUM are published only when every selected row agrees on a finite value; otherwise they are omitted rather than guessed",
+      "option legs carry a composite provider ticker, so symbol is set only for plain tickers",
+      "the CSV carries no dated history, no fund classification and no notional exposure"
+    ]
+  },
+  "field_sources": {
+    "sharesOut": {
+      "provider": "innovator",
+      "source_as_of": "2026-10-13",
+      "source_url": "https://www.innovatoretfs.com/etf/xt_holdings.csv",
+      "status": "available"
+    },
+    "aum": {
+      "provider": "innovator",
+      "source_as_of": "2026-10-13",
+      "source_url": "https://www.innovatoretfs.com/etf/xt_holdings.csv",
+      "status": "available"
+    },
+    "holdings": {
+      "provider": "innovator",
+      "source_as_of": "2026-10-13T00:00:00Z",
+      "status": "available"
+    },
+    "quote": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T20:00:00Z",
+      "status": "available"
+    },
+    "history": {
+      "provider": "stockanalysis",
+      "source_as_of": "2026-10-12T00:00:00Z",
+      "status": "available"
+    }
+  }
 }
