@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "LJUL",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T13:08:05Z",
-  "source_as_of": "2026-10-07",
+  "generated_at": "2026-10-13T13:46:39Z",
+  "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -18,9 +18,9 @@
   "facts": {
     "price": {
       "value": 23.965,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-13T12:20:02Z",
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -32,27 +32,11 @@
       "candidates": [
         {
           "value": 23.965,
-          "source": "yf",
-          "as_of": "2026-10-07",
-          "fetched_at": "2026-10-13T12:20:02Z",
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
           "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1,
-      "selection_rule": "source_date_desc_then_provider_priority"
-    },
-    "previous_close": {
-      "value": 23.965,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-13T12:20:02Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.quote",
-        "yf.stockanalysis_fallback.quote"
-      ],
-      "candidates": [
+        },
         {
           "value": 23.965,
           "source": "yf",
@@ -61,14 +45,44 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
+      "selection_rule": "source_date_desc_then_provider_priority"
+    },
+    "previous_close": {
+      "value": 23.97,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 23.97,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 23.965,
+          "source": "yf",
+          "as_of": "2026-10-07",
+          "fetched_at": "2026-10-13T12:20:02Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.0,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-13T12:20:02Z",
+      "value": 0,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -78,6 +92,13 @@
       ],
       "candidates": [
         {
+          "value": 0,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed"
+        },
+        {
           "value": 0.0,
           "source": "yf",
           "as_of": "2026-10-07",
@@ -85,14 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 0.0,
-      "source": "yf",
-      "as_of": "2026-10-07",
-      "fetched_at": "2026-10-13T12:20:02Z",
+      "value": -0.02,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": -0.02,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed"
+        },
+        {
           "value": 0.0,
           "source": "yf",
           "as_of": "2026-10-07",
@@ -109,14 +137,108 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 8991187.5,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 8991187.5,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 5.21,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 5.21,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": 0.04,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
+      ],
+      "candidates": [
+        {
+          "value": 0.04,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.79,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.79,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": 0.2127,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T23:54:05Z",
+      "value": 0.4645,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,21 +249,52 @@
       ],
       "candidates": [
         {
-          "value": 0.2127,
+          "value": 0.4645,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.4645,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T23:54:05Z",
           "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 1.591125162089027,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 1.591125162089027,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "derived",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 3.585,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T23:54:05Z",
+      "value": 3.958,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -153,7 +306,15 @@
       ],
       "candidates": [
         {
-          "value": 3.585,
+          "value": 3.958,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.958,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T23:54:05Z",
@@ -161,13 +322,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
-      "value": 5.146,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T23:54:05Z",
+      "value": 5.638,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -179,7 +340,15 @@
       ],
       "candidates": [
         {
-          "value": 5.146,
+          "value": 5.638,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 5.638,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T23:54:05Z",
@@ -187,13 +356,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_max_avg": {
-      "value": 3.839,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T23:54:05Z",
+      "value": 3.918,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:10:36Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -203,7 +372,15 @@
       ],
       "candidates": [
         {
-          "value": 3.839,
+          "value": 3.918,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:10:36Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 3.918,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T23:54:05Z",
@@ -211,24 +388,381 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 12,
+    "holdings_updated": "2026-10-13",
+    "top_holdings": [
+      {
+        "name": "SPY 06/30/2027 634.72 P",
+        "symbol": null,
+        "identifier": "4SPY  270630P00634720",
+        "identifier_type": "cusip",
+        "weight_pct": -1.21,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": -108798.0,
+        "shares": -120.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "4SPY  270630P00634720",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "4SPY  270630P00634720",
+          "CUSIP": "4SPY  270630P00634720",
+          "SecurityName": "SPY 06/30/2027 634.72 P",
+          "Shares": "-120.00000000",
+          "Price": "9.066500",
+          "MarketValue": "-108798.00",
+          "Weightings": "-1.21%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "US BANK MMDA - USBGFS 9 09/01/2037",
+        "symbol": null,
+        "identifier": "8AMMF0JA0",
+        "identifier_type": "cusip",
+        "weight_pct": 0.04,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 3582.26,
+        "shares": 3582.26,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "8AMMF0JA0",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "8AMMF0JA0",
+          "CUSIP": "8AMMF0JA0",
+          "SecurityName": "US BANK MMDA - USBGFS 9 09/01/2037",
+          "Shares": "3582.26000000",
+          "Price": "100.000000",
+          "MarketValue": "3582.26",
+          "Weightings": "0.04%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": "Y"
+        }
+      },
+      {
+        "name": "United States Treasury Bill 10/29/2026",
+        "symbol": null,
+        "identifier": "912797SK4",
+        "identifier_type": "cusip",
+        "weight_pct": 0.44,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39732.13,
+        "shares": 39800.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797SK4",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797SK4",
+          "CUSIP": "912797SK4",
+          "SecurityName": "United States Treasury Bill 10/29/2026",
+          "Shares": "39800.00000000",
+          "Price": "99.829485",
+          "MarketValue": "39732.13",
+          "Weightings": "0.44%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 11/27/2026",
+        "symbol": null,
+        "identifier": "912797SU2",
+        "identifier_type": "cusip",
+        "weight_pct": 0.44,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39602.74,
+        "shares": 39800.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797SU2",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797SU2",
+          "CUSIP": "912797SU2",
+          "SecurityName": "United States Treasury Bill 11/27/2026",
+          "Shares": "39800.00000000",
+          "Price": "99.504364",
+          "MarketValue": "39602.74",
+          "Weightings": "0.44%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 01/21/2027",
+        "symbol": null,
+        "identifier": "912797TM9",
+        "identifier_type": "cusip",
+        "weight_pct": 0.44,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39353.09,
+        "shares": 39800.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797TM9",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797TM9",
+          "CUSIP": "912797TM9",
+          "SecurityName": "United States Treasury Bill 01/21/2027",
+          "Shares": "39800.00000000",
+          "Price": "98.877114",
+          "MarketValue": "39353.09",
+          "Weightings": "0.44%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 02/18/2027",
+        "symbol": null,
+        "identifier": "912797TV9",
+        "identifier_type": "cusip",
+        "weight_pct": 0.44,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39321.67,
+        "shares": 39900.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797TV9",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797TV9",
+          "CUSIP": "912797TV9",
+          "SecurityName": "United States Treasury Bill 02/18/2027",
+          "Shares": "39900.00000000",
+          "Price": "98.550551",
+          "MarketValue": "39321.67",
+          "Weightings": "0.44%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 03/18/2027",
+        "symbol": null,
+        "identifier": "912797UD7",
+        "identifier_type": "cusip",
+        "weight_pct": 0.44,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39184.58,
+        "shares": 39900.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797UD7",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797UD7",
+          "CUSIP": "912797UD7",
+          "SecurityName": "United States Treasury Bill 03/18/2027",
+          "Shares": "39900.00000000",
+          "Price": "98.206962",
+          "MarketValue": "39184.58",
+          "Weightings": "0.44%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 04/15/2027",
+        "symbol": null,
+        "identifier": "912797UE5",
+        "identifier_type": "cusip",
+        "weight_pct": 0.43,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39049.4,
+        "shares": 39900.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797UE5",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797UE5",
+          "CUSIP": "912797UE5",
+          "SecurityName": "United States Treasury Bill 04/15/2027",
+          "Shares": "39900.00000000",
+          "Price": "97.868172",
+          "MarketValue": "39049.40",
+          "Weightings": "0.43%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 05/13/2027",
+        "symbol": null,
+        "identifier": "912797UX3",
+        "identifier_type": "cusip",
+        "weight_pct": 0.43,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 38942.97,
+        "shares": 39900.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797UX3",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797UX3",
+          "CUSIP": "912797UX3",
+          "SecurityName": "United States Treasury Bill 05/13/2027",
+          "Shares": "39900.00000000",
+          "Price": "97.601428",
+          "MarketValue": "38942.97",
+          "Weightings": "0.43%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 06/10/2027",
+        "symbol": null,
+        "identifier": "912797VF1",
+        "identifier_type": "cusip",
+        "weight_pct": 97.76,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 8789733.46,
+        "shares": 9037500.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797VF1",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797VF1",
+          "CUSIP": "912797VF1",
+          "SecurityName": "United States Treasury Bill 06/10/2027",
+          "Shares": "9037500.00000000",
+          "Price": "97.258462",
+          "MarketValue": "8789733.46",
+          "Weightings": "97.76%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "United States Treasury Bill 12/31/2026",
+        "symbol": null,
+        "identifier": "912797VJ3",
+        "identifier_type": "cusip",
+        "weight_pct": 0.44,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": 39447.36,
+        "shares": 39800.0,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "912797VJ3",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "912797VJ3",
+          "CUSIP": "912797VJ3",
+          "SecurityName": "United States Treasury Bill 12/31/2026",
+          "Shares": "39800.00000000",
+          "Price": "99.113972",
+          "MarketValue": "39447.36",
+          "Weightings": "0.44%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": ""
+        }
+      },
+      {
+        "name": "Cash & Other",
+        "symbol": null,
+        "identifier": "Cash&Other",
+        "identifier_type": "cusip",
+        "weight_pct": -0.09,
+        "weight_basis": "provider_weightings_signed",
+        "market_value": -8158.34,
+        "shares": -8158.34,
+        "quantity": null,
+        "as_of_date": "2026-10-13",
+        "position_date": null,
+        "provider_ticker": "Cash&Other",
+        "raw": {
+          "Date": "10/13/2026",
+          "Account": "LJUL",
+          "StockTicker": "Cash&Other",
+          "CUSIP": "Cash&Other",
+          "SecurityName": "Cash & Other",
+          "Shares": "-8158.34000000",
+          "Price": "1.000000",
+          "MarketValue": "-8158.34",
+          "Weightings": "-0.09%",
+          "NetAssets": "8991187.50",
+          "SharesOutstanding": "375000",
+          "CreationUnits": "15.000000000000",
+          "MoneyMarketFlag": "Y"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -236,14 +770,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/LJUL.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/LJUL.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "IBGM",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T01:16:41Z",
-  "source_as_of": "2026-10-09",
+  "generated_at": "2026-10-13T13:46:39Z",
+  "source_as_of": "2026-10-12",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 22.54,
-      "source": "yf",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T11:35:17Z",
+      "value": 22.5563,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,6 +31,13 @@
       ],
       "candidates": [
         {
+          "value": 22.5563,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed"
+        },
+        {
           "value": 22.54,
           "source": "yf",
           "as_of": "2026-10-09",
@@ -38,14 +45,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 22.51,
-      "source": "yf",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T11:35:17Z",
+      "value": 22.54,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 22.54,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed"
+        },
         {
           "value": 22.51,
           "source": "yf",
@@ -61,14 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": 0.030000687,
-      "source": "yf",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T11:35:17Z",
+      "value": 0.02,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -77,6 +91,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 0.02,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed"
+        },
         {
           "value": 0.030000687,
           "source": "yf",
@@ -85,14 +106,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": 0.13327715,
-      "source": "yf",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T11:35:17Z",
+      "value": 0.07,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -102,6 +123,13 @@
       ],
       "candidates": [
         {
+          "value": 0.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed"
+        },
+        {
           "value": 0.13327715,
           "source": "yf",
           "as_of": "2026-10-09",
@@ -109,14 +137,85 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
+    "total_assets": {
+      "value": 40520000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 40520000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 2.59,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 2.59,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.07,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.07,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -4.96333,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-12T23:54:05Z",
+      "value": -3.08374,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -127,7 +226,15 @@
       ],
       "candidates": [
         {
-          "value": -4.96333,
+          "value": -3.08374,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -3.08374,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-10-12T23:54:05Z",
@@ -135,24 +242,272 @@
           "unit": "percent_points"
         }
       ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": -6.028252600023187,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-10-12",
+      "fetched_at": "2026-10-13T13:09:38Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -6.028252600023187,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-10-12",
+          "fetched_at": "2026-10-13T13:09:38Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
       "candidate_count": 1
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 4,
+    "holdings_updated": "2026-10-09",
+    "top_holdings": [
+      {
+        "name": "TREASURY BOND (OLD)",
+        "symbol": null,
+        "identifier": "912810UU0",
+        "identifier_type": "cusip",
+        "weight_pct": 38.12,
+        "weight_basis": "provider_weight_signed",
+        "market_value": 15457580.59,
+        "notional_value": 15457580.59,
+        "shares": null,
+        "provider_quantity": 16563100.0,
+        "provider_quantity_field": "Par Value",
+        "quantity_unit": "par_value",
+        "price": 91.33,
+        "strike_price": null,
+        "location": "United States",
+        "exchange": "-",
+        "currency": "USD",
+        "maturity": "May 15, 2056",
+        "sector": "Treasury",
+        "asset_class": "Fixed Income",
+        "as_of_date": "2026-10-09",
+        "position_date": null,
+        "instrument_type": null,
+        "raw": {
+          "Name": "TREASURY BOND (OLD)",
+          "Sector": "Treasury",
+          "Asset Class": "Fixed Income",
+          "Market Value": "15,457,580.59",
+          "Weight (%)": "38.12",
+          "Notional Value": "15,457,580.59",
+          "Par Value": "16,563,100.00",
+          "CUSIP": "912810UU0",
+          "ISIN": "US912810UU06",
+          "SEDOL": "BSHW985",
+          "Price": "91.33",
+          "Location": "United States",
+          "Exchange": "-",
+          "Currency": "USD",
+          "Duration": "14.17",
+          "YTM (%)": "5.60",
+          "FX Rate": "1.00",
+          "Maturity": "May 15, 2056",
+          "Coupon (%)": "5.00",
+          "Mod. Duration": "14.39",
+          "Yield to Call (%)": "-",
+          "Yield to Worst (%)": "5.60",
+          "Real Duration": "14.39",
+          "Real YTM (%)": "5.60",
+          "Market Currency": "USD",
+          "Accrual Date": "May 15, 2026",
+          "Effective Date": "May 15, 2026"
+        }
+      },
+      {
+        "name": "TREASURY BOND (2OLD)",
+        "symbol": null,
+        "identifier": "912810UR7",
+        "identifier_type": "cusip",
+        "weight_pct": 36.13,
+        "weight_basis": "provider_weight_signed",
+        "market_value": 14649068.76,
+        "notional_value": 14649068.76,
+        "shares": null,
+        "provider_quantity": 16568900.0,
+        "provider_quantity_field": "Par Value",
+        "quantity_unit": "par_value",
+        "price": 87.7,
+        "strike_price": null,
+        "location": "United States",
+        "exchange": "-",
+        "currency": "USD",
+        "maturity": "Feb 15, 2056",
+        "sector": "Treasury",
+        "asset_class": "Fixed Income",
+        "as_of_date": "2026-10-09",
+        "position_date": null,
+        "instrument_type": null,
+        "raw": {
+          "Name": "TREASURY BOND (2OLD)",
+          "Sector": "Treasury",
+          "Asset Class": "Fixed Income",
+          "Market Value": "14,649,068.76",
+          "Weight (%)": "36.13",
+          "Notional Value": "14,649,068.76",
+          "Par Value": "16,568,900.00",
+          "CUSIP": "912810UR7",
+          "ISIN": "US912810UR76",
+          "SEDOL": "BWBZNN1",
+          "Price": "87.70",
+          "Location": "United States",
+          "Exchange": "-",
+          "Currency": "USD",
+          "Duration": "14.47",
+          "YTM (%)": "5.61",
+          "FX Rate": "1.00",
+          "Maturity": "Feb 15, 2056",
+          "Coupon (%)": "4.75",
+          "Mod. Duration": "14.69",
+          "Yield to Call (%)": "-",
+          "Yield to Worst (%)": "5.61",
+          "Real Duration": "14.69",
+          "Real YTM (%)": "5.61",
+          "Market Currency": "USD",
+          "Accrual Date": "Feb 15, 2026",
+          "Effective Date": "Feb 17, 2026"
+        }
+      },
+      {
+        "name": "TREASURY BOND (OTR)",
+        "symbol": null,
+        "identifier": "912810UW6",
+        "identifier_type": "cusip",
+        "weight_pct": 25.74,
+        "weight_basis": "provider_weight_signed",
+        "market_value": 10436496.66,
+        "notional_value": 10436496.66,
+        "shares": null,
+        "provider_quantity": 11113700.0,
+        "provider_quantity_field": "Par Value",
+        "quantity_unit": "par_value",
+        "price": 93.14,
+        "strike_price": null,
+        "location": "United States",
+        "exchange": "-",
+        "currency": "USD",
+        "maturity": "Aug 15, 2056",
+        "sector": "Treasury",
+        "asset_class": "Fixed Income",
+        "as_of_date": "2026-10-09",
+        "position_date": null,
+        "instrument_type": null,
+        "raw": {
+          "Name": "TREASURY BOND (OTR)",
+          "Sector": "Treasury",
+          "Asset Class": "Fixed Income",
+          "Market Value": "10,436,496.66",
+          "Weight (%)": "25.74",
+          "Notional Value": "10,436,496.66",
+          "Par Value": "11,113,700.00",
+          "CUSIP": "912810UW6",
+          "ISIN": "US912810UW61",
+          "SEDOL": "C084JB6",
+          "Price": "93.14",
+          "Location": "United States",
+          "Exchange": "-",
+          "Currency": "USD",
+          "Duration": "14.34",
+          "YTM (%)": "5.60",
+          "FX Rate": "1.00",
+          "Maturity": "Aug 15, 2056",
+          "Coupon (%)": "5.13",
+          "Mod. Duration": "14.56",
+          "Yield to Call (%)": "-",
+          "Yield to Worst (%)": "5.60",
+          "Real Duration": "14.56",
+          "Real YTM (%)": "5.60",
+          "Market Currency": "USD",
+          "Accrual Date": "Aug 15, 2026",
+          "Effective Date": "Aug 17, 2026"
+        }
+      },
+      {
+        "name": "BLK CSH FND TREASURY SL AGENCY",
+        "symbol": null,
+        "identifier": "066922477",
+        "identifier_type": "cusip",
+        "weight_pct": 0.01,
+        "weight_basis": "provider_weight_signed",
+        "market_value": 2690.35,
+        "notional_value": 2690.35,
+        "shares": null,
+        "provider_quantity": 2690.0,
+        "provider_quantity_field": "Par Value",
+        "quantity_unit": null,
+        "price": 1.0,
+        "strike_price": null,
+        "location": "United States",
+        "exchange": "-",
+        "currency": "USD",
+        "maturity": "-",
+        "sector": "Cash and/or Derivatives",
+        "asset_class": "Money Market",
+        "as_of_date": "2026-10-09",
+        "position_date": null,
+        "instrument_type": null,
+        "raw": {
+          "Name": "BLK CSH FND TREASURY SL AGENCY",
+          "Sector": "Cash and/or Derivatives",
+          "Asset Class": "Money Market",
+          "Market Value": "2,690.35",
+          "Weight (%)": "0.01",
+          "Notional Value": "2,690.35",
+          "Par Value": "2,690.00",
+          "CUSIP": "066922477",
+          "ISIN": "US0669224778",
+          "SEDOL": "6922477",
+          "Price": "1.00",
+          "Location": "United States",
+          "Exchange": "-",
+          "Currency": "USD",
+          "Duration": "0.07",
+          "YTM (%)": "3.83",
+          "FX Rate": "1.00",
+          "Maturity": "-",
+          "Coupon (%)": "3.91",
+          "Mod. Duration": "0.08",
+          "Yield to Call (%)": "-",
+          "Yield to Worst (%)": "3.83",
+          "Real Duration": "0.08",
+          "Real YTM (%)": "3.83",
+          "Market Currency": "USD",
+          "Accrual Date": "-",
+          "Effective Date": "Feb 04, 2009"
+        }
+      }
+    ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
@@ -160,14 +515,14 @@
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/IBGM.json",
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/IBGM.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
