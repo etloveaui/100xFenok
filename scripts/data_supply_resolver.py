@@ -14,6 +14,8 @@ from data_supply_policy import DomainPolicy, get_domain_policy
 from stockanalysis_recovery_state import (
     archived_etf_history,
     etf_detail_regression,
+    etf_display_daily_history,
+    issuer_holdings_snapshot,
     _etf_component_clocks,
     _etf_history_date_set,
     _etf_provider_source,
@@ -248,7 +250,10 @@ class DataSupplyResolver:
                         or str(info.get("symbol") or funds.get("symbol") or "").strip().upper() != row["entity"]
                         or str(info.get("quoteType") or funds.get("quote_type") or "").upper() not in {"ETF", "MUTUALFUND"}
                         or _timestamp(yahoo["source_as_of"]) != prior_source
-                        or proven_source != prior_source
+                        or (proven_source != prior_source and not (
+                            issuer_holdings_snapshot(payload) is not None
+                            and value is None and proven_source is not None
+                            and proven_source.date() == prior_source.date()))
                         or _timestamp(yahoo["fetched_at"]) != prior_fetched):
                     return False
             elif set(yahoo) - {"ticker", "suffix"}:
@@ -259,7 +264,7 @@ class DataSupplyResolver:
             if yahoo_days is None:
                 return False
             native_periods = payload.get("raw", {}).get("history_periods") or {}
-            native_history = native_periods.get("daily_1y")
+            native_history = etf_display_daily_history(payload)
             native_days = _etf_history_date_set(native_history) if native_history is not None else set()
             if native_days is None:
                 return False

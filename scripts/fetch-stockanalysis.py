@@ -50,8 +50,9 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
+from official_etf_sources import SUPPORTED_TICKERS as ISSUER_ETFS, fetch_official_etf
 from yahoo_batch_state import current_yahoo_universe_sources, verified_yahoo_terminal_evidence
-from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, membership as etf_membership, record_probe as record_etf_lifecycle_probe, ORPHAN_PROBE_LIMIT, ROTATION_POLICY
+from stockanalysis_etf_lifecycle import Inputs as EtfLifecycleInputs, membership as etf_membership, record_probe as record_etf_lifecycle_probe, ORPHAN_PROBE_LIMIT, ROTATION_POLICY, new_fund_tickers
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from data_supply_resolver import _ETF_DETAIL_POLICY, _provider_object_path
 from stockanalysis_recovery_state import (
@@ -59,6 +60,9 @@ from stockanalysis_recovery_state import (
     archived_etf_history,
     archived_etf_history_periods,
     etf_detail_regression,
+    etf_holdings_snapshot,
+    issuer_holdings_snapshot,
+    etf_display_daily_history,
     _etf_provider_source,
     _etf_component_clocks,
     _etf_history_dates,
@@ -3479,7 +3483,59 @@ def fetch_etf(
 def collect_etf_payload(ticker: str, timeout: int, include_history: bool) -> dict:
     """Collect only provider responses; publication stays on the coordinator."""
     if include_history:
-        return fetch_etf(ticker, timeout, allow_partial_holdings=True)
+        payload = fetch_etf(ticker, timeout, allow_partial_holdings=True)
+        if ticker in ISSUER_ETFS:
+            issuer = fetch_official_etf(ticker, timeout)
+            normalized = payload["normalized"]
+            holdings_date = issuer["field_dates"]["holdings"]
+            native_date = parse_stockanalysis_date(normalized.get("holdings_updated"))
+            issuer_date = parse_stockanalysis_date(holdings_date)
+            if issuer_date is None or (native_date is not None and issuer_date < native_date):
+                raise ValueError("issuer holdings snapshot is older than the native holdings")
+            payload["raw"]["official_issuer"] = issuer
+            provenance = {"provider": issuer["provider"], "landing_page": issuer["source_url"],
+                          "source_as_of": holdings_date, "position_scope": "issuer_published_snapshot",
+                          "completeness": issuer.get("completeness")}
+            payload["raw"]["official_holdings"] = provenance
+            payload["holdings_source"] = provenance
+            normalized.update(holdings=issuer["holdings"], holding_count=len(issuer["holdings"]),
+                              holdings_updated=holdings_date)
+            classification = issuer.get("classification") or {}
+            if issuer["provider"] == "corgi" and classification.get("underlying_ticker"):
+                normalized["classification"] = {
+                    "is_leveraged": True, "leverage_factor": float(classification["leverage_factor"]),
+                    "is_inverse": False, "is_single_stock": True,
+                    "underlying": classification["underlying_ticker"],
+                    "source": issuer["source_url"], "confidence": "high"}
+            elif ticker == "THYP" and "staking" in classification.get("product_category", []):
+                normalized["classification"] = {
+                    "is_leveraged": False, "leverage_factor": None, "is_inverse": False,
+                    "is_single_stock": False, "underlying": None,
+                    "source": issuer["source_url"], "confidence": "high"}
+            payload["fetched_at"] = now_iso()
+            if issuer_holdings_snapshot(payload) is None:
+                raise ValueError("issuer holdings identity, date or rows are invalid")
+            reasons = [reason for reason in payload.get("partial_reason_codes", [])
+                       if not reason.startswith("holdings_")]
+            if reasons:
+                payload["partial_reason_codes"] = reasons
+            else:
+                payload.pop("partial_reason_codes", None)
+                payload.pop("detail_status", None)
+            payload["endpoint_contracts"]["holdings"] = {
+                "format": "issuer_payload", "provider": issuer["provider"],
+                "contract": "issuer_published_snapshot/v1"}
+            source = _etf_provider_source(payload)
+            if source is None:
+                raise ValueError("issuer detail component source clocks are unavailable")
+            payload["source_as_of"] = utc_iso(source)
+        clocks = _etf_component_clocks(payload) or {}
+        payload["field_sources"] = {
+            component: {"provider": (payload.get("holdings_source") or {}).get("provider", "stockanalysis")
+                        if component == "holdings" else "stockanalysis",
+                        "source_as_of": utc_iso(stamp), "status": "available"}
+            for component, stamp in clocks.items()}
+        return payload
     return fetch_etf(
         ticker, timeout, include_history=False, include_quote=False,
         allow_partial_holdings=True,
@@ -3677,6 +3733,26 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
         return
     selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
     prior = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+    if issuer_holdings_snapshot(payload) is not None:
+        previous = [prior] if isinstance(prior, dict) else []
+        if selected:
+            ref = selected.get("payload_ref") or {}
+            if ref.get("kind") not in {"provider_object", "provider_lkg"}:
+                raise ValueError("selected ETF portfolio has no immutable reference")
+            path = DATA_SUPPLY_STATE_ROOT / ref["path"]
+            if not path.resolve().is_relative_to(DATA_SUPPLY_STATE_ROOT.resolve()):
+                raise ValueError("selected ETF portfolio escaped its state root")
+            body = path.read_bytes()
+            if hashlib.sha256(body).hexdigest() != selected["payload_sha256"]:
+                raise ValueError("selected ETF portfolio lost its source binding")
+            previous.append(json.loads(body))
+        snapshots = list(((prior or {}).get("normalized") or {}).get("holdings_history") or [])
+        for original in previous:
+            snapshot = etf_holdings_snapshot(original)
+            if snapshot["holdings"] and snapshot not in snapshots:
+                snapshots.append(snapshot)
+        if snapshots:
+            normalized["holdings_history"] = snapshots
     archives = []
     if (isinstance(prior, dict) and isinstance(prior.get("normalized"), dict)
             and prior["normalized"].get("history_archive") is not None):
@@ -3841,6 +3917,26 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
             archives.append(record)
     if archives:
         normalized["history_archive"] = archives
+    if issuer_holdings_snapshot(payload) is not None:
+        native_days = _etf_history_date_set((payload["raw"].get("history_periods") or {}).get("daily_1y")) or set()
+        yahoo_archives = [item for item in archives if item.get("provider") == "yahoo_finance"]
+        if yahoo_archives:
+            newest = max(yahoo_archives, key=lambda item: item["history_last"])
+            if not native_days or newest["history_last"] > max(native_days):
+                normalized["daily_history_selection"] = {"provider": "yahoo_finance",
+                    "payload_sha256": newest["payload_sha256"], "price_basis": "yahoo_adjusted"}
+                rows = etf_display_daily_history(payload)
+                if not rows:
+                    raise ValueError("selected daily price history is not bound to its provider archive")
+        clocks = _etf_component_clocks(payload)
+        if not clocks:
+            raise ValueError("issuer detail has invalid component dates")
+        payload["source_as_of"] = utc_iso(min(clocks.values()))
+        payload["field_sources"] = {
+            field: {"provider": (payload.get("holdings_source") or {}).get("provider", "stockanalysis")
+                    if field == "holdings" else "yahoo_finance" if field == "history" and normalized.get("daily_history_selection")
+                    else "stockanalysis", "source_as_of": utc_iso(stamp), "status": "available"}
+            for field, stamp in clocks.items()}
     if not validate_etf_history_archive(payload):
         raise ValueError("StockAnalysis ETF history archive is invalid")
 
@@ -5792,7 +5888,10 @@ def select_natural_general_incremental_candidates(
                      if (context.get("universe_aum") or 0) > 0),
                     key=lambda ticker: (-contexts[ticker]["universe_aum"], ticker))
     tier2 = set(ranked[:NATURAL_GENERAL_TIER2_SIZE])
+    new_funds = new_fund_tickers(
+        [{**context.get("record", {}), "ticker": ticker} for ticker, context in contexts.items()], now_dt)
     tier_days = lambda row: (NATURAL_GENERAL_TIER2_TARGET_DAYS if row["ticker"] in tier2
+                            else ROTATION_POLICY["new_fund_interval_days"] if row["ticker"] in new_funds
                             else NATURAL_GENERAL_TIER3_TARGET_DAYS)
     def overdue_hours(row: dict) -> float:
         return (row.get("age_hours") or 0) - tier_days(row) * 24
@@ -7562,7 +7661,8 @@ def run_one(
                 if isinstance(canonical, dict) and canonical.get("source") == "stockanalysis":
                     floor = parse_iso_timestamp(canonical.get("source_as_of"))
                     source = parse_iso_timestamp(payload.get("source_as_of"))
-                    if floor is not None and (source is None or source < floor):
+                    if (floor is not None and (source is None or source < floor)
+                            and issuer_holdings_snapshot(payload) is None):
                         record_etf_detail_failure_observation(
                             provider="stockanalysis", endpoint_family="stockanalysis_etf_detail",
                             ticker=ticker, provider_path=f"data/stockanalysis/{rel_path}",
@@ -8014,6 +8114,9 @@ def _main() -> None:
         if args.natural_run and "etf" in natural_recovery_kinds
         else []
     )
+    # Issuer-backed primary repairs must not be diverted into the same failed Yahoo route.
+    issuer_retry_etfs = [ticker for ticker in yahoo_retry_etfs if ticker in ISSUER_ETFS]
+    yahoo_retry_etfs = [ticker for ticker in yahoo_retry_etfs if ticker not in ISSUER_ETFS]
     if stocks or explicit_etfs or surface_names or args.discover_etf_universe or args.natural_run:
         recovery_store = StockAnalysisRecoveryStateStore(
             STOCKANALYSIS_RECOVERY_ROOT,
@@ -8037,6 +8140,7 @@ def _main() -> None:
                 args.max_universe_pages = max(
                     args.max_universe_pages, UNIVERSE_RECOVERY_MAX_PAGES
                 )
+    retry_etfs = unique_symbols(retry_etfs + issuer_retry_etfs)
 
     universe_payload = None
     if args.discover_etf_universe:

@@ -65,6 +65,26 @@ function etfDetailForDisplay(record: Record<string, unknown>): Record<string, un
   if (record.schema_version === "stockanalysis/v1") {
     if (!Array.isArray(normalized.holdings)) return record;
     let changed = false;
+    let historyPeriods = normalized.history_periods;
+    const selectedHistory = asRecord(normalized.daily_history_selection);
+    if (selectedHistory?.provider === "yahoo_finance" && Array.isArray(normalized.history_archive)) {
+      const archive = normalized.history_archive.map(asRecord).find(item => item?.provider === "yahoo_finance"
+        && item.payload_sha256 === selectedHistory.payload_sha256);
+      if (typeof archive?.source_payload === "string") {
+        try {
+          const source = asRecord(JSON.parse(archive.source_payload));
+          const rows = asRecord(asRecord(source?.raw)?.yf)?.history_1y;
+          if (source?.ticker === record.ticker && Array.isArray(rows) && rows.length) {
+            historyPeriods = { ...asRecord(normalized.history_periods), daily_1y: rows.map(value => {
+              const row = asRecord(value) ?? {};
+              return { ...row, t: row.date, o: row.open ?? row.Open, h: row.high ?? row.High,
+                l: row.low ?? row.Low, c: row.close ?? row.Close, v: row.volume ?? row.Volume };
+            }) };
+            changed = true;
+          }
+        } catch { /* Keep the native series when an old archive cannot be decoded. */ }
+      }
+    }
     const holdings = normalized.holdings.map((value) => {
       const row = asRecord(value);
       if (row && row.shares == null && asRecord(row.raw)?.sh === 0) {
@@ -73,7 +93,7 @@ function etfDetailForDisplay(record: Record<string, unknown>): Record<string, un
       }
       return value;
     });
-    return changed ? { ...record, normalized: { ...normalized, holdings } } : record;
+    return changed ? { ...record, normalized: { ...normalized, holdings, history_periods: historyPeriods } } : record;
   }
   if (record.schema_version !== "yf-etf-detail/v1") return record;
   const yahoo = asRecord(asRecord(record.raw)?.yf);

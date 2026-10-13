@@ -85,7 +85,9 @@ interface EtfPayload {
   fetched_at?: string;
   source_as_of?: string | null;
   source_as_of_reason?: string | null;
+  field_sources?: Record<string, { provider?: string; source_as_of?: string | null; status?: string }>;
   detail_status?: string;
+  holdings_source?: { provider?: string; position_scope?: string };
   data_supply?: EtfDataSupply;
   normalized?: {
     holdings?: EtfHolding[];
@@ -1341,8 +1343,15 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const quote = normalized.quote ?? {};
   const identity = marketFacts?.identity ?? {};
   const currency = identity.currency ?? "USD";
-  const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null);
-  const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null);
+  const detailQuoteDate = etfData?.field_sources?.quote?.source_as_of
+    ?? (typeof quote.td === "string" ? quote.td : typeof quote.u === "string" ? quote.u : null);
+  const factsQuoteDate = factDate(marketFacts, "price");
+  const preferDetailQuote = isFiniteNumber(quote.p) && detailQuoteDate !== null
+    && (!factsQuoteDate || Date.parse(detailQuoteDate) >= Date.parse(factsQuoteDate));
+  const price = preferDetailQuote ? quote.p as number
+    : factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null);
+  const changePct = preferDetailQuote ? (isFiniteNumber(quote.cp) ? quote.cp : null)
+    : factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null);
   const displayName = identity.name && identity.name !== symbol ? identity.name : metricValue(overview.name, symbol);
   const category = identity.category ?? metricValue(overview.category);
   const exchange = identity.exchange ?? metricValue(quote.ex);
@@ -1375,7 +1384,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         ].filter(Boolean).join(" · "),
       }
     : legacyStatusMeta;
-  const classification = marketFacts?.etf?.classification ?? normalized.classification ?? null;
+  const classification = normalized.classification ?? marketFacts?.etf?.classification ?? null;
   const underlyingService = useMemo(
     () => getUnderlyingStockForEtf(stockServicesIndex, symbol),
     [stockServicesIndex, symbol],
@@ -1392,7 +1401,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const inceptionDate = rawText(overview.inception);
   const sharesOutstanding = rawText(overview.sharesOut);
   const quoteDate = formatDateish(quote.u);
-  const updateDate = factDate(marketFacts, "price")
+  const updateDate = (preferDetailQuote ? detailQuoteDate : factsQuoteDate)
     ?? (quoteDate !== "—" ? quoteDate : null)
     ?? dataSupply?.source_as_of
     ?? etfData?.source_as_of
@@ -1649,6 +1658,11 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               </div>
             ) : null}
             {statusMeta ? <DetailAvailabilityCallout meta={statusMeta} available={availableDetailItems} pending={pendingDetailItems} /> : null}
+            <p className="mb-3 text-xs text-[var(--c-ink-3)]">
+              가격 기준 {formatDateish(updateDate)} · 보유내역 기준 {formatDateish(holdingsUpdated)}
+              {etfData?.field_sources?.history?.source_as_of
+                ? ` · 가격 이력 기준 ${formatDateish(etfData.field_sources.history.source_as_of)}` : ""}
+            </p>
             {statusMeta ? (
               <ExternalSourceLinks
                 ticker={symbol}
@@ -1734,6 +1748,12 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               </button>
             </div>
             <HoldingsTable holdings={holdings} currency={currency} />
+            {etfData?.holdings_source?.position_scope === "issuer_published_snapshot" ? (
+              <p className="mt-3 text-xs text-[var(--c-ink-3)]">
+                발행사가 공개한 구성입니다. 비중은 명목 투자 노출과 다를 수 있습니다.
+                {symbol === "THYP" ? " 이 목록에는 현금 잔액이 제공되지 않습니다." : ""}
+              </p>
+            ) : null}
           </SectionCard>
 
           <div className="grid gap-4 lg:grid-cols-3">

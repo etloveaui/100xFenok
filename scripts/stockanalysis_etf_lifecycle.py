@@ -19,6 +19,29 @@ CATALOGUES = {
 }
 
 
+def new_fund_tickers(records, now=None):
+    """Observe by inception age, not the provider's truncated newest-100 list."""
+    today = (now or datetime.now(timezone.utc)).date()
+    selected = set()
+    for row in records:
+        if not isinstance(row, dict):
+            continue
+        value = row.get("inceptionDate") or row.get("inception")
+        if not isinstance(value, str):
+            continue
+        for fmt in ("%Y-%m-%d", "%b %d, %Y", "%B %d, %Y"):
+            try:
+                age = (today - datetime.strptime(value, fmt).date()).days
+                if 0 <= age <= ROTATION_POLICY["new_fund_observation_days"]:
+                    ticker = str(row.get("ticker") or row.get("s") or "").upper()
+                    if ticker:
+                        selected.add(ticker)
+                break
+            except ValueError:
+                continue
+    return selected
+
+
 def detail_refresh_cadence(root):
     """Publish the same whole-catalogue AUM ranking used by the rotation."""
     root = Path(root)
@@ -34,7 +57,8 @@ def detail_refresh_cadence(root):
     ranked = sorted(aums, key=lambda ticker: (-aums[ticker], ticker))
     return {"schema_version": ROTATION_POLICY["schema_version"],
             "core_tickers": sorted(set(core_tickers)),
-            "tier2_tickers": ranked[:ROTATION_POLICY["tier2_size"]]}
+            "tier2_tickers": ranked[:ROTATION_POLICY["tier2_size"]],
+            "new_fund_tickers": sorted(new_fund_tickers(records))}
 
 
 def symbols(payload):

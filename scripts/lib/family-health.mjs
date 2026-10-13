@@ -22,8 +22,14 @@ export function buildDetailRefreshCadence(universe, core) {
   const aums = new Map(records.filter(row => Number.isFinite(row?.aum) && row.aum > 0)
     .map(row => [String(row.ticker ?? row.s ?? "").toUpperCase(), row.aum]));
   const ranked = [...aums.keys()].sort((a, b) => aums.get(b) - aums.get(a) || (a < b ? -1 : a > b ? 1 : 0));
+  const today = Date.parse(new Date().toISOString().slice(0, 10));
+  const newFunds = records.filter(row => {
+    const day = Date.parse(row?.inceptionDate ?? row?.inception);
+    const age = (today - day) / 86400_000;
+    return Number.isFinite(age) && age >= 0 && age <= rotation.new_fund_observation_days;
+  }).map(row => String(row.ticker ?? row.s ?? "").toUpperCase()).filter(Boolean);
   return { schema_version: rotation.schema_version, core_tickers: [...new Set(coreTickers)].sort(),
-    tier2_tickers: ranked.slice(0, rotation.tier2_size) };
+    tier2_tickers: ranked.slice(0, rotation.tier2_size), new_fund_tickers: [...new Set(newFunds)].sort() };
 }
 
 export function detailSourcePolicy(ticker, cadence, emergencyDays) {
@@ -31,7 +37,8 @@ export function detailSourcePolicy(ticker, cadence, emergencyDays) {
     || !Array.isArray(cadence.core_tickers) || !Array.isArray(cadence.tier2_tickers)) return null;
   const core = cadence.core_tickers.includes(ticker);
   const interval = core ? rotation.core_interval_days : cadence.tier2_tickers.includes(ticker)
-    ? rotation.tier2_interval_days : rotation.tail_interval_days;
+    ? rotation.tier2_interval_days : cadence.new_fund_tickers?.includes(ticker)
+      ? rotation.new_fund_interval_days : rotation.tail_interval_days;
   // Both core and general run on weekdays and Sunday. Allow one complete
   // declared inter-run gap (2 days) for a delayed/missed attempt.
   const weekdays = rotation.general_weekdays_utc;

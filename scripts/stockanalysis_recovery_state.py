@@ -131,6 +131,22 @@ def _bounded_error(value: Any, limit: int = 240) -> str:
 
 
 
+def etf_display_daily_history(payload: dict) -> list | None:
+    """Select a whole dated provider series; never splice adjusted and native prices."""
+    normalized = payload.get("normalized") or {}
+    selected = normalized.get("daily_history_selection")
+    if selected is None:
+        return (payload.get("raw", {}).get("history_periods") or {}).get("daily_1y")
+    if not isinstance(selected, dict) or selected.get("provider") != "yahoo_finance":
+        return None
+    for archive in normalized.get("history_archive") or []:
+        if (archive.get("provider") == "yahoo_finance"
+                and archive.get("payload_sha256") == selected.get("payload_sha256")
+                and _archive_record_dates(archive, payload.get("ticker"))):
+            return json.loads(archive["source_payload"])["raw"]["yf"]["history_1y"]
+    return None
+
+
 def _etf_component_clocks(payload: dict) -> dict[str, datetime] | None:
     """Read independent official-holdings, raw quote and raw daily-history clocks."""
     raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
@@ -164,10 +180,12 @@ def _etf_component_clocks(payload: dict) -> dict[str, datetime] | None:
     normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
     periods = (raw.get("history_periods") if isinstance(raw.get("history_periods"), dict)
                else normalized.get("history_periods") if isinstance(normalized.get("history_periods"), dict) else {})
-    daily = periods.get("daily_1y")
+    daily = etf_display_daily_history(payload) if normalized.get("daily_history_selection") else periods.get("daily_1y")
     history_dates = [stamp for row in daily if isinstance(row, dict)
                      if (stamp := _iso_timestamp(row.get("date") or row.get("t") or row.get("time"))) is not None] if isinstance(daily, list) else []
     history_stamp = max(history_dates) if history_dates else None
+    if normalized.get("daily_history_selection") and history_stamp is None:
+        return None
     if requested.get("daily_1y") and history_stamp is None:
         return None
     if history_stamp is not None:
@@ -454,6 +472,43 @@ def validate_etf_history_archive(payload: dict) -> bool:
                for index, item in enumerate(archives))
 
 
+def issuer_holdings_snapshot(payload: dict) -> datetime | None:
+    """Validate the displayed issuer snapshot independently of position count."""
+    raw = payload.get("raw") or {}
+    issuer = raw.get("official_issuer")
+    normalized = payload.get("normalized") or {}
+    if not isinstance(issuer, dict) or issuer.get("ticker") != payload.get("ticker"):
+        return None
+    ticker = payload.get("ticker")
+    expected = ({symbol: f"https://corgiinvest.com/{symbol.lower()}"
+                 for symbol in ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "ONDC", "LRNX")}
+                | {"MWHS": "https://www.skylaretfs.com/mwhs",
+                   "THYP": "https://api.primary.21shares.com/api/product_details/THYP"})
+    if ticker not in expected or issuer.get("source_url") != expected[ticker]:
+        return None
+    rows = issuer.get("holdings")
+    snapshot = issuer.get("holdings_snapshot") or {}
+    date = _iso_timestamp((issuer.get("field_dates") or {}).get("holdings"))
+    fetched = _iso_timestamp(payload.get("fetched_at"))
+    if (not isinstance(rows, list) or not rows or normalized.get("holdings") != rows
+            or snapshot.get("full_published_snapshot") is not True
+            or snapshot.get("identity") != ticker or snapshot.get("row_count") != len(rows)
+            or _iso_timestamp(snapshot.get("snapshot_date")) != date
+            or normalized.get("holding_count") != len(rows)
+            or any(not isinstance(row, dict) or not row.get("name") for row in rows)
+            or date is None or fetched is None or date > fetched
+            or date != _iso_timestamp(normalized.get("holdings_updated"))):
+        return None
+    return date
+
+
+def etf_holdings_snapshot(payload: dict) -> dict:
+    normalized = payload.get("normalized") or {}
+    return {"provider": (payload.get("holdings_source") or {}).get("provider") or payload.get("source"),
+            "source_as_of": normalized.get("holdings_updated"),
+            "holdings": normalized.get("holdings"), "holding_count": normalized.get("holding_count")}
+
+
 def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
     """Compare displayed detail, independently of provider rank and fetch time."""
     old = baseline.get("normalized")
@@ -509,7 +564,12 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
             return None
         return date
 
-    if old_holdings and holding_rows(new_holdings) < holding_rows(old_holdings):
+    issuer_date = issuer_holdings_snapshot(candidate)
+    old_date = _iso_timestamp(old.get("holdings_updated"))
+    preserved_issuer_transition = bool(
+        issuer_date and (old_date is None or issuer_date >= old_date)
+        and etf_holdings_snapshot(baseline) in (new.get("holdings_history") or []))
+    if old_holdings and holding_rows(new_holdings) < holding_rows(old_holdings) and not preserved_issuer_transition:
         old_date = complete_native_holdings_date(baseline, old_holdings)
         new_date = complete_native_holdings_date(candidate, new_holdings)
         # A later complete fund portfolio can contain fewer positions. Both
@@ -536,7 +596,8 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
         # A provider's total fund count is not equivalent to another provider's
         # top-holdings sample count. Same-provider counts can honestly change.
         if (baseline.get("source") != candidate.get("source")
-                and isinstance(old_count, (int, float)) and new_count < old_count):
+                and isinstance(old_count, (int, float)) and new_count < old_count
+                and not preserved_issuer_transition):
             return "holding_count"
     old_quote = old.get("quote") if isinstance(old.get("quote"), dict) else {}
     new_quote = new.get("quote") if isinstance(new.get("quote"), dict) else {}
@@ -927,7 +988,8 @@ class StockAnalysisRecoveryStateStore:
                 prior = self._load_state(kind, entity)["current"]
             if bound:
                 canonical_before = _iso_timestamp(payload_source_fields(kind, bound[1]).get("source_as_of"))
-                if canonical_before is not None and (after is None or after < canonical_before):
+                if (canonical_before is not None and (after is None or after < canonical_before)
+                        and issuer_holdings_snapshot(payload) is None):
                     return False
             if (not bound or prior.get("path") != self._relative(prior_path)
                     or _sha256(bound[0]) != prior.get("payload_sha256")
