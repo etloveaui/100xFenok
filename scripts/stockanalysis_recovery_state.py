@@ -522,10 +522,16 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
     issuer_date = _iso_timestamp((issuer.get("field_dates") or {}).get("holdings"))
     expected = ({symbol: f"https://corgiinvest.com/{symbol.lower()}"
                  for symbol in ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "ONDC", "LRNX",
-                                "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM")}
+                                "CIFC", "EO", "GMEC", "IONC", "MIC", "ORAC", "XQTM", "BRZX")}
                 | {symbol: "https://www.innovatoretfs.com/etf/xt_holdings.csv"
                    for symbol in ("ACII", "BDEC", "BJUL", "BJUN", "BNOV", "BSTP", "EBUF", "EJAN",
-                                  "EJUL", "IAPR", "PMAR", "PMAY", "PSTP", "QBUF", "RBUF", "TBJL")}
+                                  "EJUL", "IAPR", "PMAR", "PMAY", "PSTP", "QBUF", "RBUF", "TBJL",
+                                  "AJAN", "AJUL", "BMAR", "IBUF", "IDEC", "IFEB", "IJAN", "IJUL",
+                                  "IJUN", "IMAR", "IMAY", "INOV", "JAJL", "JULH", "JULJ", "KAUG",
+                                  "KDEC", "KJAN", "KJUN", "KMAR", "KMAY", "KOCT", "KSEP", "LJUL",
+                                  "NAUG", "NDEC", "NFEB", "NJAN", "NJUL", "UFEB", "UJAN", "USEP",
+                                  "XDQQ", "XTJA", "XTJL", "XTOC", "ZAUG", "ZDEK", "ZFEB", "ZJAN",
+                                  "ZJUL", "ZNOV", "ZOCT", "ZSEP")}
                 | {"MWHS": "https://www.skylaretfs.com/mwhs",
                    "TBIL": "https://www.fminvest.com/api/v1/etfs/1/holdings",
                    "DWUS": "https://advisorshares.com/wp-content/uploads/csv/holdings/AdvisorShares_DWUS_Holdings_File.csv",
@@ -533,6 +539,11 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
                    "BIL": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bil.xlsx",
                    "BILS": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-bils.xlsx",
                    "IWMW": "https://www.ishares.com/us/products/336263/ishares-russell-2000-buywrite-etf/latest-holdings.csv",
+                   "LQDW": "https://www.ishares.com/us/products/329120/ishares-investment-grade-corporate-bond-buywrite-strategy-etf/latest-holdings.csv",
+                   "IBGM": "https://www.ishares.com/us/products/350032/ishares-ibonds-dec-2056-term-treasury-etf/latest-holdings.csv",
+                   "XLBI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlbi.xlsx",
+                   "XLCI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlci.xlsx",
+                   "XLFI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlfi.xlsx",
                    "THYP": "https://api.primary.21shares.com/api/product_details/THYP"})
     if ticker == "SPBC" and issuer_date is not None:
         expected["SPBC"] = ("https://www.simplify.us/sites/default/files/excel_holdings/"
