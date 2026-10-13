@@ -26,6 +26,7 @@ import csv
 from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import closing
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import hashlib
 from html.parser import HTMLParser
@@ -3737,9 +3738,8 @@ def validate_aware_timestamp(value, label: str) -> str:
 
 def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
     """Preserve selected Yahoo and prior native history without changing live prices."""
-    if (payload.get("detail_status") == "stockanalysis_partial"
-            and payload.get("partial_reason_codes") != ["holdings_countries_unavailable"]):
-        return
+    # Partial holdings do not invalidate independently validated native price history.
+    # Preserve its dated archive before applying the unchanged detail regression guard.
     normalized = payload.get("normalized")
     if not isinstance(normalized, dict):
         return
@@ -4077,6 +4077,144 @@ def is_complete_stockanalysis_etf_payload(ticker: str, payload: dict | None) -> 
         return source == _etf_provider_source(payload) and source <= fetched <= parse_iso_timestamp(now_iso())
     except (ValueError, TypeError):
         return False
+
+
+def native_etf_holdings_component_date(payload: dict) -> datetime | None:
+    """Prove that the native holdings endpoint supplied every displayed row."""
+    raw = payload.get("raw") if isinstance(payload.get("raw"), dict) else {}
+    normalized = payload.get("normalized") if isinstance(payload.get("normalized"), dict) else {}
+    if raw.get("official_holdings") is not None or raw.get("official_issuer") is not None:
+        return None
+    holdings = raw.get("holdings") if isinstance(raw.get("holdings"), dict) else {}
+    rows = holdings.get("holdings")
+    count = holdings.get("count")
+    date = parse_stockanalysis_date(holdings.get("date"))
+    try:
+        fetched = parse_iso_timestamp(payload.get("fetched_at"))
+    except (ValueError, TypeError):
+        return None
+    if (not isinstance(rows, list) or not rows
+            or any(not isinstance(row, dict) or not any(row.get(key) for key in ("s", "symbol", "n", "name"))
+                   for row in rows)
+            or not isinstance(count, int) or isinstance(count, bool) or count != len(rows)
+            or normalized.get("holding_count") != count
+            or normalized.get("holdings") != normalize_holdings(rows)
+            or date is None or parse_stockanalysis_date(normalized.get("holdings_updated")) != date
+            or fetched is None or date > fetched):
+        return None
+    return date
+
+
+def retain_native_etf_holdings_component(ticker: str, candidate: dict, prior: dict | None,
+                                         prior_bytes: bytes | None) -> dict | None:
+    """Keep a verified prior native portfolio when a new holdings endpoint is absent."""
+    reasons = candidate.get("partial_reason_codes")
+    if (candidate.get("detail_status") != "stockanalysis_partial"
+            or not isinstance(reasons, list) or not all(isinstance(reason, str) for reason in reasons)
+            or not any(reason == "holdings_unavailable" or reason.startswith("holdings_surface_")
+                       for reason in reasons)
+            or not isinstance(prior, dict) or prior_bytes is None
+            or not _valid_payload("etf", ticker, prior)
+            or prior.get("source_provider") not in (None, "stockanalysis")
+            or (prior.get("detail_status") == "stockanalysis_partial"
+                and prior.get("partial_reason_codes") != ["holdings_countries_unavailable"])
+            or prior.get("detail_status") not in (None, "stockanalysis_partial")):
+        return None
+    try:
+        if json.loads(prior_bytes) != prior:
+            return None
+        validate_stockanalysis_etf_payload(ticker, prior)
+    except (ValueError, TypeError):
+        return None
+    old_date = native_etf_holdings_component_date(prior)
+    if old_date is None or native_etf_holdings_component_date(candidate) is not None:
+        return None
+    old_source = prior.get("holdings_source")
+    if old_source is not None and (not isinstance(old_source, dict)
+                                   or old_source.get("provider") not in (None, "stockanalysis")):
+        return None
+    old_clocks = _etf_component_clocks(prior)
+    new_clocks = _etf_component_clocks(candidate)
+    old_daily = ((prior.get("raw") or {}).get("history_periods") or {}).get("daily_1y")
+    new_daily = ((candidate.get("raw") or {}).get("history_periods") or {}).get("daily_1y")
+    old_dates = _etf_history_dates(old_daily)
+    new_dates = _etf_history_dates(new_daily)
+    if (not old_clocks or not new_clocks
+            or "quote" not in old_clocks or "quote" not in new_clocks
+            or old_clocks["quote"] >= new_clocks["quote"]
+            or not old_dates or not new_dates or new_dates[1] < old_dates[1]
+            or _etf_history_date_set(new_daily) is None):
+        return None
+    old_normalized = prior["normalized"]
+    old_raw = prior["raw"]
+    old_fields = prior.get("field_sources") if isinstance(prior.get("field_sources"), dict) else {}
+    old_holdings_field = old_fields.get("holdings")
+    if (isinstance(old_holdings_field, dict)
+            and old_holdings_field.get("provider") not in (None, "stockanalysis")):
+        return None
+    merged = deepcopy(candidate)
+    normalized = merged["normalized"]
+    raw = merged["raw"]
+    fields = merged.setdefault("field_sources", {})
+    if not isinstance(fields, dict):
+        return None
+    for field in ("holdings", "holding_count", "holdings_updated"):
+        normalized[field] = deepcopy(old_normalized[field])
+    retained_allocations = []
+    for field in ("countries", "sectors", "asset_allocation"):
+        if normalized.get(field):
+            continue
+        previous = old_fields.get(field) if isinstance(old_fields.get(field), dict) else {}
+        if old_normalized.get(field) and previous.get("provider") in (None, "stockanalysis"):
+            normalized[field] = deepcopy(old_normalized[field])
+            retained_allocations.append(field)
+        else:
+            fields.pop(field, None)
+    raw["holdings"] = deepcopy(old_raw["holdings"])
+    old_overview = old_raw.get("overview") if isinstance(old_raw.get("overview"), dict) else {}
+    if isinstance(raw.get("overview"), dict):
+        for field in ("holdings", "holdingsTable", "provider_holdings_available"):
+            if field in old_overview:
+                raw["overview"][field] = deepcopy(old_overview[field])
+            else:
+                raw["overview"].pop(field, None)
+    for section in ("endpoints", "endpoint_contracts"):
+        old = prior.get(section) if isinstance(prior.get(section), dict) else {}
+        current = merged.get(section) if isinstance(merged.get(section), dict) else {}
+        if "holdings" in old:
+            current["holdings"] = deepcopy(old["holdings"])
+        else:
+            current.pop("holdings", None)
+        merged[section] = current
+    if old_source is not None:
+        merged["holdings_source"] = deepcopy(old_source)
+    else:
+        merged.pop("holdings_source", None)
+    digest = hashlib.sha256(prior_bytes).hexdigest()
+    for field in ("holdings", *retained_allocations):
+        previous = old_fields.get(field) if isinstance(old_fields.get(field), dict) else {}
+        stamp = old_date
+        if field != "holdings":
+            stamp = parse_stockanalysis_date(previous.get("source_as_of")) or old_date
+        provenance = {"provider": "stockanalysis", "source_as_of": utc_iso(stamp),
+                      "status": "retained", "payload_sha256": digest}
+        fields[field] = provenance
+        if field != "holdings":
+            raw.setdefault("retained_allocations", {})[field] = {
+                **provenance, "value": deepcopy(old_normalized[field])}
+    resolved = {"holdings_unavailable", "holdings_count_unavailable", "holdings_date_unavailable"}
+    remaining = [reason for reason in reasons
+                 if reason not in resolved and not reason.startswith("holdings_surface_")]
+    if ("holdings_countries_unavailable" in prior.get("partial_reason_codes", [])
+            and not normalized.get("countries")
+            and "holdings_countries_unavailable" not in remaining):
+        remaining.append("holdings_countries_unavailable")
+    if remaining:
+        merged["partial_reason_codes"] = remaining
+    else:
+        merged.pop("partial_reason_codes", None)
+        merged.pop("detail_status", None)
+    return merged
 
 
 def preserve_partial_etf_candidate(ticker: str, payload: dict, canonical_bytes: bytes, *, collection_origin: str) -> str:
@@ -7715,6 +7853,19 @@ def run_one(
                     preserve_partial_etf_candidate(
                         ticker, payload, canonical_bytes, collection_origin=collection_origin,
                     )
+                    merged = retain_native_etf_holdings_component(
+                        ticker, payload, canonical, canonical_bytes,
+                    )
+                    if merged is not None:
+                        try:
+                            retain_yahoo_etf_history_archive(ticker, merged)
+                            validate_stockanalysis_etf_payload(ticker, merged)
+                        except ValueError:
+                            pass
+                        else:
+                            if etf_detail_regression(merged, canonical) is None:
+                                payload = merged
+                                protected_complete = False
                 if yf_fallback and payload.get("detail_status") == "stockanalysis_partial":
                     selected = data_supply_store(provider_truth_root=STORAGE_ROOT).read_active_domain("etf_detail")["current"].get(ticker)
                     try:
