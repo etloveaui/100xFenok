@@ -704,10 +704,10 @@ export const FAMILIES = {
     source_as_of: { per_asset_resolver: "stockanalysis_detail_source_timestamp" },
     reuse_active_generation: true,
     incremental_write_budget: true,
-    // Measured 2026-08-16 and re-measured at this base: 5,605 assets /
-    // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
-    // so ordinary universe growth does not trip the gate, while a runaway set
-    // still fails closed.
+    // Re-measured 2026-10-13 from the admitted recovery generation: 5,909
+    // assets / 1,319,413,299 bytes. Keep roughly 25% byte headroom while
+    // retaining the 7,000-asset ceiling. The separate strict account cost
+    // gate and measured incremental-write cap still run before publication.
     // class_b is declared because a publication of this family READS heavily and
     // those reads were previously invisible to the gate: the adapter issues one
     // presence GET per object key, a readback GET follows every object actually
@@ -715,7 +715,7 @@ export const FAMILIES = {
     // all-changed case. 34,000 is >= 2x that measurement, the same safety ratio
     // the class_a and bytes plans already use.
     plan: { class_a: 12_000, class_b: 34_000, bytes: 2_200_000_000 },
-    policy: { max_assets: 7_000, max_total_bytes: 1_300_000_000 },
+    policy: { max_assets: 7_000, max_total_bytes: 1_650_000_000 },
   },
   "earnings-overview": {
     root: "data/earnings-overview",
