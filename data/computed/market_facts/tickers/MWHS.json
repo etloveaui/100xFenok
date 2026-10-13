@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "MWHS",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T01:16:41Z",
+  "generated_at": "2026-10-13T02:35:01Z",
   "source_as_of": "2026-09-21",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -36,16 +36,9 @@
           "as_of": "2026-09-21",
           "fetched_at": "2026-10-13T00:01:46Z",
           "confidence": "observed"
-        },
-        {
-          "value": 20.010000228881836,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2,
+      "candidate_count": 1,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
@@ -90,16 +83,9 @@
           "as_of": "2026-09-21",
           "fetched_at": "2026-10-13T00:01:46Z",
           "confidence": "observed"
-        },
-        {
-          "value": -2.1399997711181626,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2,
+      "candidate_count": 1,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
@@ -121,86 +107,10 @@
           "as_of": "2026-09-21",
           "fetched_at": "2026-10-13T00:01:46Z",
           "confidence": "observed"
-        },
-        {
-          "value": -9.661398515206153,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2,
+      "candidate_count": 1,
       "selection_rule": "source_date_desc_then_provider_priority"
-    },
-    "total_assets": {
-      "value": 196544.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:23:08Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 196544.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:23:08Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview",
-        "derived.daily_1y_beta"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "expense_ratio": {
-      "value": 0.95,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:23:08Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.95,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
     },
     "return_1m": {
       "value": -1.34082,
@@ -226,54 +136,16 @@
         }
       ],
       "candidate_count": 1
-    },
-    "return_3m": {
-      "value": -4.71428462437221,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-07-08",
-      "fetched_at": "2026-07-09T09:23:08Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
-        {
-          "value": -4.71428462437221,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-07-08",
-          "fetched_at": "2026-07-09T09:23:08Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
     }
   },
   "etf": {
     "holdings_count": null,
-    "holdings_updated": "2026-07-09T09:23:08Z",
+    "holdings_updated": null,
     "top_holdings": [],
-    "asset_allocation": {
-      "cashPosition": 1.0,
-      "stockPosition": 0.0,
-      "bondPosition": 0.0,
-      "preferredPosition": 0.0,
-      "convertiblePosition": 0.0,
-      "otherPosition": 0.0
-    },
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": {
-      "is_leveraged": false,
-      "leverage_factor": null,
-      "is_inverse": false,
-      "is_single_stock": false,
-      "underlying": null,
-      "source": "stockanalysis.overview.description",
-      "confidence": "high"
-    },
+    "classification": null,
     "yahoo_funds_data_available": false
   },
   "financials": null,
@@ -281,7 +153,7 @@
     "yf": false,
     "yf_quote": true,
     "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
@@ -289,13 +161,13 @@
     "yf": null,
     "yf_quote": "yf/finance/MWHS.json",
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/MWHS.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:unavailable",
     "field_source_policy": {
       "price": [
         "yf",

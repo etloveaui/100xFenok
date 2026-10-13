@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "LRNX",
   "asset_type": "etf",
-  "generated_at": "2026-10-13T01:16:41Z",
+  "generated_at": "2026-10-13T02:35:01Z",
   "source_as_of": "2026-10-02",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -36,16 +36,9 @@
           "as_of": "2026-10-02",
           "fetched_at": "2026-10-12T04:48:59Z",
           "confidence": "observed"
-        },
-        {
-          "value": 27.631099700927734,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-06-30T14:45:18Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2,
+      "candidate_count": 1,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
@@ -90,16 +83,9 @@
           "as_of": "2026-10-02",
           "fetched_at": "2026-10-12T04:48:59Z",
           "confidence": "observed"
-        },
-        {
-          "value": 0.7617997009277353,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-06-30T14:45:18Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2,
+      "candidate_count": 1,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
@@ -121,41 +107,10 @@
           "as_of": "2026-10-02",
           "fetched_at": "2026-10-12T04:48:59Z",
           "confidence": "observed"
-        },
-        {
-          "value": 2.8352048655072344,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-06-30T14:45:18Z",
-          "confidence": "observed"
         }
       ],
-      "candidate_count": 2,
+      "candidate_count": 1,
       "selection_rule": "source_date_desc_then_provider_priority"
-    },
-    "expense_ratio": {
-      "value": 0.45,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-06-30T14:45:18Z",
-      "confidence": "observed",
-      "unit": "percent_points",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview"
-      ],
-      "candidates": [
-        {
-          "value": 0.45,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-06-30T14:45:18Z",
-          "confidence": "observed",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
     },
     "return_1m": {
       "value": -20.35894,
@@ -181,47 +136,16 @@
         }
       ],
       "candidate_count": 1
-    },
-    "return_3m": {
-      "value": 3.2166575586080417,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-30",
-      "fetched_at": "2026-06-30T14:45:18Z",
-      "confidence": "derived",
-      "unit": "percent_points",
-      "policy": [
-        "yf.history_1y",
-        "stockanalysis.detail.history"
-      ],
-      "candidates": [
-        {
-          "value": 3.2166575586080417,
-          "source": "stockanalysis.detail.history",
-          "as_of": "2026-06-30",
-          "fetched_at": "2026-06-30T14:45:18Z",
-          "confidence": "derived",
-          "unit": "percent_points"
-        }
-      ],
-      "candidate_count": 1
     }
   },
   "etf": {
     "holdings_count": null,
-    "holdings_updated": "2026-06-30T14:45:18Z",
+    "holdings_updated": null,
     "top_holdings": [],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "classification": {
-      "is_leveraged": true,
-      "leverage_factor": 2.0,
-      "is_inverse": false,
-      "is_single_stock": false,
-      "underlying": null,
-      "source": "stockanalysis.overview.description",
-      "confidence": "high"
-    },
+    "classification": null,
     "yahoo_funds_data_available": false
   },
   "financials": null,
@@ -229,7 +153,7 @@
     "yf": false,
     "yf_quote": true,
     "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
@@ -237,13 +161,13 @@
     "yf": null,
     "yf_quote": "yf/finance/LRNX.json",
     "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/LRNX.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:lkg_fallback",
+    "detail_authority": "data_supply:unavailable",
     "field_source_policy": {
       "price": [
         "yf",

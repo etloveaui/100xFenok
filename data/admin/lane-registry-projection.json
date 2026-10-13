@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-10-13T02:10:50.345Z",
+  "generated_at": "2026-10-13T02:39:17.169Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 36,
@@ -309,17 +309,17 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-13T01:12:00.000Z",
-          "next_expected_slot": "2026-10-13T02:12:00.000Z",
+          "latest_expected_slot": "2026-10-13T02:12:00.000Z",
+          "next_expected_slot": "2026-10-13T03:12:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-13T01:12:24.237Z",
+          "observed_at": "2026-10-13T02:12:24.890Z",
           "outcome": "success",
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-12",
+          "source_date": "2026-10-13",
           "source_date_reason": "data_health_source_date",
           "evidence_status": "observed",
           "sla": null
@@ -488,9 +488,9 @@
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-12T23:53:29Z",
-          "outcome": "partial",
-          "failure_class": null
+          "observed_at": "2026-10-13T02:00:00Z",
+          "outcome": "failed",
+          "failure_class": "unknown"
         },
         "source": {
           "source_date": "2026-10-12",
@@ -500,7 +500,7 @@
         },
         "recovery": {
           "state": "retained_lkg",
-          "retry_count": 111,
+          "retry_count": 119,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -658,11 +658,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-12T21:20:00.000Z",
           "next_expected_slot": "2026-10-13T21:20:00.000Z",
-          "status": "on_time"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-12T23:53:29Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -672,7 +672,7 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
+          "state": "unavailable",
           "retry_count": 0,
           "recovered_at": null,
           "lkg_source_date": null
@@ -690,6 +690,7 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
+            "attempt",
             "source"
           ]
         }

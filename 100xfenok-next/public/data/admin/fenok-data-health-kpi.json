@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v4",
-  "generated_at": "2026-10-13T02:10:49.509Z",
+  "generated_at": "2026-10-13T02:39:16.367Z",
   "sets": [
     {
       "set": "fred_macro",
@@ -9,7 +9,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "fred_macro",
         "policy": {
           "basis": "source_calendar",
@@ -52,7 +52,7 @@
       "max_age": "3d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "fred_banking",
         "policy": {
           "basis": "source_calendar",
@@ -102,7 +102,7 @@
       "max_age": "13d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "fred_yardeni",
         "policy": {
           "basis": "source_calendar",
@@ -145,7 +145,7 @@
       "max_age": "121d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "fdic_tier1",
         "policy": {
           "basis": "source_calendar",
@@ -188,7 +188,7 @@
       "max_age": "3d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "treasury_tga",
         "policy": {
           "basis": "source_calendar",
@@ -227,11 +227,11 @@
     {
       "set": "defillama_stablecoins",
       "served_path": "data/macro/stablecoins.json",
-      "newest_source_date": "2026-10-12",
+      "newest_source_date": "2026-10-13",
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "defillama_stablecoins",
         "policy": {
           "basis": "source_calendar",
@@ -250,19 +250,19 @@
           "expired": 0,
           "unknown": 0
         },
-        "oldest_source_date": "2026-10-12",
+        "oldest_source_date": "2026-10-13",
         "oldest_source_member": "defillama_stablecoins",
-        "newest_source_date": "2026-10-12"
+        "newest_source_date": "2026-10-13"
       },
       "latest_attempt": {
-        "observed_at": "2026-10-13T01:12:24.237Z",
+        "observed_at": "2026-10-13T02:12:24.890Z",
         "outcome": "success",
         "failure_class": null
       },
       "outcome_state": {
-        "attempt_at": "2026-10-13T01:12:24.237Z",
-        "source_as_of": "2026-10-12",
-        "unchanged_source_attempts": 23,
+        "attempt_at": "2026-10-13T02:12:24.890Z",
+        "source_as_of": "2026-10-13",
+        "unchanged_source_attempts": 1,
         "consecutive_retained": 0
       },
       "serving_lkg": false
@@ -274,7 +274,7 @@
       "max_age": "3-32d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "detail",
         "policy": {
           "basis": "member_rotation",
@@ -298,22 +298,22 @@
         },
         "status": "fresh",
         "reason": null,
-        "total_members": 180,
+        "total_members": 172,
         "fresh_members": 171,
         "counts": {
           "fresh": 171,
           "stale": 1,
-          "expired": 8,
+          "expired": 0,
           "unknown": 0
         },
-        "oldest_source_date": "2026-06-30T12:36:13Z",
-        "oldest_source_member": "THYP",
+        "oldest_source_date": "2026-09-21T19:22:52Z",
+        "oldest_source_member": "IFED",
         "newest_source_date": "2026-10-12T20:00:00Z"
       },
-      "oldest_source_date": "2026-06-30",
-      "oldest_source_member": "THYP",
+      "oldest_source_date": "2026-09-21",
+      "oldest_source_member": "IFED",
       "fresh_members": 171,
-      "total_members": 180,
+      "total_members": 172,
       "latest_attempt": {
         "observed_at": "2026-07-28T01:07:08Z",
         "outcome": "success",
@@ -335,7 +335,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "stockanalysis_etf_universe",
         "policy": {
           "basis": "source_calendar",
@@ -372,7 +372,7 @@
       "max_age": "3-32d",
       "status": "delayed",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "detail",
         "policy": {
           "basis": "member_rotation",
@@ -397,30 +397,30 @@
         "status": "degraded",
         "reason": "member_ratio_low",
         "total_members": 5808,
-        "fresh_members": 5034,
+        "fresh_members": 5035,
         "counts": {
-          "fresh": 5034,
+          "fresh": 5035,
           "stale": 637,
-          "expired": 10,
-          "unknown": 127
+          "expired": 2,
+          "unknown": 134
         },
-        "oldest_source_date": "2026-06-30T12:36:13Z",
-        "oldest_source_member": "THYP",
+        "oldest_source_date": "2026-09-21T19:22:52Z",
+        "oldest_source_member": "IFED",
         "newest_source_date": "2026-10-12T20:00:00Z"
       },
-      "oldest_source_date": "2026-06-30",
-      "oldest_source_member": "THYP",
-      "fresh_members": 5034,
+      "oldest_source_date": "2026-09-21",
+      "oldest_source_member": "IFED",
+      "fresh_members": 5035,
       "total_members": 5808,
       "latest_attempt": {
-        "observed_at": "2026-10-12T23:53:29Z",
-        "outcome": "partial",
-        "failure_class": null
+        "observed_at": "2026-10-13T02:00:00Z",
+        "outcome": "failed",
+        "failure_class": "unknown"
       },
       "outcome_state": {
-        "attempt_at": "2026-10-12T23:53:29Z",
+        "attempt_at": "2026-10-13T02:00:00Z",
         "source_as_of": "2026-10-12",
-        "unchanged_source_attempts": 1,
+        "unchanged_source_attempts": 2,
         "consecutive_retained": 0
       }
     },
@@ -432,7 +432,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "stockanalysis_stock_financial",
         "policy": {
           "basis": "source_calendar",
@@ -469,7 +469,7 @@
       "max_age": "166d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "earnings_overview",
         "policy": {
           "basis": "source_calendar",
@@ -516,7 +516,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "stockanalysis_surfaces",
         "policy": {
           "basis": "source_calendar",
@@ -544,16 +544,11 @@
       "fresh_members": 25,
       "total_members": 25,
       "latest_attempt": {
-        "observed_at": "2026-10-12T23:53:29Z",
-        "outcome": "success",
+        "observed_at": null,
+        "outcome": "unobserved",
         "failure_class": null
       },
-      "outcome_state": {
-        "attempt_at": "2026-10-12T23:53:29Z",
-        "source_as_of": "2026-10-12",
-        "unchanged_source_attempts": 1,
-        "consecutive_retained": 0
-      }
+      "outcome_state": null
     },
     {
       "set": "yahoo_ticker_macro",
@@ -562,7 +557,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "yahoo_ticker_macro",
         "policy": {
           "basis": "source_calendar",
@@ -608,7 +603,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "sentiment",
         "policy": {
           "basis": "source_calendar",
@@ -656,7 +651,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "nasdaq_giw_sox",
         "policy": {
           "basis": "source_calendar",
@@ -699,7 +694,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "us_indices_daily",
         "policy": {
           "basis": "source_calendar",
@@ -745,7 +740,7 @@
       "max_age": "45d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "oecd_cli",
         "policy": {
           "basis": "source_calendar",
@@ -788,7 +783,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "krx",
         "policy": {
           "basis": "source_calendar",
@@ -831,7 +826,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "slickcharts",
         "policy": {
           "basis": "source_calendar",
@@ -880,7 +875,7 @@
       "status": "fresh",
       "date_basis": "collected",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "edgar_filings",
         "policy": {
           "basis": "source_calendar",
@@ -927,7 +922,7 @@
       "max_age": "121d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "sec_13f",
         "policy": {
           "basis": "source_calendar",
@@ -969,7 +964,7 @@
       "max_age": "11d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "sentiment_aaii",
         "policy": {
           "basis": "source_calendar",
@@ -1006,7 +1001,7 @@
       "max_age": "13d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "benchmarks",
         "policy": {
           "basis": "source_calendar",
@@ -1047,7 +1042,7 @@
       "max_age": "13d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "global_scouter",
         "policy": {
           "basis": "source_calendar",
@@ -1084,7 +1079,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "briefing",
         "policy": {
           "basis": "source_calendar",
@@ -1126,7 +1121,7 @@
       "max_age": "456d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "damodaran",
         "policy": {
           "basis": "source_calendar",
@@ -1169,7 +1164,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "finra_short_volume",
         "policy": {
           "basis": "source_calendar",
@@ -1212,7 +1207,7 @@
       "max_age": "39d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "finra_ats_weekly",
         "policy": {
           "basis": "source_calendar",
@@ -1255,7 +1250,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "occ_options_volume",
         "policy": {
           "basis": "source_calendar",
@@ -1298,7 +1293,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "yahoo_private_options",
         "policy": {
           "basis": "source_calendar",
@@ -1341,7 +1336,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "apewisdom_attention",
         "policy": {
           "basis": "source_calendar",
@@ -1384,7 +1379,7 @@
       "max_age": "2d",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "gdelt_news_tone",
         "policy": {
           "basis": "source_calendar",
@@ -1427,7 +1422,7 @@
       "max_age": "6bd",
       "status": "fresh",
       "source_health": {
-        "observed_at": "2026-10-13T02:10:49.509Z",
+        "observed_at": "2026-10-13T02:39:16.367Z",
         "scope": "yahoo_batch_quote_history",
         "policy": {
           "basis": "business_days",
