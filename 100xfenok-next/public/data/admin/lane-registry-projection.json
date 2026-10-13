@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-10-13T21:34:52.070Z",
+  "generated_at": "2026-10-13T22:05:08.790Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 36,
@@ -485,11 +485,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-13T21:20:00.000Z",
           "next_expected_slot": "2026-10-14T21:20:00.000Z",
-          "status": "overdue"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-13T13:07:35Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -515,8 +515,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -542,11 +544,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-13T21:20:00.000Z",
           "next_expected_slot": "2026-10-14T21:20:00.000Z",
-          "status": "unobserved"
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": null,
-          "outcome": "unobserved",
+          "observed_at": "2026-10-13T21:23:18Z",
+          "outcome": "success",
           "failure_class": null
         },
         "source": {
@@ -556,7 +558,7 @@
           "sla": null
         },
         "recovery": {
-          "state": "unavailable",
+          "state": "fresh_primary",
           "retry_count": 0,
           "recovered_at": null,
           "lkg_source_date": null
@@ -574,7 +576,6 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
-            "attempt",
             "source"
           ]
         }
@@ -602,7 +603,7 @@
           "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-12T21:23:24Z",
+          "observed_at": "2026-10-13T21:40:53Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -716,9 +717,9 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-13T21:05:00.000Z",
-          "next_expected_slot": "2026-10-13T22:05:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-13T22:05:00.000Z",
+          "next_expected_slot": "2026-10-13T23:05:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
           "observed_at": "2026-10-13T21:11:15.127Z",
@@ -773,9 +774,9 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-12T22:00:00.000Z",
-          "next_expected_slot": "2026-10-13T22:00:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-13T22:00:00.000Z",
+          "next_expected_slot": "2026-10-14T22:00:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
           "observed_at": "2026-10-12T22:03:13.821Z",
@@ -886,9 +887,9 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-12T22:00:00.000Z",
-          "next_expected_slot": "2026-10-13T22:00:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-13T22:00:00.000Z",
+          "next_expected_slot": "2026-10-14T22:00:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
           "observed_at": "2026-10-12T22:00:24.343Z",
