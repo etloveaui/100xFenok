@@ -69,7 +69,13 @@ function write(portfolios: Portfolio[]): SavePortfoliosResult {
     updated_at: new Date().toISOString(),
   };
   try {
-    personalStore.write("portfolio", doc);
+    const saved = personalStore.write("portfolio", doc);
+    if (!saved.ok) {
+      return {
+        ok: false,
+        message: "포트폴리오를 기기에 저장하지 못했습니다 (저장 공간 부족 또는 브라우저 권한 제한). 기존 보관 데이터는 유지됩니다.",
+      };
+    }
   } catch (error) {
     const detail = error instanceof Error ? error.message : "저장 공간 부족 또는 브라우저 권한 제한";
     return {

@@ -267,28 +267,57 @@ export function MarketChartFrame({
     const points = renderedSeries
       .filter((item) => !item.hidden)
       .map((item) => {
-        let bestValue: number | null = null;
-        let bestDelta = Number.POSITIVE_INFINITY;
+        let value: number | null = null;
+        let date: string | null = null;
+        let atOrBeforeMs = Number.NEGATIVE_INFINITY;
+        let laterMs = Number.POSITIVE_INFINITY;
+        let laterValue: number | null = null;
+        let laterDate: string | null = null;
         for (const point of item.points) {
           const pointMs = Date.parse(point.label);
-          const delta = Number.isFinite(cursorMs) && Number.isFinite(pointMs)
-            ? Math.abs(pointMs - cursorMs)
-            : point.label === cursorLabel
-              ? 0
-              : Number.POSITIVE_INFINITY;
-          if (delta < bestDelta) {
-            bestDelta = delta;
-            bestValue = point.value;
+          if (!Number.isFinite(cursorMs) || !Number.isFinite(pointMs)) {
+            if (point.label === cursorLabel) {
+              value = point.value;
+              date = point.label;
+            }
+            continue;
+          }
+          if (pointMs <= cursorMs) {
+            // A historical reading is the latest observation at or before the
+            // cursor, so the value never comes from a later date.
+            if (pointMs > atOrBeforeMs) {
+              atOrBeforeMs = pointMs;
+              value = point.value;
+              date = point.label;
+            }
+          } else if (pointMs < laterMs) {
+            laterMs = pointMs;
+            laterValue = point.value;
+            laterDate = point.label;
           }
         }
-        return { seriesLabel: item.label, value: bestValue };
+        if (value === null && laterValue !== null) {
+          // No observation before the cursor: show the earliest one after it and
+          // carry its own date so the readout cannot claim the cursor's date.
+          value = laterValue;
+          date = laterDate;
+        }
+        return { seriesLabel: item.label, value, date };
       })
       .filter((point) => point.value !== null);
     return { label: cursorLabel, points, linked: true };
   }, [cursorLabel, hover, renderedSeries]);
 
   const readout = announcedHover
-    ? { label: announcedHover.label, points: announcedHover.points, linked: false }
+    ? {
+        label: announcedHover.label,
+        linked: false,
+        points: announcedHover.points.map((point) => ({
+          seriesLabel: point.seriesLabel,
+          value: point.value,
+          date: announcedHover.label,
+        })),
+      }
     : linkedReadout;
 
   const showRanges = showRangeControls && ranges.length > 1;
@@ -407,7 +436,11 @@ export function MarketChartFrame({
             {"  "}
             {readout.points
               .filter((point) => point.value !== null)
-              .map((point) => `${point.seriesLabel} ${fmt(point.value)}`)
+              .map((point) =>
+                point.date && point.date !== readout.label
+                  ? `${point.seriesLabel} ${fmt(point.value)} (${point.date})`
+                  : `${point.seriesLabel} ${fmt(point.value)}`,
+              )
               .join("   ")}
           </span>
         ) : (

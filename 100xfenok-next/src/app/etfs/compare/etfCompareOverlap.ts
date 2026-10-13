@@ -88,6 +88,24 @@ function holdingKey(holding: EtfHolding): string | null {
   return `N:${name.replace(/\s+/g, " ").slice(0, 80)}`;
 }
 
+/**
+ * Collapse duplicate keys into one exposure per key. A fund can publish several
+ * rows with the same key (for example eight same-name swap legs); keeping only
+ * the last row in a Map made the overlap depend on row order and under-counted
+ * the exposure of the repeated legs.
+ */
+function aggregateEntries(entries: HoldingEntry[]): Map<string, HoldingEntry> {
+  const aggregated = new Map<string, HoldingEntry>();
+  for (const entry of entries) {
+    const existing = aggregated.get(entry.key);
+    aggregated.set(
+      entry.key,
+      existing ? { ...existing, weight: existing.weight + entry.weight } : { ...entry },
+    );
+  }
+  return aggregated;
+}
+
 export function holdingEntries(row: EtfCompareRow): HoldingEntry[] {
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
   return holdings.slice(0, 25).flatMap((holding) => {
@@ -118,8 +136,8 @@ export function overlapFor(left: EtfCompareRow, right: EtfCompareRow): PairOverl
     };
   }
 
-  const leftMap = new Map(leftEntries.map((entry) => [entry.key, entry]));
-  const common = rightEntries
+  const leftMap = aggregateEntries(leftEntries);
+  const common = [...aggregateEntries(rightEntries).values()]
     .flatMap((rightEntry) => {
       const leftEntry = leftMap.get(rightEntry.key);
       if (!leftEntry) return [];
