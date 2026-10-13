@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-13T18:09:14.473Z",
+  "generated_at": "2026-10-13T21:38:30.407Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38468639644,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38468639644",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "a1-sec-13f",
       "label": "A1 SEC 13F (A1 daily filing check) collector",
@@ -390,11 +402,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38444193607",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38444193607",
-    "observed_at": "2026-10-13T18:09:14.473Z",
+    "run_id": "38471929922",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38471929922",
+    "observed_at": "2026-10-13T21:38:30.407Z",
     "event": "workflow_run",
     "workflows": [
+      "global-writer-queue-observer.yml",
       "a1-sec-13f"
     ],
     "title": "100xFenok pipeline job failure alarm"
