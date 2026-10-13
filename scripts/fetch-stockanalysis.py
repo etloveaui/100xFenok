@@ -63,6 +63,7 @@ from stockanalysis_recovery_state import (
     etf_holdings_snapshot,
     issuer_holdings_snapshot,
     etf_display_daily_history,
+    legacy_yahoo_collection_clock,
     _etf_provider_source,
     _etf_component_clocks,
     _etf_history_dates,
@@ -3783,7 +3784,9 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
                 or source.get("source_as_of") != selected["source_as_of"]
                 or source.get("fetched_at") != selected["observed_at"]
                 or not isinstance(yahoo_data, dict)
-                or yahoo_detail_source_timestamp(source) != selected["source_as_of"]):
+                or (yahoo_detail_source_timestamp(source) != selected["source_as_of"]
+                    and not (issuer_holdings_snapshot(payload) is not None
+                             and legacy_yahoo_collection_clock(source)))):
             raise ValueError("selected Yahoo ETF immutable source is invalid")
         yahoo_daily = yahoo_data.get("history_1y")
         if yahoo_daily:
@@ -3817,7 +3820,30 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
                         "fetched_at": source["fetched_at"],
                         "history_first": dates[0].date().isoformat(),
                         "history_last": dates[1].date().isoformat(),
+                        "source_clock_basis": "legacy_collection_time" if legacy_yahoo_collection_clock(source) else "provider_observation",
                     })
+    if issuer_holdings_snapshot(payload) is not None:
+        current_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
+        current_yahoo = read_json(current_path)
+        try:
+            if isinstance(current_yahoo, dict):
+                validate_yf_etf_detail_payload(ticker, current_yahoo)
+                rows = current_yahoo["raw"]["yf"].get("history_1y")
+                dates = _etf_history_dates(rows)
+                native = _etf_history_dates((payload["raw"].get("history_periods") or {}).get("daily_1y"))
+                if dates and (not native or dates[1] > native[1]):
+                    body = current_path.read_bytes()
+                    if json.loads(body) != current_yahoo:
+                        raise ValueError("current Yahoo history changed while archiving")
+                    digest = hashlib.sha256(body).hexdigest()
+                    if digest not in {item["payload_sha256"] for item in archives}:
+                        archives.append({"provider": "yahoo_finance", "price_basis": "yahoo_adjusted",
+                            "source_payload": body.decode("utf-8"), "payload_sha256": digest,
+                            "source_as_of": current_yahoo["source_as_of"], "fetched_at": current_yahoo["fetched_at"],
+                            "history_first": dates[0].date().isoformat(), "history_last": dates[1].date().isoformat()})
+        except ValueError:
+            # An invalid supplementary snapshot cannot replace native history.
+            pass
     native_sources = []
     if selected and selected["provider"] == "stockanalysis":
         expected = f"data/stockanalysis/etfs/{ticker}.json"

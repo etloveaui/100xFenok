@@ -16,6 +16,7 @@ from stockanalysis_recovery_state import (
     etf_detail_regression,
     etf_display_daily_history,
     issuer_holdings_snapshot,
+    legacy_yahoo_collection_clock,
     _etf_component_clocks,
     _etf_history_date_set,
     _etf_provider_source,
@@ -252,8 +253,7 @@ class DataSupplyResolver:
                         or _timestamp(yahoo["source_as_of"]) != prior_source
                         or (proven_source != prior_source and not (
                             issuer_holdings_snapshot(payload) is not None
-                            and value is None and proven_source is not None
-                            and proven_source.date() == prior_source.date()))
+                            and legacy_yahoo_collection_clock(yahoo)))
                         or _timestamp(yahoo["fetched_at"]) != prior_fetched):
                     return False
             elif set(yahoo) - {"ticker", "suffix"}:

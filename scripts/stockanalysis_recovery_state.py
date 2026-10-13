@@ -345,6 +345,27 @@ def _stockanalysis_archive_dates(archive: dict, ticker: str, prior_archives: lis
         return None
 
 
+def legacy_yahoo_collection_clock(source: dict) -> bool:
+    """Recognize retained v1 snapshots whose old source label was collection time.
+
+    This permits archiving/replacement, never treating collection time as a
+    fresh market observation. The original document remains unchanged.
+    """
+    if (source.get("schema_version") != "yf-etf-detail/v1"
+            or source.get("source_provider") != "yahoo_finance"
+            or source.get("source_as_of") != source.get("fetched_at")):
+        return False
+    data = (source.get("raw") or {}).get("yf") or {}
+    info = data.get("info") or {}
+    funds = data.get("funds_data") or {}
+    if (str(info.get("symbol") or funds.get("symbol") or "").upper() != source.get("ticker")
+            or str(info.get("quoteType") or funds.get("quote_type") or "").upper() not in {"ETF", "MUTUALFUND"}):
+        return False
+    days = _etf_history_date_set(data.get("history_1y"))
+    fetched = _iso_timestamp(source.get("fetched_at"))
+    return bool(days and fetched and max(days) <= fetched.date().isoformat())
+
+
 def _archive_record_dates(archive: dict, ticker: str, prior_archives: list[dict] | None = None) -> set[str] | None:
     if archive.get("provider") == "stockanalysis":
         return _stockanalysis_archive_dates(archive, ticker, prior_archives or [])
@@ -381,7 +402,10 @@ def _archive_record_dates(archive: dict, ticker: str, prior_archives: list[dict]
         if source_stamp is None or fetched_stamp is None or source_stamp > fetched_stamp:
             return None
         value = info.get("regularMarketTime")
-        if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+        if archive.get("source_clock_basis") == "legacy_collection_time":
+            if not legacy_yahoo_collection_clock(source):
+                return None
+        elif isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
             quote_stamp = datetime.fromtimestamp(value / 1000 if abs(value) >= 100_000_000_000 else value, timezone.utc)
             if quote_stamp.replace(microsecond=0) != source_stamp.replace(microsecond=0):
                 return None
