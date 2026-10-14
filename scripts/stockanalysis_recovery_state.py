@@ -511,8 +511,57 @@ def validate_etf_history_archive(payload: dict) -> bool:
                for index, item in enumerate(archives))
 
 
+def _harbor_holdings_snapshot(payload: dict) -> datetime | None:
+    """Recognize HBIL's existing verified issuer-HTML component without relabelling it."""
+    if payload.get("ticker") != "HBIL" or payload.get("asset_type") != "etf":
+        return None
+    raw = payload.get("raw") or {}
+    provenance = raw.get("official_holdings")
+    component = raw.get("holdings")
+    normalized = payload.get("normalized") or {}
+    url = "https://www.harborcapital.com/etf/hbil/"
+    contract = (payload.get("endpoint_contracts") or {}).get("holdings") or {}
+    if (not isinstance(provenance, dict) or not isinstance(component, dict)
+            or provenance.get("provider") != "harborcapital"
+            or provenance.get("landing_page") != url
+            or payload.get("holdings_source") != provenance
+            or (payload.get("endpoints") or {}).get("holdings") != url
+            or contract != {"format": "issuer_html", "contract": "verified_official_etf_holdings/v1",
+                            "provider": "harborcapital"}
+            or not re.fullmatch(r"[0-9a-f]{64}", str(provenance.get("page_sha256", "")))):
+        return None
+    rows = component.get("holdings")
+    displayed = normalized.get("holdings")
+    if (not isinstance(rows, list) or not rows or not isinstance(displayed, list)
+            or len(rows) != len(displayed) or component.get("count") != len(rows)
+            or normalized.get("holding_count") != len(rows)):
+        return None
+    for source, row in zip(rows, displayed):
+        if (not isinstance(source, dict) or not isinstance(row, dict)
+                or not source.get("n") or row.get("raw") != source
+                or row.get("name") != source.get("n")
+                or row.get("weight_pct") != source.get("as")
+                or row.get("shares") != source.get("sh")
+                or row.get("symbol") != source.get("s")
+                or not isinstance(source.get("raw"), dict)
+                or source["raw"].get("Company Name") != source.get("n")
+                or isinstance(source.get("as"), bool)
+                or not isinstance(source.get("as"), (int, float))
+                or not math.isfinite(source["as"])):
+            return None
+    date = _iso_timestamp(component.get("date"))
+    fetched = _iso_timestamp(payload.get("fetched_at"))
+    if (date is None or fetched is None or date > fetched
+            or date != _iso_timestamp(provenance.get("source_as_of"))
+            or date != _iso_timestamp(normalized.get("holdings_updated"))):
+        return None
+    return date
+
+
 def issuer_holdings_snapshot(payload: dict) -> datetime | None:
     """Validate the displayed issuer snapshot independently of position count."""
+    if payload.get("ticker") == "HBIL":
+        return _harbor_holdings_snapshot(payload)
     raw = payload.get("raw") or {}
     issuer = raw.get("official_issuer")
     normalized = payload.get("normalized") or {}
