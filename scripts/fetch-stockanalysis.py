@@ -3312,7 +3312,13 @@ def fetch_etf(
         )
         if not (missing_holdings_contract or missing_holdings_endpoint):
             raise
-        if not allow_partial_holdings and ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
+        if (not allow_partial_holdings and ticker not in OFFICIAL_HOLDINGS_FALLBACKS
+                and ticker not in ISSUER_ETFS):
+            # A member with an official issuer route does not need the provider
+            # holdings surface: the collector binds the issuer component instead
+            # of aborting the whole payload here.
+            pass
+        elif not allow_partial_holdings and ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
             raise
         holdings_path = ETF_DETAIL_SURFACE_CONTRACTS["holdings"]["path"].format(
             ticker=ticker.lower()
@@ -3325,7 +3331,8 @@ def fetch_etf(
             else None
         )
         overview_supplies_holdings = isinstance(overview_holdings, list) and bool(overview_holdings)
-        if not holdings_unavailable and not overview_supplies_holdings and ticker not in OFFICIAL_HOLDINGS_FALLBACKS:
+        if (not holdings_unavailable and not overview_supplies_holdings
+                and ticker not in OFFICIAL_HOLDINGS_FALLBACKS and ticker not in ISSUER_ETFS):
             raise
         if overview_supplies_holdings:
             holdings_unavailable = False
