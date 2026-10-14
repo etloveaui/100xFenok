@@ -6,8 +6,8 @@
 // contract, and materializes the verified tree to an external output root via
 // a sibling stage directory and one atomic rename. This is the reader-side
 // twin of publish-cloud-data-generation.mjs (which stays the writer), built
-// for later git-raw-writer retirement: the local tree is never read, and
-// nothing here ever mutates the plane.
+// for later git-raw-writer retirement. Optional checkout reuse requires exact
+// manifest byte identity; nothing here ever mutates the plane.
 //
 // Read-only guarantee: the ONLY plane surface used is pointerStore.get and
 // objectStore.get. No pointer write, no compare-and-swap, no ledger call, no
@@ -37,6 +37,7 @@
 //   nothing is removed at all.
 //
 // CLI: --family <name> --manifest-prefix <prefix> --output-root <path>
+//      [--reuse-root <checkout-root>]
 // Env: CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, DATA_PLANE_ENDPOINT,
 //      DATA_PLANE_WRITE_KEY. Fixed existing bucket: fenok-data-plane.
 // Materialize mode emits exactly one JSON line on stdout with
@@ -509,6 +510,26 @@ async function validateOutputRoot({ outputRoot, env, repoRoot }) {
 // pointerStore.get and objectStore.get are ever called); every byte the tree
 // receives is verified twice (plane bytes vs manifest, staged file readback vs
 // manifest) before the stage directory is renamed to the output root.
+// Optional local reuse helper. It returns checkout bytes only when they match
+// the manifest asset in both length and SHA256; a missing file, a read error,
+// a length difference or a digest difference all return null so the caller
+// keeps the unchanged remote objectStore.get path.
+async function readMatchingReusePayload(reuseRoot, asset) {
+  const root = path.resolve(reuseRoot);
+  if (safeRelativeSegments(asset.path) === null) return null;
+  const candidate = path.resolve(root, asset.path);
+  if (!candidate.startsWith(`${root}${path.sep}`)) return null;
+  let bytes;
+  try {
+    bytes = await readFile(candidate);
+  } catch {
+    return null;
+  }
+  if (!(bytes instanceof Uint8Array) || bytes.byteLength !== asset.bytes) return null;
+  if (sha256Bytes(bytes) !== asset.sha256) return null;
+  return bytes;
+}
+
 export async function materializeCloudDataPlaneFamily({
   plane,
   family,
@@ -516,6 +537,7 @@ export async function materializeCloudDataPlaneFamily({
   outputRoot,
   env = process.env,
   repoRoot = REPO_ROOT,
+  reuseRoot = null,
 }) {
   validatePlaneAndFamily(plane, family);
   const prefix = normalizeManifestPrefix(manifestPrefix);
@@ -562,10 +584,15 @@ export async function materializeCloudDataPlaneFamily({
   let stageCreated = true;
   try {
     await runBoundedAsyncPool(entries, async ({ asset, segments }) => {
-      const payload = await plane.objectStore.get(asset.object_key);
-      if (!(payload instanceof Uint8Array)) fail("PAYLOAD_MISSING", asset.path);
-      if (payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
-        fail("PAYLOAD_INTEGRITY_INVALID", asset.path);
+      let payload = reuseRoot === null
+        ? null
+        : await readMatchingReusePayload(reuseRoot, asset);
+      if (payload === null) {
+        payload = await plane.objectStore.get(asset.object_key);
+        if (!(payload instanceof Uint8Array)) fail("PAYLOAD_MISSING", asset.path);
+        if (payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
+          fail("PAYLOAD_INTEGRITY_INVALID", asset.path);
+        }
       }
       const filePath = path.join(stageDir, ...segments);
       await mkdir(path.dirname(filePath), { recursive: true });
@@ -616,7 +643,8 @@ function parseArgs(argv) {
   const args = {};
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
-    if (!["--family", "--manifest-prefix", "--output-root", "--verify-receipt"].includes(flag)) {
+    if (!["--family", "--manifest-prefix", "--output-root", "--verify-receipt",
+          "--reuse-root"].includes(flag)) {
       fail("USAGE", `unknown or unexpected argument ${flag}`);
     }
     const value = argv[index + 1];
@@ -636,7 +664,9 @@ function parseArgs(argv) {
   if (missing.length) {
     fail("USAGE", `missing required arguments: ${missing.map((key) => `--${key}`).join(", ")}`);
   }
-  const unexpected = Object.keys(args).filter((key) => !expected.includes(key));
+  const optional = verifyMode ? [] : ["reuse-root"];
+  const unexpected = Object.keys(args).filter(
+    (key) => !expected.includes(key) && !optional.includes(key));
   if (unexpected.length) fail("USAGE", `arguments cannot be mixed across modes: ${unexpected.join(",")}`);
   return { ...args, mode: verifyMode ? "verify" : "materialize" };
 }
@@ -686,6 +716,7 @@ export async function runMaterializerCli({
         manifestPrefix: args["manifest-prefix"],
         outputRoot: args["output-root"],
         env,
+        reuseRoot: args["reuse-root"] ?? null,
       });
     stdout(JSON.stringify(receipt));
     return 0;

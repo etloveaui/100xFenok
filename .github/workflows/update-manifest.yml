@@ -214,6 +214,7 @@ jobs:
           node scripts/materialize-cloud-data-plane-family.mjs \
             --family stockanalysis-etf-detail \
             --manifest-prefix data/stockanalysis/etfs/ \
+            --reuse-root "$GITHUB_WORKSPACE" \
             --output-root "$OVERLAY_ROOT" | tee "$MATERIALIZE_LOG"
           RECEIPT="$RUNNER_TEMP/stockanalysis-etf-detail-verified-receipt.json"
           python3 - "$MATERIALIZE_LOG" "$RECEIPT" <<'PYEOF'

@@ -983,6 +983,7 @@ jobs:
           node scripts/materialize-cloud-data-plane-family.mjs \
             --family stockanalysis-etf-detail \
             --manifest-prefix data/stockanalysis/etfs/ \
+            --reuse-root "$GITHUB_WORKSPACE" \
             --output-root "$ACTIVE_ROOT" | tee "$RECEIPT"
           # Hard links avoid a second 1GB download or copy. The overlay below
           # replaces candidate links atomically, leaving the verified base intact.
