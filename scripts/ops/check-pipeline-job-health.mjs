@@ -6,6 +6,9 @@ import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
 import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
 import { STATE_TITLE as RETENTION_STATE_TITLE, classifyRetentionSchedule } from "./retention-schedule.mjs";
 import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot, externalClockEvent } from "../../ops/a1-lanes/external-clock.mjs";
+// The same declared-slot derivation the admission check uses, so a scheduled
+// fallback and its marked clock run land on one key instead of two.
+import { scheduledSlot } from "../check-external-clock-slot.mjs";
 
 const GITHUB_API = "https://api.github.com";
 const DATA_HEALTH_KPI_PATH = "data/admin/fenok-data-health-kpi.json";
@@ -749,6 +752,77 @@ function isScheduledRun(workflow, run) {
   return run?.event === "schedule" || externalClockSlot(workflow, run) !== null;
 }
 
+function runStamp(run) {
+  // Recency only, never slot derivation: a queued run must not borrow a later
+  // slot, which is why the admission check pins to creation as well.
+  const stamp = Date.parse(run?.run_started_at || run?.created_at || "");
+  return Number.isFinite(stamp) ? stamp : null;
+}
+
+/**
+ * The declared slot a counted run belongs to, or null when it cannot be
+ * established. A verified external-clock dispatch reports its own marker; a
+ * scheduled fallback is pinned to the latest declared cron instant at or
+ * before its CREATION, exactly as the admission check derives it. A run whose
+ * slot cannot be parsed keeps a null key, so it can never absorb another
+ * run's failure.
+ */
+export function declaredSlotKey(workflow, run) {
+  const marked = externalClockSlot(workflow, run);
+  if (Number.isFinite(marked)) return marked;
+  if (run?.event !== "schedule") return null;
+  const declared = externalClockCrons(workflow.file);
+  // The workflow must declare the same crons before a scheduled run is
+  // coalesced, which is the compatibility the marked path already enforces.
+  if (!declared.length || !Array.isArray(workflow.crons)
+    || !declared.every((cron) => workflow.crons.includes(cron))) return null;
+  const created = Date.parse(run?.created_at || "");
+  if (!Number.isFinite(created)) return null;
+  let latest = null;
+  for (const cron of declared) {
+    try {
+      const slot = Date.parse(scheduledSlot(cron, new Date(created).toISOString()));
+      if (Number.isFinite(slot) && slot <= created && (latest === null || slot > latest)) latest = slot;
+    } catch {
+      // A cron outside the admitted calendar leaves this run unclaimed rather
+      // than folding it into a neighbouring slot.
+    }
+  }
+  return latest;
+}
+
+/**
+ * One declared slot contributes one entry to the streak. A verified clock run
+ * and the scheduled fallback for the same slot are the same automatic cycle,
+ * so only its newest completed qualifying result represents it; the fallback
+ * keeps its coverage role in the workflow itself. Runs without a declared slot
+ * (manual dispatches, other events, unparseable evidence) pass through
+ * untouched, and distinct declared slots are never merged.
+ */
+export function coalesceSlots(workflow, runs) {
+  const keys = runs.map((run) => declaredSlotKey(workflow, run));
+  if (!keys.some((key) => key !== null)) return runs;
+  const newest = new Map();
+  runs.forEach((run, index) => {
+    const key = keys[index];
+    if (key === null) return;
+    const held = newest.get(key);
+    if (held === undefined) {
+      newest.set(key, index);
+      return;
+    }
+    const stamp = runStamp(run);
+    const heldStamp = runStamp(runs[held]);
+    const id = Number(run?.id);
+    const heldId = Number(runs[held]?.id);
+    const later = (stamp ?? -Infinity) > (heldStamp ?? -Infinity)
+      || ((stamp ?? -Infinity) === (heldStamp ?? -Infinity) && Number.isFinite(id)
+        && (!Number.isFinite(heldId) || id > heldId));
+    if (later) newest.set(key, index);
+  });
+  return runs.filter((run, index) => keys[index] === null || newest.get(keys[index]) === index);
+}
+
 export function isLostScheduledSlot(run, workflow = {}) {
   return isScheduledRun(workflow, run)
     && (run?.jobs_empty === true || run?.queue_evicted === true);
@@ -809,7 +883,10 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     if (["workflow_dispatch", "repository_dispatch"].includes(run?.event)) return externalClockSlot(workflow, run) !== null;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
-  const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
+  // One declared slot, one streak entry. Package order and every non-streak
+  // rule below keep using the uncollapsed list.
+  const streakRuns = coalesceSlots(workflow, countedRuns);
+  const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(streakRuns);
   // Only the next admitted automatic cycle proves the scheduled lane recovered.
   // An unmarked manual success is useful evidence, but remains pending below.
   const newestSuccessId = countedRuns.reduce((max, run) => {
@@ -827,7 +904,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     .map((run) => run?.html_url)
     .filter(Boolean);
   // Run ids order the automatic success against the latest counted failure.
-  const newestStreakFailure = countedRuns.find((run) =>
+  const newestStreakFailure = streakRuns.find((run) =>
     run?.queue_evicted !== true
       && !TRANSPARENT_CONCLUSIONS.has(run?.conclusion)
       && FAILURE_CONCLUSIONS.has(run?.conclusion));
@@ -953,7 +1030,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   if (!base.alarming) {
     return { ...base, status: "ok" };
   }
-  const firstFailing = firstFailingIndex === null ? null : countedRuns[firstFailingIndex];
+  const firstFailing = firstFailingIndex === null ? null : streakRuns[firstFailingIndex];
   return {
     ...base,
     status: "alarm",

@@ -9,7 +9,9 @@ import {
   SCHEDULED_WORKFLOW_EXCLUSIONS,
   buildIssueBody,
   buildWorkflowRunsUrl,
+  coalesceSlots,
   computeFailureStreak,
+  declaredSlotKey,
   deriveFailureStreakThreshold,
   deriveWorkflowWatchPolicy,
   QUEUE_EVICTION_INSPECTION_LIMIT,
@@ -58,6 +60,97 @@ import {
   const lost = evaluateWorkflow(workflow, [evicted], { now });
   assert.equal(lost.streak, 0);
   assert.deepEqual(lost.alarm_reasons, ["lost_schedule_slot"]);
+}
+
+// One declared slot, one streak entry. The hourly observer's marked clock run
+// and GitHub's own fallback schedule for that same slot are one automatic
+// cycle: on 2026-10-13T21:11Z both failed for the same congestion reading and
+// the pair opened a threshold-2 alarm as if two cycles had failed.
+{
+  const workflow = { file: "global-writer-queue-observer.yml", label: "Global Writer Queue Observability",
+    events: ["schedule"], crons: ["11 * * * *"], scheduled_producer: true };
+  const clock = (id, hour, conclusion = "failure") => ({
+    id, event: "workflow_dispatch", status: "completed", conclusion,
+    created_at: `2026-10-13T${hour}:11:02Z`, run_started_at: `2026-10-13T${hour}:11:02Z`,
+    html_url: `https://gh/run/${id}`,
+    display_title: `external-clock/a1/v1 ${workflow.file} 2026-10-13T${hour}:11:00.000Z`,
+  });
+  const fallback = (id, hour, conclusion = "failure") => ({
+    id, event: "schedule", status: "completed", conclusion,
+    created_at: `2026-10-13T${hour}:11:11Z`, run_started_at: `2026-10-13T${hour}:11:11Z`,
+    html_url: `https://gh/run/${id}`,
+  });
+  const now = Date.parse("2026-10-13T23:00:00Z");
+  const slot = Date.parse("2026-10-13T21:11:00.000Z");
+  assert.equal(declaredSlotKey(workflow, fallback(1, "21")), slot,
+    "a scheduled fallback is pinned to its declared cron instant");
+  assert.equal(declaredSlotKey(workflow, clock(1, "21")), slot);
+  assert.equal(declaredSlotKey(workflow, { ...fallback(1, "21"), created_at: "not-a-date", run_started_at: "not-a-date" }), null,
+    "unparseable evidence is never folded into a slot");
+  assert.equal(declaredSlotKey(workflow, { ...clock(1, "21"), display_title: "Human dispatch" }), null);
+  // Creation pins the slot even when the runner started in a later window.
+  const queued = { ...fallback(38468658101, "21"), run_started_at: "2026-10-13T22:12:00Z" };
+  assert.equal(declaredSlotKey(workflow, queued), slot,
+    "a queued fallback keeps its creation slot, not its start slot");
+  assert.equal(coalesceSlots(workflow, [queued, clock(38468639644, "21")]).length, 1);
+  // A missing creation timestamp is unknown, not a runner-start fallback.
+  const uncreated = { ...fallback(38468658102, "21"), created_at: undefined };
+  assert.equal(declaredSlotKey(workflow, uncreated), null,
+    "a missing creation timestamp cannot claim a slot");
+  assert.equal(coalesceSlots(workflow, [uncreated, clock(38468639644, "21")]).length, 2);
+  // A drifted cron declaration stops coalescing instead of mis-bucketing.
+  const drifted = { ...workflow, crons: ["12 * * * *"] };
+  assert.equal(declaredSlotKey(drifted, fallback(1, "21")), null);
+  assert.equal(declaredSlotKey(drifted, clock(1, "21")), null);
+  assert.equal(coalesceSlots(drifted, [fallback(38468658020, "21"), clock(38468639644, "21")]).length, 2);
+
+  // The real pair: 38468639644 (clock) and 38468658020 (fallback).
+  const oneSlot = evaluateWorkflow(workflow,
+    [fallback(38468658020, "21"), clock(38468639644, "21")], { now });
+  assert.equal(oneSlot.streak, 1, "one slot counts once");
+  assert.equal(oneSlot.alarm_reasons.includes("failure_streak"), false,
+    "a single failed slot does not reach the threshold");
+
+  // A distinct failed slot still reaches the threshold.
+  const twoSlots = evaluateWorkflow(workflow,
+    [fallback(38468658020, "21"), clock(38468639644, "21"), clock(38460000000, "20")], { now });
+  assert.equal(twoSlots.streak, 2, "two separate failed slots still alarm");
+  assert.equal(twoSlots.alarm_reasons.includes("failure_streak"), true);
+  assert.equal(twoSlots.firstFailingRunId, 38460000000,
+    "the alarm names the oldest failed slot in the streak");
+  assert.match(buildIssueBody([twoSlots]),
+    /First failing run: 38460000000 started 2026-10-13T20:11/);
+
+  // A later successful fallback clears its own slot's earlier failure while an
+  // older failed slot stays counted.
+  const recovered = evaluateWorkflow(workflow,
+    [fallback(38468658200, "22"), clock(38468658100, "22"),
+      fallback(38468658020, "21", "success"), clock(38468639644, "21")], { now });
+  assert.equal(recovered.streak, 1, "the successful fallback represents its slot");
+
+  // Two marked runs in one slot are still one cycle.
+  const markedTwice = evaluateWorkflow(workflow,
+    [clock(38468639700, "21"), clock(38468639644, "21")], { now });
+  assert.equal(markedTwice.streak, 1);
+
+  // An in-progress fallback cannot erase a completed clock failure.
+  const inFlight = evaluateWorkflow(workflow,
+    [{ ...fallback(38468658099, "21"), status: "in_progress", conclusion: null }, clock(38468639644, "21")], { now });
+  assert.equal(inFlight.streak, 1);
+
+  // An unmarked manual dispatch keeps its existing separate semantics.
+  const manualRun = { ...fallback(38468658100, "21", "success"), event: "workflow_dispatch",
+    display_title: "Global Writer Queue Observability" };
+  const manual = evaluateWorkflow(workflow,
+    [manualRun, clock(38468639644, "21"), clock(38460000000, "20")], { now });
+  assert.equal(manual.streak, 2, "a manual dispatch is not a slot result");
+
+  // Runs from another workflow never coalesce into this workflow's slot.
+  const otherFile = { ...clock(38468639645, "21"),
+    display_title: "external-clock/a1/v1 fetch-yahoo-ticker.yml 2026-10-13T21:05:00.000Z" };
+  assert.equal(coalesceSlots(workflow, [fallback(38468658020, "21"), otherFile]).length, 2);
+  // Distinct declared slots survive as distinct entries.
+  assert.equal(coalesceSlots(workflow, [fallback(2, "21"), clock(1, "20")]).length, 2);
 }
 
 // The alarm's data-stoppage input is two committed KPI generations. A single
