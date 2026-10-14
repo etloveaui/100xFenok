@@ -1191,6 +1191,30 @@ jobs:
               payload["source_as_of"] = fetcher.stockanalysis_detail_source_timestamp(payload)
               return True
 
+          def retain_history_archives(ticker, payload, baseline_bytes, label):
+              if baseline_bytes is None:
+                  return False
+              baseline, _, _, _ = checked_payload(baseline_bytes, ticker, label, legacy_baseline=True)
+              archives = (baseline.get("normalized") or {}).get("history_archive") or []
+              if not archives:
+                  return False
+              # Acquisition can precede another successful publication. Carry
+              # forward its exact archives before the unchanged regression gate;
+              # do not replace native prices, provider clocks or provenance.
+              target = payload["normalized"].setdefault("history_archive", [])
+              existing = {record["payload_sha256"]: record for record in target}
+              changed = False
+              for record in archives:
+                  digest = record["payload_sha256"]
+                  if digest in existing:
+                      if existing[digest] != record:
+                          raise MemberRefusal(f"ETF {ticker} conflicting {label} history archive")
+                      continue
+                  target.append(record)
+                  existing[digest] = record
+                  changed = True
+              return changed
+
           retained_names = []
           refused_members = []
           deferred_names = set()
@@ -1225,7 +1249,10 @@ jobs:
               try:
                   payload, source_as_of, complete, _ = checked_payload(body, ticker, "artifact")
                   held_components = retain_active_holdings(ticker, payload, active_bytes)
-                  if held_components:
+                  held_archives = retain_history_archives(ticker, payload, active_bytes, "active")
+                  if lkg.returncode == 0:
+                      held_archives = retain_history_archives(ticker, payload, lkg.stdout, "Git LKG") or held_archives
+                  if held_components or held_archives:
                       body = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()
                       payload, source_as_of, complete, _ = checked_payload(body, ticker, "assembled candidate")
                   enforce_floor(ticker, payload, source_as_of, complete, active_bytes, "active")
