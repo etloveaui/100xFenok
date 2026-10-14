@@ -859,7 +859,6 @@ class DataSupplyStateStore:
             ref = row["payload_ref"]
             if ref["kind"] == "provider_truth":
                 raise SchemaError("mutable provider-truth refs cannot participate in active state")
-            ref_path = self._inside_root(self.root / _safe_relative_path(ref["path"], "payload_ref.path"))
             if ref["kind"] == "provider_object":
                 expected_path = (
                     Path("providers")
@@ -884,9 +883,14 @@ class DataSupplyStateStore:
             if ref["path"] != expected_path:
                 raise SchemaError(f"{label} ref identity mismatch")
             # Deferred callers own immutable bytes until final maintenance.
+            # Reuse that same immutable-path proof as well as the bytes: resolving
+            # every unchanged reference before this cache lookup dominated large
+            # single-entity batches. Cold refs still prove root containment below.
+            ref_path = self.root / expected_path
             cache_key = (ref_path, ref["sha256"])
             if self._defer_maintenance and cache_key in self._validated_immutable_refs:
                 continue
+            ref_path = self._inside_root(ref_path)
             try:
                 payload_bytes = ref_path.read_bytes()
             except FileNotFoundError as exc:
@@ -1021,6 +1025,11 @@ class DataSupplyStateStore:
         }
         if self._defer_maintenance:
             self._generation_cache[cache_key] = dict(result)
+            # A deferred batch can commit hundreds of full-domain generations.
+            # Keep only the retained/prepared working set in memory; evicted
+            # generations remain on disk and are validated again when needed.
+            while len(self._generation_cache) > GENERATIONS_RETAINED + MAX_LIVE_PREPARED_GENERATIONS:
+                self._generation_cache.pop(next(iter(self._generation_cache)))
         return result
 
     def _read_active_domain_unlocked(self, domain: str) -> dict[str, Any]:
