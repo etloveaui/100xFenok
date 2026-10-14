@@ -6,7 +6,7 @@ run-name: ${{ github.event.client_payload.external_clock == 'a1-v1' && format('e
 
 on:
   repository_dispatch:
-    types: [external-clock-stockanalysis]
+    types: [external-clock-stockanalysis, stockanalysis-plane-recovery]
   schedule:
     # Daily bounded stock overview + financial pair refresh (KST 06:20).
     - cron: '20 21 * * *'
@@ -119,6 +119,7 @@ on:
 
 jobs:
   clock-admission:
+    if: github.event.action != 'stockanalysis-plane-recovery'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -147,7 +148,7 @@ jobs:
         run: node scripts/check-external-clock-slot.mjs fetch-stockanalysis.yml
 
   acquire-stockanalysis:
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    if: ${{ github.event.action != 'stockanalysis-plane-recovery' && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
     permissions:
@@ -511,7 +512,7 @@ jobs:
           retention-days: 1
 
   publish-stockanalysis:
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    if: ${{ github.event.action != 'stockanalysis-plane-recovery' && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: [clock-admission, acquire-stockanalysis]
     runs-on: ubuntu-latest
     # Semantic validation must follow fresh-main apply while the writer lock is
@@ -820,13 +821,16 @@ jobs:
   publish-stockanalysis-etf-plane:
     needs: [clock-admission, acquire-stockanalysis]
     if: >-
-      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
-      ((needs.clock-admission.outputs.event_name == 'schedule' &&
-       (needs.clock-admission.outputs.mode == 'etf_weekday' || needs.clock-admission.outputs.mode == 'etf_general')) ||
-      (needs.clock-admission.outputs.event_name == 'workflow_dispatch' &&
-       (inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
-       inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
-       inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''))
+      !cancelled() &&
+      ((github.event_name == 'repository_dispatch' && github.event.action == 'stockanalysis-plane-recovery') ||
+       (needs.acquire-stockanalysis.result == 'success' &&
+        needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
+        ((needs.clock-admission.outputs.event_name == 'schedule' &&
+          (needs.clock-admission.outputs.mode == 'etf_weekday' || needs.clock-admission.outputs.mode == 'etf_general')) ||
+         (needs.clock-admission.outputs.event_name == 'workflow_dispatch' &&
+          (inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
+          inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
+          inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''))))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -853,7 +857,82 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
+      - name: Verify the reused artifact identity from the GitHub API
+        if: github.event.action == 'stockanalysis-plane-recovery'
+        id: reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.client_payload.source_run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.client_payload.source_run_attempt }}
+        run: |
+          set -euo pipefail
+          python3 - "${{ github.repository }}" "$SOURCE_RUN_ID" "$SOURCE_RUN_ATTEMPT" <<'PY'
+          import hashlib, json, os, re, stat, subprocess, sys, zipfile
+          from pathlib import Path, PurePosixPath
+          repository, run_id, attempt = sys.argv[1:]
+          if not re.fullmatch(r"[1-9][0-9]*", run_id) or not re.fullmatch(r"[1-9][0-9]*", attempt):
+              raise SystemExit("recovery requires positive source_run_id and source_run_attempt")
+          def api(path):
+              return json.loads(subprocess.check_output(["gh", "api", path], text=True))
+          run = api(f"repos/{repository}/actions/runs/{run_id}")
+          if str(run.get("id")) != run_id or run.get("repository", {}).get("full_name") != repository:
+              raise SystemExit("source run identity/repository mismatch")
+          if run.get("path") != ".github/workflows/fetch-stockanalysis.yml":
+              raise SystemExit("source run is not this workflow")
+          if run.get("status") != "completed" or run.get("head_branch") != "main":
+              raise SystemExit("recovery requires a completed main-branch source run")
+          if str(run.get("run_attempt")) != attempt:
+              raise SystemExit("source run attempt mismatch")
+          artifacts = [item for item in api(
+              f"repos/{repository}/actions/runs/{run_id}/artifacts?per_page=100")["artifacts"]
+              if item["name"] == f"stockanalysis-{run_id}-{attempt}"]
+          if len(artifacts) != 1:
+              raise SystemExit("expected exactly one source artifact")
+          artifact = artifacts[0]
+          digest_match = re.fullmatch(r"sha256:([0-9a-f]{64})", str(artifact.get("digest", "")))
+          if not digest_match or artifact.get("expired") is not False:
+              raise SystemExit("source artifact expired or lacks its API SHA256 digest")
+          identity = artifact.get("workflow_run", {})
+          if (str(identity.get("id")) != run_id
+                  or identity.get("head_sha") != run.get("head_sha")
+                  or identity.get("repository_id") != run.get("repository", {}).get("id")
+                  or identity.get("head_repository_id") != identity.get("repository_id")):
+              raise SystemExit("artifact source run/repository/revision mismatch")
+          digest = digest_match.group(1)
+          # Verify the actual ZIP, not only a caller-supplied digest string. The normal
+          # acquisition download remains unchanged; recovery is read-only to source runs.
+          archive = Path(os.environ["RUNNER_TEMP"]) / "stockanalysis-reuse.zip"
+          root = Path(os.environ["RUNNER_TEMP"]) / "stockanalysis-artifact"
+          if archive.exists() or root.exists():
+              raise SystemExit("recovery scratch already exists")
+          with archive.open("xb") as handle:
+              subprocess.run(["gh", "api", f"repos/{repository}/actions/artifacts/{artifact['id']}/zip"],
+                             stdout=handle, check=True)
+          with archive.open("rb") as handle:
+              actual_digest = hashlib.file_digest(handle, "sha256").hexdigest()
+          if actual_digest != digest:
+              raise SystemExit("downloaded artifact SHA256 does not match GitHub API")
+          with zipfile.ZipFile(archive) as source:
+              seen = set()
+              for item in source.infolist():
+                  name = PurePosixPath(item.filename)
+                  if (name.is_absolute() or ".." in name.parts or "\\" in item.filename
+                          or stat.S_ISLNK(item.external_attr >> 16) or item.filename in seen):
+                      raise SystemExit("unsafe or duplicate artifact ZIP member")
+                  seen.add(item.filename)
+              root.mkdir()
+              source.extractall(root)
+          outputs = {
+              "artifact_name": artifact["name"], "artifact_digest": digest,
+              "run_id": run_id, "run_number": str(run["run_number"]), "run_attempt": attempt,
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+              for key, value in outputs.items():
+                  handle.write(f"{key}={value}\n")
+          PY
+
       - name: Download immutable StockAnalysis candidate
+        if: github.event.action != 'stockanalysis-plane-recovery'
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
@@ -861,8 +940,8 @@ jobs:
 
       - name: Validate the immutable candidate without modifying canonical Git files
         env:
-          ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
-          ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+          ARTIFACT_DIGEST: ${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.artifact_digest || needs.acquire-stockanalysis.outputs.artifact_digest }}
+          ARTIFACT_NAME: ${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.artifact_name || needs.acquire-stockanalysis.outputs.artifact_name }}
         run: |
           set -euo pipefail
           git fetch origin main
@@ -871,9 +950,9 @@ jobs:
           APPLY_JSON="$(
             python3 scripts/stockanalysis_artifact.py validate-plane \
               --artifact-root "$ARTIFACT_ROOT" \
-              --run-id "${{ github.run_id }}" \
-              --run-number "${{ github.run_number }}" \
-              --run-attempt "${{ github.run_attempt }}" \
+              --run-id "${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.run_id || github.run_id }}" \
+              --run-number "${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.run_number || github.run_number }}" \
+              --run-attempt "${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.run_attempt || github.run_attempt }}" \
               --artifact-name "$ARTIFACT_NAME" \
               --artifact-digest "$ARTIFACT_DIGEST" \
               --github-output "$RUNNER_TEMP/stockanalysis-plane-apply-output"
@@ -1245,7 +1324,7 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           # Bind publication to the immutable acquisition artifact; this job
           # runs independently of the Git publisher.
-          PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
+          PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.artifact_digest || needs.acquire-stockanalysis.outputs.artifact_digest }}
         run: |
           node --input-type=module -e '
             import { buildFamilyManifest, runPublisherCli } from "./scripts/publish-cloud-data-generation.mjs";
@@ -1259,7 +1338,10 @@ jobs:
 
   refresh-etf-health:
     needs: [clock-admission, publish-stockanalysis, publish-stockanalysis-etf-plane]
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (always() && needs.publish-stockanalysis-etf-plane.result == 'success') }}
+    if: >-
+      !cancelled() && needs.publish-stockanalysis-etf-plane.result == 'success' &&
+      ((github.event_name == 'repository_dispatch' && github.event.action == 'stockanalysis-plane-recovery') ||
+       (needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true'))
     uses: ./.github/workflows/refresh-family-health.yml
     with:
       publication_cycle: ${{ needs.clock-admission.outputs.event_name == 'schedule' && format('{0}', github.run_id) || '' }}
