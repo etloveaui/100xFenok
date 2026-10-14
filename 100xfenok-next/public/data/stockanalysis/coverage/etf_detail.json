@@ -2,17 +2,17 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-10-13T21:23:58Z",
+  "generated_at": "2026-10-14T03:49:13Z",
   "source_date_summary": {
-    "total_members": 5784,
-    "newest_source_date": "2026-10-12",
+    "total_members": 5785,
+    "newest_source_date": "2026-10-13",
     "oldest_source_date": "2026-06-19",
     "oldest_source_member": "MEME",
     "source_date_histogram": [
       {
         "date": null,
         "basis": null,
-        "count": 4
+        "count": 5
       },
       {
         "date": "2026-06-19",
@@ -37,7 +37,7 @@
       {
         "date": "2026-09-24",
         "basis": "source",
-        "count": 70
+        "count": 56
       },
       {
         "date": "2026-09-25",
@@ -93,6 +93,11 @@
         "date": "2026-10-12",
         "basis": "source",
         "count": 1046
+      },
+      {
+        "date": "2026-10-13",
+        "basis": "source",
+        "count": 14
       }
     ]
   },
@@ -110,7 +115,7 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5784,
+    "candidate_total": 5785,
     "source_breakdown": {
       "etf_universe": 5721,
       "etf_screener": 5784,
@@ -118,40 +123,46 @@
     },
     "detail_files": 5909,
     "covered_detail_files": 5780,
-    "missing_detail_files": 4,
+    "missing_detail_files": 5,
     "extra_detail_files": 129,
     "stockanalysis_detail_files": 5909,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.93,
-    "primary_stockanalysis_pct": 99.93,
+    "coverage_pct": 99.91,
+    "primary_stockanalysis_pct": 99.91,
     "missing_by_source": {
       "etf_universe": 0,
-      "etf_screener": 4,
+      "etf_screener": 5,
       "new_etfs": 0
     },
     "missing_status_breakdown": {
-      "provider_gap_cooldown": 4
+      "provider_gap_cooldown": 4,
+      "untracked": 1
     },
     "missing_failure_breakdown": {
-      "provider_coverage_gap": 4
+      "provider_coverage_gap": 4,
+      "untracked": 1
     },
     "missing_availability_breakdown": {
-      "provider_absent": 4
+      "provider_absent": 4,
+      "unprobed": 1
     },
     "pending_tracked": 209,
-    "pending_cooldown": 34,
+    "pending_cooldown": 33,
     "pending_tracked_missing": 4,
     "provider_coverage_gaps": 50
   },
   "missing_reason_summary": {
-    "provider_coverage_gap": 4
+    "provider_coverage_gap": 4,
+    "untracked": 1
   },
   "missing_status_summary": {
-    "provider_gap_cooldown": 4
+    "provider_gap_cooldown": 4,
+    "untracked": 1
   },
   "missing_availability_summary": {
-    "provider_absent": 4
+    "provider_absent": 4,
+    "unprobed": 1
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -159,6 +170,9 @@
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "untracked": [
+      "ACMG"
     ]
   },
   "missing_status_samples": {
@@ -167,6 +181,9 @@
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "untracked": [
+      "ACMG"
     ]
   },
   "missing_availability_samples": {
@@ -175,9 +192,13 @@
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "unprobed": [
+      "ACMG"
     ]
   },
   "missing_tickers": [
+    "ACMG",
     "HYGD",
     "HYGU",
     "LQDD",
@@ -324,6 +345,7 @@
   ],
   "samples": {
     "missing": [
+      "ACMG",
       "HYGD",
       "HYGU",
       "LQDD",
@@ -334,6 +356,9 @@
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "missing_untracked": [
+      "ACMG"
     ],
     "missing_provider_coverage_gap": [
       "HYGD",
