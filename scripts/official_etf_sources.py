@@ -2460,14 +2460,26 @@ def _fetch_mastfunds(ticker: str, timeout: int) -> dict:
     """
     url = _MASTFUNDS_CSV_URLS[ticker]
     body = _http_get(url, timeout, accept="text/csv").decode("utf-8-sig", errors="replace")
-    reader = csv.DictReader(io.StringIO(body))
-    fields = [str(field).strip() for field in (reader.fieldnames or [])]
+    raw = csv.reader(io.StringIO(body))
+    fields = [str(field).strip() for field in next(raw, [])]
     expected = ["Date", "Ticker", "Security Type", "CUSIP", "Sedol", "Description",
                 "Quantity", "Portfolio Weight"]
     if fields != expected:
         raise OfficialEtfSourceError(
             f"MAST holdings CSV header is not the expected layout for {ticker}: {fields!r}")
-    rows = [row for row in reader if _text(row.get("Description"))]
+    rows = []
+    for index, values in enumerate(raw, start=2):
+        if not any(" ".join(str(value).split()) for value in values):
+            continue  # only a genuinely blank record is skipped
+        if len(values) != len(expected):
+            raise OfficialEtfSourceError(
+                f"MAST holdings row {index} for {ticker} does not match the published "
+                f"{len(expected)}-column layout: {values!r}")
+        row = dict(zip(fields, values))
+        if _text(row.get("Date")) is None or _text(row.get("Description")) is None:
+            raise OfficialEtfSourceError(
+                f"MAST holdings row {index} for {ticker} is missing its Date or Description")
+        rows.append(row)
     if not rows:
         raise OfficialEtfSourceError(f"no MAST holdings rows for {ticker}")
     dates = {_normalise_date(row.get("Date")) for row in rows}
