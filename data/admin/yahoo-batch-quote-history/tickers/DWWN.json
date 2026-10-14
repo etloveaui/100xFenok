@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:30:16Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DWWN.json",
-    "payload_sha256": "92876ed09b45e7234571e130675e94fafc05ec0d92b40508933b072f53cb69ad",
-    "quote_as_of": "2026-10-12T13:46:03Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:46:03Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/DWWN.json",
+    "payload_sha256": "3c40850ec8d6b391deddc35070078790b5e1ca12a49be13acf50b945e875850d",
+    "quote_as_of": "2026-10-01T19:19:06Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for DWWN: quote_as_of",
     "failures": [],
-    "latency_ms": 817,
-    "observed_at": "2026-10-14T00:36:26Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for DWWN: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:36:26Z"
+    "latency_ms": 774,
+    "observed_at": "2026-10-14T04:46:03Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:30:16Z",
@@ -38,21 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:36:26Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:36:26Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:46:03Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -64,5 +46,5 @@
     "source_as_of": "2026-10-01T19:19:06Z"
   },
   "ticker": "DWWN",
-  "updated_at": "2026-10-14T00:36:26Z"
+  "updated_at": "2026-10-14T04:46:03Z"
 }

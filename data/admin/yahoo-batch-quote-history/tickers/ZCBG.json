@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:46Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBG.json",
-    "payload_sha256": "78b438b48b7fa8b8ebf503a24d78862fccd5c651a48c46941c6ed559a84ad0a4",
-    "quote_as_of": "2026-10-12T13:46:08Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:46:29Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/ZCBG.json",
+    "payload_sha256": "cd34559c5df74fdd7d9c65f8a9bd437b0be906d3b5dcb44cc0a5b1b636ccd603",
+    "quote_as_of": "2026-09-30T19:59:47Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBG: quote_as_of",
     "failures": [],
-    "latency_ms": 777,
-    "observed_at": "2026-10-14T00:59:37Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBG: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:59:37Z"
+    "latency_ms": 798,
+    "observed_at": "2026-10-14T04:46:29Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:46Z",
@@ -38,22 +27,15 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:59:37Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:59:37Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:46:29Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
   "recovered_at": "2026-09-28T06:30:00Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -65,5 +47,5 @@
     "source_as_of": "2026-09-30T19:59:47Z"
   },
   "ticker": "ZCBG",
-  "updated_at": "2026-10-14T00:59:37Z"
+  "updated_at": "2026-10-14T04:46:29Z"
 }

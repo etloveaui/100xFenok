@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:03Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MHIG.json",
-    "payload_sha256": "80f515e403abbeab59cde6150db8761ba1c3c74dd081875631e7b2c714b4642c",
-    "quote_as_of": "2026-10-12T13:46:05Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:46:14Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/MHIG.json",
+    "payload_sha256": "86bf57119024de5e6f0d67fb699ce1c9fbdf2473499469d9ddc9625b2e95a110",
+    "quote_as_of": "2026-09-30T17:57:03Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MHIG: quote_as_of",
     "failures": [],
-    "latency_ms": 702,
-    "observed_at": "2026-10-14T00:47:22Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for MHIG: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:47:22Z"
+    "latency_ms": 786,
+    "observed_at": "2026-10-14T04:46:14Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:03Z",
@@ -38,21 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:47:22Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:47:22Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:46:14Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -64,5 +46,5 @@
     "source_as_of": "2026-09-30T17:57:03Z"
   },
   "ticker": "MHIG",
-  "updated_at": "2026-10-14T00:47:22Z"
+  "updated_at": "2026-10-14T04:46:14Z"
 }

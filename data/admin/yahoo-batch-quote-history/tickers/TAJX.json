@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:25Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TAJX.json",
-    "payload_sha256": "056b9bfe5d75b86ec9d475842c7415975e216ac106c6d40b9c436660e43ea4e8",
-    "quote_as_of": "2026-10-12T13:46:07Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:46:25Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/TAJX.json",
+    "payload_sha256": "8a2ee3ef5899bc6e480bb71bc1607f15a9842ffc53dd7ae3bc237048866f3c72",
+    "quote_as_of": "2026-09-30T16:14:12Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for TAJX: quote_as_of",
     "failures": [],
-    "latency_ms": 755,
-    "observed_at": "2026-10-14T00:55:02Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for TAJX: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:55:02Z"
+    "latency_ms": 813,
+    "observed_at": "2026-10-14T04:46:25Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:25Z",
@@ -38,21 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:55:02Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:55:02Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:46:25Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -64,5 +46,5 @@
     "source_as_of": "2026-09-30T16:14:12Z"
   },
   "ticker": "TAJX",
-  "updated_at": "2026-10-14T00:55:02Z"
+  "updated_at": "2026-10-14T04:46:25Z"
 }

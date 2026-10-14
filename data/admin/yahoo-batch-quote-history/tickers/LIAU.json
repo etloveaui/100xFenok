@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:02Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LIAU.json",
-    "payload_sha256": "313542b53061af0fc796796987e9add4c84c832c7f7734c3d1e32a43388dbc64",
-    "quote_as_of": "2026-10-12T13:46:05Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:46:12Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/LIAU.json",
+    "payload_sha256": "0f89257da57688a431089e98f27c3ec8093918b357b86325c0d37b149bc4f450",
+    "quote_as_of": "2026-09-30T17:25:25Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for LIAU: quote_as_of",
     "failures": [],
-    "latency_ms": 841,
-    "observed_at": "2026-10-14T00:46:16Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for LIAU: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:46:16Z"
+    "latency_ms": 797,
+    "observed_at": "2026-10-14T04:46:12Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:02Z",
@@ -38,21 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:46:16Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:46:16Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:46:12Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -64,5 +46,5 @@
     "source_as_of": "2026-09-30T17:25:25Z"
   },
   "ticker": "LIAU",
-  "updated_at": "2026-10-14T00:46:16Z"
+  "updated_at": "2026-10-14T04:46:12Z"
 }

@@ -1,19 +1,18 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:33Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/USMX.json",
-    "payload_sha256": "3809f46c8f9105357754653009d90dde6798e26b2d9bcddf5433868f54b291a4",
-    "quote_as_of": "2026-10-12T13:46:08Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:45:48Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/USMX.json",
+    "payload_sha256": "15d5b83cc04457d76ce1343a48d3472986c1a5b98ced5f483e1e8da913bfbb0b",
+    "quote_as_of": "2026-09-24T16:00:08Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
     "failures": [
       {
         "attempt": 1,
@@ -46,50 +45,9 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 801,
-    "observed_at": "2026-10-14T00:30:10Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: USMX: No Fund data found.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:30:10Z"
+    "latency_ms": 1045,
+    "observed_at": "2026-10-14T04:45:48Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:33Z",
@@ -100,22 +58,15 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:30:10Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:30:10Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:45:48Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "USMX",
-  "updated_at": "2026-10-14T00:30:10Z"
+  "updated_at": "2026-10-14T04:45:48Z"
 }
