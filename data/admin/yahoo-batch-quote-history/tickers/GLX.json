@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:30:20Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/GLX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GLX.json",
     "payload_sha256": "bb5fcaadc3fe45fda106a1cd6b11064c77c9a02832a0afb67759f16f31ab270c",
     "quote_as_of": "2026-10-12T13:46:04Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for GLX: quote_as_of",
     "failures": [],
-    "latency_ms": 732,
-    "observed_at": "2026-10-12T15:30:20Z",
-    "outcome": "fresh"
+    "latency_ms": 860,
+    "observed_at": "2026-10-14T00:40:47Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for GLX: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:40:47Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T06:07:42Z",
-    "history_as_of": "2026-10-07",
+    "fetched_at": "2026-10-12T15:30:20Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GLX.json",
-    "payload_sha256": "118b58466736f09efcb0d8ea79482aaf40e1b91a2ada1e762c64e953281d81d2",
-    "quote_as_of": "2026-10-01T16:02:22Z",
-    "source_as_of": "2026-10-01T16:02:22Z"
+    "payload_sha256": "bb5fcaadc3fe45fda106a1cd6b11064c77c9a02832a0afb67759f16f31ab270c",
+    "quote_as_of": "2026-10-12T13:46:04Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:40:47Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:40:47Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-10-01T16:02:22Z"
   },
   "ticker": "GLX",
-  "updated_at": "2026-10-12T15:30:20Z"
+  "updated_at": "2026-10-14T00:40:47Z"
 }

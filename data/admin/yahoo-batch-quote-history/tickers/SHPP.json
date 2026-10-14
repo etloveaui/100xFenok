@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:24Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/SHPP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SHPP.json",
     "payload_sha256": "2bd0f5d0a9a9f560a9923934c0148020e30a3dbe0cbe7acc082a4722ba5fa695",
     "quote_as_of": "2026-10-12T13:46:07Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for SHPP: quote_as_of",
     "failures": [],
-    "latency_ms": 633,
-    "observed_at": "2026-10-12T15:31:24Z",
-    "outcome": "fresh"
+    "latency_ms": 881,
+    "observed_at": "2026-10-14T00:53:33Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for SHPP: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:53:33Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T06:19:41Z",
-    "history_as_of": "2026-10-07",
+    "fetched_at": "2026-10-12T15:31:24Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SHPP.json",
-    "payload_sha256": "2ea6938a93ed306cbd348e685a997f72421aa2edba7e4f25c626d9e2b32ea72c",
-    "quote_as_of": "2026-10-01T16:49:50Z",
-    "source_as_of": "2026-10-01T16:49:50Z"
+    "payload_sha256": "2bd0f5d0a9a9f560a9923934c0148020e30a3dbe0cbe7acc082a4722ba5fa695",
+    "quote_as_of": "2026-10-12T13:46:07Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:53:33Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:53:33Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-10-01T16:49:50Z"
   },
   "ticker": "SHPP",
-  "updated_at": "2026-10-12T15:31:24Z"
+  "updated_at": "2026-10-14T00:53:33Z"
 }

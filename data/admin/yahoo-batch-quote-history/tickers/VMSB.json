@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:35Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/VMSB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VMSB.json",
     "payload_sha256": "db832306e33842f72e852c136f06b57cce23d9e696de5b7eddd397662abf1d0d",
     "quote_as_of": "2026-10-12T13:46:08Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for VMSB: quote_as_of",
     "failures": [],
-    "latency_ms": 0,
-    "observed_at": "2026-10-13T07:42:20Z",
-    "outcome": "skipped_fresh"
+    "latency_ms": 809,
+    "observed_at": "2026-10-14T00:30:13Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for VMSB: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:30:13Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-07T06:22:55Z",
-    "history_as_of": "2026-10-06",
+    "fetched_at": "2026-10-12T15:31:35Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VMSB.json",
-    "payload_sha256": "00db6dd76200ad2852b035f83c5a58f7a194acc768a53a9881c30714da2d3825",
-    "quote_as_of": "2026-10-01T14:51:15Z",
-    "source_as_of": "2026-10-01T14:51:15Z"
+    "payload_sha256": "db832306e33842f72e852c136f06b57cce23d9e696de5b7eddd397662abf1d0d",
+    "quote_as_of": "2026-10-12T13:46:08Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:30:13Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:30:13Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-10-01T14:51:15Z"
   },
   "ticker": "VMSB",
-  "updated_at": "2026-10-13T07:42:20Z"
+  "updated_at": "2026-10-14T00:30:13Z"
 }

@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:30:01Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/AESG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AESG.json",
     "payload_sha256": "797e9a17e29691a2d1b7401a5c59d1add66794fae405ea47c3399d817a646625",
     "quote_as_of": "2026-10-12T13:46:01Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for AESG: quote_as_of",
     "failures": [],
-    "latency_ms": 623,
-    "observed_at": "2026-10-12T15:30:01Z",
-    "outcome": "fresh"
+    "latency_ms": 747,
+    "observed_at": "2026-10-14T00:30:44Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for AESG: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:30:44Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T05:58:57Z",
-    "history_as_of": "2026-10-07",
+    "fetched_at": "2026-10-12T15:30:01Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AESG.json",
-    "payload_sha256": "aac1d5ac4fbbe828548f2a02ba97c6c198071bd54fa97cbc352d4a2b78265421",
-    "quote_as_of": "2026-10-01T19:32:39Z",
-    "source_as_of": "2026-10-01T19:32:39Z"
+    "payload_sha256": "797e9a17e29691a2d1b7401a5c59d1add66794fae405ea47c3399d817a646625",
+    "quote_as_of": "2026-10-12T13:46:01Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:30:44Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:30:44Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-10-01T19:32:39Z"
   },
   "ticker": "AESG",
-  "updated_at": "2026-10-12T15:30:01Z"
+  "updated_at": "2026-10-14T00:30:44Z"
 }

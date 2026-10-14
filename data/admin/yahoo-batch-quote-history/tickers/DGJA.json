@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:30:14Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/DGJA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DGJA.json",
     "payload_sha256": "e0b94577d004871428218f80f5aecc6e08d27d65536f3f315ef3e433d7d851d2",
     "quote_as_of": "2026-10-12T13:46:03Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for DGJA: quote_as_of",
     "failures": [],
-    "latency_ms": 738,
-    "observed_at": "2026-10-12T15:30:14Z",
-    "outcome": "fresh"
+    "latency_ms": 718,
+    "observed_at": "2026-10-14T00:35:48Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for DGJA: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:35:48Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T06:03:05Z",
-    "history_as_of": "2026-10-07",
+    "fetched_at": "2026-10-12T15:30:14Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DGJA.json",
-    "payload_sha256": "a17ff58bed4db5bbcc9a1306ee8fbdc8255118e379b0ebe7f1e00625baba07a6",
-    "quote_as_of": "2026-09-24T19:42:30Z",
-    "source_as_of": "2026-09-24T19:42:30Z"
+    "payload_sha256": "e0b94577d004871428218f80f5aecc6e08d27d65536f3f315ef3e433d7d851d2",
+    "quote_as_of": "2026-10-12T13:46:03Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:35:48Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:35:48Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 11,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-09-24T19:42:30Z"
   },
   "ticker": "DGJA",
-  "updated_at": "2026-10-12T15:30:14Z"
+  "updated_at": "2026-10-14T00:35:48Z"
 }

@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-13T06:46:22Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/ARKD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ARKD.json",
     "payload_sha256": "bf9e3def72eca4ec261970f84daf9218ae874d61e733ba42b800bf0debdaf108",
     "quote_as_of": "2026-10-05T13:31:00Z",
     "source_as_of": "2026-10-05T13:31:00Z"
@@ -18,6 +18,14 @@
     "observed_at": "2026-10-13T06:46:22Z",
     "outcome": "fresh"
   },
+  "lkg": {
+    "fetched_at": "2026-10-13T06:46:22Z",
+    "history_as_of": "2026-10-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ARKD.json",
+    "payload_sha256": "bf9e3def72eca4ec261970f84daf9218ae874d61e733ba42b800bf0debdaf108",
+    "quote_as_of": "2026-10-05T13:31:00Z",
+    "source_as_of": "2026-10-05T13:31:00Z"
+  },
   "provider_lifecycle": {
     "last_attempt_at": "2026-10-13T06:46:22Z",
     "last_history_as_of": "2026-10-12",
@@ -25,9 +33,18 @@
     "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-14T00:27:12Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "ARKD holds LKG because Yahoo source date 2026-10-05T13:31:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-10-05T13:31:00Z"
+  },
   "ticker": "ARKD",
-  "updated_at": "2026-10-13T06:46:22Z"
+  "updated_at": "2026-10-14T00:27:12Z"
 }

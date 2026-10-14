@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:33Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/USMX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USMX.json",
     "payload_sha256": "3809f46c8f9105357754653009d90dde6798e26b2d9bcddf5433868f54b291a4",
     "quote_as_of": "2026-10-12T13:46:08Z",
     "source_as_of": "2026-10-12"
@@ -10,25 +10,112 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
-    "attempts_used": 0,
-    "failures": [],
-    "latency_ms": 0,
-    "observed_at": "2026-10-13T07:41:47Z",
-    "outcome": "skipped_fresh"
+    "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 801,
+    "observed_at": "2026-10-14T00:30:10Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: USMX: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:30:10Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-01T14:19:17Z",
-    "history_as_of": "2026-10-01",
+    "fetched_at": "2026-10-12T15:31:33Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USMX.json",
-    "payload_sha256": "b1e51f7f322577e141feaee826a0c3dd7902405b0b40437501f9cf44135afcce",
-    "quote_as_of": "2026-10-01T13:46:08Z",
-    "source_as_of": "2026-10-01"
+    "payload_sha256": "3809f46c8f9105357754653009d90dde6798e26b2d9bcddf5433868f54b291a4",
+    "quote_as_of": "2026-10-12T13:46:08Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:30:10Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:30:10Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "USMX",
-  "updated_at": "2026-10-13T07:41:47Z"
+  "updated_at": "2026-10-14T00:30:10Z"
 }

@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:40Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/WR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WR.json",
     "payload_sha256": "9c69c5635793644835b36e5577998d4b8053d52560c6abef1cc4e8f43f776b30",
     "quote_as_of": "2026-10-12T14:30:03Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for WR: quote_as_of",
     "failures": [],
-    "latency_ms": 0,
-    "observed_at": "2026-10-13T07:42:59Z",
-    "outcome": "skipped_fresh"
+    "latency_ms": 698,
+    "observed_at": "2026-10-14T00:30:15Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for WR: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:30:15Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-07T06:23:36Z",
-    "history_as_of": "2026-10-06",
+    "fetched_at": "2026-10-12T15:31:40Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/WR.json",
-    "payload_sha256": "efd4262fdc206ac537091a2ac19fc675f495b4c0d61ac0fadbde07557f46f03b",
-    "quote_as_of": "2026-09-28T14:18:28Z",
-    "source_as_of": "2026-09-28T14:18:28Z"
+    "payload_sha256": "9c69c5635793644835b36e5577998d4b8053d52560c6abef1cc4e8f43f776b30",
+    "quote_as_of": "2026-10-12T14:30:03Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:30:15Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:30:15Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-09-28T14:18:28Z"
   },
   "ticker": "WR",
-  "updated_at": "2026-10-13T07:42:59Z"
+  "updated_at": "2026-10-14T00:30:15Z"
 }
