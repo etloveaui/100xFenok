@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:06Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/MUNG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MUNG.json",
     "payload_sha256": "2d6b8f29e5d0e44921be2ae57862d9a058d2b4af404a923f3d1a9d7145ae6216",
     "quote_as_of": "2026-10-12T13:46:05Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MUNG: quote_as_of",
     "failures": [],
-    "latency_ms": 581,
-    "observed_at": "2026-10-12T15:31:06Z",
-    "outcome": "fresh"
+    "latency_ms": 737,
+    "observed_at": "2026-10-14T00:48:17Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for MUNG: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:48:17Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T06:14:38Z",
-    "history_as_of": "2026-10-06",
+    "fetched_at": "2026-10-12T15:31:06Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MUNG.json",
-    "payload_sha256": "a12f5bf5228e8377b30e644d22a5256783abadd5f4cb57b331df4c6dfcdf451d",
-    "quote_as_of": "2026-09-22T20:00:00Z",
-    "source_as_of": "2026-09-22T20:00:00Z"
+    "payload_sha256": "2d6b8f29e5d0e44921be2ae57862d9a058d2b4af404a923f3d1a9d7145ae6216",
+    "quote_as_of": "2026-10-12T13:46:05Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:48:17Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:48:17Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 13,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-09-22T20:00:00Z"
   },
   "ticker": "MUNG",
-  "updated_at": "2026-10-12T15:31:06Z"
+  "updated_at": "2026-10-14T00:48:17Z"
 }

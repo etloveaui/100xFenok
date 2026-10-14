@@ -1,11 +1,11 @@
 {
   "current": {
-    "fetched_at": "2026-10-09T06:05:56Z",
-    "history_as_of": "2026-10-08",
+    "fetched_at": "2026-10-14T00:28:03Z",
+    "history_as_of": "2026-10-12",
     "path": "data/yf/finance/ACIG.json",
-    "payload_sha256": "275b9e6f697e35d16af78b70c48f6d45656bcaa4aee1005a35183da1469de0bf",
+    "payload_sha256": "77fef8ae4c135ee78afecca0d84e5e88403c28c46b55878efba8dc30ead9c5e1",
     "quote_as_of": "2026-10-05T15:55:04Z",
-    "source_as_of": "2026-10-05T15:55:04Z"
+    "source_as_of": "2026-10-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -14,13 +14,37 @@
   "last_result": {
     "attempts_used": 1,
     "failures": [],
-    "latency_ms": 656,
-    "observed_at": "2026-10-09T06:05:56Z",
+    "latency_ms": 640,
+    "observed_at": "2026-10-14T00:28:03Z",
     "outcome": "fresh"
+  },
+  "lkg": {
+    "fetched_at": "2026-10-09T06:05:56Z",
+    "history_as_of": "2026-10-08",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ACIG.json",
+    "payload_sha256": "275b9e6f697e35d16af78b70c48f6d45656bcaa4aee1005a35183da1469de0bf",
+    "quote_as_of": "2026-10-05T15:55:04Z",
+    "source_as_of": "2026-10-05T15:55:04Z"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:28:03Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-14T00:27:12Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "ACIG holds LKG because Yahoo source date 2026-10-05T15:55:04Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-10-05T15:55:04Z"
+  },
   "ticker": "ACIG",
-  "updated_at": "2026-10-09T06:05:56Z"
+  "updated_at": "2026-10-14T00:28:03Z"
 }

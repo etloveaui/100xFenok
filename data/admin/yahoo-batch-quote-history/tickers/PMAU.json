@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:14Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/PMAU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PMAU.json",
     "payload_sha256": "76d4092c8eeb85381a39ad634893826bfdea6b82ce5b0766a0f7e0c42b13b47b",
     "quote_as_of": "2026-10-12T13:46:06Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for PMAU: quote_as_of",
     "failures": [],
-    "latency_ms": 666,
-    "observed_at": "2026-10-12T15:31:14Z",
-    "outcome": "fresh"
+    "latency_ms": 761,
+    "observed_at": "2026-10-14T00:50:23Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for PMAU: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:50:23Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T06:16:40Z",
-    "history_as_of": "2026-10-07",
+    "fetched_at": "2026-10-12T15:31:14Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PMAU.json",
-    "payload_sha256": "654712e64a57dcefd88dfb32a19d174c55e513928ec77a50af9f5825e8e552d9",
-    "quote_as_of": "2026-09-30T18:06:42Z",
-    "source_as_of": "2026-09-30T18:06:42Z"
+    "payload_sha256": "76d4092c8eeb85381a39ad634893826bfdea6b82ce5b0766a0f7e0c42b13b47b",
+    "quote_as_of": "2026-10-12T13:46:06Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:50:23Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:50:23Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-09-30T18:06:42Z"
   },
   "ticker": "PMAU",
-  "updated_at": "2026-10-12T15:31:14Z"
+  "updated_at": "2026-10-14T00:50:23Z"
 }

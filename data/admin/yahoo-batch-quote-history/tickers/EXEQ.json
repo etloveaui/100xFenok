@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:30:17Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/EXEQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EXEQ.json",
     "payload_sha256": "2c04d35b0e46893d65f9acf6fd9fee187bc21f4d5edf94137d549e1cca548107",
     "quote_as_of": "2026-10-12T13:46:03Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for EXEQ: quote_as_of",
     "failures": [],
-    "latency_ms": 982,
-    "observed_at": "2026-10-12T15:30:17Z",
-    "outcome": "fresh"
+    "latency_ms": 828,
+    "observed_at": "2026-10-14T00:38:01Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for EXEQ: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:38:01Z"
   },
   "lkg": {
-    "fetched_at": "2026-10-08T06:05:12Z",
-    "history_as_of": "2026-10-07",
+    "fetched_at": "2026-10-12T15:30:17Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EXEQ.json",
-    "payload_sha256": "e9f16bfc03af1211beffa1c106a9a935cf0f070d44ffcdbb28ba5aa5de5bd8f0",
-    "quote_as_of": "2026-09-29T16:00:38Z",
-    "source_as_of": "2026-09-29T16:00:38Z"
+    "payload_sha256": "2c04d35b0e46893d65f9acf6fd9fee187bc21f4d5edf94137d549e1cca548107",
+    "quote_as_of": "2026-10-12T13:46:03Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:38:01Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:38:01Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-09-29T16:00:38Z"
   },
   "ticker": "EXEQ",
-  "updated_at": "2026-10-12T15:30:17Z"
+  "updated_at": "2026-10-14T00:38:01Z"
 }

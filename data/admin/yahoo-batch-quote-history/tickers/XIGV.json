@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:31:44Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/XIGV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XIGV.json",
     "payload_sha256": "0151c6080c122b6e53b70bc85e8c8bdcf9c6ab0f0d7f7905cc98776be779ab0f",
     "quote_as_of": "2026-10-12T13:46:08Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,49 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for XIGV: quote_as_of",
     "failures": [],
-    "latency_ms": 0,
-    "observed_at": "2026-10-13T07:43:19Z",
-    "outcome": "skipped_fresh"
+    "latency_ms": 1032,
+    "observed_at": "2026-10-14T00:30:19Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for XIGV: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-14T00:30:19Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-30T14:43:09Z",
-    "history_as_of": "2026-09-30",
+    "fetched_at": "2026-10-12T15:31:44Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XIGV.json",
-    "payload_sha256": "c9c4f7db523c6587f0b9d9f846af880bf640fcc642b308054d89828dacd14138",
-    "quote_as_of": "2026-09-30T13:46:08Z",
-    "source_as_of": "2026-09-30"
+    "payload_sha256": "0151c6080c122b6e53b70bc85e8c8bdcf9c6ab0f0d7f7905cc98776be779ab0f",
+    "quote_as_of": "2026-10-12T13:46:08Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-14T00:30:19Z",
+    "last_history_as_of": "2026-10-12",
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:30:19Z",
+        "reason": "history_not_advanced"
+      }
+    ],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +64,5 @@
     "source_as_of": "2026-09-17T18:12:27Z"
   },
   "ticker": "XIGV",
-  "updated_at": "2026-10-13T07:43:19Z"
+  "updated_at": "2026-10-14T00:30:19Z"
 }

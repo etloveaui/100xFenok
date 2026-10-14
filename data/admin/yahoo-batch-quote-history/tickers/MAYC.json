@@ -1,9 +1,9 @@
 {
   "current": {
-    "fetched_at": "2026-10-13T07:31:44Z",
+    "fetched_at": "2026-10-14T00:29:39Z",
     "history_as_of": "2026-10-12",
     "path": "data/yf/finance/MAYC.json",
-    "payload_sha256": "b5bf421a3be177b4de3063460a97ef00de1dcbe3806ff1d65fb81d50020b8ee2",
+    "payload_sha256": "94dd32d010fb0ac22ad0011f2002fc9f22fb668127469a732c1d6b4c980196f7",
     "quote_as_of": "2026-10-05T13:32:04Z",
     "source_as_of": "2026-10-05T13:32:04Z"
   },
@@ -14,23 +14,30 @@
   "last_result": {
     "attempts_used": 1,
     "failures": [],
-    "latency_ms": 874,
-    "observed_at": "2026-10-13T07:31:44Z",
+    "latency_ms": 698,
+    "observed_at": "2026-10-14T00:29:39Z",
     "outcome": "fresh"
   },
   "lkg": {
-    "fetched_at": "2026-09-28T05:29:49Z",
-    "history_as_of": "2026-09-25",
+    "fetched_at": "2026-10-13T07:31:44Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MAYC.json",
-    "payload_sha256": "f6e747de2b878a583c24785a5eceeea5b34ccc0ccac05302b97862459115527e",
-    "quote_as_of": "2026-09-25T18:08:49Z",
-    "source_as_of": "2026-09-25"
+    "payload_sha256": "b5bf421a3be177b4de3063460a97ef00de1dcbe3806ff1d65fb81d50020b8ee2",
+    "quote_as_of": "2026-10-05T13:32:04Z",
+    "source_as_of": "2026-10-05T13:32:04Z"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-13T07:31:44Z",
+    "last_attempt_at": "2026-10-14T00:29:39Z",
     "last_history_as_of": "2026-10-12",
-    "provider_advanced": true,
-    "stalled_attempts": [],
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-12",
+        "http_status": null,
+        "observed_at": "2026-10-14T00:29:39Z",
+        "reason": "history_not_advanced"
+      }
+    ],
     "was_terminal": false
   },
   "resolution_state": "fresh_primary",
@@ -38,13 +45,13 @@
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-10-06T03:07:39Z",
+    "classified_at": "2026-10-14T00:27:12Z",
     "expected_resolution": "next_yahoo_acquisition",
     "max_business_days": 6,
-    "message": "MAYC holds LKG because Yahoo source date 2026-09-25 is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "message": "MAYC holds LKG because Yahoo source date 2026-10-05T13:32:04Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-09-25"
+    "source_as_of": "2026-10-05T13:32:04Z"
   },
   "ticker": "MAYC",
-  "updated_at": "2026-10-13T07:31:44Z"
+  "updated_at": "2026-10-14T00:29:39Z"
 }
