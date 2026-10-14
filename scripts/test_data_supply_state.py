@@ -16,6 +16,8 @@ if str(SCRIPT_DIR) not in sys.path:
 from data_supply_state import (
     ConcurrencyError,
     DataSupplyStateStore,
+    GENERATIONS_RETAINED,
+    MAX_LIVE_PREPARED_GENERATIONS,
     IntegrityError,
     SchemaError,
     UnavailableError,
@@ -501,6 +503,24 @@ class DataSupplyStateTests(unittest.TestCase):
             thread.join(2)
         self.assertEqual(reader_result, [{"ticker": "VYMI", "suffix": "a"}])
         self.assertEqual(sorted(commit_results), ["lost", "won"])
+
+    def test_deferred_batch_bounds_generation_memory_and_revalidates_evictions(self):
+        self.store = DataSupplyStateStore(
+            self.root, provider_truth_root=self.root, defer_maintenance=True)
+        first, _, _ = self.commit_primary()
+        bound = GENERATIONS_RETAINED + MAX_LIVE_PREPARED_GENERATIONS
+        for index in range(bound + 2):
+            self.commit_next(suffix=f"batch{index}",
+                             observed_at=f"2026-07-10T{index + 3:02d}:00:00Z")
+            self.assertLessEqual(len(self.store._generation_cache), bound)
+        self.assertNotIn(("etf_detail", first), self.store._generation_cache)
+        self.assertEqual(self.store.read_resolved_payload("etf_detail", "VYMI"),
+                         {"ticker": "VYMI", "suffix": f"batch{bound + 1}"})
+        old_current = self.root / "domains/etf_detail/generations" / first / "current.json"
+        self.assertTrue(old_current.exists())
+        old_current.write_text("{}\n")
+        with self.assertRaises(IntegrityError):
+            self.store._validate_generation("etf_detail", first)
 
     def test_newest_three_committed_generations_are_retained(self):
         first, _, _ = self.commit_primary()

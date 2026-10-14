@@ -817,6 +817,24 @@ class PublicDataSupplyMaterializer:
             "active_generation_manifest_sha256": projection.index["active_generation_manifest_sha256"],
         }
 
+    def check_usage_manifests(self) -> dict[str, Any]:
+        """Re-check only the two usage manifests through the existing validator.
+
+        The full --check rebuilds and byte-compares the whole canonical
+        projection; after reconcile_public has already rebuilt it and verified
+        canonical/public parity, the only inputs that still change are the two
+        data-usage manifests, so this mode re-runs exactly that validation
+        without touching the projection. Standalone --check is unchanged.
+        """
+        self._validate_usage_manifests()
+        return {
+            "mode": "check-usage-manifests",
+            "validated": [
+                self._repo_rel(self.repo_root / "data/admin/data-usage-manifest.json"),
+                self._repo_rel(self.public_data_root / "admin/data-usage-manifest.json"),
+            ],
+        }
+
     def check(self, *, generated_at: str | None = None) -> dict[str, Any]:
         existing = self._load_projection_tree(self.canonical_root)
         clock = generated_at or existing.index.get("generated_at")
@@ -1067,6 +1085,7 @@ def main(argv: list[str] | None = None) -> int:
     modes.add_argument("--check", action="store_true")
     modes.add_argument("--write-canonical", action="store_true")
     modes.add_argument("--reconcile-public", action="store_true")
+    modes.add_argument("--check-usage-manifests", action="store_true")
     parser.add_argument("--bootstrap-enrollment", action="store_true")
     parser.add_argument("--generated-at")
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]))
@@ -1090,6 +1109,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.check:
             result = materializer.check(generated_at=args.generated_at)
+        elif args.check_usage_manifests:
+            result = materializer.check_usage_manifests()
         else:
             result = materializer.reconcile_public()
     except MaterializationError as exc:
