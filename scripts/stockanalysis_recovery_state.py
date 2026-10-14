@@ -544,7 +544,18 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
                    "XLBI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlbi.xlsx",
                    "XLCI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlci.xlsx",
                    "XLFI": "https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlfi.xlsx",
-                   "THYP": "https://api.primary.21shares.com/api/product_details/THYP"})
+                   "THYP": "https://api.primary.21shares.com/api/product_details/THYP",
+                   # AllianzIM fund pages (dated portfolio state) and ProShares
+                   # fund pages (dated holdings table). URLs must match the adapter
+                   # source_url exactly.
+                   **{symbol: f"https://www.allianzim.com/etfs/{symbol.lower()}/"
+                      for symbol in ("JANT", "JANU", "JANW", "JNEU", "JULT", "JULU",
+                                     "JULW", "MARU", "MAYU")},
+                   "BITI": "https://www.proshares.com/our-etfs/leveraged-and-inverse/biti",
+                   "EETH": "https://www.proshares.com/our-etfs/strategic/eeth",
+                   "EUO": "https://www.proshares.com/our-etfs/leveraged-and-inverse/euo",
+                   "SETH": "https://www.proshares.com/our-etfs/leveraged-and-Inverse/seth",
+                   "SVXY": "https://www.proshares.com/our-etfs/strategic/svxy/"})
     if ticker == "SPBC" and issuer_date is not None:
         expected["SPBC"] = ("https://www.simplify.us/sites/default/files/excel_holdings/"
                             f"{issuer_date:%Y_%m_%d}_Simplify_Portfolio_EOD_Tracker.xlsx")

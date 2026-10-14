@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import html
 import io
 import json
 import math
@@ -97,6 +98,9 @@ SUPPORTED_TICKERS = (
     "XLCI",
     "XLFI",
     "BRZX",
+    # AllianzIM buffer funds and ProShares funds with confirmed official routes.
+    "JANT", "JANU", "JANW", "JNEU", "JULT", "JULU", "JULW", "MARU", "MAYU",
+    "BITI", "EETH", "EUO", "SETH", "SVXY",
 )
 
 CORGI_TICKERS = ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "LRNX", "ONDC",
@@ -170,6 +174,42 @@ _ISHARES_HOLDINGS_URLS = {
 _ISHARES_NAME_HEADER_TICKERS = {"LQDW", "IBGM"}
 # Identifier preference for a file that publishes no provider ticker.
 _ISHARES_IDENTIFIER_COLUMNS = (("CUSIP", "cusip"), ("ISIN", "isin"), ("SEDOL", "sedol"))
+
+# AllianzIM publishes the same dated portfolio columns the Innovator all-funds
+# CSV carries, embedded as JSON state in each fund page. One page per fund; the
+# row contract is the Innovator row contract.
+_ALLIANZIM_PAGE_URLS = {
+    "JANT": "https://www.allianzim.com/etfs/jant/",
+    "JANU": "https://www.allianzim.com/etfs/janu/",
+    "JANW": "https://www.allianzim.com/etfs/janw/",
+    "JNEU": "https://www.allianzim.com/etfs/jneu/",
+    "JULT": "https://www.allianzim.com/etfs/jult/",
+    "JULU": "https://www.allianzim.com/etfs/julu/",
+    "JULW": "https://www.allianzim.com/etfs/julw/",
+    "MARU": "https://www.allianzim.com/etfs/maru/",
+    "MAYU": "https://www.allianzim.com/etfs/mayu/",
+}
+# ProShares publishes a dated holdings table in each fund page. Exposure Weight
+# is derivative/financing exposure, not a portfolio market-value weight, so the
+# row keeps an explicit exposure basis and the notional stays separate.
+# The issuer's not-published marker, shared by the cell reader and the parser.
+_NOT_PUBLISHED = frozenset({"", "--", "-", "\u2014", "n/a", "none", "null"})
+
+# The issuer publishes one header layout per fund family, with only the first
+# label differing between the observed bodies. Any other sequence is refused.
+_PROSHARES_HEADERS = (
+    ("exposure weight", "ticker", "description", "exposure value (notional + gl)",
+     "market value", "shares/contracts", "sedol number"),
+    ("weight", "ticker", "description", "exposure value (notional + gl)",
+     "market value", "shares/contracts", "sedol number"),
+)
+_PROSHARES_PAGE_URLS = {
+    "BITI": "https://www.proshares.com/our-etfs/leveraged-and-inverse/biti",
+    "EETH": "https://www.proshares.com/our-etfs/strategic/eeth",
+    "EUO": "https://www.proshares.com/our-etfs/leveraged-and-inverse/euo",
+    "SETH": "https://www.proshares.com/our-etfs/leveraged-and-Inverse/seth",
+    "SVXY": "https://www.proshares.com/our-etfs/strategic/svxy/",
+}
 
 _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -2081,6 +2121,306 @@ def _fetch_simplify(ticker: str, timeout: int) -> dict:
 # --------------------------------------------------------------------------
 
 
+# --------------------------------------------------------------------------
+# AllianzIM (nine buffer funds) and ProShares (five funds)
+# --------------------------------------------------------------------------
+
+
+def _balanced_json_slice(text: str, start: int, opener: str, closer: str) -> str | None:
+    """Slice one balanced JSON literal. Page script is never executed."""
+    if start < 0 or start >= len(text) or text[start] != opener:
+        return None
+    depth = 0
+    quote = None
+    escaped = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in "\"'":
+            quote = char
+        elif char == opener:
+            depth += 1
+        elif char == closer:
+            depth -= 1
+            if depth == 0:
+                return text[start:index + 1]
+    return None
+
+
+def _html_cell(fragment: str) -> str | None:
+    """One table cell as text, or None for the issuer's not-published marker."""
+    text = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", fragment))).strip()
+    return None if text.lower() in _NOT_PUBLISHED else text
+
+
+def _fetch_allianzim(ticker: str, timeout: int) -> dict:
+    """AllianzIM fund page: the dated portfolio is inline JSON state.
+
+    The page script is never executed. The state literal is sliced by bracket
+    balance and parsed as JSON, then rows use the Innovator contract because the
+    issuer publishes the same columns. NetAssets is total fund net assets,
+    SharesOutstanding is the fund's share count, and Price is the instrument's
+    own price, never the ETF price or a per-share NAV.
+    """
+    url = _ALLIANZIM_PAGE_URLS[ticker]
+    page = _http_get(url, timeout, accept="text/html").decode("utf-8", errors="replace")
+    marker = page.find("curPageState")
+    if marker < 0:
+        raise OfficialEtfSourceError(f"AllianzIM page state not found for {ticker}")
+    state = _balanced_json_slice(page, page.find("{", marker), "{", "}")
+    if state is None:
+        raise OfficialEtfSourceError(f"AllianzIM page state is unreadable for {ticker}")
+    fund_name = re.search(r'fundName:\s*"([^"]{1,140})"', state)
+    if fund_name is None:
+        raise OfficialEtfSourceError(f"AllianzIM fund name is missing for {ticker}")
+    table = re.search(r"holdings:\s*\{\s*data:\s*\[", state)
+    if table is None:
+        raise OfficialEtfSourceError(f"AllianzIM holdings table not found for {ticker}")
+    rows_json = _balanced_json_slice(state, table.end() - 1, "[", "]")
+    if rows_json is None:
+        raise OfficialEtfSourceError(f"AllianzIM holdings rows are unreadable for {ticker}")
+    try:
+        rows = json.loads(rows_json.replace("\\/", "/"))
+    except json.JSONDecodeError as exc:
+        raise OfficialEtfSourceError(f"AllianzIM holdings JSON is malformed for {ticker}") from exc
+    if not isinstance(rows, list) or not rows:
+        raise OfficialEtfSourceError(f"no AllianzIM holdings rows for {ticker}")
+    if not all(isinstance(row, dict) for row in rows):
+        raise OfficialEtfSourceError(f"AllianzIM holdings row is not an object for {ticker}")
+    accounts = {_text(row.get("Account")) for row in rows}
+    if accounts != {ticker}:
+        raise OfficialEtfSourceError(
+            f"issuer identity mismatch: asked {ticker}, page reports {sorted(a for a in accounts if a)}")
+    dates = {_normalise_date(row.get("Date")) for row in rows}
+    if None in dates or len(dates) != 1:
+        raise OfficialEtfSourceError(
+            f"AllianzIM rows for {ticker} carry conflicting or unreadable dates: {sorted(str(d) for d in dates)}")
+    date = dates.pop()
+    holdings = [_innovator_holding(row, ticker, date) for row in rows]
+    shares_values = {_number(row.get("SharesOutstanding")) for row in rows}
+    aum_values = {_number(row.get("NetAssets")) for row in rows}
+    quote = {}
+    if len(shares_values) == 1 and None not in shares_values:
+        quote["shares_outstanding"] = shares_values.pop()
+        quote["shares_outstanding_as_of"] = date
+    if len(aum_values) == 1 and None not in aum_values:
+        quote["aum"] = aum_values.pop()
+        quote["aum_as_of"] = date
+    field_dates = {
+        "holdings": date,
+        "shares_outstanding": quote.get("shares_outstanding_as_of"),
+        "aum": quote.get("aum_as_of"),
+    }
+    has_cash = any((row.get("identifier") or "").lower() == "cash&other" for row in holdings)
+    completeness = [
+        "holdings are every published row for this fund in the issuer's own dated "
+        "portfolio table, and all of them share one Date",
+        "rows are normalized with the Innovator row contract because the issuer "
+        "publishes the same columns: signed Weightings, CUSIP identity, option legs "
+        "kept with a composite provider ticker so symbol stays null",
+        "NetAssets is the fund's total net assets (AUM) and SharesOutstanding is the "
+        "fund's share count; the row Price is the instrument's own price and is never "
+        "used as the ETF price or a per-share NAV",
+        "weights stay exactly as published and signed, with no sum-to-100 check",
+        "the page carries no dated history and no fund classification",
+    ]
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate" if has_cash else "not_published",
+        "scope_note": (
+            "issuer publishes the fund's own dated portfolio rows in the fund page state"
+        ),
+    }
+    return {
+        "ticker": ticker.upper(),
+        "provider": "allianzim",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": quote,
+        "history": [],
+        "classification": {"provider_account": ticker.upper(), "fund_name": fund_name.group(1)},
+        "field_dates": field_dates,
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "holdings_rows": rows},
+    }
+
+
+def _proshares_header(cells: list) -> tuple:
+    """Presentation-normalized header labels; only whitespace is collapsed."""
+    return tuple(" ".join((cell or "").split()).lower() for cell in cells)
+
+
+def _proshares_number(value, ticker: str, label: str):
+    """Strict provider-local numeric cell.
+
+    Recognized not-published markers stay None. Any other non-empty cell must
+    parse to a finite number, otherwise the row is refused: a malformed
+    published value must never become a missing value. Only the formatting the
+    saved bodies actually show is accepted (currency symbol, thousands
+    separators, percent suffix).
+    """
+    if value is None:
+        return None
+    text = " ".join(str(value).split())
+    if text.lower() in _NOT_PUBLISHED:
+        return None
+    cleaned = text.replace("$", "").replace(",", "").replace("%", "").strip()
+    if not cleaned or cleaned.lower() in _NOT_PUBLISHED:
+        return None
+    try:
+        number = float(cleaned)
+    except ValueError as exc:
+        raise OfficialEtfSourceError(
+            f"malformed ProShares {label} cell for {ticker}: {value!r}") from exc
+    if not math.isfinite(number):
+        raise OfficialEtfSourceError(
+            f"non-finite ProShares {label} cell for {ticker}: {value!r}")
+    return number
+
+
+def _fetch_proshares(ticker: str, timeout: int) -> dict:
+    """ProShares fund page: a dated holdings table driven by derivative exposure.
+
+    Exposure Weight is the issuer's exposure measure (notional plus gain/loss),
+    not a market-value portfolio weight, so it keeps the explicit
+    ``provider_exposure_signed`` basis while the exposure value is stored as
+    notional_value. Market value, the provider quantity and the SEDOL identifier
+    stay separate, and a not-published cell stays null rather than zero.
+    """
+    url = _PROSHARES_PAGE_URLS[ticker]
+    page = _http_get(url, timeout, accept="text/html").decode("utf-8", errors="replace")
+    title = re.search(r"<title>(.*?)</title>", page, re.S | re.I)
+    reported = title.group(1).split("|")[0].strip().upper() if title else None
+    canonical = re.search(r'rel="canonical"[^>]*href="([^"]+)"', page, re.I)
+    canonical_path = canonical.group(1).rstrip("/").lower() if canonical else None
+    if reported != ticker or (canonical_path is not None
+                              and not canonical_path.endswith(f"/{ticker.lower()}")):
+        raise OfficialEtfSourceError(
+            f"issuer identity mismatch: asked {ticker}, page reports {reported!r}")
+    table = re.search(r'id="holdings"(.*?)</table>', page, re.S | re.I)
+    if table is None:
+        raise OfficialEtfSourceError(f"ProShares holdings table not found for {ticker}")
+    section = table.group(1)
+    heading = re.search(r"as of\s+(\d{1,2}/\d{1,2}/\d{4})", _html_text(section), re.I)
+    date = _normalise_date(heading.group(1)) if heading else None
+    if date is None:
+        raise OfficialEtfSourceError(f"ProShares holdings date is missing for {ticker}")
+    table_rows = re.findall(r"<tr[^>]*>(.*?)</tr>", section, re.S | re.I)
+    if not table_rows:
+        raise OfficialEtfSourceError(f"ProShares holdings table is empty for {ticker}")
+
+    def cells_of(row_html: str) -> list:
+        return [_html_cell(cell)
+                for cell in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", row_html, re.S | re.I)]
+
+    header = cells_of(table_rows[0])
+    if len(header) != 7 or _proshares_header(header) not in _PROSHARES_HEADERS:
+        raise OfficialEtfSourceError(
+            f"ProShares holdings header is unknown for {ticker}: {header!r}")
+    holdings = []
+    for row_html in table_rows[1:]:
+        cells = cells_of(row_html)
+        if not cells:
+            continue
+        if len(cells) != 7:
+            raise OfficialEtfSourceError(
+                f"ProShares holdings row arity {len(cells)} for {ticker}: {cells!r}")
+        weight_cell, ticker_cell, description, exposure_cell, market_cell, quantity_cell, sedol_cell = cells
+        name = description
+        if name is None:
+            raise OfficialEtfSourceError(f"malformed ProShares holdings row for {ticker}: {cells!r}")
+        symbol = ticker_cell if ticker_cell and _PLAIN_TICKER.fullmatch(ticker_cell) else None
+        weight = _proshares_number(weight_cell, ticker, "exposure weight")
+        notional = _proshares_number(exposure_cell, ticker, "exposure value")
+        market_value = _proshares_number(market_cell, ticker, "market value")
+        quantity = _proshares_number(quantity_cell, ticker, "shares/contracts")
+        holdings.append({
+            "name": name,
+            "symbol": symbol,
+            "identifier": sedol_cell,
+            "identifier_type": "sedol" if sedol_cell else None,
+            "weight_pct": weight,
+            "weight_basis": "provider_exposure_signed",
+            "market_value": market_value,
+            "notional_value": notional,
+            "shares": None,
+            "provider_quantity": quantity,
+            "provider_quantity_field": "Shares/Contracts",
+            "quantity_unit": None,
+            "price": None,
+            "as_of_date": date,
+            "position_date": None,
+            "provider_ticker": ticker_cell,
+            "raw": {
+                "exposure_weight": weight_cell, "ticker": ticker_cell, "description": description,
+                "exposure_value": exposure_cell, "market_value": market_cell,
+                "shares_contracts": quantity_cell, "sedol": sedol_cell,
+            },
+        })
+    if not holdings:
+        raise OfficialEtfSourceError(f"no ProShares holdings rows for {ticker}")
+    if all(row["weight_pct"] is None and row["notional_value"] is None for row in holdings):
+        raise OfficialEtfSourceError(f"ProShares rows for {ticker} publish neither exposure nor notional")
+    has_cash = any("NET OTHER ASSETS" in row["name"].upper() for row in holdings)
+    completeness = [
+        "holdings are every published row in the issuer's dated holdings table, "
+        "which shares one as-of date",
+        "Exposure Weight is the issuer's derivative/financing exposure (notional plus "
+        "gain/loss), recorded with the explicit provider_exposure_signed basis; it is "
+        "not a portfolio market-value weight and is never normalized or summed to 100",
+        "the exposure value is stored as notional_value and stays separate from market "
+        "value; a not-published cell (shown as --) stays null rather than zero",
+        "the Shares/Contracts column is preserved as provider_quantity with its literal "
+        "source label and no unit assertion, and normalized shares stays null",
+        "SEDOL is carried as the row identifier and never as a symbol; the instrument "
+        "ticker is a symbol only when it is a plain ticker",
+        "cash and residual rows keep a null weight when the issuer does not publish one",
+    ]
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "aggregated" if has_cash else "not_published",
+        "scope_note": (
+            "issuer publishes the fund's own dated holdings table including derivative "
+            "exposure, market value and residual rows"
+        ),
+    }
+    return {
+        "ticker": ticker.upper(),
+        "provider": "proshares",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": {},
+        "history": [],
+        "classification": {"provider_account": ticker.upper()},
+        "field_dates": {"holdings": date, "shares_outstanding": None, "aum": None},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "holdings_table_columns": [
+            "Exposure Weight", "Ticker", "Description", "Exposure Value (Notional + GL)",
+            "Market Value", "Shares/Contracts", "SEDOL Number"]},
+    }
+
+
 def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
     """Fetch the official issuer record for one supported ETF ticker."""
     if not isinstance(ticker, str):
@@ -2104,6 +2444,10 @@ def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
         return _fetch_ssga(symbol, timeout)
     if symbol in _ISHARES_HOLDINGS_URLS:
         return _fetch_ishares(symbol, timeout)
+    if symbol in _ALLIANZIM_PAGE_URLS:
+        return _fetch_allianzim(symbol, timeout)
+    if symbol in _PROSHARES_PAGE_URLS:
+        return _fetch_proshares(symbol, timeout)
     if symbol in _SIMPLIFY_PAGE_URLS:
         return _fetch_simplify(symbol, timeout)
     if symbol == "MWHS":
