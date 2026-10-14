@@ -1000,7 +1000,12 @@ jobs:
 
           def retain_active_holdings(ticker, payload, baseline_bytes):
               reasons = payload.get("partial_reason_codes") or []
-              missing_surface = any(reason == "holdings_unavailable" or reason.startswith("holdings_surface_")
+              # A countries-only partial keeps the verified primary holdings list
+              # but loses the country surface. The active generation may still hold
+              # that surface as one bound component, so it is retained exactly like
+              # the other missing-surface reasons instead of refusing the member.
+              missing_surface = any(reason in ("holdings_unavailable", "holdings_countries_unavailable")
+                                    or reason.startswith("holdings_surface_")
                                     for reason in reasons)
               if not baseline_bytes:
                   return False
