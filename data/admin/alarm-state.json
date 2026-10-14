@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-14T08:24:34.732Z",
+  "generated_at": "2026-10-14T21:33:45.360Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
+    {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38581708280,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38581708280",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
@@ -398,11 +410,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38534711428",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38534711428",
-    "observed_at": "2026-10-14T08:24:34.732Z",
-    "event": "workflow_dispatch",
+    "run_id": "38640975585",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38640975585",
+    "observed_at": "2026-10-14T21:33:45.360Z",
+    "event": "workflow_run",
     "workflows": [
+      "update-manifest.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
