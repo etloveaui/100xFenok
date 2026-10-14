@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:38Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WDAI.json",
-    "payload_sha256": "de30e3a9c86b5f9fbbd2ca9471a81f54d495f7914fcdb11a526e03cd33624d0a",
-    "quote_as_of": "2026-10-12T13:46:08Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-14T04:46:27Z",
+    "history_as_of": "2026-10-13",
+    "path": "data/yf/finance/WDAI.json",
+    "payload_sha256": "66bd2c0404afff7bdb576b1c68ef8fbee00344ba5f3de638c3c2d9d5fd7e7db7",
+    "quote_as_of": "2026-09-23T19:56:38Z",
+    "source_as_of": "2026-10-13"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for WDAI: quote_as_of",
     "failures": [],
-    "latency_ms": 842,
-    "observed_at": "2026-10-14T00:58:30Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for WDAI: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:58:30Z"
+    "latency_ms": 750,
+    "observed_at": "2026-10-14T04:46:27Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:38Z",
@@ -38,21 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T00:58:30Z",
-    "last_history_as_of": "2026-10-12",
-    "provider_advanced": false,
-    "stalled_attempts": [
-      {
-        "history_as_of": "2026-10-12",
-        "http_status": null,
-        "observed_at": "2026-10-14T00:58:30Z",
-        "reason": "history_not_advanced"
-      }
-    ],
+    "last_attempt_at": "2026-10-14T04:46:27Z",
+    "last_history_as_of": "2026-10-13",
+    "provider_advanced": true,
+    "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 12,
@@ -64,5 +46,5 @@
     "source_as_of": "2026-09-23T19:56:38Z"
   },
   "ticker": "WDAI",
-  "updated_at": "2026-10-14T00:58:30Z"
+  "updated_at": "2026-10-14T04:46:27Z"
 }

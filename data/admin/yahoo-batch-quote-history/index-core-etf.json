@@ -5728,96 +5728,53 @@
   "counts": {
     "active": 5723,
     "eligible": 5723,
-    "failed": 23,
-    "fresh": 5684,
-    "lkg": 28,
+    "failed": 10,
+    "fresh": 5702,
+    "lkg": 10,
     "pending_acquisition": 11,
     "pending_history": 0,
-    "retry": 28,
-    "stale": 27,
+    "retry": 10,
+    "stale": 10,
     "terminal": 0,
     "unavailable": 0,
     "untracked": 0
   },
   "current_results": {
-    "attempted": 1910,
+    "attempted": 1892,
     "errors": [
       {
-        "error": "ValueError: Yahoo provider source timestamp regresses for USMX: quote_as_of",
+        "error": "empty payload",
         "failures": [
           {
             "attempt": 1,
-            "error": "YFDataException: USMX: No Fund data found.",
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
             "source": "provider_safe_call"
           },
           {
             "attempt": 1,
-            "error": "YFDataException: USMX: No Fund data found.",
+            "error": "KeyError=[redacted]",
             "source": "provider_safe_call"
           },
           {
             "attempt": 1,
-            "error": "YFDataException: USMX: No Fund data found.",
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
             "source": "provider_safe_call"
           },
           {
-            "attempt": 1,
-            "error": "YFDataException: USMX: No Fund data found.",
+            "attempt": 2,
+            "error": "KeyError=[redacted]",
             "source": "provider_safe_call"
           },
           {
-            "attempt": 1,
-            "error": "YFDataException: USMX: No Fund data found.",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "YFDataException: USMX: No Fund data found.",
-            "source": "provider_safe_call"
+            "attempt": 2,
+            "error": "empty payload"
           }
         ],
-        "ticker": "USMX"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for USSX: quote_as_of",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "YFDataException: USSX: No Fund data found.",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "YFDataException: USSX: No Fund data found.",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "YFDataException: USSX: No Fund data found.",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "YFDataException: USSX: No Fund data found.",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "YFDataException: USSX: No Fund data found.",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "YFDataException: USSX: No Fund data found.",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "USSX"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for VMSB: quote_as_of",
-        "failures": [],
-        "ticker": "VMSB"
+        "ticker": "LEAD"
       },
       {
         "error": "ValueError: Yahoo provider source timestamp regresses for WR: quote_as_of",
@@ -5830,24 +5787,9 @@
         "ticker": "XIGV"
       },
       {
-        "error": "ValueError: Yahoo provider source timestamp regresses for AESG: quote_as_of",
-        "failures": [],
-        "ticker": "AESG"
-      },
-      {
         "error": "ValueError: Yahoo provider source timestamp regresses for DGJA: quote_as_of",
         "failures": [],
         "ticker": "DGJA"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for DWWN: quote_as_of",
-        "failures": [],
-        "ticker": "DWWN"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for EXEQ: quote_as_of",
-        "failures": [],
-        "ticker": "EXEQ"
       },
       {
         "error": "ValueError: Yahoo provider source timestamp regresses for GLX: quote_as_of",
@@ -5858,21 +5800,6 @@
         "error": "ValueError: Yahoo provider source timestamp regresses for IGGY: quote_as_of",
         "failures": [],
         "ticker": "IGGY"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for JULI: quote_as_of",
-        "failures": [],
-        "ticker": "JULI"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for LIAU: quote_as_of",
-        "failures": [],
-        "ticker": "LIAU"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for MHIG: quote_as_of",
-        "failures": [],
-        "ticker": "MHIG"
       },
       {
         "error": "ValueError: Yahoo provider source timestamp regresses for MUNG: quote_as_of",
@@ -5890,85 +5817,35 @@
         "ticker": "PMAU"
       },
       {
-        "error": "ValueError: Yahoo provider source timestamp regresses for QFHD: quote_as_of",
-        "failures": [],
-        "ticker": "QFHD"
-      },
-      {
         "error": "ValueError: Yahoo provider source timestamp regresses for SHPP: quote_as_of",
         "failures": [],
         "ticker": "SHPP"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for TAJX: quote_as_of",
-        "failures": [],
-        "ticker": "TAJX"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for WDAI: quote_as_of",
-        "failures": [],
-        "ticker": "WDAI"
-      },
-      {
-        "error": "ValueError: Yahoo provider source timestamp regresses for ZCBG: quote_as_of",
-        "failures": [],
-        "ticker": "ZCBG"
       }
     ],
-    "failed": 22,
-    "fetch_attempts": 983,
-    "observed_at": "2026-10-14T00:59:45Z",
-    "skipped": 927,
-    "successes": 961,
+    "failed": 10,
+    "fetch_attempts": 858,
+    "observed_at": "2026-10-14T05:12:56Z",
+    "skipped": 1035,
+    "successes": 847,
     "terminal_symbols": []
   },
-  "generated_at": "2026-10-14T00:59:45Z",
+  "generated_at": "2026-10-14T05:12:56Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for ZCBG: quote_as_of",
+    "error": "ValueError: Yahoo provider source timestamp regresses for SHPP: quote_as_of",
     "failure_kind": "candidate_rejected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-10-14T00:59:37Z",
-    "ticker": "ZCBG"
+    "observed_at": "2026-10-14T04:46:23Z",
+    "ticker": "SHPP"
   },
   "lkg_details": [
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:59:37Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "78b438b48b7fa8b8ebf503a24d78862fccd5c651a48c46941c6ed559a84ad0a4",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ZCBG"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:58:30Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "de30e3a9c86b5f9fbbd2ca9471a81f54d495f7914fcdb11a526e03cd33624d0a",
-      "source_age_business_days": 12,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "WDAI"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:55:02Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "056b9bfe5d75b86ec9d475842c7415975e216ac106c6d40b9c436660e43ea4e8",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "TAJX"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:53:33Z",
+      "failure_observed_at": "2026-10-14T04:46:23Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "2bd0f5d0a9a9f560a9923934c0148020e30a3dbe0cbe7acc082a4722ba5fa695",
       "source_age_business_days": 7,
@@ -5978,17 +5855,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:51:14Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "04c09abf4d5add0f5de5955654fe933c82393724a475512f2982ffa145ae8fd2",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "QFHD"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:50:23Z",
+      "failure_observed_at": "2026-10-14T04:46:20Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "76d4092c8eeb85381a39ad634893826bfdea6b82ce5b0766a0f7e0c42b13b47b",
       "source_age_business_days": 7,
@@ -5998,7 +5865,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:49:23Z",
+      "failure_observed_at": "2026-10-14T04:46:18Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "a99946c2f4120b9f78fc964fa9c30e556169bd03463e454b63a3500f9f7b0523",
       "source_age_business_days": 7,
@@ -6008,7 +5875,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:48:17Z",
+      "failure_observed_at": "2026-10-14T04:46:16Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "2d6b8f29e5d0e44921be2ae57862d9a058d2b4af404a923f3d1a9d7145ae6216",
       "source_age_business_days": 13,
@@ -6017,38 +5884,8 @@
       "symbol": "MUNG"
     },
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:47:22Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "80f515e403abbeab59cde6150db8761ba1c3c74dd081875631e7b2c714b4642c",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MHIG"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:46:16Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "313542b53061af0fc796796987e9add4c84c832c7f7734c3d1e32a43388dbc64",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LIAU"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:45:27Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "248a161341cd10dcf4691f6dffa34156cd1313865ee6a06bf383597fae032289",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-25",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "JULI"
-    },
-    {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-10-14T00:43:25Z",
+      "failure_observed_at": "2026-10-14T04:46:08Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "7802222225aa6586138dec72d738683589c4138274087894e85c62de6be94f36",
       "source_age_business_days": 8,
@@ -6058,7 +5895,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:40:47Z",
+      "failure_observed_at": "2026-10-14T04:46:07Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "bb5fcaadc3fe45fda106a1cd6b11064c77c9a02832a0afb67759f16f31ab270c",
       "source_age_business_days": 7,
@@ -6068,27 +5905,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:38:01Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "2c04d35b0e46893d65f9acf6fd9fee187bc21f4d5edf94137d549e1cca548107",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "EXEQ"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:36:26Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "92876ed09b45e7234571e130675e94fafc05ec0d92b40508933b072f53cb69ad",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "DWWN"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:35:48Z",
+      "failure_observed_at": "2026-10-14T04:46:01Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "e0b94577d004871428218f80f5aecc6e08d27d65536f3f315ef3e433d7d851d2",
       "source_age_business_days": 11,
@@ -6097,18 +5914,8 @@
       "symbol": "DGJA"
     },
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:30:44Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "797e9a17e29691a2d1b7401a5c59d1add66794fae405ea47c3399d817a646625",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AESG"
-    },
-    {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-10-14T00:30:19Z",
+      "failure_observed_at": "2026-10-14T04:45:55Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "0151c6080c122b6e53b70bc85e8c8bdcf9c6ab0f0d7f7905cc98776be779ab0f",
       "source_age_business_days": 7,
@@ -6118,7 +5925,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:30:15Z",
+      "failure_observed_at": "2026-10-14T04:45:54Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "9c69c5635793644835b36e5577998d4b8053d52560c6abef1cc4e8f43f776b30",
       "source_age_business_days": 8,
@@ -6127,39 +5934,29 @@
       "symbol": "WR"
     },
     {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T00:30:13Z",
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-10-14T04:45:27Z",
       "max_source_age_business_days": 6,
-      "payload_sha256": "db832306e33842f72e852c136f06b57cce23d9e696de5b7eddd397662abf1d0d",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-12",
+      "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
+      "source_age_business_days": 19,
+      "source_as_of": "2026-07-14T17:31:32Z",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "VMSB"
+      "symbol": "LEAD"
     }
   ],
   "lkg_symbols": [
-    "AESG",
-    "ARKD",
-    "CAMX",
     "DGJA",
-    "DWWN",
-    "EUDV",
-    "EXEQ",
     "GLX",
-    "HAUG",
     "IGGY",
-    "JULI",
     "LEAD",
-    "LIAU",
-    "MHIG",
     "MUNG",
     "OND",
     "PMAU",
-    "QFHD",
     "SHPP",
-    "TAJX"
+    "WR",
+    "XIGV"
   ],
-  "message": "Yahoo quote/history: fresh=5684, lkg=28, pending_history=0, unavailable=0, pending_acquisition=11, terminal=0, catalogue=5723, eligible=5723, retry=28, failed=23, source_stale=27. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
+  "message": "Yahoo quote/history: fresh=5702, lkg=10, pending_history=0, unavailable=0, pending_acquisition=11, terminal=0, catalogue=5723, eligible=5723, retry=10, failed=10, source_stale=10. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
   "oldest_source_as_of": "2026-07-14T17:31:32Z",
   "oldest_source_ticker": "LEAD",
   "pending_acquisition_details": [
@@ -6173,7 +5970,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ACYB"
@@ -6188,7 +5985,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "BTA"
@@ -6203,7 +6000,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "FIXT"
@@ -6218,7 +6015,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "GMAC"
@@ -6233,7 +6030,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "OPTO"
@@ -6248,7 +6045,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "PINC"
@@ -6263,7 +6060,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "RINK"
@@ -6278,7 +6075,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "VGTX"
@@ -6293,7 +6090,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "WSLS"
@@ -6308,7 +6105,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "WTAL"
@@ -6323,7 +6120,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T00:27:12Z",
+      "last_seen_at": "2026-10-14T04:45:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "XXQQ"
@@ -6345,37 +6142,19 @@
   "pending_details": [],
   "pending_symbols": [],
   "retry_symbols": [
-    "AESG",
-    "ARKD",
-    "CAMX",
     "DGJA",
-    "DWWN",
-    "EUDV",
-    "EXEQ",
     "GLX",
-    "HAUG",
     "IGGY",
-    "JULI",
     "LEAD",
-    "LIAU",
-    "MHIG",
     "MUNG",
     "OND",
     "PMAU",
-    "QFHD",
     "SHPP",
-    "TAJX",
-    "USMX",
-    "USSX",
-    "VMSB",
-    "WDAI",
     "WR",
-    "XIGV",
-    "ZCBG",
-    "ZSC"
+    "XIGV"
   ],
   "scheduled_universe": {
-    "observed_at": "2026-10-14T00:27:12Z",
+    "observed_at": "2026-10-14T04:45:06Z",
     "scope": "core_etf",
     "symbols": [
       "379800.KS",
@@ -12108,46 +11887,41 @@
     "candidate_count_before_filters": 5723,
     "scope": "core_etf",
     "selected_symbols": [
-      "AEMC",
-      "AUGZ",
-      "BBLS",
-      "BCOR",
-      "CBOT",
-      "EMDV",
-      "ESBG",
-      "KOKU",
-      "LIBD",
-      "LLDR",
-      "MTRA",
-      "PMNV",
-      "RHTX",
-      "SRHR",
-      "TOS",
-      "ABOT",
-      "ACIG",
-      "AESB",
-      "ANEW",
-      "CUST",
-      "EMMY",
-      "IDMY",
-      "IMTG",
-      "LCO",
-      "LSTB",
-      "RGTC",
-      "UXJL",
-      "WX",
-      "USLX",
-      "CLIX",
-      "EMFI",
-      "TOAO",
-      "CBOY",
-      "CBTA",
-      "LCTO",
+      "ZSC",
+      "LEAD",
+      "ARKD",
+      "CAMX",
+      "EUDV",
+      "HAUG",
       "AMHI",
-      "CBOL",
-      "CBXA",
-      "QQMY",
-      "BRKL",
+      "AKAF",
+      "ARKI",
+      "CJUL",
+      "MAYC",
+      "RCLY",
+      "USMX",
+      "USSX",
+      "VMSB",
+      "WR",
+      "XIGV",
+      "XWNG",
+      "AESG",
+      "DGJA",
+      "DWWN",
+      "EXEQ",
+      "GLX",
+      "IGGY",
+      "JULI",
+      "LIAU",
+      "MHIG",
+      "MUNG",
+      "OND",
+      "PMAU",
+      "QFHD",
+      "SHPP",
+      "TAJX",
+      "WDAI",
+      "ZCBG",
       "AAAA",
       "AAAU",
       "AAPX",
@@ -12176,7 +11950,6 @@
       "AIFD",
       "AIMG",
       "AIVL",
-      "AKAF",
       "AKAL",
       "ALIL",
       "AMAU",
@@ -12189,7 +11962,6 @@
       "APLZ",
       "APPX",
       "AQLT",
-      "ARKI",
       "ARKQ",
       "ARKW",
       "ARKX",
@@ -12291,7 +12063,6 @@
       "CHPS",
       "CIEI",
       "CIVG",
-      "CJUL",
       "CLCG",
       "CLOD",
       "CLOU",
@@ -12665,7 +12436,6 @@
       "MARS",
       "MART",
       "MAUG",
-      "MAYC",
       "MBBB",
       "MBCE",
       "MCHS",
@@ -12827,7 +12597,6 @@
       "RAM",
       "RB",
       "RBUF",
-      "RCLY",
       "RDFI",
       "RDVY",
       "REFA",
@@ -12986,11 +12755,9 @@
       "URTH",
       "USAF",
       "USAI",
-      "USMX",
       "USNZ",
       "USOY",
       "USRT",
-      "USSX",
       "UTSL",
       "UXOC",
       "VB",
@@ -13004,7 +12771,6 @@
       "VFH",
       "VGT",
       "VHT",
-      "VMSB",
       "VPLS",
       "VPU",
       "VSDM",
@@ -13024,7 +12790,6 @@
       "WEEK",
       "WINN",
       "WMSB",
-      "WR",
       "WSDB",
       "WSPC",
       "XA",
@@ -13038,7 +12803,6 @@
       "XHE",
       "XHOA",
       "XIDV",
-      "XIGV",
       "XIJN",
       "XISE",
       "XKRE",
@@ -13056,7 +12820,6 @@
       "XUDV",
       "XVGL",
       "XVTS",
-      "XWNG",
       "XXX",
       "XYLD",
       "XYZG",
@@ -13080,7 +12843,7 @@
       "ACSM",
       "ADIU",
       "ADVE",
-      "AESG",
+      "AEMC",
       "AFIX",
       "AFK",
       "AFRU",
@@ -13117,6 +12880,7 @@
       "ASD",
       "ATCL",
       "AUGU",
+      "AUGZ",
       "AUMI",
       "AVES",
       "AVGC",
@@ -13135,9 +12899,11 @@
       "BBAX",
       "BBHL",
       "BBIB",
+      "BBLS",
       "BBLU",
       "BCGD",
       "BCIL",
+      "BCOR",
       "BDYN",
       "BEEZ",
       "BEMD",
@@ -13184,6 +12950,7 @@
       "CALF",
       "CAOS",
       "CAPE",
+      "CBOT",
       "CCEF",
       "CCRP",
       "CCSB",
@@ -13241,7 +13008,6 @@
       "DFSB",
       "DFSV",
       "DFUV",
-      "DGJA",
       "DGRE",
       "DIAL",
       "DIG",
@@ -13263,7 +13029,6 @@
       "DUSG",
       "DVVY",
       "DWAS",
-      "DWWN",
       "DXIV",
       "DYLD",
       "EALT",
@@ -13285,6 +13050,7 @@
       "EKG",
       "ELIL",
       "EMBD",
+      "EMDV",
       "EMEM",
       "EMMF",
       "EMNT",
@@ -13294,6 +13060,7 @@
       "EQAL",
       "EQQQ",
       "EQRR",
+      "ESBG",
       "ESIM",
       "ESLV",
       "ESN",
@@ -13311,7 +13078,6 @@
       "EWK",
       "EWM",
       "EWT",
-      "EXEQ",
       "EXPN",
       "EYES",
       "EZA",
@@ -13397,7 +13163,6 @@
       "GLGG",
       "GLOF",
       "GLOW",
-      "GLX",
       "GMF",
       "GNMX",
       "GOCT",
@@ -13475,7 +13240,6 @@
       "IG",
       "IGBH",
       "IGEB",
-      "IGGY",
       "IGLB",
       "IGOV",
       "IGRO",
@@ -13538,7 +13302,6 @@
       "JPSE",
       "JTEK",
       "JUCY",
-      "JULI",
       "JULM",
       "JULP",
       "JUNM",
@@ -13556,6 +13319,7 @@
       "KJAN",
       "KLAG",
       "KOCT",
+      "KOKU",
       "KOMP",
       "KSEP",
       "KWEB",
@@ -13567,8 +13331,9 @@
       "LFGY",
       "LGDS",
       "LIAE",
-      "LIAU",
+      "LIBD",
       "LITU",
+      "LLDR",
       "LMBS",
       "LOFD",
       "LOGO",
@@ -13603,7 +13368,6 @@
       "MFUL",
       "MGMT",
       "MGV",
-      "MHIG",
       "MID",
       "MIDE",
       "MIVL",
@@ -13630,12 +13394,12 @@
       "MSTC",
       "MSTX",
       "MTAW",
+      "MTRA",
       "MUB",
       "MUG",
       "MUIB",
       "MULL",
       "MUNA",
-      "MUNG",
       "MVLL",
       "MVV",
       "MYCI",
@@ -13673,7 +13437,6 @@
       "OCTI",
       "OCTJ",
       "OIH",
-      "OND",
       "ONDU",
       "ONEV",
       "ONLN",
@@ -13705,9 +13468,9 @@
       "PLTL",
       "PLYY",
       "PMAR",
-      "PMAU",
       "PMDE",
       "PMJN",
+      "PMNV",
       "PMSE",
       "POCT",
       "PQDI",
@@ -13731,7 +13494,6 @@
       "QBQV",
       "QBUL",
       "QCMD",
-      "QFHD",
       "QGRO",
       "QIG",
       "QJN",
@@ -13757,6 +13519,7 @@
       "RGLO",
       "RGTX",
       "RGYY",
+      "RHTX",
       "RIGS",
       "RILA",
       "RISE",
@@ -13805,7 +13568,6 @@
       "SGOV",
       "SH",
       "SHDG",
-      "SHPP",
       "SHRT",
       "SIMX",
       "SIZE",
@@ -13840,6 +13602,7 @@
       "SPXV",
       "SPY",
       "SRHQ",
+      "SRHR",
       "SRS",
       "SRVR",
       "SSFI",
@@ -13857,7 +13620,6 @@
       "TAFM",
       "TAGS",
       "TAIL",
-      "TAJX",
       "TAOZ",
       "TAXF",
       "TBFG",
@@ -13890,6 +13652,7 @@
       "TMNS",
       "TOK",
       "TOPC",
+      "TOS",
       "TOTL",
       "TPLS",
       "TPUT",
@@ -13970,7 +13733,6 @@
       "VXUS",
       "WATS",
       "WBIF",
-      "WDAI",
       "WDE",
       "WDIV",
       "WEBS",
@@ -14013,7 +13775,6 @@
       "YETH",
       "YMAG",
       "YYYM",
-      "ZCBG",
       "ZIG",
       "ZINN",
       "ZJUN",
@@ -14046,15 +13807,6 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
-      "source_as_of": "2026-09-15T17:04:37Z",
-      "symbols": [
-        "USSX"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 8,
       "source_as_of": "2026-09-16T14:19:42Z",
       "symbols": [
@@ -14082,15 +13834,6 @@
     {
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 12,
-      "source_as_of": "2026-09-23T19:56:38Z",
-      "symbols": [
-        "WDAI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 11,
       "source_as_of": "2026-09-24T19:42:30Z",
       "symbols": [
@@ -14100,55 +13843,10 @@
     {
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-25",
-      "symbols": [
-        "JULI"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 8,
       "source_as_of": "2026-09-28T14:18:28Z",
       "symbols": [
         "WR"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-09-29T16:00:38Z",
-      "symbols": [
-        "EXEQ"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-30T16:14:12Z",
-      "symbols": [
-        "TAJX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-30T17:25:25Z",
-      "symbols": [
-        "LIAU"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-09-30T17:57:03Z",
-      "symbols": [
-        "MHIG"
       ]
     },
     {
@@ -14173,24 +13871,6 @@
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
       "source_age_business_days": 7,
-      "source_as_of": "2026-09-30T19:59:47Z",
-      "symbols": [
-        "ZCBG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-01T14:51:15Z",
-      "symbols": [
-        "VMSB"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
       "source_as_of": "2026-10-01T16:02:22Z",
       "symbols": [
         "GLX"
@@ -14203,78 +13883,6 @@
       "source_as_of": "2026-10-01T16:49:50Z",
       "symbols": [
         "SHPP"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-01T19:19:06Z",
-      "symbols": [
-        "DWWN"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-01T19:32:39Z",
-      "symbols": [
-        "AESG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-01T19:59:46Z",
-      "symbols": [
-        "QFHD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-02T19:07:38Z",
-      "symbols": [
-        "ZSC"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-05T13:31:00Z",
-      "symbols": [
-        "ARKD"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-05T13:45:35Z",
-      "symbols": [
-        "CAMX"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-05T19:19:46Z",
-      "symbols": [
-        "EUDV"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-05T19:30:51Z",
-      "symbols": [
-        "HAUG"
       ]
     }
   ],
@@ -14318,7 +13926,7 @@
       "completed_at": "2026-10-13T07:44:10.804717Z",
       "completed_scheduled_date": "2026-10-07",
       "covered_symbols": [],
-      "last_attempt_at": "2026-10-14T00:59:45Z",
+      "last_attempt_at": "2026-10-14T05:12:56Z",
       "last_attempt_complete": false,
       "last_attempt_scheduled_date": "2026-10-14",
       "missing_members": 923,
@@ -14327,7 +13935,7 @@
     },
     "4": {
       "covered_symbols": [],
-      "last_attempt_at": "2026-10-14T00:59:45Z",
+      "last_attempt_at": "2026-10-14T05:12:56Z",
       "last_attempt_complete": false,
       "last_attempt_scheduled_date": "2026-10-08",
       "missing_members": 962,
