@@ -47,6 +47,7 @@ from urllib.parse import urlparse
 from datetime import datetime, timezone
 
 SUPPORTED_TICKERS = (
+    "FOTO",
     "ACHX",
     "ARMA",
     "AVGC",
@@ -208,6 +209,10 @@ _PROSHARES_HEADERS = (
 # issuer's own download action; quantities are a mixed shares/contracts column.
 _MASTFUNDS_CSV_URLS = {
     "HXF": "https://mast-funds.com/wp-admin/admin-post.php?action=download_holdings_csv&ticker=HXF",
+}
+
+_TUTTLE_FUND_API_URLS = {
+    "FOTO": "https://jdkfnvgkfwotjlyovbrk.supabase.co/functions/v1/fund-public-api?ticker=FOTO&view=all",
 }
 _PROSHARES_PAGE_URLS = {
     "BITI": "https://www.proshares.com/our-etfs/leveraged-and-inverse/biti",
@@ -2555,6 +2560,142 @@ def _fetch_mastfunds(ticker: str, timeout: int) -> dict:
     }
 
 
+def _fetch_tuttle_fund_api(ticker: str, timeout: int) -> dict:
+    """Tuttle Capital public fund API: the fund's own complete dated snapshot.
+
+    The issuer page renders its holdings table from this endpoint, so identity,
+    the single as_of_date and the published row count come from the payload
+    itself. Weights are the provider's signed values, kept exactly as published:
+    derivative exposure legs and the cash line are neither normalised nor
+    re-based, and no sum-to-100 assertion is made. Quantity keeps the
+    publisher's own field with no unit assertion, and country/sector stay
+    nullable exactly as published.
+    """
+    url = _TUTTLE_FUND_API_URLS[ticker]
+    body = _http_get(url, timeout, accept="application/json").decode("utf-8", errors="replace")
+    payload = json.loads(body)
+    symbol = ticker.upper()
+    fund = payload.get("fund") if isinstance(payload, dict) else None
+    if not isinstance(fund, dict) or _text(fund.get("ticker")) != symbol:
+        raise OfficialEtfSourceError(
+            f"Tuttle fund API response is not bound to {symbol}: "
+            f"{_text((fund or {}).get('ticker')) if isinstance(fund, dict) else None!r}")
+    latest = payload.get("latest")
+    if (not isinstance(latest, dict) or latest.get("ticker") != symbol
+            or not _text(latest.get("fund_id"))
+            or fund.get("cusip") != "26923V597" or fund.get("isin") != "US26923V5975"
+            or latest.get("cusip") != fund.get("cusip")
+            or latest.get("isin") != fund.get("isin")):
+        raise OfficialEtfSourceError(f"Tuttle latest block is not bound to {symbol}")
+    snapshot_date = _normalise_date(latest.get("as_of_date"))
+    if snapshot_date is None:
+        raise OfficialEtfSourceError(f"Tuttle latest block for {symbol} has no readable as_of_date")
+    records = payload.get("holdings")
+    if not isinstance(records, list) or not records:
+        raise OfficialEtfSourceError(f"no Tuttle holdings rows for {symbol}")
+    raw_count = latest.get("holdings_count")
+    try:
+        published_count = int(str(raw_count).strip())
+    except (TypeError, ValueError):
+        raise OfficialEtfSourceError(
+            f"Tuttle latest block for {symbol} has an unreadable holdings_count: {raw_count!r}") from None
+    dates = set()
+    for index, record in enumerate(records, start=1):
+        if not isinstance(record, dict):
+            raise OfficialEtfSourceError(f"Tuttle holdings row {index} for {symbol} is not an object")
+        if record.get("fund_id") != latest["fund_id"]:
+            raise OfficialEtfSourceError(f"Tuttle holdings row {index} for {symbol} has a different fund_id")
+        if _text(record.get("ticker")) != symbol:
+            raise OfficialEtfSourceError(
+                f"Tuttle holdings row {index} is bound to "
+                f"{_text(record.get('ticker'))!r}, not {symbol}")
+        published = _normalise_date(record.get("as_of_date"))
+        if published is None:
+            raise OfficialEtfSourceError(
+                f"Tuttle holdings row {index} for {symbol} has no readable as_of_date")
+        dates.add(published)
+    if len(dates) != 1:
+        raise OfficialEtfSourceError(
+            f"Tuttle rows for {symbol} carry conflicting dates: {sorted(str(d) for d in dates)}")
+    if dates != {snapshot_date}:
+        raise OfficialEtfSourceError(
+            f"Tuttle rows for {symbol} are dated {sorted(str(d) for d in dates)}, "
+            f"but latest says {snapshot_date}")
+    if len(records) != published_count:
+        raise OfficialEtfSourceError(
+            f"Tuttle payload for {symbol} publishes {published_count} holdings but carries "
+            f"{len(records)} rows")
+    date = snapshot_date
+    holdings = []
+    for index, record in enumerate(records, start=1):
+        name = _text(record.get("security_name"))
+        if name is None:
+            raise OfficialEtfSourceError(f"Tuttle holdings row {index} for {symbol} has no security_name")
+        identifier = _text(record.get("security_id"))
+        upper = (identifier or "").upper()
+        provider_ticker = _text(record.get("security_ticker"))
+        holdings.append({
+            "name": name,
+            "symbol": provider_ticker if provider_ticker and _PLAIN_TICKER.fullmatch(provider_ticker) else None,
+            "identifier": identifier,
+            "identifier_type": "cusip" if len(upper) == 9 else ("isin" if len(upper) == 12 else None),
+            "weight_pct": _published_cell_number(record.get("weight"), symbol, "weight"),
+            "weight_basis": "provider_portfolio_weight_signed",
+            "market_value": _published_cell_number(record.get("market_value"), symbol, "market value"),
+            "notional_value": None,
+            "shares": None,
+            "provider_quantity": _published_cell_number(record.get("quantity"), symbol, "quantity"),
+            "provider_quantity_field": "quantity",
+            "quantity_unit": None,
+            "price": None,
+            "as_of_date": date,
+            "position_date": None,
+            "provider_ticker": provider_ticker,
+            "instrument_type": _text(record.get("asset_class")),
+            "country": _text(record.get("country")),
+            "sector": _text(record.get("sector")),
+            "raw": record,
+        })
+    has_cash = any(row["name"] == "CASH AND CASH EQUIVALENTS" for row in holdings)
+    completeness = [
+        "holdings are every published row of the issuer's own snapshot, all sharing one "
+        "as_of_date that matches the payload's latest block and its published holdings_count",
+        "weights are the provider's signed values kept exactly as published, with derivative "
+        "exposure legs and the cash line untouched and no sum-to-100 assertion",
+        "quantity keeps the publisher's own field with its literal label and an unknown unit, "
+        "and market value is the publisher's own figure rather than a derived price",
+        "the security id is the row identifier and the security ticker is a symbol only when it "
+        "is a plain ticker",
+        "country, sector and asset class are passed through as published and stay null when the "
+        "issuer leaves them null",
+        "only the row named exactly 'CASH AND CASH EQUIVALENTS' is treated as the cash line; a "
+        "null symbol alone is never read as cash",
+    ]
+    return {
+        "ticker": symbol,
+        "provider": "tuttlecapital",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": {},
+        "history": [],
+        "classification": {"provider_account": symbol},
+        "field_dates": {"holdings": date, "shares_outstanding": None, "aum": None},
+        "completeness": completeness,
+        "holdings_snapshot": {
+            "full_published_snapshot": True,
+            "identity": symbol,
+            "snapshot_date": date,
+            "position_date": None,
+            "row_count": len(holdings),
+            "cash_treatment": "separate" if has_cash else "not_published",
+            "scope_note": "issuer publishes the fund's own dated holdings rows",
+        },
+        "raw": {"holdings_url": url, "fund": fund, "latest": latest, "holdings_rows": records},
+    }
+
+
 def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
     """Fetch the official issuer record for one supported ETF ticker."""
     if not isinstance(ticker, str):
@@ -2584,6 +2725,8 @@ def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
         return _fetch_proshares(symbol, timeout)
     if symbol in _MASTFUNDS_CSV_URLS:
         return _fetch_mastfunds(symbol, timeout)
+    if symbol in _TUTTLE_FUND_API_URLS:
+        return _fetch_tuttle_fund_api(symbol, timeout)
     if symbol in _SIMPLIFY_PAGE_URLS:
         return _fetch_simplify(symbol, timeout)
     if symbol == "MWHS":
