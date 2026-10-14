@@ -1,12 +1,12 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-14T03:46:29Z",
+  "generated_at": "2026-10-14T04:39:32Z",
   "counts": {
     "tracked": 1157,
-    "fresh": 1039,
-    "lkg": 104,
+    "fresh": 1041,
+    "lkg": 102,
     "unavailable": 14,
-    "retry": 118,
+    "retry": 116,
     "failed": 0
   },
   "counts_by_kind": {
@@ -26,10 +26,10 @@
     },
     "etf": {
       "tracked": 1039,
-      "fresh": 921,
-      "lkg": 104,
+      "fresh": 923,
+      "lkg": 102,
       "unavailable": 14,
-      "retry": 118
+      "retry": 116
     },
     "surface": {
       "tracked": 25,
@@ -318,14 +318,6 @@
     {
       "artifact_kind": "etf",
       "entity": "FXL"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "HBIL"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "HXF"
     },
     {
       "artifact_kind": "etf",
@@ -1339,30 +1331,6 @@
     },
     {
       "artifact_kind": "etf",
-      "entity": "HBIL",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-10-01T00:00:00Z",
-      "failure_observed_at": "2026-10-13T12:17:42Z",
-      "error": "ValueError: StockAnalysis ETF candidate loses canonical holdings",
-      "failure_class": "candidate_regression",
-      "failure_count": 2,
-      "failure_count_is_lower_bound": false,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "HXF",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2026-09-30T14:25:32Z",
-      "failure_observed_at": "2026-10-13T12:17:42Z",
-      "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
-      "failure_class": "provider_not_found",
-      "failure_count": 2,
-      "failure_count_is_lower_bound": false,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
       "entity": "HYGD",
       "resolution_state": "unavailable",
       "source_as_of": null,
@@ -1970,10 +1938,6 @@
       },
       {
         "artifact_kind": "etf",
-        "entity": "HBIL"
-      },
-      {
-        "artifact_kind": "etf",
         "entity": "IAUM"
       }
     ],
@@ -2191,10 +2155,6 @@
       {
         "artifact_kind": "etf",
         "entity": "FLHK"
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "HXF"
       },
       {
         "artifact_kind": "etf",
@@ -2427,28 +2387,16 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-14T03:46:29Z",
-    "attempted": 105,
-    "successes": 105,
+    "observed_at": "2026-10-14T04:39:32Z",
+    "attempted": 2,
+    "successes": 2,
     "failed": 0,
     "errors": [],
     "by_kind": {
-      "stock": {
-        "observed_at": "2026-10-14T03:46:29Z",
-        "attempted": 40,
-        "successes": 40,
-        "failed": 0
-      },
-      "financial": {
-        "observed_at": "2026-10-14T03:46:29Z",
-        "attempted": 40,
-        "successes": 40,
-        "failed": 0
-      },
-      "surface": {
-        "observed_at": "2026-10-14T03:46:29Z",
-        "attempted": 25,
-        "successes": 25,
+      "etf": {
+        "observed_at": "2026-10-14T04:39:32Z",
+        "attempted": 2,
+        "successes": 2,
         "failed": 0
       }
     }
@@ -2523,8 +2471,6 @@
     "FLM",
     "FOVL",
     "FXL",
-    "HBIL",
-    "HXF",
     "HYGD",
     "HYGU",
     "HYGW",
