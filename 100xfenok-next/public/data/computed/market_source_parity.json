@@ -1,31 +1,31 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-10-14T03:58:32Z",
+  "generated_at": "2026-10-14T04:28:28Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 7111,
     "fields": 19,
-    "multi_candidate_fields": 51299,
-    "divergence_rows": 51295,
+    "multi_candidate_fields": 51419,
+    "divergence_rows": 51415,
     "percent_scale_warnings": 13,
     "diagnosis_counts": {
-      "agreement": 28705,
+      "agreement": 28938,
       "scale_mismatch": 13,
-      "sign_divergence": 873,
-      "stale": 19641,
-      "value_drift": 2063
+      "sign_divergence": 887,
+      "stale": 19476,
+      "value_drift": 2101
     },
-    "stale_rows": 19641,
+    "stale_rows": 19476,
     "scale_mismatch_rows": 13,
-    "sign_divergence_rows": 873
+    "sign_divergence_rows": 887
   },
   "by_field": {
     "beta": {
-      "ticker_count": 5834,
+      "ticker_count": 5848,
       "multi_candidate_count": 47,
       "selected_sources": {
-        "derived.daily_1y_beta": 1164,
-        "stockanalysis.overview": 3364,
+        "derived.daily_1y_beta": 1166,
+        "stockanalysis.overview": 3376,
         "yf": 1139,
         "yf.stockanalysis_fallback.overview": 167
       },
@@ -36,42 +36,42 @@
     },
     "change": {
       "ticker_count": 7106,
-      "multi_candidate_count": 6970,
+      "multi_candidate_count": 6984,
       "selected_sources": {
-        "stockanalysis.quote": 1555,
-        "yf": 5533,
+        "stockanalysis.quote": 1569,
+        "yf": 5519,
         "yf.derived": 3,
         "yf.stockanalysis_fallback.quote": 15
       },
       "candidate_sources": {
-        "stockanalysis.quote": 5660,
-        "yf": 6968,
+        "stockanalysis.quote": 5674,
+        "yf": 6982,
         "yf.derived": 1202,
         "yf.stockanalysis_fallback.quote": 171
       }
     },
     "change_pct": {
       "ticker_count": 7105,
-      "multi_candidate_count": 6969,
+      "multi_candidate_count": 6983,
       "selected_sources": {
-        "stockanalysis.quote": 1555,
-        "yf": 5533,
+        "stockanalysis.quote": 1569,
+        "yf": 5519,
         "yf.derived": 2,
         "yf.stockanalysis_fallback.quote": 15
       },
       "candidate_sources": {
-        "stockanalysis.quote": 5660,
-        "yf": 6967,
+        "stockanalysis.quote": 5674,
+        "yf": 6981,
         "yf.derived": 1201,
         "yf.stockanalysis_fallback.quote": 171
       }
     },
     "dividend_yield": {
-      "ticker_count": 5447,
+      "ticker_count": 5450,
       "multi_candidate_count": 561,
       "selected_sources": {
         "slickcharts": 4,
-        "stockanalysis.overview": 4158,
+        "stockanalysis.overview": 4161,
         "yf": 1192,
         "yf.stockanalysis_fallback.overview": 93
       },
@@ -82,10 +82,10 @@
       }
     },
     "expense_ratio": {
-      "ticker_count": 5821,
+      "ticker_count": 5835,
       "multi_candidate_count": 54,
       "selected_sources": {
-        "stockanalysis.overview": 5604,
+        "stockanalysis.overview": 5618,
         "yf": 54,
         "yf.stockanalysis_fallback.overview": 163
       },
@@ -124,78 +124,80 @@
     },
     "previous_close": {
       "ticker_count": 7106,
-      "multi_candidate_count": 5659,
+      "multi_candidate_count": 5673,
       "selected_sources": {
-        "stockanalysis.quote": 594,
-        "yf": 6512
+        "stockanalysis.quote": 606,
+        "yf": 6500
       },
       "candidate_sources": {
-        "stockanalysis.quote": 5659,
-        "yf": 5659
+        "stockanalysis.quote": 5673,
+        "yf": 5673
       }
     },
     "price": {
       "ticker_count": 7109,
-      "multi_candidate_count": 6312,
+      "multi_candidate_count": 6326,
       "selected_sources": {
         "slickcharts": 3,
-        "stockanalysis.quote": 594,
-        "yf": 6497,
+        "stockanalysis.quote": 606,
+        "yf": 6485,
         "yf.stockanalysis_fallback.quote": 15
       },
       "candidate_sources": {
         "slickcharts": 524,
-        "stockanalysis.quote": 5660,
-        "yf": 6312,
+        "stockanalysis.quote": 5674,
+        "yf": 6326,
         "yf.stockanalysis_fallback.quote": 171
       }
     },
     "return_10y_avg": {
       "ticker_count": 1237,
-      "multi_candidate_count": 1215,
+      "multi_candidate_count": 1217,
       "selected_sources": {
-        "stockanalysis.detail.performance": 1221,
-        "stockanalysis.etf_screener.performance": 16
+        "stockanalysis.detail.performance": 1223,
+        "stockanalysis.etf_screener.performance": 14
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 1215,
-        "stockanalysis.etf_screener.performance": 1215
+        "stockanalysis.detail.performance": 1217,
+        "stockanalysis.etf_screener.performance": 1217
       }
     },
     "return_1m": {
       "ticker_count": 6954,
-      "multi_candidate_count": 5533,
+      "multi_candidate_count": 5547,
       "selected_sources": {
-        "stockanalysis.detail.performance": 5510,
-        "stockanalysis.etf_screener.performance": 190,
+        "stockanalysis.detail.performance": 5524,
+        "stockanalysis.etf_screener.performance": 176,
         "yf.history_1y": 1254
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 5533,
-        "stockanalysis.etf_screener.performance": 5477,
+        "stockanalysis.detail.performance": 5547,
+        "stockanalysis.etf_screener.performance": 5490,
+        "stockanalysis.etf_universe.performance": 1,
         "yf.history_1y": 62
       }
     },
     "return_1y": {
       "ticker_count": 5572,
-      "multi_candidate_count": 5434,
+      "multi_candidate_count": 5448,
       "selected_sources": {
-        "stockanalysis.detail.performance": 4197,
-        "stockanalysis.etf_screener.performance": 115,
+        "stockanalysis.detail.performance": 4211,
+        "stockanalysis.etf_screener.performance": 101,
         "yf.history_1y": 1260
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 4216,
-        "stockanalysis.etf_screener.performance": 4177,
+        "stockanalysis.detail.performance": 4230,
+        "stockanalysis.etf_screener.performance": 4190,
+        "stockanalysis.etf_universe.performance": 1,
         "yf": 1258,
         "yf.history_1y": 1257
       }
     },
     "return_3m": {
-      "ticker_count": 6712,
+      "ticker_count": 6726,
       "multi_candidate_count": 106,
       "selected_sources": {
-        "stockanalysis.detail.history": 5459,
+        "stockanalysis.detail.history": 5473,
         "yf.history_1y": 1253
       },
       "candidate_sources": {
@@ -204,10 +206,10 @@
       }
     },
     "return_3y_avg": {
-      "ticker_count": 2982,
+      "ticker_count": 2991,
       "multi_candidate_count": 24,
       "selected_sources": {
-        "stockanalysis.detail.history": 2958,
+        "stockanalysis.detail.history": 2967,
         "yf": 24
       },
       "candidate_sources": {
@@ -217,50 +219,53 @@
     },
     "return_5y_avg": {
       "ticker_count": 2134,
-      "multi_candidate_count": 2087,
+      "multi_candidate_count": 2093,
       "selected_sources": {
-        "stockanalysis.detail.performance": 2079,
-        "stockanalysis.etf_screener.performance": 40,
+        "stockanalysis.detail.performance": 2085,
+        "stockanalysis.etf_screener.performance": 34,
         "yf": 15
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 2087,
-        "stockanalysis.etf_screener.performance": 2073,
+        "stockanalysis.detail.performance": 2093,
+        "stockanalysis.etf_screener.performance": 2078,
+        "stockanalysis.etf_universe.performance": 1,
         "yf": 14
       }
     },
     "return_max_avg": {
       "ticker_count": 4351,
-      "multi_candidate_count": 4177,
+      "multi_candidate_count": 4191,
       "selected_sources": {
-        "stockanalysis.detail.performance": 4236,
-        "stockanalysis.etf_screener.performance": 115
+        "stockanalysis.detail.performance": 4250,
+        "stockanalysis.etf_screener.performance": 101
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 4177,
-        "stockanalysis.etf_screener.performance": 4177
+        "stockanalysis.detail.performance": 4191,
+        "stockanalysis.etf_screener.performance": 4190,
+        "stockanalysis.etf_universe.performance": 1
       }
     },
     "return_ytd": {
       "ticker_count": 5936,
-      "multi_candidate_count": 4559,
+      "multi_candidate_count": 4573,
       "selected_sources": {
-        "stockanalysis.detail.performance": 4534,
-        "stockanalysis.etf_screener.performance": 142,
+        "stockanalysis.detail.performance": 4548,
+        "stockanalysis.etf_screener.performance": 128,
         "yf.history_1y": 1260
       },
       "candidate_sources": {
-        "stockanalysis.detail.performance": 4559,
-        "stockanalysis.etf_screener.performance": 4504,
+        "stockanalysis.detail.performance": 4573,
+        "stockanalysis.etf_screener.performance": 4517,
+        "stockanalysis.etf_universe.performance": 1,
         "yf": 47,
         "yf.history_1y": 56
       }
     },
     "total_assets": {
-      "ticker_count": 5753,
+      "ticker_count": 5767,
       "multi_candidate_count": 53,
       "selected_sources": {
-        "stockanalysis.overview": 5532,
+        "stockanalysis.overview": 5546,
         "yf": 54,
         "yf.stockanalysis_fallback.overview": 167
       },
