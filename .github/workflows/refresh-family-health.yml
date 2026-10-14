@@ -29,13 +29,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: main
           filter: blob:none
+          sparse-checkout-cone-mode: false
           sparse-checkout: |
-            scripts
-            ops
-            .github/workflows
-            100xfenok-next/scripts
-            100xfenok-next/src/lib
+            /scripts/
+            /ops/
+            /.github/workflows/
+            /100xfenok-next/scripts/
+            /100xfenok-next/src/lib/
+            /data/stockanalysis/etfs/
+            /data/stockanalysis/etf_universe.json
+            /data/stockanalysis/surfaces/etf_screener.json
+            /data/admin/stockanalysis-recovery/states/etf/
+            /data/admin/yahoo-batch-quote-history/tickers/
+            /data/admin/fenok-etf-core-daily-basket.json
+            /data/computed/data-supply/etf-detail/index.json
       - uses: actions/setup-node@v7
         with:
           package-manager-cache: false
@@ -57,11 +66,8 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
           set -euo pipefail
-          timeout 120s git fetch --filter=blob:none --depth=1 origin main
-          # Fetch all canonical blobs once, outside the lock, rather than let
-          # cat-file lazily fetch thousands of objects one by one.
-          timeout 300s git sparse-checkout add data/stockanalysis/etfs data/stockanalysis/surfaces data/admin/stockanalysis-recovery/states/etf data/admin/yahoo-batch-quote-history/tickers
-          timeout 300s git checkout origin/main -- data/stockanalysis/etfs data/stockanalysis/etf_universe.json data/stockanalysis/surfaces/etf_screener.json data/admin/stockanalysis-recovery/states/etf data/admin/yahoo-batch-quote-history/tickers
+          # Checkout fetched one current main revision and its canonical blobs.
+          # Do not hydrate the caller's older revision and then replace it again.
           node scripts/refresh-family-health.mjs prepare "$RUNNER_TEMP/family-health/prepared.json"
           printf '%s\n' 'prepared=true' >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
