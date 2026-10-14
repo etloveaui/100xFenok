@@ -40,6 +40,9 @@ interface EtfHolding {
   symbol?: string | null;
   name?: string | null;
   weight_pct?: number | null;
+  // Issuer exposure portfolios label their weights explicitly; the value is not
+  // a portfolio market-value weight.
+  weight_basis?: string | null;
   shares?: number | string | null;
 }
 
@@ -421,7 +424,7 @@ function csvCell(value: unknown): string {
 }
 
 function buildHoldingsCsv(symbol: string, holdings: EtfHolding[], holdingsUpdated: string | null | undefined): string {
-  const header = ["etf", "rank", "symbol", "name", "weight_pct", "shares", "holdings_as_of"];
+  const header = ["etf", "rank", "symbol", "name", "weight_pct", "shares", "holdings_as_of", "weight_basis"];
   const body = holdings.map((item, index) => [
     symbol,
     item.rank ?? index + 1,
@@ -430,6 +433,7 @@ function buildHoldingsCsv(symbol: string, holdings: EtfHolding[], holdingsUpdate
     isFiniteNumber(item.weight_pct) ? item.weight_pct : "",
     item.shares ?? "",
     holdingsUpdated ?? "",
+    item.weight_basis ?? "",
   ]);
   return [header, ...body].map((row) => row.map(csvCell).join(",")).join("\n");
 }
@@ -961,7 +965,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
           <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
             <th scope="col" className="px-2 py-2 text-right">#</th>
             <th scope="col" className="px-2 py-2 text-left">종목/계약</th>
-            <th scope="col" className="px-2 py-2 text-right">비중</th>
+            <th scope="col" className="px-2 py-2 text-right">{exposureWeighted ? "노출" : "비중"}</th>
             <th scope="col" className="px-2 py-2 text-right">수량</th>
           </tr>
         </thead>
@@ -1364,6 +1368,10 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
       ? marketFacts.etf.holdings_count
       : holdings.length;
   const holdingsUpdated = normalized.holdings_updated ?? marketFacts?.etf?.holdings_updated ?? null;
+  // A provider_exposure_signed portfolio publishes derivative exposure, not a
+  // portfolio market-value weight; the signed sum is disclosed as exposure and
+  // is never made absolute or normalized.
+  const exposureWeighted = holdings.some((item) => item.weight_basis === "provider_exposure_signed");
   const totalWeight = holdings.reduce((sum, item) => sum + (isFiniteNumber(item.weight_pct) ? item.weight_pct : 0), 0);
   const assetAllocation = normalized.asset_allocation ?? marketFacts?.etf?.asset_allocation ?? null;
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
@@ -1472,7 +1480,11 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatCurrency(quote.h52, currency as Currency) : "—", note: "최근 52주 고점" },
     { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatCurrency(quote.l52, currency as Currency) : "—", note: "최근 52주 저점" },
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: formatDateish(holdingsUpdated) },
-    { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
+    {
+      label: exposureWeighted ? "표시 노출 합계" : "표시 비중 합계",
+      value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—",
+      note: exposureWeighted ? "공개 노출 기준 · 현금/담보 미공개" : "표시 항목 기준",
+    },
   ].filter((metric) => metric.value !== "—");
   const etfSignalScores = etfSignals?.row?.scores ?? {};
   const etfSignalCount = etfSignals?.row?.scored_signal_count;

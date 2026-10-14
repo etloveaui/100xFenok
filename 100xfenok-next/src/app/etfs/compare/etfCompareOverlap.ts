@@ -5,6 +5,9 @@ export interface EtfHolding {
   symbol?: string | null;
   name?: string | null;
   weight_pct?: number | null;
+  // Issuer exposure portfolios label their weights explicitly; such rows are not
+  // portfolio market-value weights and must not be compared as if they were.
+  weight_basis?: string | null;
 }
 
 export interface EtfPayload {
@@ -104,10 +107,21 @@ export function holdingEntries(row: EtfCompareRow): HoldingEntry[] {
   });
 }
 
+/** True when a fund publishes issuer exposure rather than portfolio weights. */
+export function hasExposureBasis(row: EtfCompareRow): boolean {
+  const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
+  return holdings.some((holding) => holding?.weight_basis === "provider_exposure_signed");
+}
+
 export function overlapFor(left: EtfCompareRow, right: EtfCompareRow): PairOverlap {
   const leftEntries = holdingEntries(left);
   const rightEntries = holdingEntries(right);
-  const unavailable = left.failed || right.failed || leftEntries.length === 0 || rightEntries.length === 0;
+  // Exposure and portfolio weights are different measures, so a pair that
+  // involves either uses the existing unavailable outcome instead of comparing
+  // them or reporting a misleading zero.
+  const exposurePair = hasExposureBasis(left) || hasExposureBasis(right);
+  const unavailable = exposurePair || left.failed || right.failed
+    || leftEntries.length === 0 || rightEntries.length === 0;
   if (unavailable) {
     return {
       left,
