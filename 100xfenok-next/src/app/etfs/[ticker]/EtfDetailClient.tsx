@@ -955,6 +955,9 @@ function DetailAvailabilityCallout({
 }
 
 function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currency: string }) {
+  // Issuer exposure portfolios label their weights explicitly; this table's own
+  // column must not present derivative exposure as a portfolio weight.
+  const exposureWeighted = holdings.some((item) => item.weight_basis === "provider_exposure_signed");
   if (!holdings.length) {
     return <EmptyState reason="보유 구성 데이터 없음" nextRefresh="보유 데이터 연결 시" />;
   }
@@ -1483,7 +1486,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     {
       label: exposureWeighted ? "표시 노출 합계" : "표시 비중 합계",
       value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—",
-      note: exposureWeighted ? "공개 노출 기준 · 현금/담보 미공개" : "표시 항목 기준",
+      note: exposureWeighted ? "공개 노출 기준 · 현금/담보 비중 미공개" : "표시 항목 기준",
     },
   ].filter((metric) => metric.value !== "—");
   const etfSignalScores = etfSignals?.row?.scores ?? {};
