@@ -571,8 +571,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
+          BUILT_BASE=""
+          BUILT_TIP=""
           for attempt in $(seq 1 5); do
             git fetch origin main
+            if [ -z "$BUILT_TIP" ]; then
+            BUILT_BASE="$(git rev-parse origin/main)"
             git checkout -f -B main origin/main
             git clean -fd -- \
               data/stockanalysis \
@@ -671,12 +675,61 @@ jobs:
               -m "StockAnalysis-Run-Attempt: ${{ github.run_attempt }}" \
               -m "StockAnalysis-Run-ID: ${{ github.run_id }}" \
               -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
+            BUILT_TIP="$(git rev-parse HEAD)"
+            PUBLISHED_COMMIT="$BUILT_TIP"
+            elif ! git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main; then
+              # Never replay resolution/materialization after a push race. The
+              # generic public mirror reads across data/, and its scripts import
+              # registries/configuration transitively. Only documentation-only
+              # advances are known to leave ALL of those inputs/outputs intact.
+              # SEC 13F status/code changes therefore refuse reuse deliberately.
+              # New inputs need a fresh admission, not another 34-minute loop
+              # holding the shared writer. Keep the immutable artifact for it.
+              RETRY_REASON=""
+              if ! git merge-base --is-ancestor "$BUILT_BASE" origin/main; then
+                RETRY_REASON="main_history_changed"
+              elif [ -n "$(git log --format=%H --grep='^StockAnalysis-Artifact-Digest:' "$BUILT_BASE..origin/main")" ]; then
+                # Includes a newer accepted-no-changes publication with no diff.
+                RETRY_REASON="concurrent_stockanalysis_publication"
+              else
+                git diff --name-only --no-renames -z "$BUILT_BASE" origin/main > "$RUNNER_TEMP/stockanalysis-main-changes"
+                while IFS= read -r -d '' changed_path; do
+                  case "$changed_path" in
+                    docs/*.md) ;;
+                    *) RETRY_REASON="publication_inputs_changed"; break ;;
+                  esac
+                done < "$RUNNER_TEMP/stockanalysis-main-changes"
+              fi
+              if [ -z "$RETRY_REASON" ]; then
+                if MERGED_TREE="$(git merge-tree --write-tree origin/main "$BUILT_TIP")" && [[ "$MERGED_TREE" =~ ^[0-9a-f]{40}$ ]]; then
+                  # Reuse the full message: all four acquisition trailers remain
+                  # attached to the exact commit returned to the joined cycle.
+                  PUBLISHED_COMMIT="$(git log -1 --format=%B "$BUILT_TIP" | git commit-tree "$MERGED_TREE" -p "$(git rev-parse origin/main)" -p "$BUILT_TIP")"
+                else
+                  RETRY_REASON="publication_merge_conflict"
+                fi
+              fi
+              if [ -n "$RETRY_REASON" ]; then
+                echo "status=not_published" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=$RETRY_REASON" >> "$GITHUB_OUTPUT"
+                echo "candidate retained; retry refused: $RETRY_REASON" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: not_published"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: $RETRY_REASON"
+                  echo "- immutable artifact: $ARTIFACT_NAME"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
+              fi
+            fi
             # Capture the published commit BEFORE the push and the post-push
             # checkout: the readback resets to origin/main, which by then can
             # carry other lanes' commits, so HEAD afterwards is not necessarily
             # this publication. The joined-cycle tuple needs this exact commit.
-            PUBLISHED_COMMIT="$(git rev-parse HEAD)"
-            if git push origin HEAD:main; then
+            # If an ambiguous push already landed, confirm it without resending.
+            if git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main || git push origin "$PUBLISHED_COMMIT:refs/heads/main"; then
               if ! git fetch origin main || ! git checkout -f -B main origin/main; then
                 echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
@@ -758,7 +811,7 @@ jobs:
               echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            echo "git push race on attempt ${attempt}; restarting from fresh origin/main"
+            echo "git push failed on attempt ${attempt}; refreshing main without rebuilding candidate"
             sleep 3
           done
           echo "git push failed after retrying concurrent main updates"
