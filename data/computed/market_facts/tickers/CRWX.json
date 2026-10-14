@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "CRWX",
   "asset_type": "etf",
-  "generated_at": "2026-10-14T04:27:44Z",
-  "source_as_of": "2026-10-12",
+  "generated_at": "2026-10-14T21:59:01Z",
+  "source_as_of": "2026-10-13",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 16.5491,
-      "source": "yf",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:50:44Z",
+      "value": 15.48,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,17 +31,17 @@
       ],
       "candidates": [
         {
+          "value": 15.48,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
+          "confidence": "observed"
+        },
+        {
           "value": 16.5491,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T06:50:44Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 17.2394,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
           "confidence": "observed"
         }
       ],
@@ -49,10 +49,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 17.2394,
-      "source": "yf",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:50:44Z",
+      "value": 16.55,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -60,6 +60,13 @@
         "yf.stockanalysis_fallback.quote"
       ],
       "candidates": [
+        {
+          "value": 16.55,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
+          "confidence": "observed"
+        },
         {
           "value": 17.2394,
           "source": "yf",
@@ -68,14 +75,14 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.6903,
-      "source": "yf",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:50:44Z",
+      "value": -1.07,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -85,17 +92,17 @@
       ],
       "candidates": [
         {
+          "value": -1.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.6903,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T06:50:44Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.11949999999999861,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
           "confidence": "observed"
         }
       ],
@@ -103,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -4.0042,
-      "source": "yf",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-13T06:50:44Z",
+      "value": -6.47,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -116,17 +123,17 @@
       ],
       "candidates": [
         {
+          "value": -6.47,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
+          "confidence": "observed"
+        },
+        {
           "value": -4.0042,
           "source": "yf",
           "as_of": "2026-10-12",
           "fetched_at": "2026-10-13T06:50:44Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.6980180959000847,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
           "confidence": "observed"
         }
       ],
@@ -134,10 +141,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
-      "value": 2468797.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:47:49Z",
+      "value": 2130000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -146,33 +153,10 @@
       ],
       "candidates": [
         {
-          "value": 2468797.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:47:49Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview",
-        "derived.daily_1y_beta"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
+          "value": 2130000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
           "confidence": "observed"
         }
       ],
@@ -180,9 +164,9 @@
     },
     "expense_ratio": {
       "value": 0.45,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:47:49Z",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -193,9 +177,9 @@
       "candidates": [
         {
           "value": 0.45,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -203,10 +187,10 @@
       "candidate_count": 1
     },
     "return_1m": {
-      "value": -0.9244,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-14T03:46:42Z",
+      "value": -26.21544,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -217,6 +201,14 @@
       ],
       "candidates": [
         {
+          "value": -26.21544,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": -0.9244,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
@@ -225,13 +217,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
-      "value": -24.45223487435738,
+      "value": -20.724743814942467,
       "source": "stockanalysis.detail.history",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:47:49Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:33Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -240,10 +232,10 @@
       ],
       "candidates": [
         {
-          "value": -24.45223487435738,
+          "value": -20.724743814942467,
           "source": "stockanalysis.detail.history",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:47:49Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:33Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -252,35 +244,73 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-10-09T19:11:35Z",
-    "top_holdings": [],
-    "asset_allocation": [
+    "holdings_count": 5,
+    "holdings_updated": "Sep 28, 2026",
+    "top_holdings": [
       {
-        "key": "cashPosition",
-        "value": -92.67
+        "rank": 1,
+        "name": "COREWEAVE INC.-SWAP-CANT-L",
+        "weight_pct": 205.28,
+        "shares": 56889,
+        "raw": {
+          "no": 1,
+          "n": "COREWEAVE INC.-SWAP-CANT-L",
+          "as": "205.28%",
+          "sh": "56,889"
+        }
       },
       {
-        "key": "stockPosition",
-        "value": 196.42999
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 89.1,
+        "shares": 2100575,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "89.10%",
+          "sh": "2,100,575"
+        }
       },
       {
-        "key": "bondPosition",
-        "value": 0.0
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 9.54,
+        "shares": 224904,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "9.54%",
+          "sh": "224,904"
+        }
       },
       {
-        "key": "preferredPosition",
-        "value": 0.0
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -3.5,
+        "shares": 82571,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-3.50%",
+          "sh": "82,571"
+        }
       },
       {
-        "key": "convertiblePosition",
-        "value": 0.0
-      },
-      {
-        "key": "otherPosition",
-        "value": -3.7600000000000002
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -200.42,
+        "shares": 4724923,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-200.42%",
+          "sh": "4,724,923"
+        }
       }
     ],
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
     "classification": {
@@ -298,22 +328,22 @@
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/CRWX.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/CRWX.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/CRWX.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

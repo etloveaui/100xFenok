@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "PIEL",
   "asset_type": "etf",
-  "generated_at": "2026-10-14T04:27:44Z",
-  "source_as_of": "2026-09-30",
+  "generated_at": "2026-10-14T21:59:01Z",
+  "source_as_of": "2026-10-13",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 28.645,
+      "value": 28.2422,
       "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,10 +31,10 @@
       ],
       "candidates": [
         {
-          "value": 28.645,
+          "value": 28.2422,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed"
         },
         {
@@ -49,10 +49,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "previous_close": {
-      "value": 28.73,
+      "value": 28.46,
       "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -61,10 +61,10 @@
       ],
       "candidates": [
         {
-          "value": 28.73,
+          "value": 28.46,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed"
         },
         {
@@ -79,10 +79,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.09,
+      "value": -0.22,
       "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -92,10 +92,10 @@
       ],
       "candidates": [
         {
-          "value": -0.09,
+          "value": -0.22,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed"
         },
         {
@@ -110,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.3,
+      "value": -0.77,
       "source": "stockanalysis.quote",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -123,10 +123,10 @@
       ],
       "candidates": [
         {
-          "value": -0.3,
+          "value": -0.77,
           "source": "stockanalysis.quote",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed"
         },
         {
@@ -141,10 +141,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
-      "value": 1150000.0,
+      "value": 1130000.0,
       "source": "stockanalysis.overview",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -153,11 +153,68 @@
       ],
       "candidates": [
         {
-          "value": 1150000.0,
+          "value": 1130000.0,
           "source": "stockanalysis.overview",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": 1.4121871273559345,
+      "source": "derived.daily_1y_beta",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
+      "confidence": "derived",
+      "unit": "ratio",
+      "provenance": {
+        "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+        "benchmark": "SPY",
+        "benchmark_ticker": "SPY",
+        "currency_scope": "USD listings",
+        "window_days": 365,
+        "minimum_bars": 200,
+        "paired_returns": 200,
+        "window_start": "2025-12-24",
+        "window_end": "2026-10-13",
+        "instrument_history_source": "stockanalysis.history_periods.daily_1y",
+        "instrument_source_file": "computed/data-supply/etf-detail/payloads/PIEL.json",
+        "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+        "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+        "benchmark_fetched_at": "2026-10-14T02:46:27Z"
+      },
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
+      ],
+      "candidates": [
+        {
+          "value": 1.4121871273559345,
+          "source": "derived.daily_1y_beta",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
+          "confidence": "derived",
+          "unit": "ratio",
+          "provenance": {
+            "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+            "benchmark": "SPY",
+            "benchmark_ticker": "SPY",
+            "currency_scope": "USD listings",
+            "window_days": 365,
+            "minimum_bars": 200,
+            "paired_returns": 200,
+            "window_start": "2025-12-24",
+            "window_end": "2026-10-13",
+            "instrument_history_source": "stockanalysis.history_periods.daily_1y",
+            "instrument_source_file": "computed/data-supply/etf-detail/payloads/PIEL.json",
+            "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+            "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+            "benchmark_fetched_at": "2026-10-14T02:46:27Z"
+          }
         }
       ],
       "candidate_count": 1
@@ -165,8 +222,8 @@
     "expense_ratio": {
       "value": 0.49,
       "source": "stockanalysis.overview",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -178,8 +235,8 @@
         {
           "value": 0.49,
           "source": "stockanalysis.overview",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -187,10 +244,10 @@
       "candidate_count": 1
     },
     "return_1m": {
-      "value": -3.7502,
+      "value": -1.39964,
       "source": "stockanalysis.detail.performance",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -201,10 +258,10 @@
       ],
       "candidates": [
         {
-          "value": -3.7502,
+          "value": -1.39964,
           "source": "stockanalysis.detail.performance",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed",
           "unit": "percent_points"
         },
@@ -220,10 +277,10 @@
       "candidate_count": 2
     },
     "return_3m": {
-      "value": -4.247732165590235,
+      "value": -1.5745561758986215,
       "source": "stockanalysis.detail.history",
-      "as_of": "2026-09-29",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -232,10 +289,10 @@
       ],
       "candidates": [
         {
-          "value": -4.247732165590235,
+          "value": -1.5745561758986215,
           "source": "stockanalysis.detail.history",
-          "as_of": "2026-09-29",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -243,10 +300,10 @@
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 13.367,
+      "value": 11.772,
       "source": "stockanalysis.detail.performance",
-      "as_of": "2026-09-30",
-      "fetched_at": "2026-09-30T17:44:09Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:56:15Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -258,10 +315,10 @@
       ],
       "candidates": [
         {
-          "value": 13.367,
+          "value": 11.772,
           "source": "stockanalysis.detail.performance",
-          "as_of": "2026-09-30",
-          "fetched_at": "2026-09-30T17:44:09Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:56:15Z",
           "confidence": "observed",
           "unit": "percent_points"
         },
@@ -279,16 +336,30 @@
   },
   "etf": {
     "holdings_count": 108,
-    "holdings_updated": "Sep 23, 2026",
+    "holdings_updated": "Oct 2, 2026",
     "top_holdings": [
       {
         "rank": 1,
+        "symbol": "!AMS/ASML",
+        "name": "ASML Holding N.V.",
+        "weight_pct": 5.56,
+        "shares": 34,
+        "raw": {
+          "no": 1,
+          "n": "ASML Holding N.V.",
+          "s": "!ams/ASML",
+          "as": "5.56%",
+          "sh": "34"
+        }
+      },
+      {
+        "rank": 2,
         "symbol": "!KRX/000660",
         "name": "SK hynix Inc.",
         "weight_pct": 5.14,
         "shares": 43,
         "raw": {
-          "no": 1,
+          "no": 2,
           "n": "SK hynix Inc.",
           "s": "!krx/000660",
           "as": "5.14%",
@@ -296,30 +367,16 @@
         }
       },
       {
-        "rank": 2,
-        "symbol": "!AMS/ASML",
-        "name": "ASML Holding N.V.",
-        "weight_pct": 5.12,
-        "shares": 34,
-        "raw": {
-          "no": 2,
-          "n": "ASML Holding N.V.",
-          "s": "!ams/ASML",
-          "as": "5.12%",
-          "sh": "34"
-        }
-      },
-      {
         "rank": 3,
         "symbol": "!KRX/005930",
         "name": "Samsung Electronics Co., Ltd.",
-        "weight_pct": 4.91,
+        "weight_pct": 4.8,
         "shares": 268,
         "raw": {
           "no": 3,
           "n": "Samsung Electronics Co., Ltd.",
           "s": "!krx/005930",
-          "as": "4.91%",
+          "as": "4.80%",
           "sh": "268"
         }
       },
@@ -327,13 +384,13 @@
         "rank": 4,
         "symbol": "!SWX/ROP",
         "name": "Roche Holding AG",
-        "weight_pct": 4.23,
+        "weight_pct": 4.02,
         "shares": 110,
         "raw": {
           "no": 4,
           "n": "Roche Holding AG",
           "s": "!swx/ROP",
-          "as": "4.23%",
+          "as": "4.02%",
           "sh": "110"
         }
       },
@@ -341,13 +398,13 @@
         "rank": 5,
         "symbol": "!SWX/NOVN",
         "name": "Novartis AG",
-        "weight_pct": 3.97,
+        "weight_pct": 3.93,
         "shares": 319,
         "raw": {
           "no": 5,
           "n": "Novartis AG",
           "s": "!swx/NOVN",
-          "as": "3.97%",
+          "as": "3.93%",
           "sh": "319"
         }
       },
@@ -355,13 +412,13 @@
         "rank": 6,
         "symbol": "!ETR/SAP",
         "name": "SAP SE",
-        "weight_pct": 3.58,
+        "weight_pct": 3.51,
         "shares": 193,
         "raw": {
           "no": 6,
           "n": "SAP SE",
           "s": "!etr/SAP",
-          "as": "3.58%",
+          "as": "3.51%",
           "sh": "193"
         }
       },
@@ -369,13 +426,13 @@
         "rank": 7,
         "symbol": "!LON/AZN",
         "name": "AstraZeneca PLC",
-        "weight_pct": 3.49,
+        "weight_pct": 3.35,
         "shares": 243,
         "raw": {
           "no": 7,
           "n": "AstraZeneca PLC",
           "s": "!lon/AZN",
-          "as": "3.49%",
+          "as": "3.35%",
           "sh": "243"
         }
       },
@@ -383,13 +440,13 @@
         "rank": 8,
         "symbol": "!SWX/NESN",
         "name": "Nestlé S.A.",
-        "weight_pct": 3.27,
+        "weight_pct": 3.17,
         "shares": 401,
         "raw": {
           "no": 8,
           "n": "Nestlé S.A.",
           "s": "!swx/NESN",
-          "as": "3.27%",
+          "as": "3.17%",
           "sh": "401"
         }
       },
@@ -397,13 +454,13 @@
         "rank": 9,
         "symbol": "!ASX/BHP",
         "name": "BHP Group Limited",
-        "weight_pct": 3.05,
+        "weight_pct": 2.99,
         "shares": 800,
         "raw": {
           "no": 9,
           "n": "BHP Group Limited",
           "s": "!asx/BHP",
-          "as": "3.05%",
+          "as": "2.99%",
           "sh": "800"
         }
       },
@@ -411,14 +468,14 @@
         "rank": 10,
         "symbol": "!EPA/MC",
         "name": "LVMH Moët Hennessy - Louis Vuitton, Société Européenne",
-        "weight_pct": 3.04,
-        "shares": 77,
+        "weight_pct": 2.92,
+        "shares": 78,
         "raw": {
           "no": 10,
           "n": "LVMH Moët Hennessy - Louis Vuitton, Société Européenne",
           "s": "!epa/MC",
-          "as": "3.04%",
-          "sh": "77"
+          "as": "2.92%",
+          "sh": "78"
         }
       },
       {
@@ -439,139 +496,139 @@
         "rank": 12,
         "symbol": "SHOP",
         "name": "Shopify Inc.",
-        "weight_pct": 2.38,
+        "weight_pct": 2.55,
         "shares": 192,
         "raw": {
           "no": 12,
           "n": "Shopify Inc.",
           "s": "$SHOP",
-          "as": "2.38%",
+          "as": "2.55%",
           "sh": "192"
         }
       },
       {
         "rank": 13,
-        "symbol": "!LON/RR",
-        "name": "Rolls-Royce Holdings plc",
-        "weight_pct": 2.29,
-        "shares": 1317,
+        "symbol": "!TYO/8035",
+        "name": "Tokyo Electron Limited",
+        "weight_pct": 2.46,
+        "shares": 365,
         "raw": {
           "no": 13,
-          "n": "Rolls-Royce Holdings plc",
-          "s": "!lon/RR",
-          "as": "2.29%",
-          "sh": "1,317"
+          "n": "Tokyo Electron Limited",
+          "s": "!tyo/8035",
+          "as": "2.46%",
+          "sh": "365"
         }
       },
       {
         "rank": 14,
-        "symbol": "!EPA/RMS",
-        "name": "Hermès International Société en commandite par actions",
-        "weight_pct": 2.28,
-        "shares": 17,
+        "symbol": "!TYO/6857",
+        "name": "Advantest Corporation",
+        "weight_pct": 2.43,
+        "shares": 113,
         "raw": {
           "no": 14,
-          "n": "Hermès International Société en commandite par actions",
-          "s": "!epa/RMS",
-          "as": "2.28%",
-          "sh": "17"
+          "n": "Advantest Corporation",
+          "s": "!tyo/6857",
+          "as": "2.43%",
+          "sh": "113"
         }
       },
       {
         "rank": 15,
-        "symbol": "!EPA/SAF",
-        "name": "Safran SA",
-        "weight_pct": 2.17,
-        "shares": 65,
+        "symbol": "!LON/RR",
+        "name": "Rolls-Royce Holdings plc",
+        "weight_pct": 2.26,
+        "shares": 1317,
         "raw": {
           "no": 15,
-          "n": "Safran SA",
-          "s": "!epa/SAF",
-          "as": "2.17%",
-          "sh": "65"
+          "n": "Rolls-Royce Holdings plc",
+          "s": "!lon/RR",
+          "as": "2.26%",
+          "sh": "1,317"
         }
       },
       {
         "rank": 16,
-        "symbol": "!TYO/8035",
-        "name": "Tokyo Electron Limited",
-        "weight_pct": 2.14,
-        "shares": 73,
+        "symbol": "!EPA/RMS",
+        "name": "Hermès International Société en commandite par actions",
+        "weight_pct": 2.18,
+        "shares": 17,
         "raw": {
           "no": 16,
-          "n": "Tokyo Electron Limited",
-          "s": "!tyo/8035",
-          "as": "2.14%",
-          "sh": "73"
+          "n": "Hermès International Société en commandite par actions",
+          "s": "!epa/RMS",
+          "as": "2.18%",
+          "sh": "17"
         }
       },
       {
         "rank": 17,
-        "symbol": "!TYO/6857",
-        "name": "Advantest Corporation",
-        "weight_pct": 2.0,
-        "shares": 113,
+        "symbol": "!EPA/SAF",
+        "name": "Safran SA",
+        "weight_pct": 2.12,
+        "shares": 65,
         "raw": {
           "no": 17,
-          "n": "Advantest Corporation",
-          "s": "!tyo/6857",
-          "as": "2.00%",
-          "sh": "113"
+          "n": "Safran SA",
+          "s": "!epa/SAF",
+          "as": "2.12%",
+          "sh": "65"
         }
       },
       {
         "rank": 18,
         "symbol": "!ETR/ENR",
         "name": "Siemens Energy AG",
-        "weight_pct": 1.93,
-        "shares": 134,
+        "weight_pct": 1.94,
+        "shares": 135,
         "raw": {
           "no": 18,
           "n": "Siemens Energy AG",
           "s": "!etr/ENR",
-          "as": "1.93%",
-          "sh": "134"
+          "as": "1.94%",
+          "sh": "135"
         }
       },
       {
         "rank": 19,
-        "symbol": "!EBR/ABI",
-        "name": "Anheuser-Busch InBev SA/NV",
-        "weight_pct": 1.9,
-        "shares": 283,
+        "symbol": "!TYO/6758",
+        "name": "Sony Group Corporation",
+        "weight_pct": 1.92,
+        "shares": 919,
         "raw": {
           "no": 19,
-          "n": "Anheuser-Busch InBev SA/NV",
-          "s": "!ebr/ABI",
-          "as": "1.90%",
-          "sh": "283"
+          "n": "Sony Group Corporation",
+          "s": "!tyo/6758",
+          "as": "1.92%",
+          "sh": "919"
         }
       },
       {
         "rank": 20,
-        "symbol": "!TYO/6758",
-        "name": "Sony Group Corporation",
-        "weight_pct": 1.87,
-        "shares": 919,
+        "symbol": "!EBR/ABI",
+        "name": "Anheuser-Busch InBev SA/NV",
+        "weight_pct": 1.82,
+        "shares": 283,
         "raw": {
           "no": 20,
-          "n": "Sony Group Corporation",
-          "s": "!tyo/6758",
-          "as": "1.87%",
-          "sh": "919"
+          "n": "Anheuser-Busch InBev SA/NV",
+          "s": "!ebr/ABI",
+          "as": "1.82%",
+          "sh": "283"
         }
       },
       {
         "rank": 21,
         "symbol": "!LON/ULVR",
         "name": "Unilever PLC",
-        "weight_pct": 1.84,
+        "weight_pct": 1.78,
         "shares": 341,
         "raw": {
           "no": 21,
           "n": "Unilever PLC",
           "s": "!lon/ULVR",
-          "as": "1.84%",
+          "as": "1.78%",
           "sh": "341"
         }
       },
@@ -579,56 +636,56 @@
         "rank": 22,
         "symbol": "!SWX/CFR",
         "name": "Compagnie Financière Richemont SA",
-        "weight_pct": 1.5,
-        "shares": 83,
+        "weight_pct": 1.54,
+        "shares": 84,
         "raw": {
           "no": 22,
           "n": "Compagnie Financière Richemont SA",
           "s": "!swx/CFR",
-          "as": "1.50%",
-          "sh": "83"
+          "as": "1.54%",
+          "sh": "84"
         }
       },
       {
         "rank": 23,
-        "symbol": "!LON/GSK",
-        "name": "GSK plc",
-        "weight_pct": 1.38,
-        "shares": 634,
+        "symbol": "!TYO/6981",
+        "name": "Murata Manufacturing Co., Ltd.",
+        "weight_pct": 1.44,
+        "shares": 306,
         "raw": {
           "no": 23,
-          "n": "GSK plc",
-          "s": "!lon/GSK",
-          "as": "1.38%",
-          "sh": "634"
+          "n": "Murata Manufacturing Co., Ltd.",
+          "s": "!tyo/6981",
+          "as": "1.44%",
+          "sh": "306"
         }
       },
       {
         "rank": 24,
         "symbol": "!EPA/SAN",
         "name": "Sanofi",
-        "weight_pct": 1.36,
-        "shares": 187,
+        "weight_pct": 1.32,
+        "shares": 188,
         "raw": {
           "no": 24,
           "n": "Sanofi",
           "s": "!epa/SAN",
-          "as": "1.36%",
-          "sh": "187"
+          "as": "1.32%",
+          "sh": "188"
         }
       },
       {
         "rank": 25,
-        "symbol": "!TYO/6981",
-        "name": "Murata Manufacturing Co., Ltd.",
+        "symbol": "!LON/GSK",
+        "name": "GSK plc",
         "weight_pct": 1.31,
-        "shares": 306,
+        "shares": 634,
         "raw": {
           "no": 25,
-          "n": "Murata Manufacturing Co., Ltd.",
-          "s": "!tyo/6981",
+          "n": "GSK plc",
+          "s": "!lon/GSK",
           "as": "1.31%",
-          "sh": "306"
+          "sh": "634"
         }
       }
     ],
@@ -636,31 +693,31 @@
     "sectors": [
       {
         "n": "Technology",
-        "w": 33.04
+        "w": 34.64
       },
       {
         "n": "Healthcare",
-        "w": 20.93
+        "w": 20.32
       },
       {
         "n": "Industrials",
-        "w": 15.31
+        "w": 15.28
       },
       {
         "n": "Consumer Discretionary",
-        "w": 13.28
+        "w": 12.93
       },
       {
         "n": "Materials",
-        "w": 8.56
+        "w": 8.22
       },
       {
         "n": "Consumer Staples",
-        "w": 8.01
+        "w": 7.76
       },
       {
         "n": "Energy",
-        "w": 0.46
+        "w": 0.45
       },
       {
         "n": "Financials",
@@ -668,7 +725,7 @@
       },
       {
         "n": "Communication Services",
-        "w": 0.2
+        "w": 0.19
       }
     ],
     "countries": [

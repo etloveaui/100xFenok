@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "UCTX",
   "asset_type": "etf",
-  "generated_at": "2026-10-14T05:30:43Z",
+  "generated_at": "2026-10-14T21:59:01Z",
   "source_as_of": "2026-10-13",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -38,10 +38,10 @@
           "confidence": "observed"
         },
         {
-          "value": 5.5911,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
+          "value": 4.3746,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
           "confidence": "observed"
         }
       ],
@@ -66,16 +66,23 @@
           "as_of": "2026-10-13",
           "fetched_at": "2026-10-14T05:10:20Z",
           "confidence": "observed"
+        },
+        {
+          "value": 4.798,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.4233,
-      "source": "yf",
+      "value": -0.423,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T05:10:20Z",
+      "fetched_at": "2026-10-14T02:48:25Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -85,17 +92,17 @@
       ],
       "candidates": [
         {
+          "value": -0.423,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.4233,
           "source": "yf",
           "as_of": "2026-10-13",
           "fetched_at": "2026-10-14T05:10:20Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.10240000000000027,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
           "confidence": "observed"
         }
       ],
@@ -103,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -8.82262,
-      "source": "yf",
+      "value": -8.82,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T05:10:20Z",
+      "fetched_at": "2026-10-14T02:48:25Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -116,17 +123,17 @@
       ],
       "candidates": [
         {
+          "value": -8.82,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
+          "confidence": "observed"
+        },
+        {
           "value": -8.82262,
           "source": "yf",
           "as_of": "2026-10-13",
           "fetched_at": "2026-10-14T05:10:20Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 1.865651247107699,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
           "confidence": "observed"
         }
       ],
@@ -134,10 +141,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
-      "value": 753487.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:53Z",
+      "value": "$625.73K",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:25Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -146,33 +153,10 @@
       ],
       "candidates": [
         {
-          "value": 753487.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:53Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview",
-        "derived.daily_1y_beta"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
+          "value": "$625.73K",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
           "confidence": "observed"
         }
       ],
@@ -180,9 +164,9 @@
     },
     "expense_ratio": {
       "value": 0.45,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:53Z",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:25Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -193,9 +177,9 @@
       "candidates": [
         {
           "value": 0.45,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -203,10 +187,10 @@
       "candidate_count": 1
     },
     "return_1m": {
-      "value": 30.532,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-14T03:46:42Z",
+      "value": -35.45503,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:25Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -217,6 +201,14 @@
       ],
       "candidates": [
         {
+          "value": -35.45503,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 30.532,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
@@ -225,13 +217,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
-      "value": -61.71232872238346,
+      "value": -72.04204875866697,
       "source": "stockanalysis.detail.history",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:53Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:25Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -240,10 +232,10 @@
       ],
       "candidates": [
         {
-          "value": -61.71232872238346,
+          "value": -72.04204875866697,
           "source": "stockanalysis.detail.history",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:53Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:25Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -252,35 +244,73 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-10-09T19:48:38Z",
-    "top_holdings": [],
-    "asset_allocation": [
+    "holdings_count": 5,
+    "holdings_updated": "Sep 28, 2026",
+    "top_holdings": [
       {
-        "key": "cashPosition",
-        "value": -80.54
+        "rank": 1,
+        "name": "ULTRA CLEAN HOLDINGS INC.-SWAP-CANT-L",
+        "weight_pct": 198.84,
+        "shares": 17836,
+        "raw": {
+          "no": 1,
+          "n": "ULTRA CLEAN HOLDINGS INC.-SWAP-CANT-L",
+          "as": "198.84%",
+          "sh": "17,836"
+        }
       },
       {
-        "key": "stockPosition",
-        "value": 197.38001
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 120.36,
+        "shares": 842906,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "120.36%",
+          "sh": "842,906"
+        }
       },
       {
-        "key": "bondPosition",
-        "value": 0.0
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 0.03,
+        "shares": 202,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "0.03%",
+          "sh": "202"
+        }
       },
       {
-        "key": "preferredPosition",
-        "value": 0.0
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -17.92,
+        "shares": 125460,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-17.92%",
+          "sh": "125,460"
+        }
       },
       {
-        "key": "convertiblePosition",
-        "value": 0.0
-      },
-      {
-        "key": "otherPosition",
-        "value": -16.830000000000002
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -201.32,
+        "shares": 1409807,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-201.32%",
+          "sh": "1,409,807"
+        }
       }
     ],
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
     "classification": {
@@ -298,22 +328,22 @@
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/UCTX.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/UCTX.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/UCTX.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",

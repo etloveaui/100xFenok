@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "SIMX",
   "asset_type": "etf",
-  "generated_at": "2026-10-14T04:27:44Z",
+  "generated_at": "2026-10-14T21:59:01Z",
   "source_as_of": "2026-10-13",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -38,10 +38,10 @@
           "confidence": "observed"
         },
         {
-          "value": 12.4634,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
+          "value": 10.8622,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
           "confidence": "observed"
         }
       ],
@@ -66,16 +66,23 @@
           "as_of": "2026-10-13",
           "fetched_at": "2026-10-14T00:53:37Z",
           "confidence": "observed"
+        },
+        {
+          "value": 10.93,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1,
+      "candidate_count": 2,
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change": {
-      "value": -0.0678005,
-      "source": "yf",
+      "value": -0.07,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:53:37Z",
+      "fetched_at": "2026-10-14T02:48:20Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -85,17 +92,17 @@
       ],
       "candidates": [
         {
+          "value": -0.07,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.0678005,
           "source": "yf",
           "as_of": "2026-10-13",
           "fetched_at": "2026-10-14T00:53:37Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.06339999999999968,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
           "confidence": "observed"
         }
       ],
@@ -103,10 +110,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "change_pct": {
-      "value": -0.620316,
-      "source": "yf",
+      "value": -0.62,
+      "source": "stockanalysis.quote",
       "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:53:37Z",
+      "fetched_at": "2026-10-14T02:48:20Z",
       "confidence": "observed",
       "policy": [
         "stockanalysis.quote",
@@ -116,17 +123,17 @@
       ],
       "candidates": [
         {
+          "value": -0.62,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
+          "confidence": "observed"
+        },
+        {
           "value": -0.620316,
           "source": "yf",
           "as_of": "2026-10-13",
           "fetched_at": "2026-10-14T00:53:37Z",
-          "confidence": "observed"
-        },
-        {
-          "value": 0.5112903225806426,
-          "source": "yf.stockanalysis_fallback.quote",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
           "confidence": "observed"
         }
       ],
@@ -134,10 +141,10 @@
       "selection_rule": "source_date_desc_then_provider_priority"
     },
     "total_assets": {
-      "value": 1778850.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:05Z",
+      "value": 1540000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:20Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -146,33 +153,10 @@
       ],
       "candidates": [
         {
-          "value": 1778850.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
-          "confidence": "observed"
-        }
-      ],
-      "candidate_count": 1
-    },
-    "beta": {
-      "value": 0.0,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:05Z",
-      "confidence": "observed",
-      "policy": [
-        "yf",
-        "stockanalysis.overview",
-        "yf.stockanalysis_fallback.overview",
-        "derived.daily_1y_beta"
-      ],
-      "candidates": [
-        {
-          "value": 0.0,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
+          "value": 1540000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
           "confidence": "observed"
         }
       ],
@@ -180,9 +164,9 @@
     },
     "expense_ratio": {
       "value": 0.45,
-      "source": "yf.stockanalysis_fallback.overview",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:05Z",
+      "source": "stockanalysis.overview",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:20Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -193,9 +177,9 @@
       "candidates": [
         {
           "value": 0.45,
-          "source": "yf.stockanalysis_fallback.overview",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
+          "source": "stockanalysis.overview",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -203,10 +187,10 @@
       "candidate_count": 1
     },
     "return_1m": {
-      "value": 16.035,
-      "source": "stockanalysis.etf_screener.performance",
-      "as_of": null,
-      "fetched_at": "2026-10-14T03:46:42Z",
+      "value": -30.23635,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:20Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -217,6 +201,14 @@
       ],
       "candidates": [
         {
+          "value": -30.23635,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 16.035,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
@@ -225,13 +217,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_3m": {
-      "value": -41.08746920623904,
+      "value": -46.49261083743843,
       "source": "stockanalysis.detail.history",
-      "as_of": "2026-10-09",
-      "fetched_at": "2026-10-12T10:49:05Z",
+      "as_of": "2026-10-13",
+      "fetched_at": "2026-10-14T02:48:20Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -240,10 +232,10 @@
       ],
       "candidates": [
         {
-          "value": -41.08746920623904,
+          "value": -46.49261083743843,
           "source": "stockanalysis.detail.history",
-          "as_of": "2026-10-09",
-          "fetched_at": "2026-10-12T10:49:05Z",
+          "as_of": "2026-10-13",
+          "fetched_at": "2026-10-14T02:48:20Z",
           "confidence": "derived",
           "unit": "percent_points"
         }
@@ -252,35 +244,73 @@
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": "2026-10-09T19:48:31Z",
-    "top_holdings": [],
-    "asset_allocation": [
+    "holdings_count": 5,
+    "holdings_updated": "Sep 25, 2026",
+    "top_holdings": [
       {
-        "key": "cashPosition",
-        "value": -97.169995
+        "rank": 1,
+        "name": "Silicon Motion Technology Corporation-Swap-Cant-L",
+        "weight_pct": 198.43,
+        "shares": 12452,
+        "raw": {
+          "no": 1,
+          "n": "Silicon Motion Technology Corporation-Swap-Cant-L",
+          "as": "198.43%",
+          "sh": "12,452"
+        }
       },
       {
-        "key": "stockPosition",
-        "value": 197.31
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 71.21,
+        "shares": 1234362,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "71.21%",
+          "sh": "1,234,362"
+        }
       },
       {
-        "key": "bondPosition",
-        "value": 0.0
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligs X",
+        "weight_pct": 7.53,
+        "shares": 130499,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligs X",
+          "s": "!mutf/FGXXX",
+          "as": "7.53%",
+          "sh": "130,499"
+        }
       },
       {
-        "key": "preferredPosition",
-        "value": 0.0
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -8.43,
+        "shares": 146153,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-8.43%",
+          "sh": "146,153"
+        }
       },
       {
-        "key": "convertiblePosition",
-        "value": 0.0
-      },
-      {
-        "key": "otherPosition",
-        "value": -0.13999999999999999
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -168.73,
+        "shares": 2924870,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-168.73%",
+          "sh": "2,924,870"
+        }
       }
     ],
+    "asset_allocation": null,
     "sectors": null,
     "countries": null,
     "classification": {
@@ -298,22 +328,22 @@
   "sources": {
     "yf": false,
     "yf_quote": true,
-    "stockanalysis": false,
-    "stockanalysis_yf_fallback": true,
+    "stockanalysis": true,
+    "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
     "yf_quote": "yf/finance/SIMX.json",
-    "stockanalysis": null,
-    "stockanalysis_yf_fallback": "computed/data-supply/etf-detail/payloads/SIMX.json",
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/SIMX.json",
+    "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:fresh_fallback",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
