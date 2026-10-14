@@ -298,7 +298,7 @@ def publish_status_only(args, status, scratch):
         if result.returncode == 0:
             git(args.repo, "fetch", "origin", "main")
             git(args.repo, "merge-base", "--is-ancestor", proposed, "origin/main")
-            return proposed
+            return "published"
     raise PublicationFailed("13F status publication lost three push races")
 
 
