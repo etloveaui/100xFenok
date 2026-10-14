@@ -955,9 +955,11 @@ function DetailAvailabilityCallout({
 }
 
 function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currency: string }) {
-  // Issuer exposure portfolios label their weights explicitly; this table's own
-  // column must not present derivative exposure as a portfolio weight.
+  // Issuer-signed portfolios label their weights explicitly; this table's own
+  // column must not present issuer exposure or signed portfolio weights as an
+  // ordinary positive weight.
   const exposureWeighted = holdings.some((item) => item.weight_basis === "provider_exposure_signed");
+  const portfolioSignedWeighted = holdings.some((item) => item.weight_basis === "provider_portfolio_weight_signed");
   if (!holdings.length) {
     return <EmptyState reason="보유 구성 데이터 없음" nextRefresh="보유 데이터 연결 시" />;
   }
@@ -968,7 +970,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
           <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
             <th scope="col" className="px-2 py-2 text-right">#</th>
             <th scope="col" className="px-2 py-2 text-left">종목/계약</th>
-            <th scope="col" className="px-2 py-2 text-right">{exposureWeighted ? "노출" : "비중"}</th>
+            <th scope="col" className="px-2 py-2 text-right">{exposureWeighted ? "노출" : portfolioSignedWeighted ? "가중치" : "비중"}</th>
             <th scope="col" className="px-2 py-2 text-right">수량</th>
           </tr>
         </thead>
@@ -1375,6 +1377,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   // portfolio market-value weight; the signed sum is disclosed as exposure and
   // is never made absolute or normalized.
   const exposureWeighted = holdings.some((item) => item.weight_basis === "provider_exposure_signed");
+  const portfolioSignedWeighted = holdings.some((item) => item.weight_basis === "provider_portfolio_weight_signed");
   const totalWeight = holdings.reduce((sum, item) => sum + (isFiniteNumber(item.weight_pct) ? item.weight_pct : 0), 0);
   const assetAllocation = normalized.asset_allocation ?? marketFacts?.etf?.asset_allocation ?? null;
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
@@ -1484,9 +1487,10 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatCurrency(quote.l52, currency as Currency) : "—", note: "최근 52주 저점" },
     { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: formatDateish(holdingsUpdated) },
     {
-      label: exposureWeighted ? "표시 노출 합계" : "표시 비중 합계",
+      label: exposureWeighted ? "표시 노출 합계" : portfolioSignedWeighted ? "표시 가중치 합계" : "표시 비중 합계",
       value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—",
-      note: exposureWeighted ? "공개 노출 기준 · 현금/담보 비중 미공개" : "표시 항목 기준",
+      note: exposureWeighted ? "공개 노출 기준 · 현금/담보 비중 미공개"
+        : portfolioSignedWeighted ? "발행사 공개 가중치(부호 포함) 기준" : "표시 항목 기준",
     },
   ].filter((metric) => metric.value !== "—");
   const etfSignalScores = etfSignals?.row?.scores ?? {};

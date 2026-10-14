@@ -107,10 +107,18 @@ export function holdingEntries(row: EtfCompareRow): HoldingEntry[] {
   });
 }
 
-/** True when a fund publishes issuer exposure rather than portfolio weights. */
+/**
+ * True when a fund publishes signed provider weights (issuer exposure or issuer
+ * portfolio weights) rather than positive-only market-value weights. Ordinary
+ * overlap math drops negative rows and min()-es positives, which is not defined
+ * for these bases, so such a pair uses the existing unavailable outcome.
+ */
+export const SIGNED_PROVIDER_WEIGHT_BASES = ["provider_exposure_signed", "provider_portfolio_weight_signed"];
+
 export function hasExposureBasis(row: EtfCompareRow): boolean {
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
-  return holdings.some((holding) => holding?.weight_basis === "provider_exposure_signed");
+  return holdings.some((holding) =>
+    typeof holding?.weight_basis === "string" && SIGNED_PROVIDER_WEIGHT_BASES.includes(holding.weight_basis));
 }
 
 export function overlapFor(left: EtfCompareRow, right: EtfCompareRow): PairOverlap {
