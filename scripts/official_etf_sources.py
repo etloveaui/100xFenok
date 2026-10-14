@@ -101,6 +101,7 @@ SUPPORTED_TICKERS = (
     # AllianzIM buffer funds and ProShares funds with confirmed official routes.
     "JANT", "JANU", "JANW", "JNEU", "JULT", "JULU", "JULW", "MARU", "MAYU",
     "BITI", "EETH", "EUO", "SETH", "SVXY",
+    "HXF",
 )
 
 CORGI_TICKERS = ("ACHX", "ARMA", "AVGC", "IOSX", "KEYX", "LRNX", "ONDC",
@@ -203,6 +204,11 @@ _PROSHARES_HEADERS = (
     ("weight", "ticker", "description", "exposure value (notional + gl)",
      "market value", "shares/contracts", "sedol number"),
 )
+# MAST (mast-funds.com) publishes a dated holdings CSV per fund through the
+# issuer's own download action; quantities are a mixed shares/contracts column.
+_MASTFUNDS_CSV_URLS = {
+    "HXF": "https://mast-funds.com/wp-admin/admin-post.php?action=download_holdings_csv&ticker=HXF",
+}
 _PROSHARES_PAGE_URLS = {
     "BITI": "https://www.proshares.com/our-etfs/leveraged-and-inverse/biti",
     "EETH": "https://www.proshares.com/our-etfs/strategic/eeth",
@@ -2421,6 +2427,122 @@ def _fetch_proshares(ticker: str, timeout: int) -> dict:
     }
 
 
+def _published_cell_number(value, ticker: str, label: str):
+    """Strict provider-local numeric cell: markers stay null, malformed refuses."""
+    if value is None:
+        return None
+    text = " ".join(str(value).split())
+    if text.lower() in _NOT_PUBLISHED:
+        return None
+    cleaned = text.replace("$", "").replace(",", "").replace("%", "").strip()
+    if not cleaned or cleaned.lower() in _NOT_PUBLISHED:
+        return None
+    try:
+        number = float(cleaned)
+    except ValueError as exc:
+        raise OfficialEtfSourceError(
+            f"malformed MAST {label} cell for {ticker}: {value!r}") from exc
+    if not math.isfinite(number):
+        raise OfficialEtfSourceError(f"non-finite MAST {label} cell for {ticker}: {value!r}")
+    return number
+
+
+def _fetch_mastfunds(ticker: str, timeout: int) -> dict:
+    """MAST fund holdings CSV: dated futures and cash rows exactly as published.
+
+    The CSV columns are Date,Ticker,Security Type,CUSIP,Sedol,Description,
+    Quantity,Portfolio Weight. Its Ticker cell names the holding (futures legs
+    carry composite codes, cash is blank), never the fund, so identity comes
+    from the issuer URL bound to the ticker plus the single dated snapshot.
+    Quantity is a mixed shares/contracts figure: it stays provider_quantity with
+    its literal source label and no unit assertion. Signed and oversized
+    published weights (including a cash line above 100%) are preserved as is.
+    """
+    url = _MASTFUNDS_CSV_URLS[ticker]
+    body = _http_get(url, timeout, accept="text/csv").decode("utf-8-sig", errors="replace")
+    reader = csv.DictReader(io.StringIO(body))
+    fields = [str(field).strip() for field in (reader.fieldnames or [])]
+    expected = ["Date", "Ticker", "Security Type", "CUSIP", "Sedol", "Description",
+                "Quantity", "Portfolio Weight"]
+    if fields != expected:
+        raise OfficialEtfSourceError(
+            f"MAST holdings CSV header is not the expected layout for {ticker}: {fields!r}")
+    rows = [row for row in reader if _text(row.get("Description"))]
+    if not rows:
+        raise OfficialEtfSourceError(f"no MAST holdings rows for {ticker}")
+    dates = {_normalise_date(row.get("Date")) for row in rows}
+    if None in dates or len(dates) != 1:
+        raise OfficialEtfSourceError(
+            f"MAST rows for {ticker} carry conflicting or unreadable dates: {sorted(str(d) for d in dates)}")
+    date = dates.pop()
+    holdings = []
+    for row in rows:
+        name = _text(row.get("Description"))
+        quantity = _published_cell_number(row.get("Quantity"), ticker, "quantity")
+        weight = _published_cell_number(row.get("Portfolio Weight"), ticker, "portfolio weight")
+        provider_ticker = _text(row.get("Ticker"))
+        sedol = _text(row.get("Sedol"))
+        cusip = _text(row.get("CUSIP"))
+        identifier = cusip or sedol
+        holdings.append({
+            "name": name,
+            "symbol": provider_ticker if provider_ticker and _PLAIN_TICKER.fullmatch(provider_ticker) else None,
+            "identifier": identifier,
+            "identifier_type": "cusip" if (identifier and identifier == cusip) else ("sedol" if identifier else None),
+            "weight_pct": weight,
+            "weight_basis": "provider_portfolio_weight_signed",
+            "market_value": None,
+            "notional_value": None,
+            "shares": None,
+            "provider_quantity": quantity,
+            "provider_quantity_field": "Quantity",
+            "quantity_unit": None,
+            "price": None,
+            "as_of_date": date,
+            "position_date": None,
+            "provider_ticker": provider_ticker,
+            "instrument_type": _text(row.get("Security Type")),
+            "raw": row,
+        })
+    has_cash = any((row["instrument_type"] or "").upper() == "CASH" for row in holdings)
+    completeness = [
+        "holdings are every published row in the issuer's dated holdings CSV, which "
+        "shares one Date",
+        "weights are the provider's signed Portfolio Weight values, kept exactly as "
+        "published with no sum-to-100 check and no normalization of the cash line",
+        "Quantity is a mixed shares/contracts column, preserved as provider_quantity "
+        "with its literal source label and no unit assertion",
+        "CUSIP or SEDOL is the row identifier and the issuer Ticker is a symbol only "
+        "when it is a plain ticker; composite futures codes stay provider_ticker",
+        "market value, price, notional, NAV and history are not published in this "
+        "file and stay null rather than being derived",
+    ]
+    holdings_snapshot = {
+        "full_published_snapshot": True,
+        "identity": ticker.upper(),
+        "snapshot_date": date,
+        "position_date": None,
+        "row_count": len(holdings),
+        "cash_treatment": "separate" if has_cash else "not_published",
+        "scope_note": "issuer publishes the fund's own dated holdings CSV rows",
+    }
+    return {
+        "ticker": ticker.upper(),
+        "provider": "mastfunds",
+        "source_url": url,
+        "fetched_at": _now_utc(),
+        "source_as_of": date,
+        "holdings": holdings,
+        "quote": {},
+        "history": [],
+        "classification": {"provider_account": ticker.upper()},
+        "field_dates": {"holdings": date, "shares_outstanding": None, "aum": None},
+        "completeness": completeness,
+        "holdings_snapshot": holdings_snapshot,
+        "raw": {"holdings_url": url, "csv_header": fields, "holdings_rows": rows},
+    }
+
+
 def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
     """Fetch the official issuer record for one supported ETF ticker."""
     if not isinstance(ticker, str):
@@ -2448,6 +2570,8 @@ def fetch_official_etf(ticker: str, timeout: int = 30) -> dict:
         return _fetch_allianzim(symbol, timeout)
     if symbol in _PROSHARES_PAGE_URLS:
         return _fetch_proshares(symbol, timeout)
+    if symbol in _MASTFUNDS_CSV_URLS:
+        return _fetch_mastfunds(symbol, timeout)
     if symbol in _SIMPLIFY_PAGE_URLS:
         return _fetch_simplify(symbol, timeout)
     if symbol == "MWHS":

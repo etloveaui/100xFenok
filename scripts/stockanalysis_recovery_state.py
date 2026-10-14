@@ -555,7 +555,8 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
                    "EETH": "https://www.proshares.com/our-etfs/strategic/eeth",
                    "EUO": "https://www.proshares.com/our-etfs/leveraged-and-inverse/euo",
                    "SETH": "https://www.proshares.com/our-etfs/leveraged-and-Inverse/seth",
-                   "SVXY": "https://www.proshares.com/our-etfs/strategic/svxy/"})
+                   "SVXY": "https://www.proshares.com/our-etfs/strategic/svxy/",
+                   "HXF": "https://mast-funds.com/wp-admin/admin-post.php?action=download_holdings_csv&ticker=HXF"})
     if ticker == "SPBC" and issuer_date is not None:
         expected["SPBC"] = ("https://www.simplify.us/sites/default/files/excel_holdings/"
                             f"{issuer_date:%Y_%m_%d}_Simplify_Portfolio_EOD_Tracker.xlsx")
