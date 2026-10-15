@@ -2,8 +2,8 @@
   "schema_version": "market-facts/v1",
   "ticker": "MEME",
   "asset_type": "etf",
-  "generated_at": "2026-10-15T01:21:38Z",
-  "source_as_of": "2026-10-13",
+  "generated_at": "2026-10-15T05:49:06Z",
+  "source_as_of": "2026-10-14",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
@@ -17,10 +17,10 @@
   },
   "facts": {
     "price": {
-      "value": 8.03,
+      "value": 7.42,
       "source": "yf",
-      "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -31,10 +31,10 @@
       ],
       "candidates": [
         {
-          "value": 8.03,
+          "value": 7.42,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed"
         },
         {
@@ -48,10 +48,10 @@
       "candidate_count": 2
     },
     "previous_close": {
-      "value": 8.115,
+      "value": 8.03,
       "source": "yf",
-      "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -60,10 +60,10 @@
       ],
       "candidates": [
         {
-          "value": 8.115,
+          "value": 8.03,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed"
         },
         {
@@ -97,10 +97,10 @@
           "confidence": "observed"
         },
         {
-          "value": -0.085,
+          "value": -0.61,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed"
         }
       ],
@@ -127,10 +127,10 @@
           "confidence": "observed"
         },
         {
-          "value": -1.04744,
+          "value": -7.59651,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed"
         }
       ],
@@ -139,8 +139,8 @@
     "total_assets": {
       "value": 15347538,
       "source": "yf",
-      "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -151,8 +151,8 @@
         {
           "value": 15347538,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed"
         },
         {
@@ -166,10 +166,10 @@
       "candidate_count": 2
     },
     "trailing_pe": {
-      "value": 14.477224,
+      "value": 13.3774605,
       "source": "yf",
-      "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -177,11 +177,68 @@
       ],
       "candidates": [
         {
-          "value": 14.477224,
+          "value": 13.3774605,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "beta": {
+      "value": 3.699713072176356,
+      "source": "derived.daily_1y_beta",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
+      "confidence": "derived",
+      "unit": "ratio",
+      "provenance": {
+        "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+        "benchmark": "SPY",
+        "benchmark_ticker": "SPY",
+        "currency_scope": "USD listings",
+        "window_days": 365,
+        "minimum_bars": 200,
+        "paired_returns": 251,
+        "window_start": "2025-10-14",
+        "window_end": "2026-10-14",
+        "instrument_history_source": "yf.history_1y",
+        "instrument_source_file": "yf/finance/MEME.json",
+        "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+        "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+        "benchmark_fetched_at": "2026-10-14T23:56:59Z"
+      },
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "derived.daily_1y_beta"
+      ],
+      "candidates": [
+        {
+          "value": 3.699713072176356,
+          "source": "derived.daily_1y_beta",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
+          "confidence": "derived",
+          "unit": "ratio",
+          "provenance": {
+            "method": "covariance(adjusted daily simple returns, benchmark) / variance(benchmark)",
+            "benchmark": "SPY",
+            "benchmark_ticker": "SPY",
+            "currency_scope": "USD listings",
+            "window_days": 365,
+            "minimum_bars": 200,
+            "paired_returns": 251,
+            "window_start": "2025-10-14",
+            "window_end": "2026-10-14",
+            "instrument_history_source": "yf.history_1y",
+            "instrument_source_file": "yf/finance/MEME.json",
+            "benchmark_history_source": "stockanalysis.history_periods.daily_1y",
+            "benchmark_source_file": "computed/data-supply/etf-detail/payloads/SPY.json",
+            "benchmark_fetched_at": "2026-10-14T23:56:59Z"
+          }
         }
       ],
       "candidate_count": 1
@@ -189,8 +246,8 @@
     "expense_ratio": {
       "value": 0.69,
       "source": "yf",
-      "as_of": "2026-10-13",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -202,8 +259,8 @@
         {
           "value": 0.69,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed",
           "unit": "percent_points"
         },
@@ -219,10 +276,10 @@
       "candidate_count": 2
     },
     "return_1m": {
-      "value": 0.5825474996131755,
+      "value": -0.9345753933683855,
       "source": "yf.history_1y",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -233,10 +290,10 @@
       ],
       "candidates": [
         {
-          "value": 0.5825474996131755,
+          "value": -0.9345753933683855,
           "source": "yf.history_1y",
-          "as_of": "2026-10-12",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "derived",
           "unit": "percent_points"
         },
@@ -260,10 +317,10 @@
       "candidate_count": 3
     },
     "return_3m": {
-      "value": 2.5916552169482516,
+      "value": 8.16326431312547,
       "source": "yf.history_1y",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -272,10 +329,10 @@
       ],
       "candidates": [
         {
-          "value": 2.5916552169482516,
+          "value": 8.16326431312547,
           "source": "yf.history_1y",
-          "as_of": "2026-10-12",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "derived",
           "unit": "percent_points"
         },
@@ -291,10 +348,10 @@
       "candidate_count": 2
     },
     "return_ytd": {
-      "value": 20.57949105675262,
+      "value": 10.252601118349636,
       "source": "yf.history_1y",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -306,10 +363,10 @@
       ],
       "candidates": [
         {
-          "value": 20.57949105675262,
+          "value": 10.252601118349636,
           "source": "yf.history_1y",
-          "as_of": "2026-10-12",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "derived",
           "unit": "percent_points"
         },
@@ -332,8 +389,8 @@
         {
           "value": 37.72028,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -341,10 +398,10 @@
       "candidate_count": 4
     },
     "return_1y": {
-      "value": -17.320426713647883,
+      "value": -24.401422378826272,
       "source": "yf.history_1y",
-      "as_of": "2026-10-12",
-      "fetched_at": "2026-10-14T00:47:07Z",
+      "as_of": "2026-10-14",
+      "fetched_at": "2026-10-15T04:49:39Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -356,18 +413,18 @@
       ],
       "candidates": [
         {
-          "value": -17.320426713647883,
+          "value": -24.401422378826272,
           "source": "yf.history_1y",
-          "as_of": "2026-10-12",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "derived",
           "unit": "percent_points"
         },
         {
-          "value": -26.693768,
+          "value": -25.576729,
           "source": "yf",
-          "as_of": "2026-10-13",
-          "fetched_at": "2026-10-14T00:47:07Z",
+          "as_of": "2026-10-14",
+          "fetched_at": "2026-10-15T04:49:39Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
