@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-10-15T00:20:38.404Z",
-  "classification_as_of": "2026-10-15T00:19:31.420Z",
+  "generated_at": "2026-10-15T01:24:59.590Z",
+  "classification_as_of": "2026-10-15T01:23:52.712Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -60,17 +60,17 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 44,
-    "coverage_index_inception_limited_daily_1y_gap": 740,
-    "coverage_index_terminal_limited_daily_1y_gap": 6,
+    "coverage_index_fetchable_daily_1y_gap": 38,
+    "coverage_index_inception_limited_daily_1y_gap": 736,
+    "coverage_index_terminal_limited_daily_1y_gap": 13,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4637,
-    "history_gap_report_fetchable_daily_1y_gap": 44,
-    "history_gap_report_inception_limited_daily_1y_gap": 740,
-    "history_gap_report_terminal_limited_daily_1y_gap": 6
+    "history_gap_report_fetchable_daily_1y_gap": 38,
+    "history_gap_report_inception_limited_daily_1y_gap": 736,
+    "history_gap_report_terminal_limited_daily_1y_gap": 13
   },
   "samples": {
     "fetchable": [],
@@ -79,7 +79,7 @@
     "complete": [
       {
         "ticker": "AOA",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -87,7 +87,7 @@
       },
       {
         "ticker": "AOM",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -95,7 +95,7 @@
       },
       {
         "ticker": "AOR",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -103,15 +103,15 @@
       },
       {
         "ticker": "AVDV",
-        "actual_rows": 251,
+        "actual_rows": 252,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
         "effective_start_source": null
       },
       {
-        "ticker": "AVUS",
-        "actual_rows": 251,
+        "ticker": "AVLV",
+        "actual_rows": 250,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": null,
@@ -125,8 +125,8 @@
     "ticker_count": 0,
     "full_scored_scope": "full_scored_etf_universe",
     "full_scored_candidate_status": "complete",
-    "full_scored_candidate_count": 44,
-    "full_scored_candidate_ticker_count": 44,
+    "full_scored_candidate_count": 38,
+    "full_scored_candidate_ticker_count": 38,
     "full_scored_dispatch_authorized": false,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 0,
@@ -148,17 +148,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 42,
+      "ticker_count": 40,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 42,
+          "ticker_count": 40,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "BCOM,BLST,BLTD,BNDW,BUCK,CPAG,DEFI,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,FEAT,FIVY,HYSA,IWDL,IWFL,IWML,LGCF,MN,MSOO,MTUL,NVDO,OPER,OPTO,PLOO,TSLO,UFIV,USML,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,VGTX,XXQQ,XXSP"
+            "etfs": "BCOM,BLST,BLTD,BNDW,BUCK,CPAG,DEFI,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,HYSA,IWDL,IWFL,IWML,LGCF,MN,MSOO,MTUL,NVDO,OPER,OPTO,PLOO,TSLO,UFIV,USML,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,VGTX,XXQQ,XXSP"
           }
         }
       ]

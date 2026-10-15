@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-10-15T00:21:35.805Z",
+  "generated_at": "2026-10-15T01:26:16.464Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 36,
@@ -309,12 +309,12 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-15T00:12:00.000Z",
-          "next_expected_slot": "2026-10-15T01:12:00.000Z",
+          "latest_expected_slot": "2026-10-15T01:12:00.000Z",
+          "next_expected_slot": "2026-10-15T02:12:00.000Z",
           "status": "overdue"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-14T23:12:22.197Z",
+          "observed_at": "2026-10-15T00:12:21.309Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -376,7 +376,7 @@
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-12",
+          "source_date": "2026-10-14",
           "source_date_reason": "data_health_source_date",
           "evidence_status": "observed",
           "sla": null
@@ -485,22 +485,22 @@
           "grace": null,
           "latest_expected_slot": "2026-10-14T21:20:00.000Z",
           "next_expected_slot": "2026-10-15T21:20:00.000Z",
-          "status": "unobserved"
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": null,
-          "outcome": "unobserved",
+          "observed_at": "2026-10-14T23:54:08Z",
+          "outcome": "partial",
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-13",
+          "source_date": "2026-10-14",
           "source_date_reason": "data_health_source_date",
           "evidence_status": "observed",
           "sla": null
         },
         "recovery": {
           "state": "retained_lkg",
-          "retry_count": 116,
+          "retry_count": 127,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -515,10 +515,8 @@
           "depth": null
         },
         "coverage": {
-          "status": "not_covered",
-          "missing": [
-            "attempt"
-          ]
+          "status": "covered",
+          "missing": []
         }
       }
     },
@@ -544,11 +542,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-14T21:20:00.000Z",
           "next_expected_slot": "2026-10-15T21:20:00.000Z",
-          "status": "on_time"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-14T21:24:37Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -558,7 +556,7 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
+          "state": "unavailable",
           "retry_count": 0,
           "recovered_at": null,
           "lkg_source_date": null
@@ -576,6 +574,7 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
+            "attempt",
             "source"
           ]
         }
@@ -659,11 +658,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-14T21:20:00.000Z",
           "next_expected_slot": "2026-10-15T21:20:00.000Z",
-          "status": "unobserved"
+          "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": null,
-          "outcome": "unobserved",
+          "observed_at": "2026-10-14T23:54:08Z",
+          "outcome": "success",
           "failure_class": null
         },
         "source": {
@@ -673,7 +672,7 @@
           "sla": null
         },
         "recovery": {
-          "state": "unavailable",
+          "state": "fresh_primary",
           "retry_count": 0,
           "recovered_at": null,
           "lkg_source_date": null
@@ -691,7 +690,6 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
-            "attempt",
             "source"
           ]
         }
@@ -717,9 +715,9 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-15T00:05:00.000Z",
-          "next_expected_slot": "2026-10-15T01:05:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-15T01:05:00.000Z",
+          "next_expected_slot": "2026-10-15T02:05:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
           "observed_at": "2026-10-15T00:05:21.201Z",
@@ -1684,17 +1682,17 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-14T00:30:00.000Z",
-          "next_expected_slot": "2026-10-15T00:30:00.000Z",
+          "latest_expected_slot": "2026-10-15T00:30:00.000Z",
+          "next_expected_slot": "2026-10-16T00:30:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-14T02:40:23.590Z",
+          "observed_at": "2026-10-15T00:56:29.856Z",
           "outcome": "success",
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-13",
+          "source_date": "2026-10-14",
           "source_date_reason": "data_health_source_date",
           "evidence_status": "observed",
           "sla": null
@@ -1798,17 +1796,17 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-14T00:30:00.000Z",
-          "next_expected_slot": "2026-10-15T00:30:00.000Z",
+          "latest_expected_slot": "2026-10-15T00:30:00.000Z",
+          "next_expected_slot": "2026-10-16T00:30:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-14T02:51:52.998Z",
+          "observed_at": "2026-10-15T01:08:20.334Z",
           "outcome": "retained",
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-12",
+          "source_date": "2026-10-13",
           "source_date_reason": "data_health_source_date",
           "evidence_status": "observed",
           "sla": null
@@ -1855,9 +1853,9 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-14T01:10:00.000Z",
-          "next_expected_slot": "2026-10-15T01:10:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-15T01:10:00.000Z",
+          "next_expected_slot": "2026-10-16T01:10:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
           "observed_at": "2026-10-14T03:08:10.730Z",
