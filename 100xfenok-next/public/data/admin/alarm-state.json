@@ -1,35 +1,20 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-14T08:24:34.732Z",
+  "generated_at": "2026-10-14T22:24:31.655Z",
   "status": "open",
   "open_incident_count": 1,
   "open_incidents": [
     {
-      "workflow": "data-health-kpi",
-      "label": "Data stopped advancing",
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38581708280,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38581708280",
       "alarm_reasons": [
-        "data_stopped_two_generations",
-        "member_ratio_low",
-        "source_not_advancing"
+        "failure_streak"
       ],
-      "outcome_alarms": [
-        {
-          "set": "fred_banking",
-          "reasons": [
-            "member_ratio_low",
-            "source_not_advancing"
-          ],
-          "source_as_of": "2026-10-08",
-          "fresh_members": 3,
-          "total_members": 4,
-          "latest_attempt_at": "2026-10-13T07:00:26.272Z"
-        }
-      ],
-      "stopped_sets": [
-        "fred_banking"
-      ],
-      "latest_generated_at": "2026-10-14T06:41:29.718Z",
-      "previous_generated_at": "2026-10-14T05:56:47.816Z"
+      "lost_schedule_slot_count": 0
     }
   ],
   "watched_workflows": [
@@ -398,12 +383,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38534711428",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38534711428",
-    "observed_at": "2026-10-14T08:24:34.732Z",
+    "run_id": "38647256482",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38647256482",
+    "observed_at": "2026-10-14T22:24:31.655Z",
     "event": "workflow_dispatch",
     "workflows": [
-      "data-health-kpi"
+      "update-manifest.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

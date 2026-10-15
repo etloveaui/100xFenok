@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-10-14T21:24:37Z",
+  "generated_at": "2026-10-14T23:54:08Z",
   "counts": {
-    "tracked": 1157,
+    "tracked": 1168,
     "fresh": 1041,
-    "lkg": 102,
-    "unavailable": 14,
-    "retry": 116,
-    "failed": 0
+    "lkg": 111,
+    "unavailable": 16,
+    "retry": 127,
+    "failed": 21
   },
   "counts_by_kind": {
     "stock": {
@@ -25,11 +25,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 1039,
+      "tracked": 1050,
       "fresh": 923,
-      "lkg": 102,
-      "unavailable": 14,
-      "retry": 116
+      "lkg": 111,
+      "unavailable": 16,
+      "retry": 127
     },
     "surface": {
       "tracked": 25,
@@ -141,6 +141,10 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "CLIX"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "CMGG"
     },
     {
@@ -162,6 +166,10 @@
     {
       "artifact_kind": "etf",
       "entity": "CRED"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CTEX"
     },
     {
       "artifact_kind": "etf",
@@ -281,6 +289,10 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "ETRL"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EWCO"
     },
     {
@@ -321,6 +333,34 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "GAID"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GAUD"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GBF"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GEOA"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GLDY"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HOOZ"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HWAY"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "HYGD"
     },
     {
@@ -334,10 +374,6 @@
     {
       "artifact_kind": "etf",
       "entity": "HYSA"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "IAUM"
     },
     {
       "artifact_kind": "etf",
@@ -402,6 +438,10 @@
     {
       "artifact_kind": "etf",
       "entity": "OPER"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "PEPT"
     },
     {
       "artifact_kind": "etf",
@@ -502,6 +542,10 @@
     {
       "artifact_kind": "etf",
       "entity": "VOOX"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "XLYM"
     },
     {
       "artifact_kind": "etf",
@@ -791,6 +835,18 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "CLIX",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-30T14:50:09Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.sharesOut",
+      "failure_class": "candidate_regression",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "CMGG",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
@@ -857,6 +913,18 @@
       "failure_observed_at": "2026-10-12T23:53:29Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
       "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CTEX",
+      "resolution_state": "lkg_primary",
+      "source_as_of": "2026-09-30T15:04:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.sharesOut",
+      "failure_class": "candidate_regression",
       "failure_count": 1,
       "failure_count_is_lower_bound": false,
       "data_loss": false
@@ -1211,6 +1279,18 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "ETRL",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EWCO",
       "resolution_state": "unavailable",
       "source_as_of": null,
@@ -1226,10 +1306,10 @@
       "entity": "FEAT",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-09-24T17:20:16Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
       "failure_class": "provider_not_found",
-      "failure_count": 1,
+      "failure_count": 2,
       "failure_count_is_lower_bound": true,
       "data_loss": false
     },
@@ -1250,10 +1330,10 @@
       "entity": "FIVY",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-09-24T17:20:16Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Not Found",
       "failure_class": "provider_not_found",
-      "failure_count": 1,
+      "failure_count": 2,
       "failure_count_is_lower_bound": true,
       "data_loss": false
     },
@@ -1331,6 +1411,90 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "GAID",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GAUD",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GBF",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: provider_ticker_redirect:GBF:AGGM",
+      "failure_class": "provider_ticker_redirect",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GEOA",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: provider_ticker_redirect:GEOA:OPPG",
+      "failure_class": "provider_ticker_redirect",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "GLDY",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: provider_ticker_redirect:GLDY:GOLI",
+      "failure_class": "provider_ticker_redirect",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HOOZ",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "HWAY",
+      "resolution_state": "lkg_primary",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "HTTPError: HTTP Error 404: Not Found",
+      "failure_class": "provider_not_found",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "HYGD",
       "resolution_state": "unavailable",
       "source_as_of": null,
@@ -1374,18 +1538,6 @@
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "provider_contract_drift",
       "failure_count": 2,
-      "failure_count_is_lower_bound": false,
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "IAUM",
-      "resolution_state": "lkg_primary",
-      "source_as_of": "2025-10-31T00:00:00Z",
-      "failure_observed_at": "2026-10-12T02:28:47Z",
-      "error": "ValueError: StockAnalysis ETF candidate source date regresses or is invalid",
-      "failure_class": "candidate_regression",
-      "failure_count": 1,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1502,10 +1654,10 @@
       "entity": "MEME",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "ValueError: StockAnalysis ETF detail source stamp is missing",
       "failure_class": "other",
-      "failure_count": 2,
+      "failure_count": 3,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1583,6 +1735,18 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "PEPT",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: StockAnalysis ETF native history dates are invalid",
+      "failure_class": "other",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "PLOO",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
@@ -1610,10 +1774,10 @@
       "entity": "RAAR",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
       "failure_class": "provider_not_found",
-      "failure_count": 4,
+      "failure_count": 5,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1622,10 +1786,10 @@
       "entity": "RAAY",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
       "failure_class": "provider_not_found",
-      "failure_count": 4,
+      "failure_count": 5,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1634,10 +1798,10 @@
       "entity": "RCLR",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
       "failure_class": "provider_not_found",
-      "failure_count": 4,
+      "failure_count": 5,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1646,10 +1810,10 @@
       "entity": "RCLY",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
       "failure_class": "provider_not_found",
-      "failure_count": 4,
+      "failure_count": 5,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1658,10 +1822,10 @@
       "entity": "RMHY",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
       "failure_class": "provider_not_found",
-      "failure_count": 4,
+      "failure_count": 5,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1706,10 +1870,10 @@
       "entity": "TGLR",
       "resolution_state": "lkg_primary",
       "source_as_of": null,
-      "failure_observed_at": "2026-10-13T03:59:19Z",
+      "failure_observed_at": "2026-10-14T23:54:08Z",
       "error": "ValueError: StockAnalysis ETF detail source stamp is missing",
       "failure_class": "other",
-      "failure_count": 2,
+      "failure_count": 3,
       "failure_count_is_lower_bound": false,
       "data_loss": false
     },
@@ -1883,6 +2047,18 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "XLYM",
+      "resolution_state": "unavailable",
+      "source_as_of": null,
+      "failure_observed_at": "2026-10-14T23:54:08Z",
+      "error": "ValueError: StockAnalysis ETF native history dates are invalid",
+      "failure_class": "other",
+      "failure_count": 1,
+      "failure_count_is_lower_bound": false,
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "XVO",
       "resolution_state": "lkg_primary",
       "source_as_of": "2026-07-14T00:00:00Z",
@@ -1918,6 +2094,14 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "CLIX"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CTEX"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "DFAC"
       },
       {
@@ -1935,10 +2119,6 @@
       {
         "artifact_kind": "etf",
         "entity": "FXL"
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "IAUM"
       }
     ],
     "provider_ticker_redirect": [
@@ -1949,6 +2129,18 @@
       {
         "artifact_kind": "etf",
         "entity": "EASG"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GBF"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GEOA"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GLDY"
       },
       {
         "artifact_kind": "etf",
@@ -2146,6 +2338,10 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "ETRL"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "FEAT"
       },
       {
@@ -2155,6 +2351,22 @@
       {
         "artifact_kind": "etf",
         "entity": "FLHK"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GAID"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GAUD"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HOOZ"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HWAY"
       },
       {
         "artifact_kind": "etf",
@@ -2376,7 +2588,15 @@
       },
       {
         "artifact_kind": "etf",
+        "entity": "PEPT"
+      },
+      {
+        "artifact_kind": "etf",
         "entity": "TGLR"
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "XLYM"
       }
     ],
     "fallback_source_invalid": [
@@ -2387,22 +2607,149 @@
     ]
   },
   "current_results": {
-    "observed_at": "2026-10-14T21:24:37Z",
-    "attempted": 16,
-    "successes": 16,
-    "failed": 0,
-    "errors": [],
-    "by_kind": {
-      "stock": {
-        "observed_at": "2026-10-14T21:24:37Z",
-        "attempted": 8,
-        "successes": 8,
-        "failed": 0
+    "observed_at": "2026-10-14T23:54:08Z",
+    "attempted": 92,
+    "successes": 71,
+    "failed": 21,
+    "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "PEPT",
+        "error": "ValueError: StockAnalysis ETF native history dates are invalid",
+        "data_loss": false
       },
-      "financial": {
-        "observed_at": "2026-10-14T21:24:37Z",
-        "attempted": 8,
-        "successes": 8,
+      {
+        "artifact_kind": "etf",
+        "entity": "XLYM",
+        "error": "ValueError: StockAnalysis ETF native history dates are invalid",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CLIX",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.sharesOut",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CTEX",
+        "error": "ValueError: StockAnalysis ETF candidate loses canonical overview.sharesOut",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "MEME",
+        "error": "ValueError: StockAnalysis ETF detail source stamp is missing",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "TGLR",
+        "error": "ValueError: StockAnalysis ETF detail source stamp is missing",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RAAR",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RAAY",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RCLR",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RCLY",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "RMHY",
+        "error": "HTTPError: HTTP Error 404: Svelte endpoint error",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "ETRL",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FEAT",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "FIVY",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GAID",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GAUD",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GBF",
+        "error": "ValueError: provider_ticker_redirect:GBF:AGGM",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GEOA",
+        "error": "ValueError: provider_ticker_redirect:GEOA:OPPG",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "GLDY",
+        "error": "ValueError: provider_ticker_redirect:GLDY:GOLI",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HOOZ",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "HWAY",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "data_loss": false
+      }
+    ],
+    "by_kind": {
+      "etf": {
+        "observed_at": "2026-10-14T23:54:08Z",
+        "attempted": 67,
+        "successes": 46,
+        "failed": 21
+      },
+      "surface": {
+        "observed_at": "2026-10-14T23:54:08Z",
+        "attempted": 25,
+        "successes": 25,
         "failed": 0
       }
     }
@@ -2432,12 +2779,14 @@
     "BTYB",
     "BUCK",
     "BULX",
+    "CLIX",
     "CMGG",
     "CNCG",
     "COIO",
     "CPAG",
     "CPHY",
     "CRED",
+    "CTEX",
     "CUSD",
     "CZAR",
     "DEFI",
@@ -2467,6 +2816,7 @@
     "EMTL",
     "ERUS",
     "ESUM",
+    "ETRL",
     "EWCO",
     "FEAT",
     "FIHD",
@@ -2477,11 +2827,17 @@
     "FLM",
     "FOVL",
     "FXL",
+    "GAID",
+    "GAUD",
+    "GBF",
+    "GEOA",
+    "GLDY",
+    "HOOZ",
+    "HWAY",
     "HYGD",
     "HYGU",
     "HYGW",
     "HYSA",
-    "IAUM",
     "IWDL",
     "IWFL",
     "IWML",
@@ -2498,6 +2854,7 @@
     "MTUL",
     "NVDO",
     "OPER",
+    "PEPT",
     "PLOO",
     "QULL",
     "RAAR",
@@ -2523,6 +2880,7 @@
     "UTWY",
     "VBX",
     "VOOX",
+    "XLYM",
     "XVO",
     "XVUG"
   ],

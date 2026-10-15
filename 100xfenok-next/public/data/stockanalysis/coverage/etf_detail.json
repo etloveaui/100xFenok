@@ -2,17 +2,17 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-10-14T21:26:18Z",
+  "generated_at": "2026-10-15T00:15:04Z",
   "source_date_summary": {
-    "total_members": 5785,
-    "newest_source_date": "2026-10-13",
+    "total_members": 5787,
+    "newest_source_date": "2026-10-14",
     "oldest_source_date": "2026-06-19",
     "oldest_source_member": "MEME",
     "source_date_histogram": [
       {
         "date": null,
         "basis": null,
-        "count": 4
+        "count": 6
       },
       {
         "date": "2026-06-19",
@@ -52,7 +52,7 @@
       {
         "date": "2026-09-30",
         "basis": "source",
-        "count": 3246
+        "count": 2881
       },
       {
         "date": "2026-10-01",
@@ -77,7 +77,7 @@
       {
         "date": "2026-10-07",
         "basis": "source",
-        "count": 20
+        "count": 17
       },
       {
         "date": "2026-10-08",
@@ -92,12 +92,17 @@
       {
         "date": "2026-10-12",
         "basis": "source",
-        "count": 919
+        "count": 917
       },
       {
         "date": "2026-10-13",
         "basis": "source",
-        "count": 503
+        "count": 376
+      },
+      {
+        "date": "2026-10-14",
+        "basis": "source",
+        "count": 497
       }
     ]
   },
@@ -115,50 +120,60 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5785,
+    "candidate_total": 5787,
     "source_breakdown": {
       "etf_universe": 5721,
-      "etf_screener": 5784,
+      "etf_screener": 5786,
       "new_etfs": 100
     },
     "detail_files": 5910,
     "covered_detail_files": 5781,
-    "missing_detail_files": 4,
+    "missing_detail_files": 6,
     "extra_detail_files": 129,
     "stockanalysis_detail_files": 5910,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.93,
-    "primary_stockanalysis_pct": 99.93,
+    "coverage_pct": 99.9,
+    "primary_stockanalysis_pct": 99.9,
     "missing_by_source": {
       "etf_universe": 0,
-      "etf_screener": 4,
+      "etf_screener": 6,
       "new_etfs": 0
     },
     "missing_status_breakdown": {
-      "provider_gap_cooldown": 4
+      "provider_gap_cooldown": 4,
+      "retry_pending": 2
     },
     "missing_failure_breakdown": {
+      "other_error": 2,
       "provider_coverage_gap": 4
     },
     "missing_availability_breakdown": {
-      "provider_absent": 4
+      "provider_absent": 4,
+      "unresolved": 2
     },
-    "pending_tracked": 209,
-    "pending_cooldown": 33,
-    "pending_tracked_missing": 4,
-    "provider_coverage_gaps": 50
+    "pending_tracked": 221,
+    "pending_cooldown": 45,
+    "pending_tracked_missing": 6,
+    "provider_coverage_gaps": 58
   },
   "missing_reason_summary": {
+    "other_error": 2,
     "provider_coverage_gap": 4
   },
   "missing_status_summary": {
-    "provider_gap_cooldown": 4
+    "provider_gap_cooldown": 4,
+    "retry_pending": 2
   },
   "missing_availability_summary": {
-    "provider_absent": 4
+    "provider_absent": 4,
+    "unresolved": 2
   },
   "missing_reason_samples": {
+    "other_error": [
+      "PEPT",
+      "XLYM"
+    ],
     "provider_coverage_gap": [
       "HYGD",
       "HYGU",
@@ -172,6 +187,10 @@
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "retry_pending": [
+      "PEPT",
+      "XLYM"
     ]
   },
   "missing_availability_samples": {
@@ -180,13 +199,19 @@
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "unresolved": [
+      "PEPT",
+      "XLYM"
     ]
   },
   "missing_tickers": [
     "HYGD",
     "HYGU",
     "LQDD",
-    "LQDU"
+    "LQDU",
+    "PEPT",
+    "XLYM"
   ],
   "provider_absent_tickers": [
     "HYGD",
@@ -332,13 +357,23 @@
       "HYGD",
       "HYGU",
       "LQDD",
-      "LQDU"
+      "LQDU",
+      "PEPT",
+      "XLYM"
     ],
     "missing_provider_gap_cooldown": [
       "HYGD",
       "HYGU",
       "LQDD",
       "LQDU"
+    ],
+    "missing_retry_pending": [
+      "PEPT",
+      "XLYM"
+    ],
+    "missing_other_error": [
+      "PEPT",
+      "XLYM"
     ],
     "missing_provider_coverage_gap": [
       "HYGD",

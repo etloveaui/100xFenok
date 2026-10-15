@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "GEOA",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-14T23:54:08Z",
+    "error": "ValueError: provider_ticker_redirect:GEOA:OPPG",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "0e71e0480ce03773adeac04ab011d78c980e20944d11b1eda2e46b70746bd198",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-14T23:54:08Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/GEOA.json",
+    "payload_sha256": "0e71e0480ce03773adeac04ab011d78c980e20944d11b1eda2e46b70746bd198",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T09:07:17Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/GEOA.json",
+    "payload_sha256": "0e71e0480ce03773adeac04ab011d78c980e20944d11b1eda2e46b70746bd198",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T09:07:17Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-14T23:54:08Z",
+    "last_probe_at": "2026-10-14T23:54:08Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-06-18",
+    "status": "unresolved",
+    "attempts": []
+  }
+}

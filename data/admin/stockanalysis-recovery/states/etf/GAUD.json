@@ -1,0 +1,40 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "GAUD",
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "latest_failure": {
+    "observed_at": "2026-10-14T23:54:08Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "1b0a932bef74574204bc67b8bd04906dfd8ca91c34f3f67037911ef5ef8c5c55",
+    "data_loss": false
+  },
+  "updated_at": "2026-10-14T23:54:08Z",
+  "failure_count": 1,
+  "failure_count_is_lower_bound": false,
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/GAUD.json",
+    "payload_sha256": "1b0a932bef74574204bc67b8bd04906dfd8ca91c34f3f67037911ef5ef8c5c55",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T09:06:51Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/GAUD.json",
+    "payload_sha256": "1b0a932bef74574204bc67b8bd04906dfd8ca91c34f3f67037911ef5ef8c5c55",
+    "source_as_of": null,
+    "fetched_at": "2026-06-19T09:06:51Z"
+  },
+  "etf_lifecycle": {
+    "first_seen_at": "2026-10-14T23:54:08Z",
+    "last_probe_at": "2026-10-14T23:54:08Z",
+    "missing_catalogues": [
+      "etf_universe",
+      "etf_screener"
+    ],
+    "last_history_as_of": "2026-06-17",
+    "status": "unresolved",
+    "attempts": []
+  }
+}
