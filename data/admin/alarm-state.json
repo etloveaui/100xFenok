@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-15T02:15:30.669Z",
+  "generated_at": "2026-10-15T02:24:35.015Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38664246981,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38664246981",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "update-manifest.yml",
       "label": "Update Manifest",
@@ -383,11 +395,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38669900186",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38669900186",
-    "observed_at": "2026-10-15T02:15:30.669Z",
-    "event": "workflow_run",
+    "run_id": "38670687158",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38670687158",
+    "observed_at": "2026-10-15T02:24:35.015Z",
+    "event": "workflow_dispatch",
     "workflows": [
+      "global-writer-queue-observer.yml",
       "update-manifest.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
