@@ -1,9 +1,35 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-15T03:24:29.737Z",
-  "status": "unknown",
-  "open_incident_count": 0,
-  "open_incidents": [],
+  "generated_at": "2026-10-15T05:24:36.894Z",
+  "status": "open",
+  "open_incident_count": 1,
+  "open_incidents": [
+    {
+      "workflow": "data-health-kpi",
+      "label": "Data stopped advancing",
+      "alarm_reasons": [
+        "data_stopped_two_generations",
+        "member_ratio_low"
+      ],
+      "outcome_alarms": [
+        {
+          "set": "fred_banking",
+          "reasons": [
+            "member_ratio_low"
+          ],
+          "source_as_of": "2026-10-09",
+          "fresh_members": 3,
+          "total_members": 4,
+          "latest_attempt_at": "2026-10-14T07:29:08.865Z"
+        }
+      ],
+      "stopped_sets": [
+        "fred_banking"
+      ],
+      "latest_generated_at": "2026-10-15T05:14:46.868Z",
+      "previous_generated_at": "2026-10-15T04:15:50.539Z"
+    }
+  ],
   "watched_workflows": [
     {
       "file": "build-stocks-analyzer.yml",
@@ -370,12 +396,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38672423867",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38672423867",
-    "observed_at": "2026-10-15T02:44:01.757Z",
-    "event": "workflow_run",
+    "run_id": "38686484389",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38686484389",
+    "observed_at": "2026-10-15T05:24:36.894Z",
+    "event": "workflow_dispatch",
     "workflows": [
-      "global-writer-queue-observer.yml"
+      "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
