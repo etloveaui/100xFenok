@@ -1,11 +1,11 @@
 {
   "current": {
-    "fetched_at": "2026-10-09T06:27:51Z",
-    "history_as_of": "2026-10-08",
+    "fetched_at": "2026-10-15T05:31:31Z",
+    "history_as_of": "2026-10-14",
     "path": "data/yf/finance/TXS.json",
-    "payload_sha256": "850a62ca3636c34ebf0b424841618a4d3b16943d1d21b2f27c975736f3050880",
-    "quote_as_of": "2026-10-08T19:59:50Z",
-    "source_as_of": "2026-10-08"
+    "payload_sha256": "16fb94e1236ff250217b3b88d1df0fd0a6845ade84cc628687182c545744f373",
+    "quote_as_of": "2026-10-14T19:59:20Z",
+    "source_as_of": "2026-10-14"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -13,9 +13,40 @@
   "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "failures": [],
-    "latency_ms": 650,
-    "observed_at": "2026-10-09T06:27:51Z",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: TXS: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TXS: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TXS: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TXS: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TXS: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: TXS: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1377,
+    "observed_at": "2026-10-15T05:31:31Z",
     "outcome": "fresh"
   },
   "lkg": {
@@ -25,6 +56,13 @@
     "payload_sha256": "ccfc717be197adb9cd47296e53e3f93cbaa2d67e352b05671a904a3e5a2d5c5d",
     "quote_as_of": "2026-09-25T19:59:45Z",
     "source_as_of": "2026-09-25"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-15T05:31:31Z",
+    "last_history_as_of": "2026-10-14",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -39,5 +77,5 @@
     "source_as_of": "2026-09-25"
   },
   "ticker": "TXS",
-  "updated_at": "2026-10-09T06:27:51Z"
+  "updated_at": "2026-10-15T05:31:31Z"
 }

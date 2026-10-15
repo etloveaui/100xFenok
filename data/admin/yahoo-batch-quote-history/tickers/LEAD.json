@@ -10,7 +10,7 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 7,
+  "failure_count": 8,
   "last_result": {
     "attempts_used": 2,
     "error": "empty payload",
@@ -45,8 +45,8 @@
       }
     ],
     "latency_ms": 0,
-    "observed_at": "2026-10-14T04:45:27Z",
-    "outcome": "failed"
+    "observed_at": "2026-10-15T04:30:28Z",
+    "outcome": "terminal"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -85,7 +85,7 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-10-14T04:45:27Z"
+    "observed_at": "2026-10-15T04:30:28Z"
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:47:07Z",
@@ -96,7 +96,7 @@
     "source_as_of": "2026-07-14T17:31:32Z"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-14T04:45:27Z",
+    "last_attempt_at": "2026-10-15T04:30:28Z",
     "last_history_as_of": "2026-07-21",
     "provider_advanced": false,
     "stalled_attempts": [
@@ -111,12 +111,18 @@
         "http_status": null,
         "observed_at": "2026-10-14T04:45:27Z",
         "reason": "empty_payload"
+      },
+      {
+        "history_as_of": null,
+        "http_status": null,
+        "observed_at": "2026-10-15T04:30:28Z",
+        "reason": "empty_payload"
       }
     ],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 19,
@@ -127,6 +133,33 @@
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-07-14T17:31:32Z"
   },
+  "terminal": {
+    "attempts": [
+      {
+        "history_as_of": null,
+        "http_status": null,
+        "observed_at": "2026-10-13T06:45:05Z",
+        "reason": "empty_payload"
+      },
+      {
+        "history_as_of": null,
+        "http_status": null,
+        "observed_at": "2026-10-14T04:45:27Z",
+        "reason": "empty_payload"
+      },
+      {
+        "history_as_of": null,
+        "http_status": null,
+        "observed_at": "2026-10-15T04:30:28Z",
+        "reason": "empty_payload"
+      }
+    ],
+    "classified_at": "2026-10-15T04:30:28Z",
+    "history_business_days": 61,
+    "last_history_as_of": "2026-07-21",
+    "last_probe_error": "empty payload",
+    "method": "automatic_provider_lifecycle"
+  },
   "ticker": "LEAD",
-  "updated_at": "2026-10-14T04:45:27Z"
+  "updated_at": "2026-10-15T04:30:28Z"
 }

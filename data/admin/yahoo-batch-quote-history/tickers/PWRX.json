@@ -1,11 +1,11 @@
 {
   "current": {
-    "fetched_at": "2026-10-09T06:23:00Z",
-    "history_as_of": "2026-10-08",
+    "fetched_at": "2026-10-15T05:25:54Z",
+    "history_as_of": "2026-10-14",
     "path": "data/yf/finance/PWRX.json",
-    "payload_sha256": "deb9aa18505e2a4dfb67d0d54c8d05720e1c05644c1493ab6d4901239074bdd3",
-    "quote_as_of": "2026-10-08T19:59:05Z",
-    "source_as_of": "2026-10-08"
+    "payload_sha256": "fcd2c8bd222e978286db50f8bd0634edaa3389b3dcfb77f0eb5dcfbb0b0b7394",
+    "quote_as_of": "2026-10-14T15:06:31Z",
+    "source_as_of": "2026-10-14"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -16,7 +16,7 @@
     "failures": [
       {
         "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "error": "YFDataException: PWRX: No Fund data found.",
         "source": "provider_safe_call"
       },
       {
@@ -45,13 +45,20 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 719,
-    "observed_at": "2026-10-09T06:23:00Z",
+    "latency_ms": 1351,
+    "observed_at": "2026-10-15T05:25:54Z",
     "outcome": "fresh"
+  },
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-15T05:25:54Z",
+    "last_history_as_of": "2026-10-14",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PWRX",
-  "updated_at": "2026-10-09T06:23:00Z"
+  "updated_at": "2026-10-15T05:25:54Z"
 }

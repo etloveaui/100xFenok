@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T15:30:05Z",
     "history_as_of": "2026-10-12",
-    "path": "data/yf/finance/BILD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BILD.json",
     "payload_sha256": "cf5153321eeab1cd440d3ca44d8d04a7b27a948047554f67958f265b60ea289b",
     "quote_as_of": "2026-10-12T14:15:01Z",
     "source_as_of": "2026-10-12"
@@ -10,24 +10,42 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 0,
+  "failure_count": 1,
   "last_result": {
     "attempts_used": 1,
+    "error": "ValueError: Yahoo provider source timestamp regresses for BILD: quote_as_of",
     "failures": [],
-    "latency_ms": 675,
-    "observed_at": "2026-10-12T15:30:05Z",
-    "outcome": "fresh"
+    "latency_ms": 1059,
+    "observed_at": "2026-10-15T05:07:29Z",
+    "outcome": "failed"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: Yahoo provider source timestamp regresses for BILD: quote_as_of",
+    "failure_kind": "candidate_rejected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-10-15T05:07:29Z"
   },
   "lkg": {
-    "fetched_at": "2026-09-30T14:33:17Z",
-    "history_as_of": "2026-09-30",
+    "fetched_at": "2026-10-12T15:30:05Z",
+    "history_as_of": "2026-10-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BILD.json",
-    "payload_sha256": "4eaac0d45454910eaf960758ffcc0a190e4ca20a549914a67b95e646749ba60f",
-    "quote_as_of": "2026-09-30T13:46:02Z",
-    "source_as_of": "2026-09-30"
+    "payload_sha256": "cf5153321eeab1cd440d3ca44d8d04a7b27a948047554f67958f265b60ea289b",
+    "quote_as_of": "2026-10-12T14:15:01Z",
+    "source_as_of": "2026-10-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "provider_lifecycle": {
+    "last_attempt_at": "2026-10-15T05:07:29Z",
+    "last_history_as_of": "2026-10-14",
+    "provider_advanced": true,
+    "stalled_attempts": [],
+    "was_terminal": false
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -39,5 +57,5 @@
     "source_as_of": "2026-09-30"
   },
   "ticker": "BILD",
-  "updated_at": "2026-10-12T15:30:05Z"
+  "updated_at": "2026-10-15T05:07:29Z"
 }
