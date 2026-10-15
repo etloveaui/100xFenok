@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-15T06:02:06.872Z",
+  "generated_at": "2026-10-15T07:02:44.096Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38688835771,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38688835771",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "data-health-kpi",
       "label": "Data stopped advancing",
@@ -26,8 +38,8 @@
       "stopped_sets": [
         "fred_banking"
       ],
-      "latest_generated_at": "2026-10-15T05:53:34.598Z",
-      "previous_generated_at": "2026-10-15T05:14:46.868Z"
+      "latest_generated_at": "2026-10-15T06:55:53.364Z",
+      "previous_generated_at": "2026-10-15T06:44:23.721Z"
     }
   ],
   "watched_workflows": [
@@ -396,11 +408,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38689904150",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38689904150",
-    "observed_at": "2026-10-15T06:02:06.872Z",
+    "run_id": "38695971677",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38695971677",
+    "observed_at": "2026-10-15T07:02:44.096Z",
     "event": "workflow_run",
     "workflows": [
+      "deploy-worker.yml",
       "data-health-kpi"
     ],
     "title": "100xFenok pipeline job failure alarm"
