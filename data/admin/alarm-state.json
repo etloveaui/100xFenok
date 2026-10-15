@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-15T07:02:44.096Z",
+  "generated_at": "2026-10-15T07:24:36.942Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 1,
   "open_incidents": [
     {
       "workflow": "deploy-worker.yml",
@@ -15,31 +15,6 @@
         "failure_streak"
       ],
       "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "data-health-kpi",
-      "label": "Data stopped advancing",
-      "alarm_reasons": [
-        "data_stopped_two_generations",
-        "member_ratio_low"
-      ],
-      "outcome_alarms": [
-        {
-          "set": "fred_banking",
-          "reasons": [
-            "member_ratio_low"
-          ],
-          "source_as_of": "2026-10-09",
-          "fresh_members": 3,
-          "total_members": 4,
-          "latest_attempt_at": "2026-10-14T07:29:08.865Z"
-        }
-      ],
-      "stopped_sets": [
-        "fred_banking"
-      ],
-      "latest_generated_at": "2026-10-15T06:55:53.364Z",
-      "previous_generated_at": "2026-10-15T06:44:23.721Z"
     }
   ],
   "watched_workflows": [
@@ -408,13 +383,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38695971677",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38695971677",
-    "observed_at": "2026-10-15T07:02:44.096Z",
-    "event": "workflow_run",
+    "run_id": "38698374185",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38698374185",
+    "observed_at": "2026-10-15T07:24:36.942Z",
+    "event": "workflow_dispatch",
     "workflows": [
-      "deploy-worker.yml",
-      "data-health-kpi"
+      "deploy-worker.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
