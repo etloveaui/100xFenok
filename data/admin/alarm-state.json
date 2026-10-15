@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-15T08:29:44.992Z",
-  "status": "unknown",
-  "open_incident_count": 0,
-  "open_incidents": [],
+  "generated_at": "2026-10-15T10:02:23.543Z",
+  "status": "open",
+  "open_incident_count": 1,
+  "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38708373158,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38708373158",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    }
+  ],
   "watched_workflows": [
     {
       "file": "build-stocks-analyzer.yml",
@@ -370,9 +383,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38702523481",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38702523481",
-    "observed_at": "2026-10-15T08:01:25.784Z",
+    "run_id": "38717175864",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38717175864",
+    "observed_at": "2026-10-15T10:02:23.543Z",
     "event": "workflow_run",
     "workflows": [
       "deploy-worker.yml"
