@@ -533,7 +533,8 @@ export function deriveCentralCommitPaths(routes = UPDATE_MANIFEST_MATERIALIZATIO
   for (const destination of destinations) {
     if (baseSet.has(destination)) fail(`materialization destination duplicates a central base path: ${destination}`);
   }
-  return [...base, ...destinations];
+  // Public mirrors are build output, never Git publication inputs.
+  return [...base, ...destinations].filter((entry) => !entry.startsWith("100xfenok-next/public/data/"));
 }
 
 function fail(message) {

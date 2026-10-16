@@ -630,6 +630,12 @@ export function redactPrivateArtifactPathMirrors({
 // Guard so importing this module (fixture tests) does not run the whole override
 // pipeline against the importer's cwd. Executed only when run as the sync-static step.
 if (isMain) {
+// Regenerate the lane-owned slim marker after the generic copy skips it.
+const occAvailability = path.resolve(rootDir, "../data/computed/fenok_occ_options_availability.json");
+if (fs.existsSync(occAvailability)) {
+  const { rows, side_attempts, ...slim } = JSON.parse(fs.readFileSync(occAvailability, "utf8"));
+  writeJsonAtomic(path.join(rootDir, "public/data/computed/fenok_occ_options_availability.json"), slim);
+}
 removePrivateDataSupplyPublicTrees();
 redactPrivateArtifactPathMirrors();
 removePrivateResearchPublicTrees();

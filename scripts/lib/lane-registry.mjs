@@ -458,7 +458,6 @@ const lanes = [
     commit_shards: [
       "data/admin/earnings_overview",
       "data/earnings-overview",
-      "100xfenok-next/public/data/earnings-overview",
     ],
     recovery_store: null,
     declared_exception:
@@ -1712,7 +1711,6 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
     commitSpec("data/yf/finance", "dynamic_set"),
-    commitSpec("100xfenok-next/public/data", "directory", false),
   ],
 }, [
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
@@ -1724,7 +1722,6 @@ workflow_policies[".github/workflows/refresh-earnings-overview.yml"] = lanePolic
   ],
   success_if_exists: [
     commitSpec("data/earnings-overview", "directory", true),
-    commitSpec("100xfenok-next/public/data/earnings-overview", "directory", true),
   ],
 });
 workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = policy([], {
@@ -1808,11 +1805,9 @@ workflow_policies[".github/workflows/pins-autosync.yml"] = policy([], {
     commitSpec("scripts/fixtures/derived-asset-registry/registry.expected.json", "file"),
     commitSpec("scripts/fixtures/data_supply/policy_registry/registry.expected.json", "file"),
     commitSpec("data/admin/lane-registry-projection.json", "file"),
-    commitSpec("100xfenok-next/public/data/admin/lane-registry-projection.json", "file"),
     commitSpec("scripts/fixtures/data_supply/detection_floor/cases.expected.json", "file"),
     commitSpec("data/admin/data-supply-detection-floor.json", "file"),
     commitSpec("data/admin/fenok-data-health-kpi.json", "file"),
-    commitSpec("100xfenok-next/public/data/admin/fenok-data-health-kpi.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
