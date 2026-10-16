@@ -101,7 +101,7 @@ const STOCKANALYSIS_STOCK_FINANCIAL_TICKERS = Object.freeze([
 // makes it evidence-backed rather than ownerless.
 const OWNERLESS_LANE_IDS = Object.freeze(
   LANE_REGISTRY.lanes
-    .filter((lane) => lane.store_kind === "artifact_only" && lane.cadence.provenance === undefined)
+    .filter((lane) => lane.store_kind === "artifact_only" && lane.owner_workflow === null && lane.cadence.provenance === undefined)
     .map((lane) => lane.id),
 );
 
