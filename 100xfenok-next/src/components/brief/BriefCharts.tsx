@@ -140,7 +140,18 @@ function placeAnnotations(
     const candidates = [above ? item.y - 34 : item.y + 12, above ? item.y + 12 : item.y - 34];
     for (let step = 1; step <= 3; step += 1) candidates.push(item.y - 34 - 26 * step, item.y + 12 + 26 * step);
     const inside = (by: number) => by >= 0 && by + 22 <= g.H - g.B;
-    const by = candidates.find((c) => inside(c) && !hits(bx, c, w)) ?? candidates.find(inside) ?? candidates[0];
+    let by = candidates.find((c) => inside(c) && !hits(bx, c, w));
+    if (by === undefined) {
+      // A narrow plot (folded phone) has no free slot near the point: take the free slot nearest to it.
+      let gap = Infinity;
+      for (let c = 0; inside(c); c += 2) {
+        if (!hits(bx, c, w) && Math.abs(c - candidates[0]) < gap) {
+          gap = Math.abs(c - candidates[0]);
+          by = c;
+        }
+      }
+    }
+    by ??= candidates.find(inside) ?? candidates[0];
     placed.push({ ...item, bx, by, w, label });
   }
   return placed;
@@ -190,6 +201,7 @@ export function SessionMap({
   const T = 18;
   const B = 34;
   const X = (t: string) => L + (minutesFromOpen(t) / 390) * (W - L - R);
+  const tightTicks = ((W - L - R) * 90) / 390 < 44;
   const ra0 = ready ? paddedRange(a) : { mn: 0, mx: 1 };
   // Show the record line only when it is within two session ranges of the high.
   const showRecord = ready && recordClose != null && recordClose > ra0.mn && recordClose < ra0.mx + 2 * (ra0.mx - ra0.mn);
@@ -262,7 +274,7 @@ export function SessionMap({
               </g>
             );
           })}
-          {["09:30", "11:00", "12:30", "14:00", "16:00"].map((t) => {
+          {["09:30", "11:00", "12:30", "14:00", "16:00"].map((t, i) => {
             const x = X(t);
             return (
               <g key={`tick-${t}`}>
@@ -270,9 +282,12 @@ export function SessionMap({
                 <text x={x} y={H - B + 17} textAnchor="middle" fontSize={11} fontWeight={600} fill={pal.xLabel}>
                   {kst(t, leadHours)}
                 </text>
-                <text x={x} y={H - B + 30} textAnchor="middle" fontSize={9.5} fill={pal.xSub}>
-                  현지 {t}
-                </text>
+                {/* on a folded phone the ticks are too close for every local-time line */}
+                {tightTicks && i % 2 === 1 ? null : (
+                  <text x={x} y={H - B + 30} textAnchor="middle" fontSize={9.5} fill={pal.xSub}>
+                    현지 {t}
+                  </text>
+                )}
               </g>
             );
           })}
