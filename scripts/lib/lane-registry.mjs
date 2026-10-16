@@ -1817,6 +1817,7 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
 
 // Family-to-workflow attribution used for publish admission and workflow health.
 export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "scouter-derived": Object.freeze({ lane_id: "global_scouter", workflow: ".github/workflows/build-stocks-analyzer.yml" }),
   "briefing": Object.freeze({ lane_id: "briefing", workflow: ".github/workflows/publish-briefing.yml" }),
   "computed-signals": Object.freeze({ lane_id: "computed_signals", workflow: ".github/workflows/coordinate-computed-signals.yml" }),
   "damodaran": Object.freeze({ lane_id: "damodaran", workflow: ".github/workflows/fetch-damodaran-shadow.yml" }),

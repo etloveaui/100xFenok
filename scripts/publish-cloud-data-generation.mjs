@@ -769,6 +769,26 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "scouter-derived": {
+    root: "data",
+    manifest_prefix: "public/data",
+    files: [
+      "global-scouter/core/stocks_analyzer.json",
+      "global-scouter/core/per_bands_index.json",
+      "global-scouter/core/slick_index.json",
+      "global-scouter/core/revision_movers.json",
+      "computed/sec13f_bridge_index.json",
+    ],
+    privacy_class: "public",
+    reader_enrollment: true,
+    source_as_of: { per_asset_resolver: "scouter_derived_source_date" },
+    plan: { class_a: 20, class_b: 40, bytes: 10_000_000 },
+    policy: { max_assets: 5, max_total_bytes: 5_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value && typeof value === "object" && !Array.isArray(value);
+    },
+  },
   "global-scouter": {
     // The owner-run export is public and reader-enrolled after two successful
     // real generations established a previous-pointer rollback target. The
@@ -1257,7 +1277,26 @@ function yahooFinanceSourceObservation(payload, relative = "") {
     : { day: observationDay, origin: "acquisition-observation" };
 }
 
+// Preserve an explicitly unknown derived source clock. Generation time is
+// never substituted for the undated SlickCharts rows or SEC quarter label.
+function scouterDerivedSourceDate(payload, relative) {
+  if (relative === "global-scouter/core/slick_index.json" && payload.source_date === null
+      && payload.source_date_reason) return { day: null, origin: "unknown" };
+  if (relative === "computed/sec13f_bridge_index.json") {
+    const clocks = Object.values(payload.source_as_of ?? {}).map((value) => {
+      const quarter = /^(\d{4})-Q([1-4])$/.exec(String(value));
+      if (!quarter) return toIsoDay(value);
+      return new Date(Date.UTC(Number(quarter[1]), Number(quarter[2]) * 3, 0)).toISOString().slice(0, 10);
+    });
+    return clocks.length && clocks.every(Boolean)
+      ? { day: clocks.sort()[0], origin: "source" } : { day: null, origin: "unknown" };
+  }
+  const day = toIsoDay(payload.source_date ?? payload.source_as_of);
+  return day === null ? null : { day, origin: "source" };
+}
+
 const PER_ASSET_SOURCE_RESOLVERS = new Map([
+  ["scouter_derived_source_date", scouterDerivedSourceDate],
   [STOCKANALYSIS_DETAIL_SOURCE_RESOLVER, stockAnalysisDetailSourceObservation],
   [YAHOO_FINANCE_SOURCE_RESOLVER, yahooFinanceSourceObservation],
 ]);
