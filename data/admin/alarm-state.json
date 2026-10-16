@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-16T16:59:43.401Z",
+  "generated_at": "2026-10-16T17:23:25.951Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -19,7 +19,7 @@
     {
       "workflow": "pins-autosync.yml",
       "label": "Pins Autosync",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38929374269,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38929374269",
@@ -29,9 +29,21 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38933033292,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38933033292",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 6,
+      "streak": 8,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38928464740,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38928464740",
@@ -407,13 +419,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38936073213",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38936073213",
-    "observed_at": "2026-10-16T16:59:43.401Z",
+    "run_id": "38939042743",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38939042743",
+    "observed_at": "2026-10-16T17:23:25.951Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
       "pins-autosync.yml",
+      "update-manifest.yml",
       "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
