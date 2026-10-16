@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-16T00:01:00.531Z",
+  "generated_at": "2026-10-16T00:24:34.486Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 2,
   "open_incidents": [
     {
       "workflow": "deploy-worker.yml",
@@ -11,6 +11,18 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38708373158,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38708373158",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "fetch-stockanalysis.yml",
+      "label": "Fetch StockAnalysis Data",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38825123349,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38825123349",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -383,12 +395,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38826829848",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38826829848",
-    "observed_at": "2026-10-16T00:01:00.531Z",
-    "event": "workflow_run",
+    "run_id": "38829167715",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38829167715",
+    "observed_at": "2026-10-16T00:24:34.486Z",
+    "event": "workflow_dispatch",
     "workflows": [
-      "deploy-worker.yml"
+      "deploy-worker.yml",
+      "fetch-stockanalysis.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
