@@ -1245,7 +1245,7 @@ const lanes = [
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-batch-quote-history",
     detection_attempt: null,
-    canonical_outputs: [],
+    canonical_outputs: ["data/yf/finance", "data/yf/quarter_closes.json"],
     public_mirror: [],
     commit_shards: [],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",

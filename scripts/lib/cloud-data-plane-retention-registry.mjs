@@ -25,6 +25,10 @@
 export const RETENTION_REGISTRY = Object.freeze({
   retained: Object.freeze([
     {
+      path: "data/yf/_acquisition-state.json",
+      reason: "Private acquisition observations retained inside the Yahoo generation; prices cannot reconstruct lifecycle, first-seen or rotation history.",
+    },
+    {
       path: "data/admin/data-supply-state",
       reason:
         "Per-lane acquisition state: attempt shards, detection evidence and publish outcomes. Read by the freshness and recovery machinery, never served to the product.",
@@ -32,7 +36,7 @@ export const RETENTION_REGISTRY = Object.freeze({
     {
       path: "data/admin/yahoo-batch-quote-history",
       reason:
-        "Yahoo quote/history lane store: per-ticker progression state, retry state and last-known-good payloads carrying 1-260 history rows each. The provider data is re-acquirable in principle, but this root is the recovery and provenance record, so deleting it is not equivalent to a refetch.",
+        "Derived runtime projection of the active Yahoo generation: indexes, hashes, retry state and retained-good descriptors. The generation owns payloads and non-derivable acquisition observations.",
     },
     {
       path: "data/admin/stockanalysis-recovery",
@@ -261,7 +265,6 @@ export const OWNERSHIP_REGISTRY = Object.freeze({
     { path: "data/admin/fenok-edge-coverage-index.json", reason: "Edge coverage index; a declared public destination whose public copy is a redacted schema enforced by the mirror guard." },
     { path: "data/admin/alarm-state.json", reason: "Pipeline alarm state; carries its own declared public-mirror exception and is fetched by the admin surface." },
     { path: "data/admin/stock-field-usage-manifest.json", reason: "Stock field usage manifest read by the admin data-lab surface." },
-    { path: "data/yf/quarter_closes.json", reason: "Quarter close reference produced by a lane workflow step and consumed by downstream closeout, portfolio-view, enrichment and signal work; an active analytical input rather than an archive." },
     { path: "data/global-scouter/core/stocks_analyzer.json", reason: "Derived Global Scouter output built by the stocks-analyzer workflow and materialized into the public tree by Update Manifest; committed under workflow policy rather than owned by an acquisition lane." },
     { path: "data/global-scouter/core/per_bands_index.json", reason: "Derived Global Scouter output built by the stocks-analyzer workflow; materialized by Update Manifest." },
     { path: "data/global-scouter/core/slick_index.json", reason: "Derived Global Scouter output built by the stocks-analyzer workflow; materialized by Update Manifest." },

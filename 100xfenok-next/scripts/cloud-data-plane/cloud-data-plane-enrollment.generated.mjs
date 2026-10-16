@@ -1,5 +1,6 @@
 export const PLANE_ENROLLMENT_SCHEMA_VERSION = "cloud-data-plane-enrollment/v1";
 export const PLANE_ENROLLMENT_EXACT = Object.freeze([
+  ["/data/yf/quarter_closes.json","yahoo-finance"],
   ["/data/computed/signals.json","computed-signals"],
   ["/data/damodaran/credit_ratings.json","damodaran"],
   ["/data/damodaran/erp.json","damodaran"],
@@ -616,11 +617,13 @@ export const PLANE_ENROLLMENT_EXACT = Object.freeze([
   ["/data/yardney/yardney_model.json","fred-yardeni"],
 ]);
 export const PLANE_ENROLLMENT_PREFIXES = Object.freeze([
+  {"prefix":"/data/yf/finance/","family":"yahoo-finance"},
   {"prefix":"/data/briefing/","family":"briefing"},
   {"prefix":"/data/edgar-korean-summaries/","family":"edgar-korean-summaries"},
   {"prefix":"/data/global-scouter/","family":"global-scouter"},
 ]);
 export const PLANE_ENROLLMENT_PRIVATE_DENY = Object.freeze([
+  "/data/yf/_acquisition-state.json",
   "/data/computed/etf_action_index.json",
   "/data/computed/fenok_etf_signals.json",
   "/data/computed/fenok_flow_proxies.json",

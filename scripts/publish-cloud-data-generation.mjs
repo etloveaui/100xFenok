@@ -736,7 +736,7 @@ export const FAMILIES = {
     // acquisition metadata. Asset privacy is applied before manifest creation.
     root: "data/yf",
     manifest_prefix: "public/data/yf",
-    reader_enrollment: false,
+    reader_enrollment: true,
     privacy_class: "public",
     source_as_of: { per_asset_resolver: "yahoo_finance_source_timestamp" },
     reuse_active_generation: true,
@@ -1581,7 +1581,7 @@ export async function buildFamilyManifest({
   const yahooFiles = familyName === "yahoo-finance" && explicitFiles === null
     ? [
       ...(await walkFiles(path.join(absRoot, "finance"), "", true))
-        .filter((relative) => relative !== "_summary.json").map((relative) => `finance/${relative}`),
+        .filter((relative) => !["_summary.json", "_index.json"].includes(relative)).map((relative) => `finance/${relative}`),
       ...(await walkFiles(path.join(absRoot, "estimates-archive"), "", true))
         .filter((relative) => relative !== "_summary.json").map((relative) => `estimates-archive/${relative}`),
       "quarter_closes.json", "_acquisition-state.json",
@@ -1653,6 +1653,19 @@ export async function buildFamilyManifest({
         payloads.set(asset.path, bytes);
       }
     }
+    // The public route serves enrolled assets, not the private generation
+    // manifest. Derive its public finance listing here from this exact asset set.
+    const financeAssets = assets.filter((asset) => asset.path.startsWith("public/data/yf/finance/"));
+    const indexPath = "public/data/yf/finance/_index.json";
+    const indexBytes = new TextEncoder().encode(JSON.stringify(Object.fromEntries(
+      financeAssets.map((asset) => [asset.path.slice("public/data/yf/finance/".length), asset.bytes]),
+    )) + "\n");
+    const indexSha = sha256Bytes(indexBytes);
+    assets.push({ path: indexPath, object_key: `objects/sha256/${indexSha}`,
+      sha256: indexSha, bytes: indexBytes.byteLength, content_type: "application/json",
+      source_as_of: financeAssets.map((asset) => asset.source_as_of).filter(Boolean).sort().at(-1) ?? null,
+      privacy_class: "public" });
+    payloads.set(indexPath, indexBytes);
     assets.sort((left, right) => left.path.localeCompare(right.path));
   }
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
