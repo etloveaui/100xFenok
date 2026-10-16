@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-16T08:45:46.402Z",
+  "generated_at": "2026-10-16T16:42:02.439Z",
   "status": "open",
-  "open_incident_count": 1,
+  "open_incident_count": 3,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -11,6 +11,30 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38825123349,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38825123349",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "pins-autosync.yml",
+      "label": "Pins Autosync",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38929374269,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38929374269",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 5,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38928464740,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38928464740",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -383,12 +407,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38875687268",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38875687268",
-    "observed_at": "2026-10-16T08:45:46.402Z",
+    "run_id": "38933623324",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38933623324",
+    "observed_at": "2026-10-16T16:42:02.439Z",
     "event": "workflow_run",
     "workflows": [
-      "fetch-stockanalysis.yml"
+      "fetch-stockanalysis.yml",
+      "pins-autosync.yml",
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
