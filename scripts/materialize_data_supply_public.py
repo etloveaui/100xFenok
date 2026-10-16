@@ -347,11 +347,11 @@ class PublicDataSupplyMaterializer:
         if missing:
             raise MaterializationError(f"required state/ref paths are not Git-tracked: {missing[:5]}")
 
-    def _validate_usage_manifests(self) -> None:
-        for path in (
-            self.repo_root / "data/admin/data-usage-manifest.json",
-            self.public_data_root / "admin/data-usage-manifest.json",
-        ):
+    def _validate_usage_manifests(self, *, include_public: bool = True) -> None:
+        paths = [self.repo_root / "data/admin/data-usage-manifest.json"]
+        if include_public:
+            paths.append(self.public_data_root / "admin/data-usage-manifest.json")
+        for path in paths:
             regular = self._regular_file(path, root=self.repo_root, label=self._repo_rel(path))
             payload = regular.read_bytes()
             _strict_json_bytes(payload, self._repo_rel(path))
@@ -449,7 +449,9 @@ class PublicDataSupplyMaterializer:
 
     def build_projection(self, *, generated_at: str) -> Projection:
         generated_at = _timestamp(generated_at, "generated_at")
-        self._validate_usage_manifests()
+        # Canonical generation precedes public projection on a clean checkout.
+        # --check-usage-manifests validates both after the mirror is generated.
+        self._validate_usage_manifests(include_public=False)
         try:
             active = self.state_reader.read_active_domain(DOMAIN)
         except Exception as exc:
