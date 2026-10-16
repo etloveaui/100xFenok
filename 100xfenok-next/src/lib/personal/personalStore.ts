@@ -229,11 +229,17 @@ export function read<T = unknown>(key: PersonalStoreKey | string): T | null {
   }
 }
 
-export function write<T = unknown>(key: PersonalStoreKey | string, value: T): void {
-  const norm = normalizeStoreKey(key);
-  if (!norm) return;
-  if (typeof window === "undefined") return;
+export interface PersonalStoreWriteResult {
+  ok: boolean;
+  reason?: "unavailable" | "storage";
+}
 
+export function write<T = unknown>(key: PersonalStoreKey | string, value: T): PersonalStoreWriteResult {
+  const norm = normalizeStoreKey(key);
+  if (!norm) return { ok: false, reason: "unavailable" };
+  if (typeof window === "undefined") return { ok: false, reason: "unavailable" };
+
+  let localOk = true;
   if (norm === "ib") {
     if (value && typeof value === "object") {
       unpackIbStoreToLocal(value as IbStoreDocument);
@@ -245,13 +251,23 @@ export function write<T = unknown>(key: PersonalStoreKey | string, value: T): vo
       try {
         window.localStorage.setItem(storageKey, raw);
       } catch {
-        // Storage full or private mode
+        // Storage full or private mode: the device copy did not land, so the
+        // caller must not be told the save succeeded.
+        localOk = false;
       }
     }
   }
 
+  if (!localOk) {
+    // A logged-in account may still persist it through the queued server write,
+    // but that is a different promise from "saved on this device".
+    queueServerWrite(norm, typeof value === "string" ? JSON.parse(value) : value);
+    return { ok: false, reason: "storage" };
+  }
+
   notifyListeners(norm);
   queueServerWrite(norm, typeof value === "string" ? JSON.parse(value) : value);
+  return { ok: true };
 }
 
 export function subscribe(key: PersonalStoreKey | string, fn: Listener): () => void {

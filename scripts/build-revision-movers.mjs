@@ -72,6 +72,21 @@ rows.sort((a, b) => b.change_1w - a.change_1w);
 const up = rows.filter((r) => r.change_1w > 0).slice(0, TOP_N);
 const down = rows.filter((r) => r.change_1w < 0).slice(-TOP_N).reverse();
 
+// Discovery index: every qualified revision, not only the headline movers. A
+// real change outside the top-N must stay findable for a held ticker instead of
+// disappearing because it did not make the ranking.
+const qualifiedByTicker = {};
+for (const row of rows) {
+  qualifiedByTicker[row.ticker] = {
+    change_1w: row.change_1w,
+    as_of: row.as_of,
+    name: row.name,
+    eps_fy1: row.eps_fy1,
+    eps_fy1_prev: row.eps_fy1_prev,
+    prev_as_of: row.prev_as_of,
+  };
+}
+
 const payload = {
   schema_version: "revision-movers/v1",
   generated_at: new Date().toISOString(),
@@ -80,6 +95,7 @@ const payload = {
   scanned,
   qualified: rows.length,
   min_abs_change: MIN_ABS_CHANGE,
+  qualified_by_ticker: qualifiedByTicker,
   up,
   down,
 };
