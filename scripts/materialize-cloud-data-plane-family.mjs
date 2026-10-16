@@ -789,6 +789,28 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
   }
 }
 
+// The hosted analyzer owns these five derived files independently of the
+// owner-run Scouter export. Consumers import its promoted generation at build.
+export async function hydrateScouterDerived({ repoRoot = REPO_ROOT, env = process.env } = {}) {
+  const family = "scouter-derived";
+  const plane = createDefaultMaterializePlane({
+    accountId: env.CLOUDFLARE_ACCOUNT_ID, token: env.CLOUDFLARE_API_TOKEN,
+    endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY, family,
+  });
+  const base = await realpath(env.RUNNER_TEMP || env.TMPDIR || os.tmpdir());
+  const temporary = await mkdtemp(path.join(base, "scouter-derived-"));
+  try {
+    const receipt = await materializeCloudDataPlaneFamily({
+      plane, family, manifestPrefix: "public/data", privacyClass: "public", env, repoRoot,
+      outputRoot: path.join(temporary, "derived"), canonicalReuseRoot: repoRoot,
+    });
+    await cp(receipt.output_root, path.join(repoRoot, "data"), { recursive: true });
+    return receipt;
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+}
+
 // Keep the verified active tree until the hosted job ends: the producer reads
 // it as its retained-good baseline while writing a separate candidate checkout.
 export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.env, financeOnly = false } = {}) {
@@ -844,7 +866,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-finance") {
+    if (process.argv.slice(2).join(" ") === "--hydrate-scouter-derived") {
+      console.log(JSON.stringify(await hydrateScouterDerived()));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-finance") {
       console.log(JSON.stringify(await hydrateYahooFinance()));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter-universe") {
       const { generation_id } = await hydrateGlobalScouter({ universeOnly: true });
