@@ -237,7 +237,7 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
         life = projection.index["entries"]["LOST"]["security_lifecycle"]
         self.assertEqual(life["status"], "closed")
         self.assertEqual(life["evidence_kind"], "provider_observations")
-        self.assertEqual(life["last_source_as_of"], "2026-08-01")
+        self.assertEqual(life["last_source_as_of"], "2026-08-01T00:00:00Z")
         self.assertEqual(projection.payloads["LOST"], self.fixture.payloads["LOST"])
         self.assertIn("data/admin/stockanalysis-recovery/states/etf/LOST.json", projection.tracked_paths)
 

@@ -155,6 +155,11 @@ def _timestamp(value: Any, label: str) -> str:
     return value
 
 
+def _day_as_timestamp(value: Any) -> Any:
+    """A history day is a date; every timestamp field of the contract carries that day as 00:00:00Z."""
+    return f"{value}T00:00:00Z" if isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) else value
+
+
 def _sha(value: Any, label: str) -> str:
     if not isinstance(value, str) or not HEX64.fullmatch(value):
         raise MaterializationError(f"{label} must be a lowercase SHA-256 digest")
@@ -527,8 +532,9 @@ class PublicDataSupplyMaterializer:
                 self._regular_file(self.repo_root / evidence["evidence_path"], root=self.repo_root, label=f"lifecycle evidence {entity}")
                 lifecycle_paths.add(evidence["evidence_path"])
             dates = [row["source_as_of"] for row in retained_refs.values() if row["entity"] == entity]
-            if evidence.get("last_history_as_of"):
-                dates.append(evidence["last_history_as_of"])
+            history_as_of = _day_as_timestamp(evidence.get("last_history_as_of"))
+            if history_as_of:
+                dates.append(history_as_of)
             # The detail LKG may already have expired. A retained canonical raw
             # quote can still disclose the identifier's last actual trade clock.
             provider_path = self.repo_root / "data/yf/finance" / f"{entity}.json"
@@ -548,7 +554,7 @@ class PublicDataSupplyMaterializer:
                 "successor_ticker": evidence["alias_target"],
                 "reason": evidence["reason"],
                 "primary_reference": evidence["source_url"].removeprefix("https://"),
-                "last_source_as_of": evidence.get("last_history_as_of") or (max(dates) if dates else None),
+                "last_source_as_of": history_as_of or (max(dates) if dates else None),
                 **({"evidence_kind": "provider_observations"} if evidence["source"] == "automatic_provider_observations" else {}),
             }
 
