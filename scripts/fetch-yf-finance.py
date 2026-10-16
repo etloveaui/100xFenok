@@ -74,7 +74,7 @@ from data_supply_stock_detail import (
 )
 from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore, yahoo_run_verdict, valid_illiquid_history, source_freshness_contract
 
-STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
+STOCK_UNIVERSE_INDEX = ROOT / "data" / "global-scouter" / "core" / "stocks_index.json"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
 STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
 STOCKANALYSIS_ETF_SCREENER = ROOT / "data" / "stockanalysis" / "surfaces" / "etf_screener.json"
@@ -1561,7 +1561,8 @@ def load_universe_sources(stocks_only=False, stockanalysis_etfs=False):
             if SYMBOL_RE.match(symbol):
                 sources.setdefault(symbol, set()).add(source)
 
-    add({p.stem for p in STOCK_UNIVERSE_DIR.glob("*.json")}, "global_scouter_stock")
+    stock_index = json.loads(STOCK_UNIVERSE_INDEX.read_text(encoding="utf-8"))
+    add(set(stock_index["stocks"]), "global_scouter_stock")
     add(load_market_facts_stocks(), "market_facts")
     add(load_sox_giw_symbols(), "nasdaq_giw_sox")
     add(BETA_BENCHMARK_SYMBOLS, "korean_beta_benchmark")

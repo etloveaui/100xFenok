@@ -1597,7 +1597,10 @@ def hydrate_generation_state(root: Path, yf_root: Path) -> dict:
     observed = metadata["observed_at"]
     store = YahooBatchStateStore(root, yf_root / "finance")
     retained = metadata.get("tickers") or {}
-    payloads = {path.stem: path for path in store.finance_dir.glob("*.json") if not path.name.startswith("_")}
+    # Tracker histories are sibling assets, not separate acquisition tickers.
+    # Keep them in the generation without overwriting the canonical ticker state.
+    payloads = {path.stem: path for path in store.finance_dir.glob("*.json")
+                if not path.name.startswith("_") and not path.name.endswith(".unadjusted.json")}
     sources = {}
     for ticker in sorted(set(payloads) | set(retained)):
         if not SYMBOL_RE.fullmatch(ticker):

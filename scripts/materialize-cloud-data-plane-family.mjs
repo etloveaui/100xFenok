@@ -759,7 +759,7 @@ export async function runMaterializerCli({
 
 // The owner export is cloud-authoritative. Hosted consumers hydrate its exact
 // enrolled files; the four separately generated core projections stay intact.
-export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process.env, buildOnly = false } = {}) {
+export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process.env, buildOnly = false, universeOnly = false } = {}) {
   const family = "global-scouter";
   const plane = createDefaultMaterializePlane({
     accountId: env.CLOUDFLARE_ACCOUNT_ID,
@@ -776,9 +776,10 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
       outputRoot: path.join(temporary, "export"), privacyClass: "public", env, repoRoot,
       canonicalReuseRoot: repoRoot,
       publicAssetOrigin: "https://100xfenok.etloveaui.workers.dev",
-      includeAsset: buildOnly ? (asset) => [
+      includeAsset: buildOnly || universeOnly ? (asset) => [
         "public/data/global-scouter/core/metadata.json",
         "public/data/global-scouter/core/stocks_index.json",
+        ...(universeOnly ? ["public/data/global-scouter/etfs/index.json"] : []),
       ].includes(asset.path) : null,
     });
     await cp(receipt.output_root, path.join(repoRoot, "data/global-scouter"), { recursive: true });
@@ -801,6 +802,9 @@ export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.
   const receipt = await materializeCloudDataPlaneFamily({
     plane, family, manifestPrefix: "public/data/yf", privateManifestPrefix: "data/yf",
     outputRoot: path.join(temporary, "active"), privacyClass: "public", env, repoRoot,
+    canonicalReuseRoot: repoRoot,
+    publicAssetOrigin: "https://100xfenok.etloveaui.workers.dev",
+    includeAsset: financeOnly ? (asset) => asset.path.startsWith("public/data/yf/finance/") : null,
   });
   const source = financeOnly ? path.join(receipt.output_root, "finance") : receipt.output_root;
   const target = path.join(repoRoot, financeOnly ? "data/yf/finance" : "data/yf");
@@ -842,6 +846,9 @@ if (invokedDirectly) {
   try {
     if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-finance") {
       console.log(JSON.stringify(await hydrateYahooFinance()));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter-universe") {
+      const { generation_id } = await hydrateGlobalScouter({ universeOnly: true });
+      console.log(JSON.stringify({ family: "global-scouter", generation_id }));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter-build") {
       const { generation_id } = await hydrateGlobalScouter({ buildOnly: true });
       console.log(JSON.stringify({ family: "global-scouter", generation_id }));
