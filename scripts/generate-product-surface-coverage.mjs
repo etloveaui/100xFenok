@@ -289,7 +289,7 @@ const counts = {
   marketFactsEtfs: number(marketFactsIndex?.coverage?.etf),
   marketFactsStocks: number(marketFactsIndex?.coverage?.stock),
   yfFinance: countJsonFiles("yf/finance"),
-  globalScouterDetails: countJsonFiles("global-scouter/stocks/detail"),
+  globalScouterDetails: Object.keys(readJson("global-scouter/core/stocks_index.json")?.stocks ?? {}).length,
   stockanalysisEtfs: countJsonFiles("stockanalysis/etfs"),
   stockanalysisStocks: countJsonFiles("stockanalysis/stocks"),
   stockanalysisFinancials: countJsonFiles("stockanalysis/financials"),

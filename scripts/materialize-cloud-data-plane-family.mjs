@@ -12,8 +12,8 @@
 // Read-only guarantee: the ONLY plane surface used is pointerStore.get and
 // objectStore.get. No pointer write, no compare-and-swap, no ledger call, no
 // object list, no delete, and no R2 mutation of any kind. This file carries no
-// HTTP/auth logic of its own — the REST bridge, the remote coordinator shim
-// and the Cloudflare adapter are reused unchanged.
+// write/auth logic of its own. Public payloads may use the enrolled Worker GET;
+// private payloads retain the REST bridge and existing coordinator adapter.
 //
 // Reader-side safety contract (all fail closed before any payload byte is
 // staged):
@@ -543,6 +543,9 @@ export async function materializeCloudDataPlaneFamily({
   reuseRoot = null,
   privacyClass = "private",
   privateManifestPrefix = null,
+  includeAsset = null,
+  publicAssetOrigin = null,
+  canonicalReuseRoot = null,
 }) {
   validatePlaneAndFamily(plane, family);
   if (!["private", "public"].includes(privacyClass)) fail("ASSET_PRIVACY_INVALID", privacyClass);
@@ -575,7 +578,7 @@ export async function materializeCloudDataPlaneFamily({
     if (segments === null) fail("ASSET_REL_PATH_INVALID", asset.path);
     if (relativePaths.has(remainder)) fail("ASSET_DUPLICATE", remainder);
     relativePaths.add(remainder);
-    entries.push({ asset, segments });
+    if (includeAsset === null || includeAsset(asset)) entries.push({ asset, segments });
   }
 
   // 4. Stage beside the output, materialize under bounded concurrency, verify
@@ -596,8 +599,25 @@ export async function materializeCloudDataPlaneFamily({
       let payload = reuseRoot === null
         ? null
         : await readMatchingReusePayload(reuseRoot, asset);
+      if (payload === null && canonicalReuseRoot !== null) {
+        payload = await readMatchingReusePayload(canonicalReuseRoot, {
+          ...asset, path: asset.path.replace(/^public\/data\//, "data/"),
+        });
+      }
       if (payload === null) {
-        payload = await plane.objectStore.get(asset.object_key);
+        if (asset.privacy_class === "public" && publicAssetOrigin !== null) {
+          const response = await fetch(new URL(asset.path.replace(/^public/, ""), publicAssetOrigin), {
+            headers: { "user-agent": "feno-data/2", "cache-control": "no-cache" },
+            signal: AbortSignal.timeout(30_000),
+          });
+          if (!response.ok || response.headers.get("x-data-plane-generation") !== summary.generation_id) {
+            await response.body?.cancel();
+            fail("PUBLIC_GENERATION_MISMATCH", asset.path);
+          }
+          payload = new Uint8Array(await response.arrayBuffer());
+        } else {
+          payload = await plane.objectStore.get(asset.object_key);
+        }
         if (!(payload instanceof Uint8Array)) fail("PAYLOAD_MISSING", asset.path);
         if (payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
           fail("PAYLOAD_INTEGRITY_INVALID", asset.path);
@@ -625,8 +645,8 @@ export async function materializeCloudDataPlaneFamily({
     generation_id: summary.generation_id,
     manifest_sha256: summary.manifest_sha256,
     source_sha: manifest.source_sha,
-    asset_count: summary.asset_count,
-    total_bytes: summary.total_bytes,
+    asset_count: entries.length,
+    total_bytes: entries.reduce((total, { asset }) => total + asset.bytes, 0),
     output_root: output,
   };
 }
@@ -739,7 +759,7 @@ export async function runMaterializerCli({
 
 // The owner export is cloud-authoritative. Hosted consumers hydrate its exact
 // enrolled files; the four separately generated core projections stay intact.
-export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process.env } = {}) {
+export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process.env, buildOnly = false } = {}) {
   const family = "global-scouter";
   const plane = createDefaultMaterializePlane({
     accountId: env.CLOUDFLARE_ACCOUNT_ID,
@@ -754,6 +774,12 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
     const receipt = await materializeCloudDataPlaneFamily({
       plane, family, manifestPrefix: "public/data/global-scouter",
       outputRoot: path.join(temporary, "export"), privacyClass: "public", env, repoRoot,
+      canonicalReuseRoot: repoRoot,
+      publicAssetOrigin: "https://100xfenok.etloveaui.workers.dev",
+      includeAsset: buildOnly ? (asset) => [
+        "public/data/global-scouter/core/metadata.json",
+        "public/data/global-scouter/core/stocks_index.json",
+      ].includes(asset.path) : null,
     });
     await cp(receipt.output_root, path.join(repoRoot, "data/global-scouter"), { recursive: true });
     return receipt;
@@ -816,6 +842,9 @@ if (invokedDirectly) {
   try {
     if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-finance") {
       console.log(JSON.stringify(await hydrateYahooFinance()));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter-build") {
+      const { generation_id } = await hydrateGlobalScouter({ buildOnly: true });
+      console.log(JSON.stringify({ family: "global-scouter", generation_id }));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter") {
       const { generation_id } = await hydrateGlobalScouter();
       console.log(JSON.stringify({ family: "global-scouter", generation_id }));
