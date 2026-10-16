@@ -6,13 +6,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { atomicWrite } from "./lib/atomic-file.mjs";
-import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
+import { attemptResult, classifyEndpointResponse, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
-  LaneLkgStore,
   allNaturalRequestsFailed,
-  classifyLkgFailure,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { hydrateCanonicalCloudData } from "./materialize-cloud-data-plane-family.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -138,27 +137,20 @@ function validateControlledFailureKey(controlledFailureKey, eventName) {
 }
 
 export async function runFredMacro({
-  repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fred-macro.json"),
   apiKey = process.env.FRED_API_KEY,
   request = requestBytes,
   observedAt = new Date().toISOString(),
-  attemptId = defaultAttemptId("fred-macro", observedAt),
-  runId = process.env.GITHUB_RUN_ID || "local",
-  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
+  if (!observedAt.endsWith("Z") || !Number.isFinite(Date.parse(observedAt))) throw new Error("observedAt must be RFC3339 UTC");
   const injectedKey = validateControlledFailureKey(controlledFailureKey.trim(), eventName);
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fred_macro" });
-  const lkgArtifacts = [{
-    key: "fred_macro",
-    canonicalPath,
-    validateDocument: validMacroDocument,
-    sourceAsOf: macroSourceAsOf,
-  }];
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  // The active generation supplies the monotonicity baseline and remains live
+  // on every acquisition failure. No Git-era recovery snapshots are written.
+  const previous = fs.existsSync(canonicalPath) ? JSON.parse(fs.readFileSync(canonicalPath, "utf8")) : null;
+  if (!validMacroDocument(previous)) throw new Error("active FRED generation baseline is missing or invalid");
   let requestResults;
   if (!apiKey) {
     requestResults = [{
@@ -182,8 +174,6 @@ export async function runFredMacro({
     );
     const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedKey && !systemicOutage ? "controlled_failure" : worst.reason);
-    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
-    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
     const failureDetail = failureReason === "controlled_failure"
       ? null
       : worst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
@@ -192,51 +182,35 @@ export async function runFredMacro({
       reason: failureReason,
       updated: false,
       attempt,
-      retrySet: failure.retrySet,
+      retrySet: ["fred_macro"],
       ...(failureDetail ? { failure_detail: failureDetail } : {}),
-      ...outcome,
+      degraded: true,
+      corrupt: false,
+      exitCode: 2,
     };
   }
 
   const series = Object.fromEntries(FRED_MACRO_SERIES.map((item, index) => [item.id, requestResults[index].rows]));
   const output = { updated: observedAt, series };
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
-  const candidate = {
-    key: "fred_macro",
-    currentRelativePath: "data/macro/fred-macro.json",
-    payloadBytes: Buffer.from(serialized),
-    sourceAsOf: macroSourceAsOf(output),
-    validateDocument: validMacroDocument,
-    deriveSourceAsOf: macroSourceAsOf,
-  };
-  const recoveryState = lkgStore.stateSnapshot();
-  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
-  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
-  if (promotable.length === 0) {
-    const reason = decisions[0].reason;
-    return {
-      ok: false,
-      reason,
-      updated: false,
-      attempt,
-      retrySet: lkgStore.stateSnapshot().retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
+  const sourceAsOf = Date.parse(macroSourceAsOf(output));
+  if (!validMacroDocument(output) || !Number.isFinite(sourceAsOf) || sourceAsOf > Date.parse(observedAt) + 120_000) {
+    throw new Error("FRED candidate is invalid or future-dated");
+  }
+  if (sourceAsOf < Date.parse(macroSourceAsOf(previous))) {
+    return { ok: false, reason: "source_regression", updated: false, attempt,
+      retrySet: ["fred_macro"], degraded: true, corrupt: false, exitCode: 2 };
   }
   // Canonical only. The public mirror is produced by sync-public-data.mjs during
   // sync-static, and the mirror contract requires that no lane stage it. Writing
   // it here left an unstaged file dirty after every run, which is what
   // cloud publication was refused for ten consecutive runs.
   atomicWrite(canonicalPath, serialized);
-  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = recoveringKeys.has("fred_macro");
-  return { ok: true, reason: "ok", updated: true, attempt, seriesCount: FRED_MACRO_SERIES.length, recovered };
+  return { ok: true, reason: "ok", updated: true, attempt, seriesCount: FRED_MACRO_SERIES.length, recovered: false };
 }
 
 async function main() {
+  await hydrateCanonicalCloudData();
   const result = await runFredMacro();
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
@@ -246,7 +220,7 @@ async function main() {
     process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved ${result.seriesCount} FRED macro series and current-attempt evidence${result.recovered ? "; recovered from LKG" : ""}`);
+  console.log(`Prepared ${result.seriesCount} FRED macro series for generation publication`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {

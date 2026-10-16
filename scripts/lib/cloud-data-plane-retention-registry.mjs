@@ -103,10 +103,6 @@ export const RETENTION_REGISTRY = Object.freeze({
       reason: "Yahoo hourly ticker lane store: per-key progression state, last-known-good payloads, promotion contracts, and 167 content-addressed provider observation records. The lane's canonical output is the macro ticker file; this tree is its acquisition and recovery evidence.",
     },
     {
-      path: "data/admin/fred_macro",
-      reason: "FRED macro lane acquisition state and last-known-good store; the lane's canonical output is the macro file.",
-    },
-    {
       path: "data/admin/oecd_cli",
       reason: "OECD CLI lane acquisition state, last-known-good marker and shadow parity proof. The shadow output is declared canonical for enforcement only, with no public mirror and no consumer.",
     },

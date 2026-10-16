@@ -275,6 +275,7 @@ jobs:
           # All canonical data and public fallbacks remain: the live plane can
           # fall through to ASSETS. Only non-runtime root docs/ops are omitted.
           git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
 
       - name: Restore current Next build cache
         uses: actions/cache/restore@v4

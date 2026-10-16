@@ -590,6 +590,11 @@ function buildScheduleState(lane, context, attempt) {
 // clocks never become collection attempts.
 export function readLaneAttempt(lane, context = {}) {
   const normalized = { ...context, repoRoot: context.repoRoot || REPO_ROOT };
+  if (lane.id === "fred_macro") {
+    const payload = readJson(path.join(normalized.repoRoot, "data/macro/fred-macro.json"));
+    // This clock belongs to the last promoted payload, never this projection.
+    return normalizeAttempt({ observed_at: payload?.updated, outcome: "success" });
+  }
   if (lane.id === "earnings_overview") {
     const summary = readJson(path.join(normalized.repoRoot, "data/admin/earnings_overview/refresh-summary.json"));
     const rows = Object.values(summary?.tickers ?? {});

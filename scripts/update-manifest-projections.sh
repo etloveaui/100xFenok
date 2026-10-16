@@ -56,6 +56,8 @@ if [[ ! "${BEFORE_SHA-}" =~ ^(AUTO|[0-9a-fA-F]{40})$ ]]; then
   exit 2
 fi
 
+node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
+
 # --- S-1: Verified stockanalysis-etf-detail cloud overlay (optional) ----------
 # Natural StockAnalysis ETF runs publish the verified ETF canonical generation
 # to the private cloud plane. Update Manifest materializes that generation ONCE

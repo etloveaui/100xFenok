@@ -726,11 +726,44 @@ export async function runMaterializerCli({
   }
 }
 
+// Git-retired public inputs are materialized from the existing serving plane.
+// A bundled fallback is not an active generation and cannot seed a producer.
+export async function hydrateCanonicalCloudData({ repoRoot = REPO_ROOT, fetchImpl = fetch } = {}) {
+  const relative = "macro/fred-macro.json";
+  const response = await fetchImpl(`https://100xfenok.etloveaui.workers.dev/data/${relative}`, {
+    headers: { "user-agent": "feno-data/2", "cache-control": "no-cache" },
+    signal: AbortSignal.timeout(30_000),
+  });
+  const generation = response.headers.get("x-data-plane-generation");
+  if (!response.ok || !generation?.startsWith("fred-macro-")) {
+    fail("CANONICAL_GENERATION_UNAVAILABLE", `${relative}:${response.status}`);
+  }
+  const body = await response.text();
+  const document = JSON.parse(body);
+  if (!document || typeof document !== "object" || !document.series
+    || !Number.isFinite(Date.parse(document.updated))) fail("CANONICAL_PAYLOAD_INVALID", relative);
+  const target = path.join(repoRoot, "data", relative);
+  await mkdir(path.dirname(target), { recursive: true });
+  const temporary = `${target}.generation-${process.pid}`;
+  await writeFile(temporary, body, { flag: "wx" });
+  try {
+    await rename(temporary, target);
+  } finally {
+    await rm(temporary, { force: true });
+  }
+  return { document, generation };
+}
+
 const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    process.exitCode = await runMaterializerCli();
+    if (process.argv.slice(2).join(" ") === "--hydrate-canonical") {
+      const { generation } = await hydrateCanonicalCloudData();
+      console.log(JSON.stringify({ family: "fred-macro", generation }));
+    } else {
+      process.exitCode = await runMaterializerCli();
+    }
   } catch (error) {
     console.error(`materialize-cloud-data-plane-family: ${error.code ?? "ERROR"}: ${error.message}`);
     process.exitCode = 1;
