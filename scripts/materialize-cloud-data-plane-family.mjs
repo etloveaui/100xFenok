@@ -24,7 +24,8 @@
 // - the pointer must validate; the stored manifest bytes must hash to the
 //   pointer's manifest_sha256; the parsed manifest must re-validate and
 //   cross-bind (generation_id, manifest_sha256, source_sha) to the pointer.
-// - >=1 asset; every asset privacy_class "private" and path strictly under
+// - >=1 asset; every asset matches the requested privacy class (private by
+//   default; public requires explicit opt-in) and path strictly under
 //   --manifest-prefix (one or more safe unique relative segments after the
 //   prefix); the content-addressed object key is enforced by the contract's
 //   own validation.
@@ -37,7 +38,7 @@
 //   nothing is removed at all.
 //
 // CLI: --family <name> --manifest-prefix <prefix> --output-root <path>
-//      [--reuse-root <checkout-root>]
+//      [--reuse-root <checkout-root>] [--privacy-class public|private]
 // Env: CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, DATA_PLANE_ENDPOINT,
 //      DATA_PLANE_WRITE_KEY. Fixed existing bucket: fenok-data-plane.
 // Materialize mode emits exactly one JSON line on stdout with
@@ -46,7 +47,9 @@
 //   status:"current" appended. No secrets, ever.
 
 import {
+  cp,
   lstat,
+  mkdtemp,
   mkdir,
   readFile,
   readdir,
@@ -538,19 +541,21 @@ export async function materializeCloudDataPlaneFamily({
   env = process.env,
   repoRoot = REPO_ROOT,
   reuseRoot = null,
+  privacyClass = "private",
 }) {
   validatePlaneAndFamily(plane, family);
+  if (!["private", "public"].includes(privacyClass)) fail("ASSET_PRIVACY_INVALID", privacyClass);
   const prefix = normalizeManifestPrefix(manifestPrefix);
   const output = await validateOutputRoot({ outputRoot, env, repoRoot });
   const { manifest, summary } = await readActiveFamilyIdentity({ plane, family });
   if (summary.asset_count < 1) fail("ASSET_COUNT_INVALID", "at least one asset is required");
 
-  // 3. Family enrollment: every asset private and strictly under the prefix,
+  // 3. Family enrollment: every asset matches the requested privacy class and prefix,
   // with a unique safe relative remainder of one or more segments.
   const entries = [];
   const relativePaths = new Set();
   for (const asset of manifest.assets) {
-    if (asset.privacy_class !== "private") {
+    if (asset.privacy_class !== privacyClass) {
       fail("ASSET_PRIVACY_INVALID", `${asset.privacy_class}:${asset.path}`);
     }
     if (asset.path === prefix) {
@@ -644,7 +649,7 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (!["--family", "--manifest-prefix", "--output-root", "--verify-receipt",
-          "--reuse-root"].includes(flag)) {
+          "--reuse-root", "--privacy-class"].includes(flag)) {
       fail("USAGE", `unknown or unexpected argument ${flag}`);
     }
     const value = argv[index + 1];
@@ -664,7 +669,7 @@ function parseArgs(argv) {
   if (missing.length) {
     fail("USAGE", `missing required arguments: ${missing.map((key) => `--${key}`).join(", ")}`);
   }
-  const optional = verifyMode ? [] : ["reuse-root"];
+  const optional = verifyMode ? [] : ["reuse-root", "privacy-class"];
   const unexpected = Object.keys(args).filter(
     (key) => !expected.includes(key) && !optional.includes(key));
   if (unexpected.length) fail("USAGE", `arguments cannot be mixed across modes: ${unexpected.join(",")}`);
@@ -717,12 +722,38 @@ export async function runMaterializerCli({
         outputRoot: args["output-root"],
         env,
         reuseRoot: args["reuse-root"] ?? null,
+        privacyClass: args["privacy-class"] ?? "private",
       });
     stdout(JSON.stringify(receipt));
     return 0;
   } catch (error) {
     stderr(`materialize-cloud-data-plane-family: ${error.code ?? "ERROR"}: ${error.message}`);
     return 1;
+  }
+}
+
+// The owner export is cloud-authoritative. Hosted consumers hydrate its exact
+// enrolled files; the four separately generated core projections stay intact.
+export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process.env } = {}) {
+  const family = "global-scouter";
+  const plane = createDefaultMaterializePlane({
+    accountId: env.CLOUDFLARE_ACCOUNT_ID,
+    token: env.CLOUDFLARE_API_TOKEN,
+    endpoint: env.DATA_PLANE_ENDPOINT,
+    writeKey: env.DATA_PLANE_WRITE_KEY,
+    family,
+  });
+  const base = await realpath(env.RUNNER_TEMP || env.TMPDIR || os.tmpdir());
+  const temporary = await mkdtemp(path.join(base, "global-scouter-"));
+  try {
+    const receipt = await materializeCloudDataPlaneFamily({
+      plane, family, manifestPrefix: "public/data/global-scouter",
+      outputRoot: path.join(temporary, "export"), privacyClass: "public", env, repoRoot,
+    });
+    await cp(receipt.output_root, path.join(repoRoot, "data/global-scouter"), { recursive: true });
+    return receipt;
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
   }
 }
 
@@ -758,7 +789,10 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-canonical") {
+    if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter") {
+      const { generation_id } = await hydrateGlobalScouter();
+      console.log(JSON.stringify({ family: "global-scouter", generation_id }));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-canonical") {
       const { generation } = await hydrateCanonicalCloudData();
       console.log(JSON.stringify({ family: "fred-macro", generation }));
     } else {

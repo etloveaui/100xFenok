@@ -2800,11 +2800,12 @@ export function assertPublicationAuthorization({
 
 function parseArgs(argv) {
   const args = {
-    family: null, dryRun: false, json: false, tolerateGateBlock: false, chaos: null, rollback: false,
+    family: null, inputRoot: null, dryRun: false, json: false, tolerateGateBlock: false, chaos: null, rollback: false,
     retention: false, retentionDelete: false,
   };
   for (const arg of argv) {
     if (arg.startsWith("--family=")) args.family = arg.slice("--family=".length);
+    else if (arg.startsWith("--input-root=")) args.inputRoot = arg.slice("--input-root=".length);
     else if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--json") args.json = true;
     else if (arg === "--tolerate-gate-block") args.tolerateGateBlock = true;
@@ -2821,6 +2822,9 @@ function parseArgs(argv) {
       if (!CHAOS_MODES.includes(mode)) fail("ARGS_INVALID", `unknown chaos mode ${mode}`);
       args.chaos = mode;
     } else fail("ARGS_INVALID", arg);
+  }
+  if (args.inputRoot !== null && (!args.inputRoot || args.rollback || args.retention)) {
+    fail("ARGS_INVALID", "--input-root requires a nonempty publication input directory");
   }
   if (!args.retention && !args.family) fail("ARGS_INVALID", "--family=<name> is required");
   if (args.retention && args.family) {
@@ -3167,7 +3171,7 @@ export async function runPublisherCli({
     // 1. Manifest from disk.
     const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifestImpl({
       familyName: args.family,
-      absRoot: path.join(REPO_ROOT, family.root),
+      absRoot: args.inputRoot === null ? path.join(REPO_ROOT, family.root) : path.resolve(args.inputRoot),
       relRoot: family.manifest_prefix ?? family.root,
     });
     const uniqueAssetKeys = new Set(manifest.assets.map((asset) => asset.object_key)).size;
