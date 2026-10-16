@@ -8316,6 +8316,9 @@ def _main() -> None:
         except Exception:
             raise
         if canary["status"] != "ready":
+            for row in canary["results"]:
+                if row["status"] != "ready":
+                    print(f"[endpoint-canary] {json.dumps(row, ensure_ascii=False)}", flush=True)
             raise SystemExit(3)
     required_history_periods = (
         parse_history_periods(args.required_history_periods)
