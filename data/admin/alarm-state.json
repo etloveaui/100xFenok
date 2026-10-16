@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-16T17:52:03.674Z",
+  "generated_at": "2026-10-16T18:58:29.845Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -19,7 +19,7 @@
     {
       "workflow": "pins-autosync.yml",
       "label": "Pins Autosync",
-      "streak": 4,
+      "streak": 6,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38929374269,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38929374269",
@@ -43,12 +43,36 @@
     {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 11,
+      "streak": 12,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38928464740,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38928464740",
       "alarm_reasons": [
         "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "a1-fdic-tier1",
+      "label": "A1 FDIC Tier-1 collector",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "a1_status_stale"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "a1-sec-13f",
+      "label": "A1 SEC 13F (A1 daily filing check) collector",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "a1_status_stale"
       ],
       "lost_schedule_slot_count": 0
     }
@@ -401,6 +425,20 @@
       "events": [],
       "event": null,
       "failure_streak_threshold": 2
+    },
+    {
+      "file": "a1-fdic-tier1",
+      "label": "A1 FDIC Tier-1 collector",
+      "events": [],
+      "event": null,
+      "failure_streak_threshold": 2
+    },
+    {
+      "file": "a1-sec-13f",
+      "label": "A1 SEC 13F (A1 daily filing check) collector",
+      "events": [],
+      "event": null,
+      "failure_streak_threshold": 2
     }
   ],
   "excluded_workflows": [
@@ -419,15 +457,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38942753462",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38942753462",
-    "observed_at": "2026-10-16T17:52:03.674Z",
+    "run_id": "38951243885",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38951243885",
+    "observed_at": "2026-10-16T18:58:29.845Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
       "pins-autosync.yml",
       "update-manifest.yml",
-      "validate-workflows.yml"
+      "validate-workflows.yml",
+      "a1-fdic-tier1",
+      "a1-sec-13f"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
