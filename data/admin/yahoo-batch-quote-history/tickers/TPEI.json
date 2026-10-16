@@ -2,7 +2,7 @@
   "current": {
     "fetched_at": "2026-10-12T02:40:52Z",
     "history_as_of": "2026-10-09",
-    "path": "data/yf/finance/TPEI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TPEI.json",
     "payload_sha256": "824aa98f652b66f9cdea6fddce415c2b4a2135414a2c93598196899c9dde4178",
     "quote_as_of": "2026-10-06T19:59:46Z",
     "source_as_of": "2026-10-06T19:59:46Z"
@@ -17,9 +17,26 @@
     "observed_at": "2026-10-12T15:29:34Z",
     "outcome": "skipped_fresh"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "lkg": {
+    "fetched_at": "2026-10-12T02:40:52Z",
+    "history_as_of": "2026-10-09",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TPEI.json",
+    "payload_sha256": "824aa98f652b66f9cdea6fddce415c2b4a2135414a2c93598196899c9dde4178",
+    "quote_as_of": "2026-10-06T19:59:46Z",
+    "source_as_of": "2026-10-06T19:59:46Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-10-15T23:24:38Z",
+    "expected_resolution": "next_yahoo_acquisition",
+    "max_business_days": 6,
+    "message": "TPEI holds LKG because Yahoo source date 2026-10-06T19:59:46Z is 7 business days old, beyond the 6-day bound; it will retry on the next Yahoo acquisition.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-10-06T19:59:46Z"
+  },
   "ticker": "TPEI",
-  "updated_at": "2026-10-12T15:29:34Z"
+  "updated_at": "2026-10-15T23:24:38Z"
 }

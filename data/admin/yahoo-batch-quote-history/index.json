@@ -4739,6 +4739,7 @@
     "PENU",
     "PEP",
     "PEPS",
+    "PEPT",
     "PEVC",
     "PEX",
     "PEXL",
@@ -6799,6 +6800,7 @@
     "XLVX",
     "XLY",
     "XLYI",
+    "XLYM",
     "XLYX",
     "XMAG",
     "XMAR",
@@ -6987,16 +6989,16 @@
     "^KS11"
   ],
   "counts": {
-    "active": 6984,
-    "eligible": 6984,
+    "active": 6986,
+    "eligible": 6986,
     "failed": 10,
-    "fresh": 6907,
-    "lkg": 38,
-    "pending_acquisition": 22,
+    "fresh": 6903,
+    "lkg": 44,
+    "pending_acquisition": 21,
     "pending_history": 0,
-    "retry": 38,
-    "stale": 38,
-    "terminal": 17,
+    "retry": 44,
+    "stale": 44,
+    "terminal": 18,
     "unavailable": 0,
     "untracked": 0
   },
@@ -7007,32 +7009,42 @@
     "skipped": 0,
     "fetch_attempts": 1182,
     "errors": [],
-    "observed_at": "2026-10-14T23:43:34Z",
+    "observed_at": "2026-10-15T23:51:35Z",
     "terminal_symbols": []
   },
-  "generated_at": "2026-10-14T23:43:34Z",
+  "generated_at": "2026-10-15T23:51:35Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for SHPP: quote_as_of",
+    "error": "ValueError: Yahoo provider source timestamp regresses for PMMY: quote_as_of",
     "failure_kind": "candidate_rejected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-10-14T04:46:23Z",
-    "ticker": "SHPP"
+    "observed_at": "2026-10-15T05:25:06Z",
+    "ticker": "PMMY"
   },
   "lkg_details": [
     {
       "expected_resolution": "next_yahoo_acquisition",
       "failure_observed_at": null,
       "max_source_age_business_days": 6,
-      "payload_sha256": "6a3d3442408eaa2cebf4f85ff1937c4166cc6db0c7dd8d4069538697f5d1b799",
-      "source_age_business_days": 7,
+      "payload_sha256": "748956b6fa230fd9a4dcbe3662a2014657ad202579798b82c260939bc23f043a",
+      "source_age_business_days": 8,
       "source_as_of": "2026-10-05T13:46:03Z",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "AMHI"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "6545c18fe2f607a7e2867293073d6e514b3bdb130999690150097771f7fdfaa8",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T19:58:30Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "AMUB"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -7043,6 +7055,16 @@
       "source_as_of": "2026-08-10",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "BERZ"
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "failure_observed_at": "2026-10-15T05:07:29Z",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "cf5153321eeab1cd440d3ca44d8d04a7b27a948047554f67958f265b60ea289b",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-12",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BILD"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -7076,7 +7098,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T04:46:01Z",
+      "failure_observed_at": "2026-10-15T04:30:38Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "e0b94577d004871428218f80f5aecc6e08d27d65536f3f315ef3e433d7d851d2",
       "source_age_business_days": 11,
@@ -7146,7 +7168,7 @@
     },
     {
       "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": "2026-10-14T04:46:07Z",
+      "failure_observed_at": "2026-10-15T04:30:40Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "bb5fcaadc3fe45fda106a1cd6b11064c77c9a02832a0afb67759f16f31ab270c",
       "source_age_business_days": 7,
@@ -7176,7 +7198,7 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-10-14T04:46:08Z",
+      "failure_observed_at": "2026-10-15T04:30:42Z",
       "max_source_age_business_days": 6,
       "payload_sha256": "7802222225aa6586138dec72d738683589c4138274087894e85c62de6be94f36",
       "source_age_business_days": 8,
@@ -7203,31 +7225,13 @@
       "source_as_of": "2026-08-07",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "JETU"
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "failure_observed_at": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "35a8a1a524c3d6c97081464e2a9116b5581b8fa8bacace03f5482d4e81def0a2",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-10-05T16:54:56Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "JPND"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-10-14T04:45:27Z",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
-      "source_age_business_days": 19,
-      "source_as_of": "2026-07-14T17:31:32Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LEAD"
     }
   ],
   "lkg_symbols": [
     "AMHI",
+    "AMUB",
     "BERZ",
+    "BILD",
     "BNKU",
     "BULZ",
     "CARD",
@@ -7243,13 +7247,11 @@
     "IFED",
     "IGGY",
     "JETD",
-    "JETU",
-    "JPND",
-    "LEAD"
+    "JETU"
   ],
-  "message": "Yahoo quote/history: fresh=6907, lkg=38, pending_history=0, unavailable=0, pending_acquisition=22, terminal=17, catalogue=6984, eligible=6984, retry=38, failed=10, source_stale=38. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
-  "oldest_source_as_of": "2026-07-14T17:31:32Z",
-  "oldest_source_ticker": "LEAD",
+  "message": "Yahoo quote/history: fresh=6903, lkg=44, pending_history=0, unavailable=0, pending_acquisition=21, terminal=18, catalogue=6986, eligible=6986, retry=44, failed=10, source_stale=44. Pending history is a normal new-listing state and self-resolves on the next Yahoo acquisition.",
+  "oldest_source_as_of": "2026-08-06",
+  "oldest_source_ticker": "BNKU",
   "pending_acquisition_details": [
     {
       "coverage": false,
@@ -7261,7 +7263,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ACMG"
@@ -7276,22 +7278,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
-      "provider_reachability": "not_attempted",
-      "resolution_state": "pending_acquisition",
-      "symbol": "ACYB"
-    },
-    {
-      "coverage": false,
-      "coverage_status": "not_observed",
-      "discovered_from": [
-        "stockanalysis_etf"
-      ],
-      "first_seen_at": "2026-10-12T15:29:34Z",
-      "first_seen_from": [
-        "stockanalysis_etf"
-      ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "BRZL"
@@ -7306,7 +7293,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "BTA"
@@ -7321,7 +7308,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "FIXT"
@@ -7336,7 +7323,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "FLYD"
@@ -7351,7 +7338,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "GMAC"
@@ -7366,7 +7353,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "JPNU"
@@ -7381,7 +7368,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "LQDU"
@@ -7396,7 +7383,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "MNGU"
@@ -7411,10 +7398,25 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "OPTO"
+    },
+    {
+      "coverage": false,
+      "coverage_status": "not_observed",
+      "discovered_from": [
+        "stockanalysis_etf"
+      ],
+      "first_seen_at": "2026-10-15T23:24:38Z",
+      "first_seen_from": [
+        "stockanalysis_etf"
+      ],
+      "last_seen_at": "2026-10-15T23:47:06Z",
+      "provider_reachability": "not_attempted",
+      "resolution_state": "pending_acquisition",
+      "symbol": "PEPT"
     },
     {
       "coverage": false,
@@ -7426,7 +7428,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "PINC"
@@ -7441,7 +7443,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "RINK"
@@ -7456,7 +7458,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "SMHD"
@@ -7471,7 +7473,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "SMHU"
@@ -7486,22 +7488,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
-      "provider_reachability": "not_attempted",
-      "resolution_state": "pending_acquisition",
-      "symbol": "VGTX"
-    },
-    {
-      "coverage": false,
-      "coverage_status": "not_observed",
-      "discovered_from": [
-        "stockanalysis_etf"
-      ],
-      "first_seen_at": "2026-10-12T15:29:34Z",
-      "first_seen_from": [
-        "stockanalysis_etf"
-      ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "WSLS"
@@ -7516,7 +7503,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "WTAL"
@@ -7531,7 +7518,7 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "XLCD"
@@ -7546,15 +7533,29 @@
       "first_seen_from": [
         "stockanalysis_etf"
       ],
-      "last_seen_at": "2026-10-14T23:39:37Z",
+      "last_seen_at": "2026-10-15T23:47:06Z",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "XLPD"
+    },
+    {
+      "coverage": false,
+      "coverage_status": "not_observed",
+      "discovered_from": [
+        "stockanalysis_etf"
+      ],
+      "first_seen_at": "2026-10-12T15:29:34Z",
+      "first_seen_from": [
+        "stockanalysis_etf"
+      ],
+      "last_seen_at": "2026-10-15T23:47:06Z",
+      "provider_reachability": "not_attempted",
+      "resolution_state": "pending_acquisition",
+      "symbol": "XLPU"
     }
   ],
   "pending_acquisition_symbols": [
     "ACMG",
-    "ACYB",
     "BRZL",
     "BTA",
     "FIXT",
@@ -7564,21 +7565,24 @@
     "LQDU",
     "MNGU",
     "OPTO",
+    "PEPT",
     "PINC",
     "RINK",
     "SMHD",
     "SMHU",
-    "VGTX",
     "WSLS",
     "WTAL",
     "XLCD",
-    "XLPD"
+    "XLPD",
+    "XLPU"
   ],
   "pending_details": [],
   "pending_symbols": [],
   "retry_symbols": [
     "AMHI",
+    "AMUB",
     "BERZ",
+    "BILD",
     "BNKU",
     "BULZ",
     "CARD",
@@ -7596,9 +7600,9 @@
     "JETD",
     "JETU",
     "JPND",
-    "LEAD",
     "MLPR",
-    "MUNG",
+    "MUNB",
+    "NBCE",
     "NRGD",
     "NRGU",
     "OILD",
@@ -7606,9 +7610,13 @@
     "OND",
     "PFFL",
     "PMAU",
+    "PMMY",
+    "RAAY",
     "SHNY",
     "SHPP",
+    "SMCC",
     "SPYU",
+    "TPEI",
     "VXZ",
     "WR",
     "WTID",
@@ -7617,7 +7625,7 @@
     "ZSC"
   ],
   "scheduled_universe": {
-    "observed_at": "2026-10-14T23:39:37Z",
+    "observed_at": "2026-10-15T23:47:06Z",
     "scope": "stocks",
     "symbols": [
       "000001.SZ",
@@ -9998,15 +10006,6 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 19,
-      "source_as_of": "2026-07-14T17:31:32Z",
-      "symbols": [
-        "LEAD"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 9,
       "source_as_of": "2026-08-06",
       "symbols": [
@@ -10085,15 +10084,6 @@
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
       "source_age_business_days": 13,
-      "source_as_of": "2026-09-22T20:00:00Z",
-      "symbols": [
-        "MUNG"
-      ]
-    },
-    {
-      "expected_resolution": "next_yahoo_acquisition",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 13,
       "source_as_of": "2026-09-23",
       "symbols": [
         "DJP",
@@ -10149,6 +10139,15 @@
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
       "source_age_business_days": 7,
+      "source_as_of": "2026-09-30",
+      "symbols": [
+        "BILD"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
       "source_as_of": "2026-09-30T18:06:42Z",
       "symbols": [
         "PMAU"
@@ -10161,6 +10160,15 @@
       "source_as_of": "2026-09-30T19:04:39Z",
       "symbols": [
         "OND"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-01T15:07:37Z",
+      "symbols": [
+        "PMMY"
       ]
     },
     {
@@ -10184,7 +10192,7 @@
     {
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
+      "source_age_business_days": 9,
       "source_as_of": "2026-10-02T19:07:38Z",
       "symbols": [
         "ZSC"
@@ -10193,7 +10201,7 @@
     {
       "expected_resolution": "next_yahoo_acquisition",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
+      "source_age_business_days": 8,
       "source_as_of": "2026-10-05T13:46:03Z",
       "symbols": [
         "AMHI"
@@ -10216,6 +10224,60 @@
       "symbols": [
         "JPND"
       ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T13:33:39Z",
+      "symbols": [
+        "MUNB"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T14:19:17Z",
+      "symbols": [
+        "RAAY"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T15:17:55Z",
+      "symbols": [
+        "NBCE"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T19:47:12Z",
+      "symbols": [
+        "SMCC"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T19:58:30Z",
+      "symbols": [
+        "AMUB"
+      ]
+    },
+    {
+      "expected_resolution": "next_yahoo_acquisition",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-10-06T19:59:46Z",
+      "symbols": [
+        "TPEI"
+      ]
     }
   ],
   "terminal_symbols": [
@@ -10231,6 +10293,7 @@
     "EWCO",
     "HOLX",
     "IHYF",
+    "LEAD",
     "MMC",
     "PSKY",
     "QRVO",
