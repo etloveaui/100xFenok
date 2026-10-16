@@ -1,13 +1,13 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-16T07:25:56.120Z",
+  "generated_at": "2026-10-16T08:01:32.691Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 2,
   "open_incidents": [
     {
       "workflow": "deploy-worker.yml",
       "label": "Deploy Worker (Cloudflare)",
-      "streak": 26,
+      "streak": 27,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38708373158,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38708373158",
@@ -27,31 +27,6 @@
         "failure_streak"
       ],
       "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "data-health-kpi",
-      "label": "Data stopped advancing",
-      "alarm_reasons": [
-        "data_stopped_two_generations",
-        "member_ratio_low"
-      ],
-      "outcome_alarms": [
-        {
-          "set": "fred_banking",
-          "reasons": [
-            "member_ratio_low"
-          ],
-          "source_as_of": "2026-10-13",
-          "fresh_members": 3,
-          "total_members": 4,
-          "latest_attempt_at": "2026-10-15T07:03:48.409Z"
-        }
-      ],
-      "stopped_sets": [
-        "fred_banking"
-      ],
-      "latest_generated_at": "2026-10-16T06:54:46.307Z",
-      "previous_generated_at": "2026-10-16T06:40:27.503Z"
     }
   ],
   "watched_workflows": [
@@ -420,14 +395,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38866860886",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38866860886",
-    "observed_at": "2026-10-16T07:25:56.120Z",
-    "event": "workflow_dispatch",
+    "run_id": "38870746357",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38870746357",
+    "observed_at": "2026-10-16T08:01:32.691Z",
+    "event": "workflow_run",
     "workflows": [
       "deploy-worker.yml",
-      "fetch-stockanalysis.yml",
-      "data-health-kpi"
+      "fetch-stockanalysis.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
