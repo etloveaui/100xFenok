@@ -120,12 +120,9 @@ jobs:
 
       - name: Restore generated signal files to HEAD
         # The publisher owns the plane generation; the git copies belong to
-        # scheduled Update Manifest reconciliation. Clean both canonical and
-        # public mirror files after publication. Restore, rather than delete: both files
-        # are tracked and must remain present at their checked-out HEAD bytes.
+        # scheduled Update Manifest reconciliation. Restore only the tracked
+        # canonical file; public/data is an ignored build projection.
         if: ${{ always() }}
         run: |
           set -euo pipefail
-          git restore --source=HEAD --worktree -- \
-            data/computed/signals.json \
-            100xfenok-next/public/data/computed/signals.json
+          git restore --source=HEAD --worktree -- data/computed/signals.json
