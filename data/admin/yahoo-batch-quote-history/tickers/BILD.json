@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:30:05Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BILD.json",
-    "payload_sha256": "cf5153321eeab1cd440d3ca44d8d04a7b27a948047554f67958f265b60ea289b",
-    "quote_as_of": "2026-10-12T14:15:01Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-16T00:31:07Z",
+    "history_as_of": "2026-10-15",
+    "path": "data/yf/finance/BILD.json",
+    "payload_sha256": "c8abdb5f021f85ea3c79333b7229c2bca4421f173df15fe5c5508be552a42f93",
+    "quote_as_of": "2026-10-15T13:42:06Z",
+    "source_as_of": "2026-10-15"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for BILD: quote_as_of",
     "failures": [],
-    "latency_ms": 1059,
-    "observed_at": "2026-10-15T05:07:29Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for BILD: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-15T05:07:29Z"
+    "latency_ms": 480,
+    "observed_at": "2026-10-16T00:31:07Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:30:05Z",
@@ -38,14 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-15T05:07:29Z",
-    "last_history_as_of": "2026-10-14",
+    "last_attempt_at": "2026-10-16T00:31:07Z",
+    "last_history_as_of": "2026-10-15",
     "provider_advanced": true,
     "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -57,5 +46,5 @@
     "source_as_of": "2026-09-30"
   },
   "ticker": "BILD",
-  "updated_at": "2026-10-15T05:07:29Z"
+  "updated_at": "2026-10-16T00:31:07Z"
 }

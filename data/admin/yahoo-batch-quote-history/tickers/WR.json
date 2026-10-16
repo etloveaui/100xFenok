@@ -1,33 +1,22 @@
 {
   "current": {
-    "fetched_at": "2026-10-12T15:31:40Z",
-    "history_as_of": "2026-10-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WR.json",
-    "payload_sha256": "9c69c5635793644835b36e5577998d4b8053d52560c6abef1cc4e8f43f776b30",
-    "quote_as_of": "2026-10-12T14:30:03Z",
-    "source_as_of": "2026-10-12"
+    "fetched_at": "2026-10-16T01:15:02Z",
+    "history_as_of": "2026-10-15",
+    "path": "data/yf/finance/WR.json",
+    "payload_sha256": "e6e5086521c59170fd33c154192231f42c14bd02f9a203582bfdff20fab2bdce",
+    "quote_as_of": "2026-10-15T14:08:06Z",
+    "source_as_of": "2026-10-15"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 3,
+  "failure_count": 0,
   "last_result": {
     "attempts_used": 1,
-    "error": "ValueError: Yahoo provider source timestamp regresses for WR: quote_as_of",
     "failures": [],
-    "latency_ms": 906,
-    "observed_at": "2026-10-15T04:30:34Z",
-    "outcome": "failed"
-  },
-  "latest_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "ValueError: Yahoo provider source timestamp regresses for WR: quote_as_of",
-    "failure_kind": "candidate_rejected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-10-15T04:30:34Z"
+    "latency_ms": 403,
+    "observed_at": "2026-10-16T01:15:02Z",
+    "outcome": "fresh"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:40Z",
@@ -38,14 +27,14 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-15T04:30:34Z",
-    "last_history_as_of": "2026-10-14",
+    "last_attempt_at": "2026-10-16T01:15:02Z",
+    "last_history_as_of": "2026-10-15",
     "provider_advanced": true,
     "stalled_attempts": [],
     "was_terminal": false
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -57,5 +46,5 @@
     "source_as_of": "2026-09-28T14:18:28Z"
   },
   "ticker": "WR",
-  "updated_at": "2026-10-15T04:30:34Z"
+  "updated_at": "2026-10-16T01:15:02Z"
 }

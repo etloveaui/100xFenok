@@ -10,13 +10,13 @@
   "discovered_from": [
     "stockanalysis_etf"
   ],
-  "failure_count": 1,
+  "failure_count": 2,
   "last_result": {
     "attempts_used": 1,
     "error": "ValueError: Yahoo provider source timestamp regresses for PMMY: quote_as_of",
     "failures": [],
-    "latency_ms": 1019,
-    "observed_at": "2026-10-15T05:25:06Z",
+    "latency_ms": 467,
+    "observed_at": "2026-10-16T00:44:32Z",
     "outcome": "failed"
   },
   "latest_failure": {
@@ -27,7 +27,7 @@
     "failure_kind": "candidate_rejected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-10-15T05:25:06Z"
+    "observed_at": "2026-10-16T00:44:32Z"
   },
   "lkg": {
     "fetched_at": "2026-10-12T15:31:15Z",
@@ -38,10 +38,17 @@
     "source_as_of": "2026-10-12"
   },
   "provider_lifecycle": {
-    "last_attempt_at": "2026-10-15T05:25:06Z",
+    "last_attempt_at": "2026-10-16T00:44:32Z",
     "last_history_as_of": "2026-10-14",
-    "provider_advanced": true,
-    "stalled_attempts": [],
+    "provider_advanced": false,
+    "stalled_attempts": [
+      {
+        "history_as_of": "2026-10-14",
+        "http_status": null,
+        "observed_at": "2026-10-16T00:44:32Z",
+        "reason": "history_not_advanced"
+      }
+    ],
     "was_terminal": false
   },
   "recovered_at": "2026-09-28T06:02:24Z",
@@ -58,5 +65,5 @@
     "source_as_of": "2026-10-01T15:07:37Z"
   },
   "ticker": "PMMY",
-  "updated_at": "2026-10-15T05:25:06Z"
+  "updated_at": "2026-10-16T00:44:32Z"
 }
