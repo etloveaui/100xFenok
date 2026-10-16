@@ -743,10 +743,14 @@ function hasDeclaredCanonicalPublicMirror(assetValue, publicSpec, repoRoot) {
   if (!publicSpec.path.startsWith(PUBLIC_MIRROR_PREFIX)) return false;
   const canonicalPath = publicSpec.path.slice(PUBLIC_MIRROR_PREFIX.length);
   const canonicalSpec = assetValue.outputs.find((outputSpec) => (
-    outputSpec.path === canonicalPath && outputSpec.kind === publicSpec.kind
+    (outputSpec.path === canonicalPath && outputSpec.kind === publicSpec.kind)
+    || (outputSpec.kind === "directory" && canonicalPath.startsWith(`${outputSpec.path}/`))
   ));
   if (!canonicalSpec) return false;
-  return fs.existsSync(path.join(repoRoot, canonicalSpec.path));
+  const canonical = path.join(repoRoot, canonicalPath);
+  if (!fs.existsSync(canonical)) return false;
+  const stat = fs.lstatSync(canonical);
+  return publicSpec.kind === "file" ? stat.isFile() : stat.isDirectory();
 }
 
 function validateOutput(spec, context, prefix) {
