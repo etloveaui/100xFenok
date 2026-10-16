@@ -126,12 +126,12 @@ on:
         default: 'false'
 
 permissions:
-  contents: write
+  contents: read
   actions: write
 
 # Serialize Yahoo runs against each other so an older artifact cannot publish
 # after a newer acquisition. This private group does not occupy the global Git
-# writer queue; only the publish job below takes fenok-data-writer.
+# writer queue; publication uses the existing family coordinator.
 concurrency:
   group: yf-finance-pipeline-${{ github.ref }}
   cancel-in-progress: false
@@ -184,6 +184,8 @@ jobs:
       artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
       artifact_ready: ${{ steps.pack.outputs.ready }}
       base_sha: ${{ steps.artifact_identity.outputs.base_sha }}
+      active_generation: ${{ steps.cloud_basis.outputs.generation }}
+      active_manifest: ${{ steps.cloud_basis.outputs.manifest }}
       plan_only: ${{ steps.artifact_identity.outputs.plan_only }}
       fetch_outcome: ${{ steps.fetch_batch.outcome }}
       quarter_closes_outcome: ${{ steps.quarter_closes.outcome }}
@@ -223,6 +225,29 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter
+
+      - name: Hydrate active Yahoo generation and derive runtime state
+        id: cloud_basis
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --hydrate-yahoo-finance)"
+          echo "generation=$(jq -r '.generation_id' <<< "$basis")" >> "$GITHUB_OUTPUT"
+          echo "manifest=$(jq -r '.manifest_sha256' <<< "$basis")" >> "$GITHUB_OUTPUT"
+          export YF_ACTIVE_GENERATION_ROOT="$(jq -r '.output_root' <<< "$basis")"
+          export YAHOO_BATCH_STATE_ROOT="$RUNNER_TEMP/yahoo-state"
+          echo "YF_ACTIVE_GENERATION_ROOT=$YF_ACTIVE_GENERATION_ROOT" >> "$GITHUB_ENV"
+          echo "YAHOO_BATCH_STATE_ROOT=$YAHOO_BATCH_STATE_ROOT" >> "$GITHUB_ENV"
+          # One transition only: the pre-migration generation has no lifecycle
+          # metadata. Retain actual observations from its existing writer state.
+          if [ ! -f data/yf/_acquisition-state.json ]; then
+            python3 scripts/yahoo_batch_state.py export-generation --state-root data/admin/yahoo-batch-quote-history
+          fi
+          python3 scripts/yahoo_batch_state.py hydrate-generation --state-root "$YAHOO_BATCH_STATE_ROOT"
 
       - name: Run batch fetch
         id: fetch_batch
@@ -471,7 +496,7 @@ jobs:
 
       - name: Pack immutable Yahoo candidate
         id: pack
-        if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
+        if: ${{ always() && steps.cloud_basis.outcome == 'success' && env.YF_PLAN_ONLY != 'true' }}
         env:
           ARTIFACT_NAME: ${{ steps.artifact_identity.outputs.name }}
           BASE_SHA: ${{ steps.artifact_identity.outputs.base_sha }}
@@ -480,34 +505,32 @@ jobs:
           ART="$RUNNER_TEMP/yf-artifact"
           rm -rf "$ART"
           mkdir -p "$ART"
-          # The candidate roots are exactly the lane manifest's always_if_exists
-          # declarations for this workflow plus the legacy hand list, selected
-          # with the same git query the manifest stager uses, and the exclusions
-          # below are read from that same manifest, so the artifact and the
-          # staging step cannot disagree about the candidate set.
-          git ls-files --modified --deleted --others --exclude-standard --deduplicate -z -- \
-            data/yf/finance \
-            data/yf/quarter_closes.json \
-            data/admin/yahoo-batch-quote-history \
-            data/yf/estimates-archive \
-            > "$ART/candidate-paths.z"
+          python3 scripts/yahoo_batch_state.py export-generation --state-root "$YAHOO_BATCH_STATE_ROOT"
+          # Compare against the verified active tree, not Git's index. Ignored
+          # generated files still participate, and unchanged bytes are not packed.
+          python3 - "$ART/candidate-paths.z" <<'PYEOF'
+          import hashlib, os, pathlib, sys
+          current = pathlib.Path('data/yf')
+          baseline = pathlib.Path(os.environ['YF_ACTIVE_GENERATION_ROOT'])
+          def inventory(root):
+              files = set()
+              for directory in ('finance', 'estimates-archive'):
+                  files.update(p.relative_to(root).as_posix() for p in (root/directory).rglob('*')
+                               if p.is_file() and p.name != '_summary.json')
+              files.update(name for name in ('quarter_closes.json', '_acquisition-state.json') if (root/name).is_file())
+              return files
+          def digest(path):
+              return hashlib.sha256(path.read_bytes()).digest() if path.is_file() else None
+          changed = ['data/yf/' + name for name in sorted(inventory(current) | inventory(baseline))
+                     if digest(current/name) != digest(baseline/name)]
+          pathlib.Path(sys.argv[1]).write_bytes(b''.join(path.encode() + b'\0' for path in changed))
+          PYEOF
           : > "$ART/candidate-present.z"
           : > "$ART/candidate-deleted.txt"
           : > "$ART/candidate-digests.txt"
-          # The digest set must honour exactly the manifest exclusions the
-          # staging step restores out of the index. A path that is digested but
-          # never committed can never match the origin/main payload readback,
-          # so the lane would fail on every run until a human edits that file.
-          EXCLUDED="$RUNNER_TEMP/yf-candidate-excluded.txt"
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-yf-finance.yml \
-            --list-excludes > "$EXCLUDED"
           present=0
           deleted=0
           while IFS= read -r -d '' candidate; do
-            if grep -qxF -- "$candidate" "$EXCLUDED"; then
-              continue
-            fi
             if [ -e "$candidate" ]; then
               [ -f "$candidate" ] && [ ! -L "$candidate" ] \
                 || { echo "::error::Yahoo candidate is not a regular file: $candidate" >&2; exit 1; }
@@ -570,22 +593,15 @@ jobs:
     # cancelled, or produced no candidate at all.
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (always() && needs.acquire-yf-finance.result != 'cancelled' && needs.acquire-yf-finance.outputs.plan_only != 'true' && needs.acquire-yf-finance.outputs.artifact_ready == 'true') }}
     runs-on: ubuntu-latest
-    # The serialized critical section is apply, stage, commit, push and
-    # readback. Cloud publication is a separate job so provider I/O cannot
-    # hold the global writer queue.
+    # The verified active generation is the apply base; publication owns CAS.
     timeout-minutes: 75
+    permissions:
+      contents: read
+      actions: write
     env:
       YF_PLAN_ONLY: ${{ needs.acquire-yf-finance.outputs.plan_only }}
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
     outputs:
-      pushed_sha: ${{ steps.persist_yahoo_state.outputs.pushed_sha }}
-      readback_confirmed: ${{ steps.readback.outputs.confirmed }}
-      origin_readback: ${{ steps.readback.outputs.origin_readback }}
-      persisted: ${{ steps.persist_yahoo_state.outputs.persisted }}
-      artifact_digest: ${{ needs.acquire-yf-finance.outputs.artifact_digest }}
+      generation: ${{ steps.publish_cloud_generation.outputs.generation }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -601,6 +617,21 @@ jobs:
         with:
           package-manager-cache: false
           node-version: '22'
+
+      - name: Hydrate publication base
+        id: cloud_basis
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          EXPECTED_GENERATION: ${{ needs.acquire-yf-finance.outputs.active_generation }}
+          EXPECTED_MANIFEST: ${{ needs.acquire-yf-finance.outputs.active_manifest }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --hydrate-yahoo-finance)"
+          [ "$(jq -r '.generation_id' <<< "$basis")" = "$EXPECTED_GENERATION" ]
+          [ "$(jq -r '.manifest_sha256' <<< "$basis")" = "$EXPECTED_MANIFEST" ]
 
       - name: Download immutable Yahoo candidate
         uses: actions/download-artifact@v4
@@ -665,17 +696,17 @@ jobs:
             cat "$ART/candidate-noncanonical.txt" >&2
             exit 1
           fi
-          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$)' "$ART/candidate-entries.txt" > "$ART/candidate-outside.txt"; then
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/yf/_acquisition-state\.json$|data/yf/quarter_closes\.json$)' "$ART/candidate-entries.txt" > "$ART/candidate-outside.txt"; then
             echo "::error::artifact contains paths outside the Yahoo candidate allowlist" >&2
             cat "$ART/candidate-outside.txt" >&2
             exit 1
           fi
-          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$)' "$ART/candidate-deleted.txt" > "$ART/deleted-outside.txt"; then
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/yf/_acquisition-state\.json$|data/yf/quarter_closes\.json$)' "$ART/candidate-deleted.txt" > "$ART/deleted-outside.txt"; then
             echo "::error::artifact deletion list contains paths outside the Yahoo candidate allowlist" >&2
             cat "$ART/deleted-outside.txt" >&2
             exit 1
           fi
-          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$)' "$ART/candidate-digest-paths.txt" > "$ART/digest-outside.txt"; then
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/yf/_acquisition-state\.json$|data/yf/quarter_closes\.json$)' "$ART/candidate-digest-paths.txt" > "$ART/digest-outside.txt"; then
             echo "::error::artifact digest list contains paths outside the Yahoo candidate allowlist" >&2
             cat "$ART/digest-outside.txt" >&2
             exit 1
@@ -693,28 +724,10 @@ jobs:
             || { echo "::error::candidate tar and digest paths disagree" >&2; cat "$ART/candidate-path-parity.diff" >&2; exit 1; }
           echo "artifact validated: $(wc -l < "$ART/candidate-entries.txt") entries at base $BASE_SHA"
 
-      - name: Apply candidate onto latest main
-        env:
-          BASE_SHA: ${{ needs.acquire-yf-finance.outputs.base_sha }}
+      - name: Apply candidate onto the verified active generation
         run: |
           set -euo pipefail
           ART="$RUNNER_TEMP/yf-artifact"
-          git fetch --depth=1 origin +main:refs/remotes/origin/main
-          git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null \
-            || git fetch --no-tags origin "$BASE_SHA"
-          git fetch --deepen=50 origin main || git fetch origin main
-          git merge-base --is-ancestor "$BASE_SHA" origin/main \
-            || { echo "::error::Yahoo candidate base is not an ancestor of latest main" >&2; exit 1; }
-          cat "$ART/candidate-entries.txt" "$ART/candidate-deleted.txt" \
-            | sort -u > "$ART/candidate-all.txt"
-          while IFS= read -r candidate; do
-            [ -n "$candidate" ] || continue
-            if ! git diff --quiet "$BASE_SHA" origin/main -- "$candidate"; then
-              echo "::error::stale Yahoo candidate path changed since acquisition: $candidate" >&2
-              exit 1
-            fi
-          done < "$ART/candidate-all.txt"
-          git checkout -B main origin/main
           tar --no-same-owner --no-same-permissions -xf "$ART/candidate.tar" -C .
           # Re-verify every extracted file against the digest recorded at pack
           # time, so transport corruption fails closed before staging.
@@ -725,141 +738,24 @@ jobs:
               rm -f -- "$removed"
             done < "$ART/candidate-deleted.txt"
           fi
-          echo "applied Yahoo candidate onto $(git rev-parse HEAD)"
+          echo "Applied Yahoo candidate onto its verified active generation"
 
-      - name: Commit and push fetched Yahoo source data
-        id: persist_yahoo_state
-        if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-yf-finance.yml \
-            --stage always_if_exists
-          git add -- \
-            data/yf/finance \
-            data/yf/quarter_closes.json \
-            data/admin/yahoo-batch-quote-history
-          git restore --staged --worktree -- data/yf/finance/_summary.json
-          if git diff --staged --quiet; then
-            echo "No fetched Yahoo candidate changes to persist"
-            echo "persisted=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git commit -m "data: persist yf finance candidates"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "candidate rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
-              echo "persisted=true" >> "$GITHUB_OUTPUT"
-              echo "pushed_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "candidate push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "candidate push failed after retrying concurrent main updates"
-          exit 1
-
-      - name: Read back landed commit from origin/main
-        id: readback
-        if: ${{ steps.persist_yahoo_state.outputs.persisted == 'true' }}
-        env:
-          PUSHED_SHA: ${{ steps.persist_yahoo_state.outputs.pushed_sha }}
-        run: |
-          set -euo pipefail
-          # DEC-305: a publish is confirmed only by a landed commit read back
-          # from origin/main, never by a green push step.
-          git fetch --deepen=50 origin main || git fetch origin main
-          REMOTE_SHA="$(git rev-parse origin/main)"
-          if [ "$PUSHED_SHA" = "$REMOTE_SHA" ]; then
-            echo "origin/main readback confirmed at $PUSHED_SHA"
-          elif git merge-base --is-ancestor "$PUSHED_SHA" origin/main; then
-            echo "origin/main readback confirmed: $PUSHED_SHA is an ancestor of $REMOTE_SHA"
-          else
-            echo "::error::origin/main readback did not contain pushed commit $PUSHED_SHA" >&2
-            exit 1
-          fi
-          while read -r expected path; do
-            [ -n "$path" ] || continue
-            actual="$(git show "origin/main:$path" | sha256sum | awk '{print $1}')"
-            [ "$actual" = "$expected" ] \
-              || { echo "::error::origin/main payload digest mismatch: $path" >&2; exit 1; }
-          done < "$RUNNER_TEMP/yf-artifact/candidate-digests.txt"
-          while IFS= read -r removed; do
-            [ -n "$removed" ] || continue
-            if git cat-file -e "origin/main:$removed" 2>/dev/null; then
-              echo "::error::origin/main still contains deleted Yahoo candidate: $removed" >&2
-              exit 1
-            fi
-          done < "$RUNNER_TEMP/yf-artifact/candidate-deleted.txt"
-          echo "confirmed=true" >> "$GITHUB_OUTPUT"
-          echo "origin_readback=confirmed" >> "$GITHUB_OUTPUT"
-
-      # Keep the dispatch after source commit/readback. The explicit recovery
-      # branch preserves failed-fetch recovery when an earlier step failed,
-      # while the success branch covers ordinary and no-change runs.
-      - name: Dispatch shared projection rebuild
-        if: ${{ always() && env.YF_PLAN_ONLY != 'true' && (success() || ((needs.acquire-yf-finance.outputs.fetch_outcome == 'failure' || needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure') && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' && steps.readback.outputs.confirmed == 'true')) }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run update-manifest.yml --ref main
-
-  # Cloud publication reads the exact source commit that the locked Git job
-  # pushed. It carries no Git write and therefore uses only a family-local
-  # concurrency group.
-  publish-yf-cloud:
-    needs: [clock-admission, acquire-yf-finance, publish-yf-finance]
-    # Publish confirmed canonical bytes, including accepted partial batches.
-    # Rejected acquisition candidates never enter these bytes; failures stay visible.
-    if: >-
-      needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
-      (always() &&
-      needs.publish-yf-finance.result == 'success' &&
-      needs.publish-yf-finance.outputs.readback_confirmed == 'true')
-    runs-on: ubuntu-latest
-    timeout-minutes: 75
-    permissions:
-      contents: read
-    concurrency:
-      group: yf-finance-cloud-${{ github.ref }}
-      cancel-in-progress: false
-      queue: max
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Confirm exact Yahoo source checkout
-        env:
-          EXPECTED_SHA: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
-        run: |
-          set -euo pipefail
-          ACTUAL_SHA="$(git rev-parse HEAD)"
-          [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ] \
-            || { echo "::error::Yahoo cloud checkout is not the pushed source commit" >&2; exit 1; }
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          package-manager-cache: false
-          node-version: '22'
-
-      - name: Publish Yahoo finance shadow generation
+      - name: Publish Yahoo finance generation
         id: publish_cloud_generation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-          PUBLISH_BINDING_GIT_COMMIT: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
-          PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.publish-yf-finance.outputs.artifact_digest }}
-        run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-finance --tolerate-gate-block --json
+          PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-yf-finance.outputs.artifact_digest }}
+          PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: ${{ needs.acquire-yf-finance.outputs.active_generation }}
+          PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: ${{ needs.acquire-yf-finance.outputs.active_manifest }}
+        run: |
+          result="$(node scripts/publish-cloud-data-generation.mjs --family=yahoo-finance --json)"
+          echo "$result"
+          echo "generation=$(jq -r '.generation_id' <<< "$result")" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch shared projection rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-manifest.yml --ref main

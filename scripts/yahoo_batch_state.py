@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 import hashlib
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -428,14 +429,50 @@ def _result(run: dict, outcome: str, evidence: dict, *, error: str | None = None
     return row
 
 
+def source_freshness_contract(source_by_ticker, now_iso):
+    """Evaluate Yahoo source ages and the canonical bound through the JS contract SSOT."""
+    script = """
+import { yahooBusinessDayAge } from './scripts/lib/market-calendar.mjs';
+import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from './scripts/lib/kpi-contract-constants.mjs';
+let raw = '';
+for await (const chunk of process.stdin) raw += chunk;
+const input = JSON.parse(raw);
+const ages = Object.fromEntries(Object.entries(input.sources).map(([ticker, source]) => [
+  ticker,
+  yahooBusinessDayAge(source, input.now, ticker),
+]));
+process.stdout.write(JSON.stringify({ ages, max_source_business_days: YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS }));
+"""
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parent.parent,
+        input=json.dumps({"sources": source_by_ticker, "now": now_iso}),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Yahoo source-age classification failed: {result.stderr.strip()[:500]}")
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Yahoo source-age classifier returned invalid JSON") from exc
+    ages = payload.get("ages") if isinstance(payload.get("ages"), dict) else None
+    bound = payload.get("max_source_business_days")
+    if ages is None or not isinstance(bound, int):
+        raise RuntimeError("Yahoo source-age classifier returned an invalid contract shape")
+    return {"ages": ages, "max_source_business_days": bound}
+
+
 class YahooBatchStateStore:
-    """Keep one canonical pointer, one exact LKG and actual failures per ticker."""
+    """Derive retained-good payloads from the active generation; retain actual observations."""
 
     def __init__(self, root: Path, finance_dir: Path):
         self.root = Path(root)
         self.finance_dir = Path(finance_dir)
         self.ticker_dir = self.root / "tickers"
-        self.lkg_dir = self.root / "lkg"
+        self.lkg_dir = (Path(os.environ["YF_ACTIVE_GENERATION_ROOT"]) / "finance"
+                        if os.environ.get("YF_ACTIVE_GENERATION_ROOT") else self.finance_dir)
         self.active_universe_path = self.root / "active-universe.json"
         self._results: dict[str, dict] = {}
 
@@ -910,11 +947,10 @@ class YahooBatchStateStore:
         canonical = self.finance_dir / f"{ticker}.json"
         payload_bytes = canonical.read_bytes()
         lkg_path = self._lkg_path(ticker)
-        _write_bytes(lkg_path, payload_bytes)
         source = _payload_source_fields(payload)
         observed_at = str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
         lkg = {
-            "path": f"data/admin/yahoo-batch-quote-history/lkg/{ticker}.json",
+            "path": f"data/yf/finance/{ticker}.json",
             "payload_sha256": _sha256(payload_bytes),
             "fetched_at": payload.get("fetched_at"),
             **source,
@@ -1122,25 +1158,21 @@ class YahooBatchStateStore:
         lkg_path = self._lkg_path(ticker)
 
         lkg = None
-        prior_lkg = state.get("lkg") if isinstance(state.get("lkg"), dict) else None
         prior_lkg_payload = _read_json(lkg_path)
-        if prior_lkg and _valid_canonical_payload(prior_lkg_payload, ticker):
+        if _valid_canonical_payload(prior_lkg_payload, ticker):
             prior_bytes = lkg_path.read_bytes()
-            prior_hash = _sha256(prior_bytes)
-            if prior_hash == prior_lkg.get("payload_sha256"):
-                lkg = {
-                    "path": f"data/admin/yahoo-batch-quote-history/lkg/{ticker}.json",
-                    "payload_sha256": prior_hash,
-                    "fetched_at": prior_lkg_payload.get("fetched_at"),
-                    **_payload_source_fields(prior_lkg_payload),
-                }
+            lkg = {
+                "path": f"data/yf/finance/{ticker}.json",
+                "payload_sha256": _sha256(prior_bytes),
+                "fetched_at": prior_lkg_payload.get("fetched_at"),
+                **_payload_source_fields(prior_lkg_payload),
+            }
         canonical_payload = _read_json(canonical)
         if _valid_canonical_payload(canonical_payload, ticker) and self.recovery_candidate_advances(ticker, canonical_payload):
             payload_bytes = canonical.read_bytes()
-            _write_bytes(lkg_path, payload_bytes)
             source = _payload_source_fields(canonical_payload)
             lkg = {
-                "path": f"data/admin/yahoo-batch-quote-history/lkg/{ticker}.json",
+                "path": f"data/yf/finance/{ticker}.json",
                 "payload_sha256": _sha256(payload_bytes),
                 "fetched_at": canonical_payload.get("fetched_at"),
                 **source,
@@ -1179,8 +1211,6 @@ class YahooBatchStateStore:
             state["lkg"] = lkg
             state["current"] = dict(lkg)
         else:
-            if lkg_path.exists():
-                lkg_path.unlink()
             state.pop("lkg", None)
             state.pop("current", None)
         _write_json(self._state_path(ticker), state)
@@ -1511,3 +1541,127 @@ class YahooBatchStateStore:
         }
         _write_json(self.root / index_filename, index)
         return index
+
+
+# The generation retains observations that prices cannot reconstruct. Payload
+# pointers, hashes, source clocks, retry flags and KPI counts are rebuilt.
+GENERATION_OBSERVATION_KEYS = (
+    "terminal", "provider_lifecycle", "latest_failure", "failure_count", "last_result",
+)
+
+
+def export_generation_state(root: Path, yf_root: Path) -> dict:
+    store = YahooBatchStateStore(root, yf_root / "finance")
+    tickers = {}
+    clocks = []
+    for path in sorted(store.ticker_dir.glob("*.json")):
+        state = store._load_state(path.stem)
+        item = {key: state[key] for key in GENERATION_OBSERVATION_KEYS if key in state}
+        first_seen = (state.get("pending") or {}).get("first_seen_at")
+        if first_seen:
+            item["first_seen_at"] = first_seen
+        if item:
+            tickers[path.stem] = item
+        clocks.extend(value for value in ((state.get("provider_lifecycle") or {}).get("last_attempt_at"),
+                      (state.get("last_result") or {}).get("observed_at")) if _iso_ms(value) is not None)
+    universes = {}
+    for name in (DEFAULT_INDEX_FILENAME, CORE_ETF_INDEX_FILENAME):
+        index = _read_json(root / name) or {}
+        if index:
+            # Membership and selection describe the actual acquisition event;
+            # retained payloads include other runs and cannot reconstruct it.
+            universes[name] = {key: index[key] for key in (
+                "catalogue_symbols", "active_universe_scope", "scheduled_universe",
+                "selection", "weekly_shard_visits", "generated_at",
+            ) if key in index}
+            if _iso_ms(index.get("generated_at")) is not None:
+                clocks.append(index["generated_at"])
+    first_seen = {
+        ticker: {key: row[key] for key in ("first_seen_at", "first_seen_from") if key in row}
+        for ticker, row in store._load_active_universe()["items"].items()
+        if isinstance(row, dict) and row.get("first_seen_at")
+    }
+    if not clocks:
+        raise ValueError("Yahoo generation has no actual acquisition observation timestamp")
+    observed = max(clocks, key=_iso_ms)
+    payload = {"schema_version": "yahoo-generation-observations/v1", "observed_at": observed,
+               "tickers": tickers, "first_seen": first_seen, "universes": universes}
+    _write_json(yf_root / "_acquisition-state.json", payload)
+    return payload
+
+
+def hydrate_generation_state(root: Path, yf_root: Path) -> dict:
+    metadata = _read_json(yf_root / "_acquisition-state.json")
+    if not isinstance(metadata, dict) or metadata.get("schema_version") != "yahoo-generation-observations/v1":
+        raise ValueError("active Yahoo generation lacks acquisition observations")
+    observed = metadata["observed_at"]
+    store = YahooBatchStateStore(root, yf_root / "finance")
+    retained = metadata.get("tickers") or {}
+    payloads = {path.stem: path for path in store.finance_dir.glob("*.json") if not path.name.startswith("_")}
+    sources = {}
+    for ticker in sorted(set(payloads) | set(retained)):
+        if not SYMBOL_RE.fullmatch(ticker):
+            raise ValueError(f"invalid Yahoo generation ticker: {ticker}")
+        saved = retained.get(ticker) or {}
+        state = {"schema_version": "yahoo-batch-quote-history-state/v1", "ticker": ticker,
+                 **{key: saved[key] for key in GENERATION_OBSERVATION_KEYS if key in saved}}
+        if saved.get("first_seen_at"):
+            state["pending"] = {"first_seen_at": saved["first_seen_at"]}
+        path = payloads.get(ticker)
+        payload = _read_json(path) if path else None
+        valid = _valid_canonical_payload(payload, ticker)
+        if valid:
+            state["current"] = {"path": f"data/yf/finance/{ticker}.json",
+                                "payload_sha256": _sha256(path.read_bytes()),
+                                "fetched_at": payload.get("fetched_at"), **_payload_source_fields(payload)}
+        if valid:
+            sources[ticker] = state["current"].get("source_as_of")
+        history = (payload.get("data") or {}).get("history_1y") if valid else None
+        has_history = isinstance(history, list) and bool(history)
+        failed = (state.get("last_result") or {}).get("outcome") in {"failed", "skipped_retry_not_recovered"}
+        pending = _pending_history_reason(payload, state, observed) if valid and not has_history else None
+        terminal = bool(state.get("terminal"))
+        state["resolution_state"] = (TERMINAL_RESOLUTION_STATE if terminal else
+                                     "lkg_primary" if valid and failed else
+                                     "fresh_primary" if has_history else
+                                     "pending_history" if pending else "unavailable")
+        state["retry"] = not terminal and (failed or not has_history)
+        if valid and failed:
+            state["lkg"] = dict(state["current"])
+        state["updated_at"] = (state.get("last_result") or {}).get("observed_at") or observed
+        _write_json(store._state_path(ticker), state)
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    freshness = source_freshness_contract(sources, now)
+    for ticker, age in freshness["ages"].items():
+        state = store._load_state(ticker)
+        if state.get("resolution_state") == "fresh_primary" and isinstance(age, int) and age > freshness["max_source_business_days"]:
+            store._record_source_stale_lkg(ticker, _read_json(payloads[ticker]), {"observed_at": now}, [],
+                                          age_business_days=age, max_business_days=freshness["max_source_business_days"])
+    items = {ticker: {**row, "resolution_state": "pending_acquisition", "coverage": False,
+                     "coverage_status": "not_observed", "provider_reachability": "not_attempted"}
+             for ticker, row in (metadata.get("first_seen") or {}).items() if ticker not in retained and ticker not in payloads}
+    _write_json(store.active_universe_path, {"schema_version": ACTIVE_UNIVERSE_SCHEMA_VERSION, "items": items})
+    for name, event in (metadata.get("universes") or {}).items():
+        if name not in {DEFAULT_INDEX_FILENAME, CORE_ETF_INDEX_FILENAME}:
+            raise ValueError(f"invalid Yahoo generation universe: {name}")
+        _write_json(root / name, event)
+        store._results = {ticker: row["last_result"] for ticker, row in retained.items()
+                          if (row.get("last_result") or {}).get("observed_at") == event.get("generated_at")}
+        store.rebuild_index(set(event.get("catalogue_symbols") or []), {
+            "observed_at": event.get("generated_at") or observed,
+            "active_universe_scope": event.get("active_universe_scope"),
+            "scheduled_universe": event.get("scheduled_universe"), "selection": event.get("selection"),
+        })
+    return metadata
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", choices=("export-generation", "hydrate-generation"))
+    parser.add_argument("--state-root", type=Path, required=True)
+    parser.add_argument("--yf-root", type=Path, default=Path(__file__).resolve().parent.parent / "data/yf")
+    args = parser.parse_args()
+    operation = export_generation_state if args.action == "export-generation" else hydrate_generation_state
+    result = operation(args.state_root, args.yf_root)
+    print(json.dumps({"observed_at": result["observed_at"], "tickers": len(result["tickers"])}))

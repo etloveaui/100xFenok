@@ -57,6 +57,14 @@ if [[ ! "${BEFORE_SHA-}" =~ ^(AUTO|[0-9a-fA-F]{40})$ ]]; then
 fi
 
 node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
+# The hosted retry loop resets tracked inputs. Restore the already verified
+# active Yahoo tree after that reset; derive runtime indexes without a new read.
+if [[ -n "${YAHOO_ACTIVE_PROJECTION_ROOT:-}" ]]; then
+  cp -R "$YAHOO_ACTIVE_PROJECTION_ROOT/." data/yf/
+  if [[ -f data/yf/_acquisition-state.json ]]; then
+    python3 scripts/yahoo_batch_state.py hydrate-generation --state-root data/admin/yahoo-batch-quote-history
+  fi
+fi
 
 # --- S-1: Verified stockanalysis-etf-detail cloud overlay (optional) ----------
 # Natural StockAnalysis ETF runs publish the verified ETF canonical generation

@@ -542,10 +542,12 @@ export async function materializeCloudDataPlaneFamily({
   repoRoot = REPO_ROOT,
   reuseRoot = null,
   privacyClass = "private",
+  privateManifestPrefix = null,
 }) {
   validatePlaneAndFamily(plane, family);
   if (!["private", "public"].includes(privacyClass)) fail("ASSET_PRIVACY_INVALID", privacyClass);
   const prefix = normalizeManifestPrefix(manifestPrefix);
+  const privatePrefix = privateManifestPrefix === null ? null : normalizeManifestPrefix(privateManifestPrefix);
   const output = await validateOutputRoot({ outputRoot, env, repoRoot });
   const { manifest, summary } = await readActiveFamilyIdentity({ plane, family });
   if (summary.asset_count < 1) fail("ASSET_COUNT_INVALID", "at least one asset is required");
@@ -555,18 +557,20 @@ export async function materializeCloudDataPlaneFamily({
   const entries = [];
   const relativePaths = new Set();
   for (const asset of manifest.assets) {
-    if (asset.privacy_class !== privacyClass) {
+    const assetPrefix = asset.privacy_class === "private" && privatePrefix !== null ? privatePrefix : prefix;
+    const expectedPrivacy = assetPrefix === privatePrefix ? "private" : privacyClass;
+    if (asset.privacy_class !== expectedPrivacy) {
       fail("ASSET_PRIVACY_INVALID", `${asset.privacy_class}:${asset.path}`);
     }
-    if (asset.path === prefix) {
+    if (asset.path === assetPrefix) {
       // The path does not leave the prefix at all: strictly under the prefix
       // requires one or more segments after it.
       fail("ASSET_REL_PATH_INVALID", asset.path);
     }
-    if (!asset.path.startsWith(`${prefix}/`)) {
+    if (!asset.path.startsWith(`${assetPrefix}/`)) {
       fail("ASSET_PREFIX_INVALID", asset.path);
     }
-    const remainder = asset.path.slice(prefix.length + 1);
+    const remainder = asset.path.slice(assetPrefix.length + 1);
     const segments = safeRelativeSegments(remainder);
     if (segments === null) fail("ASSET_REL_PATH_INVALID", asset.path);
     if (relativePaths.has(remainder)) fail("ASSET_DUPLICATE", remainder);
@@ -649,7 +653,7 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (!["--family", "--manifest-prefix", "--output-root", "--verify-receipt",
-          "--reuse-root", "--privacy-class"].includes(flag)) {
+          "--reuse-root", "--privacy-class", "--private-manifest-prefix"].includes(flag)) {
       fail("USAGE", `unknown or unexpected argument ${flag}`);
     }
     const value = argv[index + 1];
@@ -669,7 +673,7 @@ function parseArgs(argv) {
   if (missing.length) {
     fail("USAGE", `missing required arguments: ${missing.map((key) => `--${key}`).join(", ")}`);
   }
-  const optional = verifyMode ? [] : ["reuse-root", "privacy-class"];
+  const optional = verifyMode ? [] : ["reuse-root", "privacy-class", "private-manifest-prefix"];
   const unexpected = Object.keys(args).filter(
     (key) => !expected.includes(key) && !optional.includes(key));
   if (unexpected.length) fail("USAGE", `arguments cannot be mixed across modes: ${unexpected.join(",")}`);
@@ -723,6 +727,7 @@ export async function runMaterializerCli({
         env,
         reuseRoot: args["reuse-root"] ?? null,
         privacyClass: args["privacy-class"] ?? "private",
+        privateManifestPrefix: args["private-manifest-prefix"] ?? null,
       });
     stdout(JSON.stringify(receipt));
     return 0;
@@ -757,6 +762,26 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
   }
 }
 
+// Keep the verified active tree until the hosted job ends: the producer reads
+// it as its retained-good baseline while writing a separate candidate checkout.
+export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.env, financeOnly = false } = {}) {
+  const family = "yahoo-finance";
+  const plane = createDefaultMaterializePlane({
+    accountId: env.CLOUDFLARE_ACCOUNT_ID, token: env.CLOUDFLARE_API_TOKEN,
+    endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY, family,
+  });
+  const base = await realpath(env.RUNNER_TEMP || env.TMPDIR || os.tmpdir());
+  const temporary = await mkdtemp(path.join(base, "yahoo-finance-"));
+  const receipt = await materializeCloudDataPlaneFamily({
+    plane, family, manifestPrefix: "public/data/yf", privateManifestPrefix: "data/yf",
+    outputRoot: path.join(temporary, "active"), privacyClass: "public", env, repoRoot,
+  });
+  const source = financeOnly ? path.join(receipt.output_root, "finance") : receipt.output_root;
+  const target = path.join(repoRoot, financeOnly ? "data/yf/finance" : "data/yf");
+  await cp(source, target, { recursive: true });
+  return receipt;
+}
+
 // Git-retired public inputs are materialized from the existing serving plane.
 // A bundled fallback is not an active generation and cannot seed a producer.
 export async function hydrateCanonicalCloudData({ repoRoot = REPO_ROOT, fetchImpl = fetch } = {}) {
@@ -789,7 +814,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter") {
+    if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-finance") {
+      console.log(JSON.stringify(await hydrateYahooFinance()));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter") {
       const { generation_id } = await hydrateGlobalScouter();
       console.log(JSON.stringify({ family: "global-scouter", generation_id }));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-canonical") {

@@ -72,7 +72,7 @@ from data_supply_stock_detail import (
     validate_stock_detail_candidate,
     yahoo_provider_symbol,
 )
-from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore, yahoo_run_verdict, valid_illiquid_history
+from yahoo_batch_state import SYMBOL_RE, YahooBatchStateStore, yahoo_run_verdict, valid_illiquid_history, source_freshness_contract
 
 STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
@@ -84,7 +84,7 @@ SOX_GIW_CONSTITUENTS = ROOT / "data" / "indices" / "nasdaq-giw-sox-constituents.
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
-YAHOO_BATCH_STATE_ROOT = ROOT / "data" / "admin" / "yahoo-batch-quote-history"
+YAHOO_BATCH_STATE_ROOT = Path(os.environ.get("YAHOO_BATCH_STATE_ROOT", ROOT / "data" / "admin" / "yahoo-batch-quote-history"))
 S1_STOCK_PROMOTION_DRY_RUN = ROOT / "data" / "admin" / "fenok-s1-stock-public-promotion-dry-run.json"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
@@ -1980,7 +1980,7 @@ def _valid_retained_lkg(state_store, ticker, state):
         return False
     lkg = state.get("lkg") if isinstance(state.get("lkg"), dict) else None
     current = state.get("current") if isinstance(state.get("current"), dict) else None
-    expected_path = f"data/admin/yahoo-batch-quote-history/lkg/{ticker}.json"
+    expected_path = f"data/yf/finance/{ticker}.json"
     if (
         not lkg
         or not current
@@ -2215,40 +2215,10 @@ def plan_summary(args, tickers, candidate_count):
 
 
 def yahoo_source_freshness(source_by_ticker, now_iso):
-    """Evaluate Yahoo source ages and the canonical bound through the JS contract SSOT."""
     global _YAHOO_QUOTE_SOURCE_BOUND
-    script = """
-import { yahooBusinessDayAge } from './scripts/lib/market-calendar.mjs';
-import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from './scripts/lib/kpi-contract-constants.mjs';
-let raw = '';
-for await (const chunk of process.stdin) raw += chunk;
-const input = JSON.parse(raw);
-const ages = Object.fromEntries(Object.entries(input.sources).map(([ticker, source]) => [
-  ticker,
-  yahooBusinessDayAge(source, input.now, ticker),
-]));
-process.stdout.write(JSON.stringify({ ages, max_source_business_days: YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS }));
-"""
-    result = subprocess.run(
-        ["node", "--input-type=module", "-e", script],
-        cwd=ROOT,
-        input=json.dumps({"sources": source_by_ticker, "now": now_iso}),
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"Yahoo source-age classification failed: {result.stderr.strip()[:500]}")
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("Yahoo source-age classifier returned invalid JSON") from exc
-    ages = payload.get("ages") if isinstance(payload.get("ages"), dict) else None
-    bound = payload.get("max_source_business_days")
-    if ages is None or not isinstance(bound, int):
-        raise RuntimeError("Yahoo source-age classifier returned an invalid contract shape")
-    _YAHOO_QUOTE_SOURCE_BOUND = bound
-    return {"ages": ages, "max_source_business_days": bound}
+    result = source_freshness_contract(source_by_ticker, now_iso)
+    _YAHOO_QUOTE_SOURCE_BOUND = result["max_source_business_days"]
+    return result
 
 
 def yahoo_source_business_day_ages(source_by_ticker, now_iso):

@@ -329,17 +329,15 @@ const lanes = [
     public_mirror_allowed: false,
     admin_store: "data/admin/yahoo_etf_fallback",
     detection_attempt: null,
-    canonical_outputs: ["data/yf/etf-details", "data/yf/finance"],
+    canonical_outputs: ["data/yf/etf-details"],
     public_mirror: [],
     commit_shards: [
       "data/admin/yahoo_etf_fallback",
       "data/yf/etf-details",
-      "data/yf/finance",
     ],
     recovery_store: "data/admin/yahoo_etf_fallback/index.json",
     kpi_recovery_shape: "general",
-    declared_exception: "data/yf/finance is a ticker-partitioned namespace shared with the separate Yahoo batch producer; this workflow stages only its artifact-declared changed ticker files",
-    public_canonical_outputs: ["data/yf/finance"],
+    declared_exception: "Yahoo finance is an in-run working copy seeded from its active generation; only the Yahoo engine publishes that family",
     script_sources: [
       "scripts/fetch-stockanalysis.py",
       "scripts/yahoo-etf-fallback-recovery.mjs",
@@ -1249,9 +1247,7 @@ const lanes = [
     detection_attempt: null,
     canonical_outputs: [],
     public_mirror: [],
-    commit_shards: [
-      "data/admin/yahoo-batch-quote-history",
-    ],
+    commit_shards: [],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
     kpi_recovery_shape: "direct",
     script_sources: [
@@ -1293,6 +1289,14 @@ const declared_exceptions = [
     kind: "root",
     reason: "legacy Yahoo-migration evidence root, admin-private; not a lane store",
     owner: "platform",
+  },
+  {
+    path: "data/yf/_acquisition-state.json",
+    kind: "file",
+    reason: "Private Yahoo generation acquisition observations; runtime indexes are derived from the active generation",
+    owner: "yahoo_batch_quote_history",
+    may_be_absent: true,
+    public_sync: "exclude",
   },
   {
     path: "data/yf/estimates-archive",
@@ -1687,17 +1691,7 @@ workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = lanePolicy("
     commitSpec("data/admin/finra-ats/weeks", "directory", true),
   ],
 });
-workflow_policies[".github/workflows/fetch-yf-finance.yml"] = lanePolicy(".github/workflows/fetch-yf-finance.yml", {
-  always_if_exists: [
-    commitSpec("data/yf/finance", "directory", true),
-    commitSpec("data/yf/quarter_closes.json", "file", true),
-    commitSpec("data/admin/yahoo-batch-quote-history", "directory", true),
-    commitSpec("data/yf/estimates-archive", "directory", true),
-  ],
-}, [
-  commitSpec("data/yf/finance/_summary.json", "file"),
-  commitSpec("data/yf/estimates-archive/_summary.json", "file"),
-]);
+workflow_policies[".github/workflows/fetch-yf-finance.yml"] = lanePolicy(".github/workflows/fetch-yf-finance.yml", { always_if_exists: [] });
 workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".github/workflows/fetch-stockanalysis.yml", {
   always_if_exists: [
     commitSpec("data/stockanalysis", "directory", true),
@@ -1705,7 +1699,6 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec("data/admin/data-supply-state/v1", "directory", true),
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
-    commitSpec("data/yf/finance", "dynamic_set"),
   ],
 }, [
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),

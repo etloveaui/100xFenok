@@ -342,6 +342,10 @@ def pack_artifact(
             continue
         if is_public_mirror_path(rel):
             continue
+        # Yahoo owns finance publication. Acquisition may use and update these
+        # working copies, but ETF detail already embeds its Yahoo observation.
+        if rel.startswith("data/yf/finance/"):
+            continue
         if any(spec_matches(rel, excluded) for excluded in excludes):
             source = repo / rel
             if not source.is_file() or sha256_file(source) != sha256_file(path):

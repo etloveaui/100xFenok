@@ -732,11 +732,10 @@ export const FAMILIES = {
     validate_public_payload: validateEarningsOverviewPublicPayload,
   },
   "yahoo-finance": {
-    // Shadow-only first slice. quarter_closes has a different source clock and
-    // stays outside this family; _summary is an uncommitted local receipt.
-    root: "data/yf/finance",
-    manifest_prefix: "public/data/yf/finance",
-    exclude: ["_summary.json"],
+    // One generation carries public market inputs and private, non-derivable
+    // acquisition metadata. Asset privacy is applied before manifest creation.
+    root: "data/yf",
+    manifest_prefix: "public/data/yf",
     reader_enrollment: false,
     privacy_class: "public",
     source_as_of: { per_asset_resolver: "yahoo_finance_source_timestamp" },
@@ -1214,7 +1213,20 @@ function stockAnalysisDetailSourceObservation(payload) {
     : { day: observationDay, origin: "acquisition-observation" };
 }
 
-function yahooFinanceSourceObservation(payload) {
+function yahooFinanceSourceObservation(payload, relative = "") {
+  if (relative.startsWith("estimates-archive/") && Array.isArray(payload)) {
+    const days = payload.map((row) => stockAnalysisCollectionDay(row?.receipt_at)).filter(Boolean).sort();
+    return days.length ? { day: days.at(-1), origin: "acquisition-observation" } : null;
+  }
+  if (relative === "_acquisition-state.json") {
+    const day = stockAnalysisCollectionDay(payload?.observed_at);
+    return day ? { day, origin: "acquisition-observation" } : null;
+  }
+  if (relative === "quarter_closes.json") {
+    const days = Object.values(payload?.tickers ?? {})
+      .map((row) => stockAnalysisCollectionDay(row?.latest?.date)).filter(Boolean).sort();
+    return days.length ? { day: days.at(-1), origin: "source" } : null;
+  }
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const present = (value) => value !== undefined && value !== null && value !== "";
   if (present(payload.source_as_of)) {
@@ -1406,7 +1418,7 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       }
       const relative = enrolledPath.slice(relRoot.length + 1);
       const json = decodeJson(bytes);
-      const resolved = resolveAssetSource(json);
+      const resolved = resolveAssetSource(json, relative);
       if (resolved === null) {
         fail(
           "FAMILY_ASOF_INVALID",
@@ -1566,7 +1578,15 @@ export async function buildFamilyManifest({
 }) {
   const family = FAMILIES[familyName];
   if (!family) fail("FAMILY_UNKNOWN", familyName);
-  const enrolled = explicitFiles ?? family.files ?? (
+  const yahooFiles = familyName === "yahoo-finance" && explicitFiles === null
+    ? [
+      ...(await walkFiles(path.join(absRoot, "finance"), "", true))
+        .filter((relative) => relative !== "_summary.json").map((relative) => `finance/${relative}`),
+      ...(await walkFiles(path.join(absRoot, "estimates-archive"), "", true))
+        .filter((relative) => relative !== "_summary.json").map((relative) => `estimates-archive/${relative}`),
+      "quarter_closes.json", "_acquisition-state.json",
+    ] : null;
+  const enrolled = explicitFiles ?? yahooFiles ?? family.files ?? (
     family.source_lane_id
       ? await filesFromCanonicalRoots({ sourceLaneId: family.source_lane_id, absRoot, familyRoot: family.root })
       : null
@@ -1621,6 +1641,19 @@ export async function buildFamilyManifest({
     } else {
       asset.source_as_of = sourceAsOf.value;
     }
+  }
+  if (familyName === "yahoo-finance") {
+    for (const asset of assets) {
+      const relative = asset.path.slice(relRoot.length + 1);
+      if (relative === "_acquisition-state.json" || relative.startsWith("estimates-archive/")) {
+        const bytes = payloads.get(asset.path);
+        payloads.delete(asset.path);
+        asset.path = `data/yf/${relative}`;
+        asset.privacy_class = "private";
+        payloads.set(asset.path, bytes);
+      }
+    }
+    assets.sort((left, right) => left.path.localeCompare(right.path));
   }
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
   const fingerprint = generationSemanticFingerprint({
@@ -3304,7 +3337,7 @@ export async function runPublisherCli({
     });
     const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
-    if (args.family === "stockanalysis-etf-detail"
+    if (["stockanalysis-etf-detail", "yahoo-finance"].includes(args.family)
       && (env.PUBLISH_BINDING_ARTIFACT_DIGEST
         || env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID
         || env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256)) {
@@ -3314,11 +3347,11 @@ export async function runPublisherCli({
       const expectedId = env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID;
       const expectedSha = env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256;
       if (!expectedId || !/^[0-9a-f]{64}$/.test(expectedSha ?? "")) {
-        fail("ACTIVE_BASIS_BINDING_MISSING", "ETF publish needs its verified active receipt");
+        fail("ACTIVE_BASIS_BINDING_MISSING", `${args.family} publish needs its verified active receipt`);
       }
       if (livePointer?.active?.generation_id !== expectedId
         || livePointer.active.manifest_sha256 !== expectedSha) {
-        fail("ACTIVE_BASIS_DRIFT", "ETF active generation differs from the materialized basis");
+        fail("ACTIVE_BASIS_DRIFT", `${args.family} active generation differs from the materialized basis`);
       }
     }
     const pointerSequenceBefore = livePointer?.sequence ?? 0;

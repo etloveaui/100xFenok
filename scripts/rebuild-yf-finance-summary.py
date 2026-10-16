@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -22,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 FETCHER = ROOT / "scripts" / "fetch-yf-finance.py"
 SCHEMA_VERSION = "yf-finance/v2"
-STATE_INDEX = ROOT / "data" / "admin" / "yahoo-batch-quote-history" / "index.json"
+STATE_INDEX = Path(os.environ.get("YAHOO_BATCH_STATE_ROOT", ROOT / "data" / "admin" / "yahoo-batch-quote-history")) / "index.json"
 
 
 def write_json_atomic(path: Path, payload: dict) -> None:
