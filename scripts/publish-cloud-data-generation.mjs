@@ -725,16 +725,29 @@ export const FAMILIES = {
     },
   },
   "finra-short-volume": {
-    root: "data/admin/finra_short_volume",
-    files: ["current/regsho_daily.json"],
-    privacy_class: "private",
-    // The public-safe freshness marker carries the FINRA trade date of the
-    // source payload as its top-level source_as_of (never the acquisition
-    // time). Non-servable: private family, no ENROLLED_PATHS entry.
-    source_as_of: { key: "source_as_of" },
-    // Gate declaration: >= 2x the measured 1 PutObject / 398 bytes.
-    plan: { class_a: 10, bytes: 1_000 },
-    policy: { max_assets: 4, max_total_bytes: 2_000 },
+    root: "data/computed",
+    manifest_prefix: "public/data/computed",
+    files: ["fenok_occ_options_availability.json"],
+    privacy_class: "public",
+    reuse_active_generation: true,
+    source_as_of: { key: "source_date" },
+    private_roots: ["data/admin/finra_short_volume", "data/admin/occ_options_volume"],
+    private_assets: [
+      {"path": "data/computed/fenok_flow_proxies.json", "source_as_of": null},
+      {"path": "data/computed/fenok_flow_proxies_history.json", "source_as_of": null},
+      {"path": "data/computed/fenok_occ_options_volume.json", "source_as_of": null},
+      {"path": "data/computed/fenok_occ_options_volume_history.json", "source_as_of": null},
+      {"path": "data/computed/fenok_signal_lens_proxies.json", "source_as_of": null},
+      {"path": "data/computed/fenok_signal_lens_proxies_history.json", "source_as_of": null},
+      {"path": "data/computed/fenok_signal_lens_proxies_summary.json", "source_as_of": null},
+    ],
+    plan: { class_a: 64, class_b: 128, bytes: 400_000_000 },
+    policy: { max_assets: 32, max_total_bytes: 200_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return Array.isArray(value.rows) && typeof value.source_date === "string"
+        && !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
   },
   "finra-ats-weekly": {
     root: "data/admin/finra-ats",
@@ -747,6 +760,38 @@ export const FAMILIES = {
     // Retain the existing bounded 26-week raw history and recovery state privately.
     plan: { class_a: 70, class_b: 150, bytes: 20_000_000 },
     policy: { max_assets: 32, max_total_bytes: 10_000_000 },
+  },
+  "krx-daily": {
+    root: "data",
+    manifest_prefix: "public/data",
+    files: ["admin/fenok-edge-korea-krx-daily-index.json", "computed/fenok-edge-korea-krx-bridge-history.json",
+      "computed/fenok-edge-korea-krx-index-daily.json", "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"],
+    privacy_class: "public",
+    reuse_active_generation: true,
+    source_as_of: { file: "computed/fenok-edge-korea-krx-index-daily.json", key: "as_of" },
+    private_roots: ["data/admin/krx"],
+    plan: { class_a: 20, class_b: 40, bytes: 6_000_000 },
+    policy: { max_assets: 12, max_total_bytes: 3_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "yahoo-private-options": {
+    root: "data/computed",
+    manifest_prefix: "public/data/computed",
+    files: ["fenok_yahoo_private_options_availability.json"],
+    privacy_class: "public",
+    reuse_active_generation: true,
+    // This is the provider-availability observation carried by the safe marker.
+    source_as_of: { key: "source_as_of" },
+    private_roots: ["data/admin/yahoo_private_options"],
+    plan: { class_a: 16, class_b: 32, bytes: 10_000_000 },
+    policy: { max_assets: 8, max_total_bytes: 5_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value.public_safe === true && value.raw_payload_included === false;
+    },
   },
   "apewisdom-attention": {
     root: "data",
@@ -1052,6 +1097,10 @@ export function toIsoDay(value) {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (ISO_DAY.test(trimmed)) return isRealIsoDay(trimmed) ? trimmed : null;
+  if (/^\d{8}$/.test(trimmed)) {
+    const day = `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`;
+    return isRealIsoDay(day) ? day : null;
+  }
   const dateTime = trimmed.match(/^(\d{4}-\d{2}-\d{2})[T ]/);
   return dateTime && isRealIsoDay(dateTime[1]) ? dateTime[1] : null;
 }

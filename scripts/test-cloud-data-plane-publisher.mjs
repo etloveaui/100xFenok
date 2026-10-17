@@ -3500,7 +3500,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 // not set-equal, in BOTH directions. Shipped state must be authorized.
 {
   const shipped = assertPublicationAuthorization();
-  assert.equal(shipped.authorized, 30, "shipped families and registry bindings include ApeWisdom");
+  assert.equal(shipped.authorized, 32, "shipped families and registry bindings include the remaining edge lanes");
 
   const bindings = { alpha: { lane_id: "alpha", workflow: ".github/workflows/a.yml" } };
   // A publisher family nobody owns: publishable but its outcome would never land.

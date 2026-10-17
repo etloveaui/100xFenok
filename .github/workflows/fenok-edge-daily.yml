@@ -67,11 +67,11 @@ on:
         default: '250'
 
 permissions:
-  contents: write
+  contents: read
   actions: write
 
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  group: finra-short-volume-publish
   cancel-in-progress: false
   queue: max
 
@@ -104,8 +104,6 @@ jobs:
     needs: clock-admission
     runs-on: ubuntu-latest
     # The cloud data plane's credentials live in the production environment.
-    # This lane publishes a generation after its git write; git stays
-    # authoritative either way.
     environment: production
     timeout-minutes: 75
     steps:
@@ -121,6 +119,21 @@ jobs:
         with:
           package-manager-cache: false
           node-version: '22'
+
+      - name: Hydrate active FINRA/OCC payload and recovery state
+        id: baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family finra-short-volume --manifest-prefix public/data --private-manifest-prefix data --privacy-class public --output-root "$RUNNER_TEMP/finra-short-volume-active")"
+          mkdir -p data
+          cp -R "$RUNNER_TEMP/finra-short-volume-active/." data/
+          echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
+          echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
 
       - name: Resolve bounded window
         id: window
@@ -253,65 +266,7 @@ jobs:
             npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts
           fi
 
-      - name: Commit and push owned source artifacts
-        if: ${{ always() }}
-        shell: bash
-        env:
-          REFRESH_OUTCOME: ${{ steps.refresh_edge.outcome }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fenok-edge-daily.yml \
-            --stage always_if_exists
-          # LKG recovery state is committed on every run so retry/recovery
-          # accounting survives across CI runs. Neither tree carries private raw rows.
-          for SHARD in \
-            data/admin/finra_short_volume/index.json \
-            data/admin/finra_short_volume/current/regsho_daily.json \
-            data/admin/finra_short_volume/lkg/regsho_daily.json \
-            data/admin/finra_short_volume/history/regsho_daily.json \
-            data/admin/occ_options_volume/index.json \
-            data/admin/occ_options_volume/current/occ_options_volume.json \
-            data/admin/occ_options_volume/lkg/occ_options_volume.json; do
-            if [ -f "$SHARD" ]; then git add -- "$SHARD"; fi
-          done
-          if [ "${FENOK_EDGE_PLAN_ONLY:-false}" != "true" ] && [ "$REFRESH_OUTCOME" = "success" ]; then
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fenok-edge-daily.yml \
-              --stage success_verify_not_plan_if_exists
-            git add -- \
-              data/computed/fenok_flow_proxies*.json \
-              data/computed/fenok_occ_options_availability.json \
-              data/computed/fenok_occ_options_volume*.json \
-              data/computed/fenok_signal_lens_proxies*.json
-
-          fi
-          git diff --staged --quiet || git commit -m "chore: update fenok edge daily data"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
-
-      # Publish the same FINRA freshness marker this run just committed as an
-      # immutable generation in the cloud data plane. Nothing switches and no
-      # consumer reads it (private, non-servable family): git remains
-      # authoritative, so a blocked cost gate or a failed publish is loud but
-      # never fatal to the lane.
-      - name: Publish FINRA short volume generation to the cloud data plane
+      - name: Publish finra-short-volume generation
         id: publish_cloud_generation
         if: ${{ steps.refresh_edge.outcome == 'success' && env.FENOK_EDGE_PLAN_ONLY != 'true' }}
         env:
@@ -319,11 +274,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/publish-cloud-data-generation.mjs --family=finra-short-volume --tolerate-gate-block --json
-
-
-      - name: Dispatch manifest reconciliation
-        if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run update-manifest.yml --ref main
+          PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: ${{ steps.baseline.outputs.generation }}
+          PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: ${{ steps.baseline.outputs.manifest }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=finra-short-volume --json
