@@ -355,13 +355,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// FDIC is an artifact-only lane with no always-stage recovery files. Its
-// canonical output is required only when the successful stage is selected.
+// FDIC is an artifact-only lane and has no Git staging stages.
 {
   const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
-  const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
-  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
+  assert.deepEqual(fixture.paths.always, []);
+  assert.deepEqual(fixture.paths.success, []);
 }
 
 // EDGAR's non-admin directory outputs use the default success stage, while
