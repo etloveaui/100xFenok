@@ -872,7 +872,6 @@ export const FAMILIES = {
     root: "data/stockanalysis",
     manifest_prefix: "public/data/stockanalysis",
     privacy_class: "public",
-    exclude: ["etfs/", "README.md"],
     source_as_of: { per_asset_resolver: "stockanalysis_catalogue_source_date" },
     reuse_active_generation: true,
     incremental_write_budget: true,
@@ -1861,11 +1860,14 @@ export async function buildFamilyManifest({
     ? (await walkFiles(absRoot)).filter((relative) => relative.endsWith(".json")
       && (relative.startsWith("investors/") || relative.startsWith("analytics/")
         || ["summary.json", "by_ticker.json", "by_sector.json", "schema.json"].includes(relative))) : null;
+  const catalogueFiles = familyName === "stockanalysis-catalogue" && explicitFiles === null
+    ? (await walkFiles(absRoot)).filter((relative) => relative.endsWith(".json") && !relative.startsWith("etfs/"))
+    : null;
   const publicRootFiles = explicitFiles === null && family.public_roots
     ? [...(family.files ?? []), ...(await Promise.all(family.public_roots.map(async (root) =>
       (await walkFiles(path.join(absRoot, root))).map((relative) => `${root}/${relative}`)))).flat()]
     : null;
-  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? publicRootFiles ?? family.files ?? (
+  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? catalogueFiles ?? publicRootFiles ?? family.files ?? (
     family.source_lane_id
       ? await filesFromCanonicalRoots({ sourceLaneId: family.source_lane_id, absRoot, familyRoot: family.root })
       : null
