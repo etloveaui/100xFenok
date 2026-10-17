@@ -69,11 +69,11 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
   actions: write
 
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  group: krx-daily-publish
   cancel-in-progress: false
   queue: max
 
@@ -106,6 +106,7 @@ jobs:
     needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment: production
     steps:
       - uses: actions/checkout@v7
 
@@ -119,6 +120,21 @@ jobs:
         with:
           package-manager-cache: false
           node-version: '22'
+
+      - name: Hydrate active KRX payload and recovery state
+        id: baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family krx-daily --manifest-prefix public/data --private-manifest-prefix data --privacy-class public --output-root "$RUNNER_TEMP/krx-daily-active")"
+          mkdir -p data
+          cp -R "$RUNNER_TEMP/krx-daily-active/." data/
+          echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
+          echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
 
       - name: Resolve KRX bounded window
         id: window
@@ -265,43 +281,14 @@ jobs:
           echo "KRX fetch failed for ${BASE_END} and ${WALKBACK_DAYS} walkback day(s)"
           exit "$WORST_EXIT_CODE"
 
-      - name: Commit and push KRX source evidence
-        if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
+      - name: Publish krx-daily generation
+        id: publish_cloud_generation
+        if: ${{ steps.krx_fetch.outcome == 'success' && steps.krx_fetch.outputs.attempt_outcome == 'success' && env.FENOK_KRX_PLAN_ONLY != 'true' }}
         env:
-          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outputs.attempt_outcome || steps.krx_fetch.outcome }}
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # The generated manifest owns recovery-state and public-safe output
-          # staging; raw private KRX payloads remain outside this commit boundary.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fenok-edge-krx-daily.yml \
-            --stage always_if_exists
-          if [ "$KRX_FETCH_OUTCOME" = "success" ]; then
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fenok-edge-krx-daily.yml \
-              --stage success_if_exists
-          fi
-          git diff --staged --quiet || git commit -m "chore: update fenok edge krx daily data"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
-
-      - name: Dispatch manifest reconciliation
-        if: ${{ env.FENOK_KRX_PLAN_ONLY != 'true' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run update-manifest.yml --ref main
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: ${{ steps.baseline.outputs.generation }}
+          PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: ${{ steps.baseline.outputs.manifest }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=krx-daily --json
