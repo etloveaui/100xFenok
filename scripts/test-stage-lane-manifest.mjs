@@ -355,14 +355,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Monthly FDIC recovery state and successful canonical outputs remain
-// optional so degraded evidence can still be committed without false failure.
+// FDIC is an artifact-only lane with no always-stage recovery files. Its
+// canonical output is required only when the successful stage is selected.
 {
   const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
-  const always = run(fixture.root, "always_if_exists", [], FDIC_WORKFLOW);
-  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-
   const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
