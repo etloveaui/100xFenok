@@ -220,7 +220,8 @@ const lanes = [
     admin_store: "data/admin/fred_yardeni",
     detection_attempt: null,
     canonical_outputs: ["data/yardney/yardney_model.json"],
-    public_mirror: [],
+    // The aggregate stays public; the workflow publishes only plane generations.
+    public_mirror: ["100xfenok-next/public/data/yardney/yardney_model.json"],
     commit_shards: [],
     recovery_store: "data/admin/fred_yardeni/index.json",
     kpi_recovery_shape: "general",

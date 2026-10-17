@@ -11,7 +11,7 @@ import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
-const WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
+const WORKFLOW = ".github/workflows/staging-fixture.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
@@ -46,6 +46,16 @@ function makeFixture({ workflow = WORKFLOW, includeSuccess = true, successStage 
   execFileSync("git", ["config", "user.email", "test@example.invalid"], { cwd: root });
   execFileSync("git", ["config", "user.name", "manifest-test"], { cwd: root });
   const registry = structuredClone(LANE_REGISTRY);
+  if (workflow === WORKFLOW) {
+    registry.workflow_policies[WORKFLOW] = {
+      ...structuredClone(registry.workflow_policies[YARDENI_WORKFLOW]),
+      stages: {
+        ...structuredClone(registry.workflow_policies[YARDENI_WORKFLOW].stages),
+        always_if_exists: [{ kind: "file", path: "data/admin/fixture/index.json", required: false }],
+        success_if_exists: [{ kind: "file", path: "data/fixture.json", required: true }],
+      },
+    };
+  }
   writeRegistry(root, registry);
   const paths = {
     always: registry.workflow_policies[workflow].stages.always_if_exists.map((entry) => entry.path),
@@ -375,17 +385,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Weekly Yardeni recovery state is always optional, and canonical outputs are
-// selected only by the workflow's successful outcome branch.
+// Yardeni publishes its model and recovery state through the plane.
 {
   const fixture = makeFixture({ workflow: YARDENI_WORKFLOW });
-  const always = run(fixture.root, "always_if_exists", [], YARDENI_WORKFLOW);
-  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-
-  const success = run(fixture.root, "success_if_exists", [], YARDENI_WORKFLOW);
-  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
+  assert.deepEqual(fixture.paths.always, []);
+  assert.deepEqual(fixture.paths.success, []);
 }
 
 // StockAnalysis combines four required producer directories, the optional
