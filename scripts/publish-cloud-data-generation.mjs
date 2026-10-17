@@ -3420,7 +3420,7 @@ export async function runPublisherCli({
     });
     const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
-    if (["stockanalysis-etf-detail", "yahoo-finance"].includes(args.family)
+    if (["stockanalysis-etf-detail", "yahoo-finance", "sec-13f"].includes(args.family)
       && (env.PUBLISH_BINDING_ARTIFACT_DIGEST
         || env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID
         || env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256)) {

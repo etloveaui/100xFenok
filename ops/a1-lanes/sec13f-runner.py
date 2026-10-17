@@ -8,7 +8,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 
 STATUS_PATH = "ops/a1-lanes/sec_13f.json"
@@ -22,33 +21,8 @@ BUILDERS = (
     "build-13f-factor-radar-v2.mjs",
     "build-guru-holders-index.mjs",
 )
-INPUT_ROOTS = (
-    "scripts", "100xfenok-next/src/lib", "100xfenok-next/scripts/cloud-data-plane", "data/sec-13f",
-    "data/global-scouter/core", "data/yf/finance", "data/yf/quarter_closes.json",
-    "data/edgar/company_tickers.json", STATUS_PATH,
-)
-SPARSE_ROOTS = (
-    "scripts", "ops/a1-lanes", "100xfenok-next/src/lib", "100xfenok-next/scripts/cloud-data-plane",
-    "data/sec-13f", "data/global-scouter/core", "data/yf", "data/edgar",
-)
-# A publication only advances the lane when its own payload or its heartbeat
-# reached main. Everything else keeps the failure count alive.
 SUCCESS_OUTCOMES = ("published", "retained")
-# The existing push-race bound is unchanged; a busy writer is waited out inside
-# the same bounded loop instead of failing the run on the first observation.
 PUBLISH_RACE_ATTEMPTS = 3
-WRITER_WAIT_SECONDS = 60
-# One bounded recollection from the refreshed main is allowed per invocation,
-# and only for the input race the fence reports.
-REBUILD_LIMIT = 1
-
-
-class RetryableInputRace(RuntimeError):
-    """A data publication whose inputs changed while it was being collected."""
-
-
-class PublicationDeferred(RuntimeError):
-    """A writer stayed busy for the bounded wait; retain and report honestly."""
 
 
 class PublicationFailed(RuntimeError):
@@ -82,7 +56,7 @@ def write_json(path, value):
 
 
 def seed_tracker(output):
-    """Only committed filings may establish already-processed identities."""
+    """Only the active generation may establish already-processed identities."""
     filings = {}
     for path in sorted((output / "investors").glob("*.json")):
         investor = read_json(path)["investor"]
@@ -99,7 +73,7 @@ def seed_tracker(output):
                 },
             }
     if not filings:
-        raise RuntimeError("Committed 13F investor history is missing")
+        raise RuntimeError("Active 13F investor history is missing")
     return {"version": "3.0.0", "last_build": None, "last_full_build": None,
             "filings": filings, "stats": {"total_processed": 0, "total_skipped": 0}}
 
@@ -202,102 +176,30 @@ def build_state(outcome, error, collected_clock, served_clock, reconciled, rebui
     }
 
 
-def prepare_attempt(args, candidate, base):
-    git(args.repo, "worktree", "add", "--detach", "--no-checkout", str(candidate), base)
-    git(candidate, "sparse-checkout", "set", "--cone", *SPARSE_ROOTS)
-    git(candidate, "checkout", base)
-
-
-def assert_writer_idle():
-    """None when no known writer runs, otherwise the reason to keep waiting."""
-    payload = json.loads(command([
-        "gh", "api", "repos/etloveaui/100xFenok/actions/runs?status=in_progress&per_page=100",
-    ], Path.cwd(), timeout=30))
-    if len(payload.get("workflow_runs", [])) >= 100:
-        return "Writer activity page is full; cannot prove an idle publication window"
-    busy = [run["name"] for run in payload.get("workflow_runs", [])
-            if any(name in run["name"].lower()
-                   for name in ("stockanalysis", "stocks analyzer", "update manifest"))]
-    if busy:
-        return "Publication deferred while writers run: " + ", ".join(sorted(set(busy)))
-    return None
-
-
-def publish(candidate, base, paths, *, data_publication):
-    """Merge only independent incoming changes; never overwrite a newer input.
-
-    A data publication still stops when its inputs changed under it. A
-    status-only update carries no collected payload, so it keeps the same
-    optimistic push retry without the input fence.
-    """
-    git(candidate, "add", "--", *paths)
-    if not git(candidate, "diff", "--cached", "--name-only"):
-        return None
-    git(candidate, "-c", "user.name=fenok-sec13f",
-        "-c", "user.email=fenok-sec13f@local", "commit", "-m",
-        "data: record scheduled SEC 13F collection", "--", *paths)
-    generated = git(candidate, "rev-parse", "HEAD")
-    for attempt in range(PUBLISH_RACE_ATTEMPTS):
-        busy = assert_writer_idle()
-        if busy is not None:
-            if attempt + 1 < PUBLISH_RACE_ATTEMPTS:
-                time.sleep(WRITER_WAIT_SECONDS)
-                continue
-            raise PublicationDeferred(busy)
-        git(candidate, "fetch", "origin", "main")
-        remote = git(candidate, "rev-parse", "origin/main")
-        if data_publication and git(candidate, "diff", "--name-only", base, remote, "--", *INPUT_ROOTS):
-            raise RetryableInputRace("13F inputs changed during collection; retry from the new main")
-        proposed = generated
-        if remote != base:
-            tree = git(candidate, "merge-tree", "--write-tree", generated, remote)
-            proposed = git(candidate, "-c", "user.name=fenok-sec13f",
-                           "-c", "user.email=fenok-sec13f@local", "commit-tree",
-                           tree, "-p", remote, "-p", generated, "-m",
-                           "Merge scheduled SEC 13F collection")
-        result = subprocess.run(["git", "push", "origin", f"{proposed}:refs/heads/main"],
-                                cwd=candidate, text=True, capture_output=True, timeout=120)
-        if result.returncode == 0:
-            git(candidate, "fetch", "origin", "main")
-            git(candidate, "merge-base", "--is-ancestor", proposed, "origin/main")
-            return proposed
-    raise PublicationFailed("13F publication lost three push races; retained for retry")
-
-
 def publish_status_only(args, status, scratch):
-    """Publish one heartbeat file on the current main tip.
-
-    A status-only update carries no collected data, so unrelated input changes
-    cannot block it, and it is committed on a fresh tip of main so no stale
-    candidate tree travels with it. A newer report for this lane is never
-    overwritten by an older attempt. Returns what happened: "published",
-    "superseded" or "no_change".
-    """
+    """Publish the existing heartbeat with a temporary index, never a worktree."""
     scratch.parent.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ, GIT_INDEX_FILE=str(scratch))
     for _ in range(PUBLISH_RACE_ATTEMPTS):
         git(args.repo, "fetch", "origin", "main")
         remote = git(args.repo, "rev-parse", "origin/main")
         if status_is_newer(status_at(args.repo, remote), status):
             return "superseded"
-        if not (scratch / ".git").exists():
-            git(args.repo, "worktree", "add", "--detach", "--no-checkout", str(scratch), remote)
-            git(scratch, "sparse-checkout", "set", "--cone", "ops/a1-lanes")
-            git(scratch, "checkout", remote)
-        else:
-            git(scratch, "checkout", "--detach", remote)
-        write_json(scratch / STATUS_PATH, status)
-        git(scratch, "add", "--", STATUS_PATH)
-        if not git(scratch, "diff", "--cached", "--name-only"):
+        command(["git", "read-tree", remote], args.repo, env=env)
+        body = json.dumps(status, ensure_ascii=False, indent=2) + "\n"
+        blob = subprocess.run(["git", "hash-object", "-w", "--stdin"], cwd=args.repo,
+                              input=body, text=True, capture_output=True, check=True).stdout.strip()
+        command(["git", "update-index", "--add", "--cacheinfo", "100644", blob, STATUS_PATH],
+                args.repo, env=env)
+        tree = command(["git", "write-tree"], args.repo, env=env)
+        if tree == git(args.repo, "rev-parse", f"{remote}^{{tree}}"):
             return "no_change"
-        git(scratch, "-c", "user.name=fenok-sec13f",
-            "-c", "user.email=fenok-sec13f@local", "commit", "-m",
-            "ops: record scheduled SEC 13F lane status", "--", STATUS_PATH)
-        proposed = git(scratch, "rev-parse", "HEAD")
+        proposed = git(args.repo, "-c", "user.name=fenok-sec13f",
+                       "-c", "user.email=fenok-sec13f@local", "commit-tree", tree,
+                       "-p", remote, "-m", "ops: record scheduled SEC 13F lane status")
         result = subprocess.run(["git", "push", "origin", f"{proposed}:refs/heads/main"],
-                                cwd=scratch, text=True, capture_output=True, timeout=120)
+                                cwd=args.repo, text=True, capture_output=True, timeout=120)
         if result.returncode == 0:
-            git(args.repo, "fetch", "origin", "main")
-            git(args.repo, "merge-base", "--is-ancestor", proposed, "origin/main")
             return "published"
     raise PublicationFailed("13F status publication lost three push races")
 
@@ -353,136 +255,75 @@ def main():
     parser.add_argument("--state-root", required=True, type=Path)
     parser.add_argument("--publish", action="store_true")
     args = parser.parse_args()
-    args.repo = args.repo.resolve()
-    args.converter_root = args.converter_root.resolve()
-    args.state_root = args.state_root.resolve()
+    args.repo, args.converter_root, args.state_root = (
+        value.resolve() for value in (args.repo, args.converter_root, args.state_root))
     if sys.platform != "linux":
         raise RuntimeError("This producer runs on the authorized A1 Linux host")
-    # Untrusted preconditions stay outside the reporting path: without a clean
-    # checkout bound to the product remote there is no evidence to report from.
     if git(args.repo, "status", "--porcelain"):
         raise RuntimeError("Collector checkout is dirty; preserve it and stop")
     if git(args.repo, "remote", "get-url", "origin") != "git@github-100xf-a1:etloveaui/100xFenok.git":
         raise RuntimeError("Collector is not bound to the existing A1 product remote")
-    # The checkout is verified from here on, so its committed status and served
-    # clock are the prior truth, and every remaining failure reports a status.
-    reconciled = reconcile_state(
-        read_json(args.repo / STATUS_PATH, {}),
-        read_json(args.state_root / "last-run.json", {}),
-    )
-    served_clock = source_clock(args.repo / DATA_ROOT)
-    started = datetime.now(timezone.utc)
-    runtime = args.state_root / "runs" / started.strftime("%Y%m%dT%H%M%S.%fZ")
-    attempt = 0
-    published = None
-    publication = "none"
-    candidate = runtime / "candidate"
-    outcome, error = "failed", None
+    # The collector owns this checkout and is serialized by the service flock.
+    # Provider files are ignored runtime inputs after the generation cutover.
+    git(args.repo, "fetch", "origin", "main")
+    git(args.repo, "merge", "--ff-only", "origin/main")
+    runtime = args.state_root / "runs" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    runtime.mkdir(parents=True)
+    env = dict(os.environ, RUNNER_TEMP=str(runtime))
+    reconciled = reconcile_state(read_json(args.repo / STATUS_PATH, {}),
+                                 read_json(args.state_root / "last-run.json", {}))
+    outcome, error, generation = "failed", None, None
+    served_clock = (None, None)
     collected_clock = served_clock
     try:
-        git(args.repo, "fetch", "origin", "main")
-        git(args.repo, "merge-base", "--is-ancestor", "HEAD", "origin/main")
-        git(args.repo, "merge", "--ff-only", "origin/main")
-        base = git(args.repo, "rev-parse", "HEAD")
+        basis = json.loads(command(["node", "scripts/materialize-cloud-data-plane-family.mjs",
+                                    "--hydrate-sec-13f"], args.repo, env=env, timeout=15 * 60))
         served_clock = source_clock(args.repo / DATA_ROOT)
-        reconciled = reconcile_state(reconciled, read_json(args.repo / STATUS_PATH, {}))
-        while True:
-            attempt_runtime = (runtime if attempt == 0
-                               else runtime.with_name(f"{runtime.name}-r{attempt}"))
-            attempt_runtime.mkdir(parents=True, exist_ok=True)
-            candidate = attempt_runtime / "candidate"
-            error = None
-            try:
-                prepare_attempt(args, candidate, base)
-                outcome = collect(args, candidate, attempt_runtime)
-            except Exception as exc:
-                outcome, error = "failed", str(exc)
-            # Only a data candidate is published here. Every status-only outcome
-            # (retained, failure, deferral) goes through the one-path publisher
-            # below, on a fresh main tip and without the writer gate.
-            if error is not None or not args.publish or outcome != "candidate_ready":
-                break
-            collected_clock = source_clock(candidate / DATA_ROOT)
-            write_json(candidate / STATUS_PATH, build_state(
-                "published", None, collected_clock, served_clock, reconciled, attempt, _now(),
-                args.publish, publication="with_data"))
-            try:
-                published = publish(candidate, base, [DATA_ROOT, STATUS_PATH],
-                                    data_publication=True)
-                outcome, publication = "published", "with_data"
-                break
-            except RetryableInputRace as exc:
-                if attempt >= REBUILD_LIMIT:
-                    outcome, error = "failed", str(exc)
-                    break
-                # The collected payload stays unpublished. One bounded recollection
-                # runs from the refreshed main in its own attempt directory, and a
-                # refresh failure is reported rather than escaping the handler.
-                attempt += 1
-                try:
-                    git(args.repo, "fetch", "origin", "main")
-                    git(args.repo, "merge", "--ff-only", "origin/main")
-                    base = git(args.repo, "rev-parse", "HEAD")
-                    served_clock = source_clock(args.repo / DATA_ROOT)
-                except Exception as refresh_error:
-                    outcome = "failed"
-                    error = f"recollection refresh failed: {refresh_error}"
-                    break
-            except PublicationDeferred as exc:
-                outcome, error = "deferred", str(exc)
-                break
-            except Exception as exc:
-                outcome, error = "failed", str(exc)
-                break
+        collected_clock = served_clock
+        for flag in ("--hydrate-global-scouter-build", "--hydrate-scouter-derived", "--hydrate-yahoo-analytics"):
+            command(["node", "scripts/materialize-cloud-data-plane-family.mjs", flag],
+                    args.repo, env=env, timeout=15 * 60)
+        outcome = collect(args, args.repo, runtime)
+        collected_clock = source_clock(args.repo / DATA_ROOT)
+        if outcome == "candidate_ready" and args.publish:
+            publish_env = dict(env,
+                PUBLISH_EXPECTED_ACTIVE_GENERATION_ID=basis["generation_id"],
+                PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256=basis["manifest_sha256"])
+            result = json.loads(command(["node", "scripts/publish-cloud-data-generation.mjs",
+                                        "--family=sec-13f", "--json"], args.repo,
+                                       env=publish_env, timeout=15 * 60))
+            if result.get("result") not in ("published", "resumed"):
+                raise RuntimeError(f"13F generation was not promoted: {result.get('result')}")
+            generation = result.get("generation_id")
+            outcome = "published"
+        elif outcome == "retained":
+            generation = basis["generation_id"]
     except Exception as exc:
         outcome, error = "failed", str(exc)
-
     finished = _now()
-    # The report this attempt hands to the status publisher already states that it
-    # reached main; the value is only committed when that publication happens, and
-    # a superseded or failed publication replaces it in the local record below.
-    initial_publication = "with_data" if outcome == "published" else (
-        "published" if args.publish else "none")
-    state = build_state(outcome, error, collected_clock, served_clock, reconciled, attempt,
-                        finished, args.publish, publication=initial_publication)
-    # The local record is durable and is written before any heartbeat, so an
-    # unpublished failure survives even when the status publication also fails.
+    state = build_state(outcome, error, collected_clock, served_clock, reconciled, 0,
+                        finished, args.publish, publication="published" if args.publish else "none")
+    state["last_run"]["generation_id"] = generation
     write_json(args.state_root / "last-run.json", state)
-    status_error = None
-    publication = initial_publication
-    if args.publish and outcome != "published":
+    if args.publish:
         try:
-            publication = publish_status_only(args, state, args.state_root / "status-worktree")
+            publication = publish_status_only(args, state, runtime / "status.index")
+            state["last_run"]["status_publication"] = publication
+            state["last_run"]["published"] = publication in ("published", "no_change")
         except Exception as exc:
-            publication, status_error = "failed", str(exc)
-        if publication != "published":
-            state = build_state(outcome, error, collected_clock, served_clock, reconciled, attempt,
-                                finished, args.publish, publication=publication)
-            if status_error is not None:
-                state["last_run"]["status_publication_error"] = status_error
+            state["last_run"]["status_publication"] = "failed"
+            state["last_run"]["published"] = False
+            state["last_run"]["status_publication_error"] = str(exc)
             write_json(args.state_root / "last-run.json", state)
-    if status_error is not None:
-        print(json.dumps({"outcome": state["last_run"]["outcome"], "error": error,
-                          "status_publication_error": status_error,
-                          "candidate": str(candidate)}))
-        return 1
-    # A clean candidate is removable only when its revision is already on main.
-    # Failed/unpublished output stays available; no reset, clean or forced removal.
-    if candidate.exists():
-        try:
-            if not git(candidate, "status", "--porcelain"):
-                ancestor = subprocess.run(
-                    ["git", "merge-base", "--is-ancestor", "HEAD", "origin/main"], cwd=candidate)
-                if ancestor.returncode == 0:
-                    git(args.repo, "worktree", "remove", str(candidate))
-        except Exception as cleanup_error:
-            print(f"SEC 13F candidate cleanup skipped: {cleanup_error}", file=sys.stderr)
-    print(json.dumps({"outcome": state["last_run"]["outcome"],
-                      "source_as_of": state["last_run"]["source_as_of"],
-                      "consecutive_failures": state["consecutive_failures"], "rebuilds": attempt,
-                      "status_publication": publication, "published": published,
-                      "candidate": str(candidate), "error": error}))
-    return 1 if error else 0
+            print(json.dumps(state["last_run"]))
+            return 1
+        write_json(args.state_root / "last-run.json", state)
+    # Failures retain the converter candidate. A successfully promoted/retained
+    # generation is the retained-good copy; only this run's scratch is removed.
+    if error is None and outcome in SUCCESS_OUTCOMES and args.publish:
+        shutil.rmtree(runtime)
+    print(json.dumps(state["last_run"]))
+    return 0 if error is None and outcome in (*SUCCESS_OUTCOMES, "candidate_ready") else 1
 
 
 if __name__ == "__main__":

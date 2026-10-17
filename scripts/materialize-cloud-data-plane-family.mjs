@@ -835,7 +835,7 @@ export async function hydrateScouterDerived({ repoRoot = REPO_ROOT, env = proces
 
 // Keep the verified active tree until the hosted job ends: the producer reads
 // it as its retained-good baseline while writing a separate candidate checkout.
-export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.env, financeOnly = false } = {}) {
+export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.env, financeOnly = false, analyticsOnly = false } = {}) {
   const family = "yahoo-finance";
   const plane = createDefaultMaterializePlane({
     accountId: env.CLOUDFLARE_ACCOUNT_ID, token: env.CLOUDFLARE_API_TOKEN,
@@ -848,7 +848,9 @@ export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.
     outputRoot: path.join(temporary, "active"), privacyClass: "public", env, repoRoot,
     canonicalReuseRoot: repoRoot,
     publicAssetOrigin: "https://100xfenok.etloveaui.workers.dev",
-    includeAsset: financeOnly ? (asset) => asset.path.startsWith("public/data/yf/finance/") : null,
+    includeAsset: financeOnly || analyticsOnly ? (asset) =>
+      asset.path.startsWith("public/data/yf/finance/")
+      || (analyticsOnly && asset.path === "public/data/yf/quarter_closes.json") : null,
   });
   const source = financeOnly ? path.join(receipt.output_root, "finance") : receipt.output_root;
   const target = path.join(repoRoot, financeOnly ? "data/yf/finance" : "data/yf");
@@ -888,7 +890,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-sec-13f") {
+    if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-analytics") {
+      console.log(JSON.stringify(await hydrateYahooFinance({ analyticsOnly: true })));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-sec-13f") {
       console.log(JSON.stringify(await hydrateSec13f()));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-scouter-derived") {
       console.log(JSON.stringify(await hydrateScouterDerived()));
