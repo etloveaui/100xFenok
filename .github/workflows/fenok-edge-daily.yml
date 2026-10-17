@@ -272,7 +272,7 @@ jobs:
               return state.retry_set.length === 0 && Object.values(state.items).every(item => item.retry !== true);
             });
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `promoted=${promoted}\n`);
-            JS
+          JS
           fi
 
       - name: Publish finra-short-volume generation
