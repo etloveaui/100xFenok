@@ -622,11 +622,11 @@ jobs:
           JS
 
   publish-stockanalysis-etf-plane:
-    needs: [clock-admission, acquire-stockanalysis]
+    needs: [clock-admission, acquire-stockanalysis, publish-stockanalysis]
     if: >-
       !cancelled() &&
       ((github.event_name == 'repository_dispatch' && github.event.action == 'stockanalysis-plane-recovery') ||
-       (needs.acquire-stockanalysis.result == 'success' &&
+       (needs.acquire-stockanalysis.result == 'success' && needs.publish-stockanalysis.result == 'success' &&
         needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
         ((needs.clock-admission.outputs.event_name == 'schedule' &&
           (needs.clock-admission.outputs.mode == 'etf_weekday' || needs.clock-admission.outputs.mode == 'etf_general')) ||
@@ -1198,7 +1198,7 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           # Bind publication to the immutable acquisition artifact; this job
-          # runs independently of the catalogue publisher.
+          # follows the catalogue publisher to serialize bulk R2 operations.
           PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.artifact_digest || needs.acquire-stockanalysis.outputs.artifact_digest }}
         run: |
           node --input-type=module -e '
