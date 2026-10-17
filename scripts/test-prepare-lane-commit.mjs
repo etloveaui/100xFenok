@@ -7,9 +7,9 @@ import { prepare, apply, git } from "./prepare-lane-commit.mjs";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "lane-commit-test-"));
 const env = { GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "2" };
-const workflow = "fetch-defillama.yml";
-const output = "data/macro/stablecoins.json";
-const recovery = "data/admin/defillama_stablecoins/index.json";
+const workflow = "fetch-yahoo-ticker.yml";
+const output = "data/macro/yahoo-ticker.json";
+const recovery = "data/admin/yahoo-hourly-ticker/index.json";
 const g = (...args) => git(args, { cwd: root }).toString().trim();
 const write = (name, body) => { fs.mkdirSync(path.dirname(path.join(root, name)), { recursive: true }); fs.writeFileSync(path.join(root, name), body); };
 const commit = (name) => { g("add", "--", name); g("commit", "-qm", "fixture"); };
