@@ -15,6 +15,7 @@ import {
   PLANE_ENROLLMENT_PREFIXES,
 } from "../../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import { COMPUTED_SIGNALS_SOURCE_LANE_IDS, LANE_REGISTRY } from "./lane-registry.mjs";
+import { FAMILIES } from "../publish-cloud-data-generation.mjs";
 
 export const DERIVED_ASSET_REGISTRY_SCHEMA = "derived-asset-registry/v1";
 export const DERIVED_ASSET_LIFECYCLES = Object.freeze([
@@ -747,6 +748,12 @@ const PUBLIC_MIRROR_PREFIX = "100xfenok-next/public/";
 function isPlaneCanonicalPath(relative) {
   const publicPath = `/${relative}`;
   return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
+    || Object.values(FAMILIES).some((family) =>
+      family.private_assets?.some((asset) => asset.path === relative)
+      || (family.privacy_class === "private" && (relative === family.root
+        || (family.files
+          ? family.files.some((file) => relative === `${family.root}/${file}`)
+          : relative.startsWith(`${family.root}/`)))))
     // Private-route denial alone does not prove that a family was migrated.
     || relative === "data/computed/data-supply" || relative.startsWith("data/computed/data-supply/etf-detail")
     || ["data/computed/fenok_social_attention_proxy.json", "data/computed/fenok_social_attention_proxy_history.json",
