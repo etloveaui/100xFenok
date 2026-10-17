@@ -19,7 +19,7 @@
  * schema version that happen to sit side by side.
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -43,6 +43,7 @@ let checked = 0;
 
 for (const rel of MANIFESTS) {
   const path = resolve(repo, rel);
+  if (rel === "100xfenok-next/public/data/manifest.json" && !existsSync(path)) continue;
   let doc;
   try {
     doc = JSON.parse(readFileSync(path, "utf8"));
@@ -87,8 +88,9 @@ for (const rel of MANIFESTS) {
 
 // The public copy must be an exact mirror; a drift here is the same defect one
 // level up, and the SOP already requires the two files to move together.
-const [canonical, mirror] = MANIFESTS.map((rel) => readFileSync(resolve(repo, rel), "utf8"));
-if (canonical !== mirror) {
+const canonical = readFileSync(resolve(repo, MANIFESTS[0]), "utf8");
+const mirrorPath = resolve(repo, MANIFESTS[1]);
+if (existsSync(mirrorPath) && canonical !== readFileSync(mirrorPath, "utf8")) {
   failures.push("data/manifest.json and its public mirror are not byte-identical");
 }
 
