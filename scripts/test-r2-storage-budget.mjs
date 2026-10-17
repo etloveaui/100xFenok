@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { verdictFor, summarise, storageCostUsd, STORAGE_WARN_GB, STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
+import { fetchInventory, verdictFor, summarise, storageCostUsd, STORAGE_WARN_GB, STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
+import { createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
 const summary = (gb, a = 0, b = 0) => ({ storage: { peak_bytes: gb * 1e9 },
   class_a: { projected_month: a }, class_b: { projected_month: b } });
 const plan = { bytes: 0, class_a: 0, class_b: 0 };
@@ -32,4 +33,42 @@ const result = summarise({ r2StorageAdaptiveGroups: [{ dimensions: { date: "2026
 assert.equal(result.storage.peak_bytes, 41e9, "historic peak still bounds the full-cycle projection");
 assert.equal(verdictFor(result, plan, false).verdict, "warn");
 assert.equal(result.storage.free_gb_month, 10, "the paid storage decision does not relabel the free allowance");
+// A family-sized inventory would miss retained generations and other buckets.
+// Keep the full storage guard while replacing its slow REST object walk.
+{
+  const buckets = [];
+  const request = async route => {
+    assert.equal(route, "/r2/buckets");
+    return { result: { buckets: [{ name: "first" }, { name: "other" }] } };
+  };
+  const inventory = await fetchInventory({ request, createClient: async ({ bucket }) => {
+    buckets.push(bucket);
+    return { listAllObjects: async () => [{ size: bucket === "first" ? 13 : 29 }] };
+  } });
+  assert.deepEqual(buckets, ["first", "other"]);
+  assert.equal(inventory.bytes, 42);
+  assert.equal(inventory.objects, 2);
+  assert.equal(inventory.truncated, false);
+  const paths = [];
+  const client = await createR2S3ClientFromExistingToken({
+    env: { CLOUDFLARE_ACCOUNT_ID: "fixture", CLOUDFLARE_API_TOKEN: "fixture" },
+    bucket: "other",
+    fetchImpl: async url => {
+      const parsed = new URL(url);
+      if (parsed.pathname.endsWith("/tokens/verify")) {
+        return new Response(JSON.stringify({ success: true, result: { id: "fixture", status: "active" } }));
+      }
+      paths.push(parsed.pathname);
+      return new Response("<ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>");
+    },
+  });
+  assert.deepEqual(await client.listAllObjects(), []);
+  assert.deepEqual(paths, ["/other"], "each discovered bucket must be measured, not the default plane repeatedly");
+  await assert.rejects(fetchInventory({ request, createClient: async () => ({
+    listAllObjects: async () => { throw new Error("S3_LIST_BUDGET"); },
+  }) }), /S3_LIST_BUDGET/, "an incomplete inventory must still block publication");
+  await assert.rejects(fetchInventory({ request, createClient: async () => ({
+    listAllObjects: async () => [{ size: undefined }],
+  }) }), /size is unavailable/);
+}
 console.log("R2 storage budget: PASS (40/70 GB, planned increments, paid operation cost thresholds, blind measurement, billing rounding)");

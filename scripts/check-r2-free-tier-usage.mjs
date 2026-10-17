@@ -23,6 +23,8 @@ const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
+import { runBoundedAsyncPool } from "./lib/cloud-data-plane-generation.mjs";
 import {
   BACKOFF_BASE_MS,
   MAX_ATTEMPTS,
@@ -207,16 +209,9 @@ async function fetchUsage(bounds) {
 // appeared within about one minute. Storage therefore cannot depend on
 // analytics — it is measured directly from the object listing, which is ground
 // truth. Analytics remains the source for operations.
-const INVENTORY_PAGE_SIZE = 1000;
-const INVENTORY_MAX_PAGES = 100; // 100k objects; the current estate is ~31.7k
 
-// fetchInventory walks the whole estate on EVERY publish of EVERY family, so
-// this is roughly 32 sequential control-plane calls per publish and the gate is
-// a large part of why it gets rate limited. Without a retry a single 429
-// anywhere in that chain threw and failed the gate closed: measured 2026-08-21,
-// all six cost-gate blocks in recorded history were exactly that, and none was
-// a budget breach. The policy honoured here is the same one the write path that
-// runs immediately after this has always used.
+// Control-plane bucket discovery retains the write path's bounded retry policy.
+// Object inventory uses the existing S3 pagination/retry implementation below.
 // Exported with injectable transport and sleep so the retry can be exercised
 // rather than inferred. A structural check that the 429 branch exists passed
 // with that branch disabled, which is the vacuous-contract shape this whole
@@ -250,31 +245,38 @@ export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep
   }
 }
 
-// Walk every bucket and sum real object bytes. Throws so the caller fails closed;
-// a truncated walk is reported rather than silently under-counted.
-async function fetchInventory() {
-  const list = await cf("/r2/buckets");
+// Storage needs the whole estate, including retained and unrelated families.
+// The existing S3 reader lists object metadata, without the slow REST
+// object walk. Its pagination/deadline failures still fail the gate closed.
+export async function fetchInventory({
+  request = cf,
+  createClient = createR2S3ClientFromExistingToken,
+  fetchImpl = fetch,
+} = {}) {
+  const list = await request("/r2/buckets");
   const buckets = (list?.result?.buckets ?? list?.result ?? []).map((b) => b.name).filter(Boolean);
   let bytes = 0;
   let objects = 0;
-  let truncated = false;
   let listCalls = 1;
-  for (const bucket of buckets) {
-    let cursor = "";
-    for (let page = 0; page < INVENTORY_MAX_PAGES; page += 1) {
-      const query = `?per_page=${INVENTORY_PAGE_SIZE}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
-      const body = await cf(`/r2/buckets/${encodeURIComponent(bucket)}/objects${query}`);
-      listCalls += 1;
-      for (const object of body.result ?? []) {
-        bytes += object?.size ?? 0;
-        objects += 1;
+  await runBoundedAsyncPool(buckets, async bucket => {
+    const client = await createClient({
+      env: { CLOUDFLARE_ACCOUNT_ID: ACCOUNT_ID, CLOUDFLARE_API_TOKEN: TOKEN },
+      bucket,
+      timeoutMs: FETCH_TIMEOUT_MS,
+      fetchImpl: (url, init) => {
+        if (new URL(url).searchParams.get("list-type") === "2") listCalls += 1;
+        return fetchImpl(url, init);
+      },
+    });
+    for (const object of await client.listAllObjects()) {
+      if (!Number.isSafeInteger(object.size) || object.size < 0) {
+        throw new Error("inventory object size is unavailable");
       }
-      cursor = body?.result_info?.cursor ?? "";
-      if (!cursor) break;
-      if (page === INVENTORY_MAX_PAGES - 1) truncated = true;
+      bytes += object.size;
+      objects += 1;
     }
-  }
-  return { buckets: buckets.length, bytes, objects, truncated, list_calls: listCalls };
+  });
+  return { buckets: buckets.length, bytes, objects, truncated: false, list_calls: listCalls };
 }
 
 function tallyOperations(rows, fromDate) {
@@ -432,6 +434,8 @@ async function main() {
     console.error(`check-r2-free-tier-usage: measurement failed (${error.message}) — reporting unverified, never ok`);
     process.exit(MEASUREMENT_UNVERIFIED_EXIT);
   }
+  // The measurement's own S3 ListObjects requests are billable Class A too.
+  plan.class_a += buckets.list_calls;
   // Storage now comes from the object listing, so an empty analytics dataset is
   // no longer blindness. The remaining blind case is a listing we could not
   // finish: we cannot certify bytes we did not count.

@@ -409,9 +409,11 @@ export function createR2S3Client({
 }
 
 // Factory used by the ops scripts: derive credentials in memory from the existing
-// Cloudflare token and bind the client to the approved endpoint/bucket only.
+// Cloudflare token and default to the plane bucket. The account inventory may
+// explicitly select another bucket discovered through the same account token.
 export async function createR2S3ClientFromExistingToken({
   env = process.env,
+  bucket = R2_S3_BUCKET,
   fetchImpl = fetch,
   sleepImpl,
   now,
@@ -429,7 +431,7 @@ export async function createR2S3ClientFromExistingToken({
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
     accessKeyId,
     secretAccessKey,
-    bucket: R2_S3_BUCKET,
+    bucket,
     fetchImpl,
     sleepImpl,
     now,
