@@ -277,10 +277,23 @@ jobs:
         run: |
           # Code/configuration supplies the bundle imports. Enrolled data is
           # served from active generations at request time.
-          git sparse-checkout set --no-cone \
-            '/*' '!/docs/' '!/ops/' '!/data/' \
-            '/data/catalog/macro-series.json' \
-            '!/100xfenok-next/public/data/'
+          node --input-type=module <<'JS' | git sparse-checkout set --no-cone --stdin
+          import { PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES } from './100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs';
+          import { PRIVATE_PUBLIC_PATH_VALUES } from './100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs';
+          import { deriveExcludedPublicDataRoots } from './scripts/lib/lane-routing.mjs';
+          const routes = new Set([
+            ...PLANE_ENROLLMENT_EXACT.map(([route]) => route),
+            ...PLANE_ENROLLMENT_PREFIXES.map(({prefix}) => prefix),
+            ...PRIVATE_PUBLIC_PATH_VALUES,
+            ...deriveExcludedPublicDataRoots().map(root => `/data/${root}/`),
+            '/data/computed/data-supply/',
+          ]);
+          console.log('/*\n!/docs/\n!/ops/');
+          for (const route of routes) {
+            console.log(`!${route}`);
+            console.log(`!/100xfenok-next/public${route}`);
+          }
+          JS
           echo 'Deploy active-family payload hydration count: 0 (runtime reads)'
 
       - name: Restore current Next build cache
