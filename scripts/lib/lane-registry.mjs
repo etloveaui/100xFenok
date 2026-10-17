@@ -565,7 +565,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json"],
     commit_shards: [],
     recovery_store: null,
-    kpi_recovery_shape: "direct",
+
   }),
   record({
     id: "us_indices_daily",
