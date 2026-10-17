@@ -889,15 +889,13 @@ export async function hydrateCanonicalCloudData(options = {}) {
   return hydratePublicCloudData({ ...options, relative: "macro/fred-macro.json", family: "fred-macro" });
 }
 
-// Public consumer inputs use the publisher's exact file inventory.
+// Public consumer inputs use the existing generated route inventory.
 export async function hydratePublicFamily(family, options = {}) {
-  const { FAMILIES } = await import("./publish-cloud-data-generation.mjs");
-  const descriptor = FAMILIES[family];
-  if (descriptor?.privacy_class !== "public" || !Array.isArray(descriptor.files)
-    || !descriptor.manifest_prefix?.startsWith("public/data/")) fail("PUBLIC_FAMILY_INVENTORY_INVALID", family);
-  const prefix = descriptor.manifest_prefix.slice("public/data/".length);
-  const results = await Promise.all(descriptor.files.map((file) =>
-    hydratePublicCloudData({ ...options, family, relative: `${prefix}/${file}` })));
+  const { PLANE_ENROLLMENT_EXACT } = await import("../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs");
+  const files = PLANE_ENROLLMENT_EXACT.filter(([, owner]) => owner === family).map(([route]) => route.slice("/data/".length));
+  if (files.length === 0) fail("PUBLIC_FAMILY_INVENTORY_INVALID", family);
+  const results = await Promise.all(files.map((relative) =>
+    hydratePublicCloudData({ ...options, family, relative })));
   if (new Set(results.map(({ generation }) => generation)).size !== 1) fail("PUBLIC_GENERATION_MISMATCH", family);
   return { family, generation: results[0].generation, files: results.length };
 }
