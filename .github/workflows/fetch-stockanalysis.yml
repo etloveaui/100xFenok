@@ -416,13 +416,13 @@ jobs:
             echo "EFFECTIVE_YF_ETF_FALLBACK=${INPUT_YF_ETF_FALLBACK:-true}"
           } >> "$GITHUB_ENV"
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
-            node --input-type=module <<'NODE'
-          import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+            INPUT_ETFS="$(node --input-type=module <<'NODE'
+          import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
           import path from "node:path";
           import { createDefaultMaterializePlane, materializeCloudDataPlaneFamily } from "./scripts/materialize-cloud-data-plane-family.mjs";
           const family = "platform-projections", relative = "admin/fenok-etf-core-daily-basket.json";
           const env = process.env, repoRoot = process.cwd();
-          const temporary = await mkdtemp(path.join(env.RUNNER_TEMP, "core-basket-"));
+          const temporary = await mkdtemp(path.join(await realpath(env.RUNNER_TEMP), "core-basket-"));
           try {
             const plane = createDefaultMaterializePlane({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
               token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
@@ -431,12 +431,16 @@ jobs:
               manifestPrefix: "public/data", privateManifestPrefix: "data", privacyClass: "public",
               outputRoot: path.join(temporary, "active"), canonicalReuseRoot: repoRoot,
               includeAsset: asset => asset.path === `data/${relative}` && asset.privacy_class === "private" });
-            const target = path.join(repoRoot, "data", relative);
-            await mkdir(path.dirname(target), { recursive: true });
-            await cp(path.join(receipt.output_root, relative), target);
+            const payload = JSON.parse(await readFile(path.join(receipt.output_root, relative), "utf8"));
+            const tickers = Array.isArray(payload.daily_refresh_universe?.tickers)
+              ? payload.daily_refresh_universe.tickers
+              : Array.isArray(payload.rows) ? payload.rows.map(row => row && row.ticker) : [];
+            const selected = [...new Set(tickers.map(raw => String(raw || "").trim().toUpperCase()).filter(Boolean))];
+            if (!selected.length) throw new Error("Core Basket refresh requested, but no tickers were found");
+            process.stdout.write(selected.join(","));
           } finally { await rm(temporary, { recursive: true, force: true }); }
           NODE
-            INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
+          )"
           fi
           if [ "$UNIVERSE_FAILURE_PROOF" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --discover-etf-universe --universe-only --stocks-only --controlled-failure-surfaces etf_universe --limit-etfs 0"
