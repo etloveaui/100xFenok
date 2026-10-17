@@ -60,24 +60,32 @@ function assertValidAttempt(attempt) {
   return attempt;
 }
 
-async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "baseline-run" } = {}) {
+async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE" } = {}) {
   const result = await runNasdaqGiwSox({
     ...paths,
     dates: [asOf],
     request: async () => response(200, weightingPayload(prefix)),
     observedAt: "2026-07-16T01:00:00.000Z",
-    attemptId: `${runId}-attempt`,
-    runId,
     eventName: "schedule",
     publicMirror: false,
+    write: false,
   });
   assert.equal(result.ok, true);
-  return fs.readFileSync(paths.canonicalPath);
+  const serialized = `${JSON.stringify(result.payload, null, 2)}\n`;
+  fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
+  fs.writeFileSync(paths.canonicalPath, serialized);
+  rotateSoxSnapshotHistory({
+    repoRoot: paths.repoRoot,
+    payload: result.payload,
+    generatedAt: result.payload.generated_at,
+  });
+  return Buffer.from(serialized);
 }
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-ready-"));
   const paths = makePaths(root);
+  await seedBaseline(paths);
   const result = await runNasdaqGiwSox({
     ...paths,
     dates: DATES,
@@ -104,6 +112,8 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-single-key-transient-"));
   const paths = makePaths(root);
   const canonicalBefore = await seedBaseline(paths);
+  const historyPath = soxHistoryPathFor(root);
+  const historyBefore = fs.readFileSync(historyPath);
 
   // SOX is one logical artifact, not a bundle of independent series. Therefore
   // an all-lookback 5xx/network ratio carries no corruption signal: with a
@@ -124,13 +134,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.equal(failed.exitCode, 0);
   assert.deepEqual(failed.retrySet, ["constituents"]);
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBefore);
-  const state = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
-  assert.equal(state.items.constituents.resolution_state, "lkg_primary");
-
-  assert.deepEqual(
-    fs.readFileSync(path.join(root, "data", "admin", "nasdaq_giw_sox", "lkg", "constituents.json")),
-    canonicalBefore,
-  );
+  assert.deepEqual(fs.readFileSync(historyPath), historyBefore);
 
   const networkFailed = await runNasdaqGiwSox({
     ...paths,
@@ -228,7 +232,7 @@ for (const failureCase of [
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-no-lkg-"));
   const paths = makePaths(root);
-  const failed = await runNasdaqGiwSox({
+  await assert.rejects(() => runNasdaqGiwSox({
     ...paths,
     dates: DATES,
     request: async () => response(500, { error: "upstream" }),
@@ -237,17 +241,15 @@ for (const failureCase of [
     runId: "sox-no-lkg-run",
     eventName: "workflow_dispatch",
     publicMirror: false,
-  });
-  assert.equal(failed.reason, "http_error");
-  assert.equal(failed.exitCode, 2);
-  assert.equal(failed.corrupt, true);
-  assert.deepEqual(failed.retrySet, ["constituents"]);
+  }), /Active SOX baseline is invalid/);
 }
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-source-regression-"));
   const paths = makePaths(root);
   const canonicalBefore = await seedBaseline(paths, { asOf: "2026-07-16", runId: "source-regression-baseline" });
+  const historyPath = soxHistoryPathFor(root);
+  const historyBefore = fs.readFileSync(historyPath);
   const regressed = await runNasdaqGiwSox({
     ...paths,
     dates: ["2026-07-15"],
@@ -263,8 +265,7 @@ for (const failureCase of [
   assert.equal(regressed.exitCode, 0);
   assert.deepEqual(regressed.retrySet, ["constituents"]);
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBefore, "older provider source cannot overwrite canonical");
-  const state = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
-  assert.equal(state.items.constituents.lkg.source_as_of, "2026-07-16");
+  assert.deepEqual(fs.readFileSync(historyPath), historyBefore, "older provider source cannot replace retained history");
 }
 
 {
@@ -295,19 +296,18 @@ for (const failureCase of [
     publicMirror: false,
   });
   assert.equal(recovered.ok, true);
-  assert.equal(recovered.recovered, true);
-  const state = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
-  assert.deepEqual(state.retry_set, []);
-  assert.equal(state.items.constituents.resolution_state, "fresh_primary");
+  assert.equal(recovered.recovered, false);
+  assert.notDeepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeRecovery);
+  const history = readJson(soxHistoryPathFor(root));
+  assert.deepEqual(history.entries.map((entry) => entry.as_of), ["2026-07-16", "2026-07-15"]);
 
 
 
 
 }
 
-// SOX-only opt-in: a first-attempt workflow_dispatch with a structured
-// GitHub run may promote recovery when the source advances, while retry
-// attempts and local/unbound manual dispatches stay blocked.
+// A manual dispatch uses the same fresh-primary path and records the prior
+// valid canonical snapshot in bounded private history.
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-bound-dispatch-recovery-"));
   const paths = makePaths(root);
@@ -336,10 +336,10 @@ for (const failureCase of [
     eventName: "workflow_dispatch",
     publicMirror: false,
   });
-  assert.equal(boundRecovered.ok, true, "authentic first-attempt workflow_dispatch may recover when the source advances");
-  assert.equal(boundRecovered.recovered, true);
-  const boundState = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
-  assert.deepEqual(boundState.retry_set, []);
+  assert.equal(boundRecovered.ok, true, "workflow_dispatch may promote a valid fresh primary when the source advances");
+  assert.equal(boundRecovered.recovered, false);
+  const history = readJson(soxHistoryPathFor(root));
+  assert.deepEqual(history.entries.map((entry) => entry.as_of), ["2026-07-16", "2026-07-15"]);
 
 
   const boundAttempt = assertValidAttempt(boundRecovered.attempt);
@@ -362,6 +362,7 @@ await assert.rejects(() => runNasdaqGiwSox({
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-history-"));
   const paths = makePaths(root);
+  await seedBaseline(paths, { asOf: DATES[1] });
   const seed = await runNasdaqGiwSox({
     ...paths,
     dates: DATES,
@@ -373,7 +374,7 @@ await assert.rejects(() => runNasdaqGiwSox({
     publicMirror: false,
   });
   assert.equal(seed.ok, true);
-  assert.equal(seed.history.entries_retained, 1, "a fresh-primary promotion rotates the sidecar");
+  assert.equal(seed.history.entries_retained, 2, "a fresh-primary promotion rotates the sidecar");
   const historyFile = soxHistoryPathFor(root);
   assert.equal(validSoxHistory(readJson(historyFile)), true);
 
