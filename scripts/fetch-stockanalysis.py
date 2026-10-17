@@ -1498,6 +1498,15 @@ def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
         except (TypeError, ValueError) as exc:
             raise ValueError(f"svelte_contract_drift:{surface}:decode_error:{exc}") from exc
         if isinstance(decoded, dict):
+            # Equity ETF holdings moved into the dynamic table; bond ETFs
+            # still return the original top-level holdings array.
+            if surface == "holdings" and "holdings" not in decoded:
+                table = decoded.get("holdingsTable")
+                if isinstance(table, dict) and isinstance(table.get("data"), list):
+                    rows = table["data"]
+                    if not all(isinstance(row, dict) for row in rows):
+                        raise ValueError("svelte_contract_drift:holdings:invalid_table_rows")
+                    decoded = {**decoded, "holdings": rows}
             decoded_candidates.append(decoded)
             if all(key in decoded for key in required_types):
                 for key, expected_type in required_types.items():
@@ -1580,6 +1589,11 @@ def fetch_svelte_detail(
                 and str(exc) == "svelte_contract_drift:holdings:missing_required:holdings"):
             return path, {}
         raise
+    if surface == "holdings" and isinstance(decoded.get("holdingsTable"), dict):
+        query = decoded["holdingsTable"].get("query")
+        if (not isinstance(query, dict) or query.get("index") != "holdings"
+                or clean_symbol(str(query.get("holdingsOf") or "")) != clean_symbol(ticker)):
+            raise ValueError("svelte_contract_drift:holdings:table_ticker_mismatch")
     if surface == "overview" and provider_info:
         features = provider_info.get("features")
         available = features.get("holdings") if isinstance(features, dict) else None
@@ -2483,8 +2497,8 @@ def normalize_holdings(rows):
             "rank": parse_int(row.get("no") or row.get("rank")),
             "symbol": symbol,
             "name": name,
-            "weight_pct": parse_percent(row.get("as") if row.get("as") is not None else row.get("weight")),
-            "shares": parse_int(row.get("sh") if row.get("sh") is not None else row.get("shares")),
+            "weight_pct": parse_percent(row.get("as") if row.get("as") is not None else row.get("holdingWeight", row.get("weight"))),
+            "shares": parse_int(row.get("sh") if row.get("sh") is not None else row.get("holdingShares", row.get("shares"))),
             "raw": row,
         }
         out.append({key: value for key, value in item.items() if value is not None})
