@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-17T07:24:21.806Z",
+  "generated_at": "2026-10-17T07:45:18.722Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -11,6 +11,18 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38825123349,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38825123349",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "pins-autosync.yml",
+      "label": "Pins Autosync",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 39012429469,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39012429469",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -33,8 +45,8 @@
       "label": "Validate GitHub Workflows",
       "streak": 15,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 39007330781,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39007330781",
+      "first_failing_run_id": 39007410241,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39007410241",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -411,12 +423,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "39013425237",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39013425237",
-    "observed_at": "2026-10-17T07:24:21.806Z",
-    "event": "workflow_dispatch",
+    "run_id": "39014723419",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39014723419",
+    "observed_at": "2026-10-17T07:45:18.722Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
+      "pins-autosync.yml",
       "update-manifest.yml",
       "validate-workflows.yml"
     ],
