@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-17T03:34:37.934Z",
+  "generated_at": "2026-10-17T03:43:10.354Z",
   "status": "open",
   "open_incident_count": 6,
   "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 38999006162,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38999006162",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
@@ -29,18 +41,6 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "pins-autosync.yml",
-      "label": "Pins Autosync",
-      "streak": 4,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 38991622356,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38991622356",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
       "workflow": "update-manifest.yml",
       "label": "Update Manifest",
       "streak": 11,
@@ -57,8 +57,8 @@
       "label": "Validate GitHub Workflows",
       "streak": 15,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 38992075333,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38992075333",
+      "first_failing_run_id": 38997640101,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38997640101",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -450,14 +450,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "38999240018",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38999240018",
-    "observed_at": "2026-10-17T03:34:37.934Z",
+    "run_id": "38999780216",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38999780216",
+    "observed_at": "2026-10-17T03:43:10.354Z",
     "event": "workflow_run",
     "workflows": [
+      "deploy-worker.yml",
       "fetch-stockanalysis.yml",
       "global-writer-queue-observer.yml",
-      "pins-autosync.yml",
       "update-manifest.yml",
       "validate-workflows.yml",
       "a1-sec-13f"
