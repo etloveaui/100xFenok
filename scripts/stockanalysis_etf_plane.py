@@ -5,9 +5,9 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import shutil
-import subprocess
 
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from materialize_data_supply_public import PublicDataSupplyMaterializer
@@ -145,9 +145,9 @@ def main():
     if not args.select_only and isinstance(existing, dict) and existing.get('schema_version') == 'etf-detail-selection/v1':
         selection = existing
     else:
-        # API output stays in memory; owner values never reach workflow logs.
-        owner = json.loads(subprocess.check_output([
-            'gh', 'api', 'repos/etloveaui/100xFenok/actions/variables/ETF_ALWAYS_INCLUDE']))['value'].split()
+        owner = os.environ.get('ETF_ALWAYS_INCLUDE', '').split()
+        if not owner:
+            print('owner list empty')
         selection = select(source, owner)
     if args.select_only:
         path = source / SELECTION

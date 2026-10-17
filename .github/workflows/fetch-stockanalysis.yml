@@ -245,7 +245,7 @@ jobs:
 
       - name: Run StockAnalysis fetch
         env:
-          GH_TOKEN: ${{ github.token }}
+          ETF_ALWAYS_INCLUDE: ${{ secrets.ETF_ALWAYS_INCLUDE }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
@@ -1156,7 +1156,6 @@ jobs:
 
       - name: Build selected projection and provider state in one bundle
         env:
-          GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
