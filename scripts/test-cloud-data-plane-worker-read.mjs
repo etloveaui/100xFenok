@@ -161,9 +161,9 @@ try {
   assert.equal(familyForPath("/data/edgar-korean-summaries//index.json"), null);
   assert.equal(isEnrolledPath("/data/slickcharts/stocks/AAPL.json"), true, "stocks ticker exact entry");
   assert.equal(isEnrolledPath("/data/slickcharts/stocks/BF.B.json"), true, "dotted ticker exact entry");
-  assert.equal(familyForPath("/data/slickcharts/stocks/AAPL.json"), "slickcharts-history");
+  assert.equal(familyForPath("/data/slickcharts/stocks/AAPL.json"), "slickcharts");
   assert.equal(isEnrolledPath("/data/slickcharts/stocks-evil/AAPL.json"), false, "stocks sibling not enrolled");
-  assert.equal(familyForPath("/data/slickcharts/gainers.json"), "slickcharts-daily", "per-lane exact wins");
+  assert.equal(familyForPath("/data/slickcharts/gainers.json"), "slickcharts", "unified family exact entry");
   assert.equal(isEnrolledPath("/data/computed/signals.json"), true, "computed-signals pilot exact file enrolled");
   assert.equal(familyForPath("/data/computed/signals.json"), "computed-signals");
   assert.equal(isEnrolledPath("/data/computed/other.json"), false, "unrelated computed path remains unenrolled");

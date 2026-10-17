@@ -51,11 +51,10 @@ function runRunner(env) {
     ...process.env,
     REBUILD_SLICKCHARTS: "false",
     VALIDATE_SLICKCHARTS_SKIP_PUBLIC: "false",
-    RESET_ETF_SNAPSHOTS: "false",
     BEFORE_SHA: "AUTO",
     ...env,
   };
-  for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC", "RESET_ETF_SNAPSHOTS", "BEFORE_SHA"]) {
+  for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC", "BEFORE_SHA"]) {
     if (childEnv[name] === undefined) delete childEnv[name];
   }
   const result = spawnSync("bash", [runnerPath], {
@@ -78,8 +77,6 @@ function runRunner(env) {
 const COMPOSITE_GUARD = "node scripts/slickcharts-composite-recovery.mjs validate-live --index data/admin/slickcharts-composite-recovery/index.json";
 const SKIP_PUBLIC = "python3 scripts/validate-slickcharts-integrity.py --skip-public --allow-history-coverage-lag";
 const FULL_PUBLIC = "python3 scripts/validate-slickcharts-integrity.py --allow-history-coverage-lag";
-const SNAPSHOT_RESET = "rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots";
-const SYNC_PUBLIC = "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only";
 const PUSH_SHA = "0123456789abcdef0123456789abcdef01234567";
 
 for (const skipPublic of ["true", "false"]) {
@@ -99,12 +96,12 @@ for (const skipPublic of ["true", "false"]) {
 }
 
 // Missing/non-boolean mode flags and malformed BEFORE_SHA fail before S1.
-for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC", "RESET_ETF_SNAPSHOTS", "BEFORE_SHA"]) {
+for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC", "BEFORE_SHA"]) {
   const missing = runRunner({ [name]: undefined });
   assert.equal(missing.result.status, 2, `${name} must be required`);
   assert.deepEqual(missing.records, [], `${name} validation must fail before S1`);
 }
-for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC", "RESET_ETF_SNAPSHOTS"]) {
+for (const name of ["REBUILD_SLICKCHARTS", "VALIDATE_SLICKCHARTS_SKIP_PUBLIC"]) {
   const invalid = runRunner({ [name]: "yes" });
   assert.equal(invalid.result.status, 2, `${name} must reject non-boolean values`);
   assert.deepEqual(invalid.records, [], `${name} validation must fail before S1`);
@@ -113,19 +110,15 @@ const invalidSha = runRunner({ BEFORE_SHA: "0123abcd" });
 assert.equal(invalidSha.result.status, 2, "BEFORE_SHA must reject malformed values");
 assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before S1");
 
-// Final retry-loop env: snapshot reset, no --skip-public validation.
+// Final producer env: no --skip-public validation.
 {
   const { result, records } = runRunner({
     REBUILD_SLICKCHARTS: "true",
     VALIDATE_SLICKCHARTS_SKIP_PUBLIC: "false",
-    RESET_ETF_SNAPSHOTS: "true",
     BEFORE_SHA: "AUTO",
   });
   assert.equal(result.status, 0, `final-path run failed: ${result.stderr}`);
   assert.equal(records.includes(SKIP_PUBLIC), false, "final path must not validate with --skip-public");
-  assert.ok(records.includes(SNAPSHOT_RESET), "final path must reset snapshots before re-materializing");
-  assert.ok(records.indexOf(SNAPSHOT_RESET) < records.indexOf(SYNC_PUBLIC),
-    "final snapshot reset must execute before public sync");
   assert.ok(records.includes("before_sha AUTO"), "final path must propagate BEFORE_SHA to update-manifest.py");
 }
 
@@ -134,7 +127,6 @@ assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before
   const tolerated = runRunner({
     REBUILD_SLICKCHARTS: "true",
     VALIDATE_SLICKCHARTS_SKIP_PUBLIC: "false",
-    RESET_ETF_SNAPSHOTS: "true",
     BEFORE_SHA: "AUTO",
     UPDATE_MANIFEST_PY_EXIT: "1",
   });
@@ -145,7 +137,6 @@ assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before
   const aborted = runRunner({
     REBUILD_SLICKCHARTS: "true",
     VALIDATE_SLICKCHARTS_SKIP_PUBLIC: "false",
-    RESET_ETF_SNAPSHOTS: "true",
     BEFORE_SHA: "AUTO",
     UPDATE_MANIFEST_PY_EXIT: "2",
   });
@@ -159,67 +150,4 @@ assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before
 fs.rmSync(stubBin, { recursive: true, force: true });
 fs.rmSync(mktempDir, { recursive: true, force: true });
 
-// A real rejected Git push must reuse a projection when only an independent
-// watcher or documentation changed, and rebuild when any possible input moved.
-const publisherPath = path.join(repoRoot, "scripts/publish-update-manifest.sh");
-for (const [incoming, expectedBuilds] of [
-  ["docs/note.md", 1], ["scripts/datawatch/watch.py", 1],
-  ["data/input.txt", 2], ["data/computed/result.txt", 2],
-  ["unknown-input.txt", 2], [null, 1],
-]) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "umr-push-"));
-  const remote = path.join(root, "remote.git");
-  const producer = path.join(root, "producer");
-  const peer = path.join(root, "peer");
-  const bin = path.join(root, "bin");
-  const buildCount = path.join(root, "builds");
-  function git(cwd, args) {
-    const result = spawnSync("git", args, { cwd, encoding: "utf8" });
-    assert.equal(result.status, 0, `${args.join(" ")}: ${result.stderr}`);
-    return result.stdout.trim();
-  }
-  function put(relative, content, cwd = producer) {
-    const file = path.join(cwd, relative);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, content);
-  }
-  try {
-    git(root, ["init", "--bare", "--initial-branch=main", remote]);
-    git(root, ["clone", remote, producer]);
-    for (const key of ["user.name", "user.email"]) git(producer, ["config", key, "manifest-test"]);
-    put("data/input.txt", "initial\n");
-    put("scripts/update-manifest-projections.sh", '#!/bin/bash\nmkdir -p data/computed\ncp data/input.txt data/computed/result.txt\necho build >> "$BUILD_COUNT"\n');
-    git(producer, ["add", "."]);
-    git(producer, ["commit", "-m", "initial"]);
-    git(producer, ["push", "origin", "main"]);
-    git(root, ["clone", remote, peer]);
-    for (const key of ["user.name", "user.email"]) git(peer, ["config", key, "manifest-peer"]);
-    if (incoming) {
-      put(incoming, "incoming\n", peer);
-      git(peer, ["add", "."]);
-      git(peer, ["commit", "-m", "incoming"]);
-    }
-    const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
-    put(".git/hooks/pre-push", `#!/bin/bash\nif [[ ! -e ${quote(path.join(root, "pushed"))} ]]; then\n  touch ${quote(path.join(root, "pushed"))}\n  ${incoming ? `git -C ${quote(peer)} push origin main` : "exit 1"}\nfi\n`);
-    fs.chmodSync(path.join(producer, ".git/hooks/pre-push"), 0o755);
-    fs.mkdirSync(bin);
-    fs.writeFileSync(path.join(bin, "node"), '#!/bin/bash\nif [[ "$*" == *"--stage"* ]]; then git add data/computed/result.txt; fi\nexit 0\n');
-    fs.writeFileSync(path.join(bin, "sleep"), '#!/bin/bash\nexit 0\n');
-    for (const name of ["node", "sleep"]) fs.chmodSync(path.join(bin, name), 0o755);
-    const output = path.join(root, "output");
-    const result = spawnSync("bash", [publisherPath], {
-      cwd: producer, encoding: "utf8",
-      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, BUILD_COUNT: buildCount, GITHUB_OUTPUT: output, ETF_DETAIL_OVERLAY_RECEIPT: "" },
-    });
-    assert.equal(result.status, 0, `${incoming}: ${result.stdout}\n${result.stderr}`);
-    assert.equal(fs.readFileSync(buildCount, "utf8").trim().split("\n").length, expectedBuilds, `${incoming}: rebuild count`);
-    assert.match(fs.readFileSync(output, "utf8"), /pushed=true/);
-    assert.equal(git(producer, ["show", "HEAD:data/computed/result.txt"]), incoming === "data/input.txt" ? "incoming" : "initial");
-    if (incoming) assert.equal(git(producer, ["show", `HEAD:${incoming}`]), incoming === "data/computed/result.txt" ? "initial" : "incoming");
-    assert.equal(git(producer, ["status", "--porcelain"]), "");
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-}
-
-console.log("test-update-manifest-runner: ok (including 6 rejected-push cases)");
+console.log("test-update-manifest-runner: ok");

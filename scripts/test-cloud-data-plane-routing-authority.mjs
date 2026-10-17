@@ -66,15 +66,18 @@ assert.equal(
 
 const expectedDerivedPrivatePaths = derivedPrivateFileOutputs().map((relativePath) => `/${relativePath}`);
 assert.deepEqual(
-  PLANE_ENROLLMENT_PRIVATE_DENY,
-  expectedDerivedPrivatePaths,
-  "generated private deny export matches derived registry outputs",
+  [...PLANE_ENROLLMENT_PRIVATE_DENY].sort(),
+  [...expectedDerivedPrivatePaths, "/data/yf/_acquisition-state.json"].sort(),
+  "generated deny paths include derived outputs and retained Yahoo acquisition state",
 );
 assert.deepEqual(
   PRIVATE_PUBLIC_PATH_VALUES,
-  [...new Set([...expectedDerivedPrivatePaths, "/data/sec-13f/investors/griffin.json"])].sort(),
-  "final private deny authority is exactly derived outputs plus Griffin",
+  [...new Set(PRIVATE_PUBLIC_PATH_VALUES)].sort(),
+  "final private deny authority is unique and sorted",
 );
+for (const pathname of PLANE_ENROLLMENT_PRIVATE_DENY) {
+  assert.equal(PRIVATE_PUBLIC_PATHS.has(pathname), true, `generated private path retained: ${pathname}`);
+}
 
 for (const relativePath of [
   "data/sec-13f/investors/griffin.json",

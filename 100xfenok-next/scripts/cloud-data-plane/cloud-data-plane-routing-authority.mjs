@@ -12,6 +12,36 @@ import {
 } from "./cloud-data-plane-enrollment.generated.mjs";
 
 const EXPLICIT_PRIVATE_PATH_VALUES = Object.freeze([
+  "/data/admin/data-supply-detection-floor.json",
+  "/data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+  "/data/admin/fenok-edge-etf-daily1y-readiness.json",
+  "/data/admin/fenok-etf-core-daily-basket.json",
+  "/data/admin/fenok-s0-finra-occ-mapping-ledger.json",
+  "/data/admin/fenok-s1-stock-public-promotion-dry-run.json",
+  "/data/admin/slickcharts-composite-recovery/index.json",
+  "/data/admin/slickcharts-daily-delivery/index.json",
+  "/data/admin/slickcharts-daily-delivery/keys/currency.json",
+  "/data/admin/slickcharts-daily-delivery/keys/gainers.json",
+  "/data/admin/slickcharts-daily-delivery/keys/losers.json",
+  "/data/admin/slickcharts-daily-delivery/keys/mortgage.json",
+  "/data/admin/slickcharts-daily-delivery/keys/treasury.json",
+  "/data/admin/slickcharts-daily-delivery/lkg/currency.json",
+  "/data/admin/slickcharts-daily-delivery/lkg/gainers.json",
+  "/data/admin/slickcharts-daily-delivery/lkg/losers.json",
+  "/data/admin/slickcharts-daily-delivery/lkg/mortgage.json",
+  "/data/admin/slickcharts-daily-delivery/lkg/treasury.json",
+  "/data/computed/etf_action_index.json",
+  "/data/computed/fenok_etf_signals.json",
+  "/data/computed/fenok_flow_proxies.json",
+  "/data/computed/fenok_flow_proxies_history.json",
+  "/data/computed/fenok_occ_options_volume.json",
+  "/data/computed/fenok_occ_options_volume_history.json",
+  "/data/computed/fenok_signal_lens_proxies.json",
+  "/data/computed/fenok_signal_lens_proxies_history.json",
+  "/data/computed/fenok_signal_lens_proxies_summary.json",
+  "/data/computed/fenok_signals.json",
+  "/data/computed/fenok_social_attention_proxy.json",
+  "/data/computed/fenok_social_attention_proxy_history.json",
   // Keep retained source and recovery snapshots off the public asset route.
   "/data/admin/apewisdom_attention/index.json",
   "/data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
@@ -157,7 +187,7 @@ export const PRIVATE_PUBLIC_PATHS = Object.freeze({
 function familyRootPattern(pathname, label) {
   const match = /^\/data\/([^/]+)(?:\/|$)/u.exec(pathname);
   if (!match) throw new Error(`invalid ${label} enrollment path: ${pathname}`);
-  return `/data/${match[1]}/*`;
+  return pathname === `/data/${match[1]}` ? pathname : `/data/${match[1]}/*`;
 }
 
 function coversPath(pattern, pathname) {
