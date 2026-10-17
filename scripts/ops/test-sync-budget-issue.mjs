@@ -87,8 +87,8 @@ test("missing and nonnumeric Worker measurements cannot masquerade as zero usage
     { day: [{ sum: { requests: "unreadable" } }], hour: zero }, { day: [{ sum: { requests: -1 } }], hour: zero }]) {
     assert.throws(() => parseWorkerUsage(account));
   }
-  assert.equal(parseWorkerUsage({ day: zero, hour: zero, month: zero }).todayRequests, 0);
-  assert.equal(parseWorkerUsage({ day: [{ sum: { requests: 12 } }], hour: zero, month: zero }).todayRequests, 12);
+  assert.equal(parseWorkerUsage({ day: zero, hour: zero, month: zero, trailing: zero }).todayRequests, 0);
+  assert.equal(parseWorkerUsage({ day: [{ sum: { requests: 12 } }], hour: zero, month: zero, trailing: zero }).todayRequests, 12);
 });
 
 test("Worker quota query includes all scripts in the selected account", async () => {
@@ -100,6 +100,7 @@ test("Worker quota query includes all scripts in the selected account", async ()
       day: [{ sum: { requests: 49000 } }, { sum: { requests: 2000 } }],
       hour: [{ sum: { requests: 700 } }],
       month: [{ sum: { requests: 7000000 } }],
+      trailing: [{ sum: { requests: 8000000 } }],
     }] } } }) };
   };
   try {
@@ -108,6 +109,7 @@ test("Worker quota query includes all scripts in the selected account", async ()
     assert.equal(usage.todayRequests, 51000);
     assert.equal(usage.lastHourRequests, 700);
     assert.equal(usage.monthlyRequests, 7000000);
+    assert.equal(usage.trailing31dRequests, 8000000);
     assert.equal(request.variables.accountTag, "account");
     assert.equal(Object.hasOwn(request.variables, "scriptName"), false);
     assert.doesNotMatch(request.query, /scriptName/);

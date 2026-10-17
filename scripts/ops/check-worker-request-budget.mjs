@@ -122,7 +122,8 @@ function sumRequests(rows) {
 export function parseWorkerUsage(account) {
   if (!Array.isArray(account?.day) || !account.day.length
     || !Array.isArray(account?.hour) || !account.hour.length
-    || !Array.isArray(account?.month) || !account.month.length) {
+    || !Array.isArray(account?.month) || !account.month.length
+    || !Array.isArray(account?.trailing) || !account.trailing.length) {
     throw new Error("Cloudflare Worker usage rows are missing; usage is unknown.");
   }
   const dayRows = account.day;
@@ -130,25 +131,31 @@ export function parseWorkerUsage(account) {
   return {
     monthRows: account.month.length,
     monthlyRequests: sumRequests(account.month),
+    trailing31dRequests: sumRequests(account.trailing),
     dayRows: dayRows.length,
     hourRows: hourRows.length,
     todayRequests: sumRequests(dayRows),
     lastHourRequests: sumRequests(hourRows),
-    truncated: dayRows.length >= 10000 || hourRows.length >= 10000 || account.month.length >= 10000,
+    truncated: dayRows.length >= 10000 || hourRows.length >= 10000 || account.month.length >= 10000 || account.trailing.length >= 10000,
   };
 }
 
-export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, now, monthStart = new Date(now.getTime() - 31 * 86400_000) }) {
+export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, now, monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)) }) {
   const query = `
     query WorkerRequestBudget(
       $accountTag: string,
       $monthStart: string,
+      $trailingStart: string,
       $dayStart: string,
       $hourStart: string,
       $end: string
     ) {
       viewer {
         accounts(filter: { accountTag: $accountTag }) {
+          trailing: workersInvocationsAdaptive(
+            limit: 10000,
+            filter: { datetime_geq: $trailingStart, datetime_leq: $end }
+          ) { sum { requests } }
           month: workersInvocationsAdaptive(
             limit: 10000,
             filter: { datetime_geq: $monthStart, datetime_leq: $end }
@@ -188,6 +195,7 @@ export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, 
       variables: {
         accountTag: accountId,
         monthStart: toIso(monthStart),
+        trailingStart: toIso(new Date(now.getTime() - 31 * 86400_000)),
         dayStart: toIso(dayStart),
         hourStart: toIso(hourStart),
         end: toIso(now),
@@ -210,7 +218,8 @@ export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, 
 function buildIssueBody(result) {
   const paid = [
     `Paid included requests: ${MONTHLY_INCLUDED_REQUESTS}/month; overage USD 0.30/M`,
-    `Trailing 31-day requests: ${result.monthlyRequests} / warning ${result.monthlyThreshold}`,
+    `Month-to-date requests: ${result.monthlyRequests}; projected month-end: ${result.projectedMonthRequests}`,
+    `Trailing 31-day requests: ${result.trailing31dRequests}; warning ${result.monthlyThreshold} against the larger of trailing usage and month-end projection`,
     `Request-only estimated overage: USD ${result.requestOverageUsd} (KRW ${result.requestOverageKrw}, planning rate 1,500 KRW/USD)`,
     "Extra-charge allowance: about KRW 10,000/month; early warning KRW 5,000.",
     "Coverage: Worker requests only; excludes CPU, Builds, KV, D1, Queues, R2 and tax. R2 publisher gate measures its own costs; this is not an account-wide billing cap.",
@@ -302,10 +311,14 @@ async function main() {
       token,
     });
 
-    const requestOverageUsd = Math.max(0, usage.monthlyRequests - MONTHLY_INCLUDED_REQUESTS) / 1_000_000 * 0.30;
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    const projectedMonthRequests = Math.ceil(usage.monthlyRequests * (monthEnd - monthStart) / Math.max(60_000, now - monthStart));
+    const budgetRequests = Math.max(usage.trailing31dRequests, projectedMonthRequests);
+    const requestOverageUsd = Math.max(0, budgetRequests - MONTHLY_INCLUDED_REQUESTS) / 1_000_000 * 0.30;
     const requestOverageKrw = Math.ceil(requestOverageUsd * 1500);
     const alert =
-      usage.monthlyRequests >= monthlyThreshold || requestOverageKrw >= 5000 ||
+      budgetRequests >= monthlyThreshold || requestOverageKrw >= 5000 ||
       usage.truncated ||
       usage.todayRequests > dailyThreshold ||
       usage.lastHourRequests > hourlyThreshold;
@@ -313,6 +326,7 @@ async function main() {
     const result = {
       ...base,
       ...usage,
+      projectedMonthRequests,
       requestOverageUsd,
       requestOverageKrw,
       accountIdMasked: maskAccountId(account.id),
@@ -329,7 +343,7 @@ async function main() {
         `status=${result.status}`,
         "scope=account",
         `account=${account.name} (${result.accountIdMasked}, ${account.source})`,
-        `trailing31d=${result.monthlyRequests}/${monthlyThreshold}`,
+        `monthToDate=${result.monthlyRequests} projected=${projectedMonthRequests}/${monthlyThreshold} trailing31d=${result.trailing31dRequests}`,
         `todayUtc=${result.todayRequests}/${dailyThreshold}`,
         `lastHour=${result.lastHourRequests}/${hourlyThreshold}`,
         `rows=day:${result.dayRows},hour:${result.hourRows}`,
