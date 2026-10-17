@@ -167,7 +167,7 @@ jobs:
     # maximum without treating six hours as a completion guarantee.
     timeout-minutes: 360
     steps:
-      - name: Wait for preceding StockAnalysis Git publication
+      - name: Wait for preceding StockAnalysis publication
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -200,14 +200,15 @@ jobs:
                   # Waiting on them while holding the acquisition lock deadlocks.
                   if not acquisition or acquisition.get("conclusion") != "success":
                       continue
-                  publisher = next((job for job in jobs if job["name"] == "publish-stockanalysis"), None)
-                  if publisher is None or publisher["status"] != "completed":
+                  publishers = [next((job for job in jobs if job["name"] == name), None)
+                                for name in ("publish-stockanalysis", "publish-stockanalysis-etf-plane")]
+                  if any(job is None or job["status"] != "completed" for job in publishers):
                       waiting.append(run["id"])
               if not waiting:
                   break
               if time.monotonic() >= deadline:
-                  raise SystemExit(f"preceding StockAnalysis Git publication has not settled: {waiting}")
-              print(f"Waiting for preceding Git publication: {waiting}", flush=True)
+                  raise SystemExit(f"preceding StockAnalysis publication has not settled: {waiting}")
+              print(f"Waiting for preceding publication: {waiting}", flush=True)
               time.sleep(30)
           PY
 
@@ -222,6 +223,11 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+
+      - uses: actions/setup-node@v7
+        with:
+          package-manager-cache: false
+          node-version: '22'
 
       - name: Configure external candidate root
         run: |
@@ -239,6 +245,7 @@ jobs:
 
       - name: Run StockAnalysis fetch
         env:
+          GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
@@ -292,7 +299,8 @@ jobs:
               INPUT_STOCKS="AAPL,NVDA,MSFT,AMZN,GOOGL,META,TSLA,JPM"
               INPUT_STOCKS_ONLY="true"
               INPUT_FETCH_FINANCIALS="true"
-              INPUT_DISCOVER_UNIVERSE="false"
+              INPUT_DISCOVER_UNIVERSE="true"
+              INPUT_MAX_UNIVERSE_PAGES="100"
               INPUT_UNIVERSE_BACKFILL="false"
               INPUT_INCREMENTAL_ETF_BACKFILL="false"
               INPUT_HISTORY_GAPS_ONLY="false"
@@ -303,7 +311,7 @@ jobs:
               INPUT_STOCK_LIMIT="8"
               INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
               INPUT_ISOLATED_STOCK_SCHEDULE="true"
-              NATURAL_RECOVERY_KINDS="stock,financial"
+              NATURAL_RECOVERY_KINDS="stock,financial,universe"
             elif [ "$CLOCK_MODE" = "etf_weekday" ] || [ "$CLOCK_MODE" = "etf_general" ]; then
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
@@ -312,7 +320,9 @@ jobs:
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
               INPUT_INCREMENTAL_ETF_BACKFILL="true"
               INPUT_INCREMENTAL_ETF_LIMIT="400"
-              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="720"
+              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="144"
+              INPUT_DISCOVER_UNIVERSE="false"
+              INPUT_MAX_UNIVERSE_PAGES="100"
               NATURAL_RECOVERY_KINDS="etf,surface"
               if [ "$CLOCK_MODE" = "etf_general" ]; then
                 INPUT_SLEEP="2"
@@ -388,6 +398,7 @@ jobs:
             echo "EFFECTIVE_YF_ETF_FALLBACK=${INPUT_YF_ETF_FALLBACK:-true}"
           } >> "$GITHUB_ENV"
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
+            node --input-type=module -e 'import { hydratePrivateFamily } from "./scripts/materialize-cloud-data-plane-family.mjs"; await hydratePrivateFamily("platform-projections");'
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
           if [ "$UNIVERSE_FAILURE_PROOF" = "true" ]; then
@@ -462,7 +473,31 @@ jobs:
             --no-public-mirror
           python3 scripts/stockanalysis_artifact.py seed \
             --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT"
-          node --input-type=module -e 'import { hydrateYahooFinance } from "./scripts/materialize-cloud-data-plane-family.mjs"; await hydrateYahooFinance({ repoRoot: process.env.STOCKANALYSIS_CANDIDATE_ROOT, financeOnly: true });'
+          node --input-type=module -e '
+            import { hydrateYahooFinance, hydratePrivateFamily, hydratePublicCloudData, hydrateStockanalysisCatalogue } from "./scripts/materialize-cloud-data-plane-family.mjs";
+            const repoRoot = process.env.STOCKANALYSIS_CANDIDATE_ROOT;
+            const etf = await hydratePrivateFamily("stockanalysis-etf-detail", { repoRoot });
+            const catalogue = await hydrateStockanalysisCatalogue({ repoRoot });
+            const identity = ({ generation_id, manifest_sha256 }) => ({ generation_id, manifest_sha256 });
+            const { writeFile } = await import("node:fs/promises");
+            await writeFile(`${process.env.RUNNER_TEMP}/stockanalysis-plane-basis.json`, JSON.stringify({
+              "stockanalysis-etf-detail": identity(etf), "stockanalysis-catalogue": identity(catalogue) }));
+            await hydrateYahooFinance({ repoRoot, financeOnly: true });
+            await hydratePublicCloudData({ relative: "yf/finance/_index.json", family: "yahoo-finance", repoRoot });
+            await hydratePublicCloudData({ relative: "global-scouter/core/stocks_analyzer.json", family: "scouter-derived", repoRoot });
+          '
+          # Compare acquisition to the hydrated generation, not retired Git blobs.
+          python3 - <<'PYBASE'
+          import json, os, sys
+          from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          from stockanalysis_artifact import candidate_files, sha256_file
+          root = Path(os.environ['STOCKANALYSIS_CANDIDATE_ROOT'])
+          baseline = {rel: sha256_file(path) for rel, path in candidate_files(root).items()}
+          basis = json.loads((Path(os.environ['RUNNER_TEMP']) / 'stockanalysis-plane-basis.json').read_text())
+          (Path(os.environ['RUNNER_TEMP']) / 'stockanalysis-baseline.json').write_text(json.dumps({'files': baseline, 'plane_basis': basis}))
+          PYBASE
+          python3 scripts/stockanalysis_etf_plane.py --source-root "$STOCKANALYSIS_CANDIDATE_ROOT" --select-only
           python3 scripts/fetch-stockanalysis.py $ARGS \
             --event-name "$EVENT_NAME" \
             --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
@@ -501,6 +536,7 @@ jobs:
           python3 scripts/stockanalysis_artifact.py pack \
             --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
             --artifact-root "$STOCKANALYSIS_ARTIFACT_ROOT" \
+            --baseline-manifest "$RUNNER_TEMP/stockanalysis-baseline.json" \
             --base-sha "$STOCKANALYSIS_BASE_SHA" \
             --run-id "${{ github.run_id }}" \
             --run-number "${{ github.run_number }}" \
@@ -520,306 +556,70 @@ jobs:
     if: ${{ github.event.action != 'stockanalysis-plane-recovery' && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: [clock-admission, acquire-stockanalysis]
     runs-on: ubuntu-latest
-    # Semantic validation must follow fresh-main apply while the writer lock is
-    # held; cap the fail-closed critical section instead of validating a stale
-    # pre-lock checkout. Allow the hosted maximum for full ETF native resolution
-    # and public materialization; this bound does not guarantee completion.
-    timeout-minutes: 360
+    timeout-minutes: 45
     permissions:
-      contents: write
-      actions: write
+      contents: read
+      actions: read
     concurrency:
-      group: fenok-data-writer-refs/heads/main
+      group: stockanalysis-catalogue-publish
       cancel-in-progress: false
       queue: max
-    # The Git publication leg of the joined-cycle tuple. These were already
-    # computed inside the publish step's push/readback loop; exporting them is
-    # what lets a later job bind Cloud publication to the same artifact instead
-    # of re-deriving a weaker claim from ambient run metadata.
-    outputs:
-      published_commit: ${{ steps.publish.outputs.commit }}
-      readback_confirmation: ${{ steps.publish.outputs.confirmation }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
-          # Path-history admission needs the complete commit graph.
+          ref: main
           fetch-depth: 0
           filter: blob:none
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           package-manager-cache: false
           node-version: '22'
-
-      - name: Download immutable StockAnalysis candidate
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
           path: ${{ runner.temp }}/stockanalysis-artifact
-
-      - name: Publish candidate to latest main
-        id: publish
+      - name: Publish catalogue and stock recovery atomically
         env:
           ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
           ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
-          # Reachability is proven by remote comparison rather than by local
-          # shallow history, so the readback needs an API token.
-          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
-          BUILT_BASE=""
-          BUILT_TIP=""
-          for attempt in $(seq 1 5); do
-            git fetch origin main
-            if [ -z "$BUILT_TIP" ]; then
-            BUILT_BASE="$(git rev-parse origin/main)"
-            git checkout -f -B main origin/main
-            git clean -fd -- \
-              data/stockanalysis \
-              data/yf/etf-details \
-              data/admin/data-supply-state \
-              data/admin/stockanalysis-recovery \
-              data/admin/yahoo_etf_fallback
-
-            APPLY_JSON="$(
-              python3 scripts/stockanalysis_artifact.py apply \
-                --artifact-root "$ARTIFACT_ROOT" \
-                --run-id "${{ github.run_id }}" \
-                --run-number "${{ github.run_number }}" \
-                --run-attempt "${{ github.run_attempt }}" \
-                --artifact-name "$ARTIFACT_NAME" \
-                --artifact-digest "$ARTIFACT_DIGEST" \
-                --github-output "$RUNNER_TEMP/stockanalysis-apply-output"
-            )"
-            APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
-            APPLY_CONFIRMATION="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["confirmation"])' <<<"$APPLY_JSON")"
-            APPLY_REASON="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("reason") or "")' <<<"$APPLY_JSON")"
-            if [ "$APPLY_STATUS" = "stale" ]; then
-              if [ "$APPLY_CONFIRMATION" != "not_confirmed" ]; then
-                echo "stale artifact must be explicitly non-confirming" >&2
-                exit 1
-              fi
-              echo "status=stale" >> "$GITHUB_OUTPUT"
-              echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-              echo "fence_reason=stale_candidate" >> "$GITHUB_OUTPUT"
-              echo "stale apply reason: $APPLY_REASON" >&2
-              {
-                echo "### StockAnalysis publish fence"
-                echo "- status: stale"
-                echo "- confirmation: not_confirmed"
-                echo "- fence_reason: stale_candidate"
-                echo "- reason: $APPLY_REASON"
-              } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
-              exit 75
-            fi
-
-            PROJECTION_ORACLE_ROOT="$RUNNER_TEMP/stockanalysis-projection-oracle"
-            PROJECTION_ORACLE="$PROJECTION_ORACLE_ROOT/surfaces"
-            rm -rf "$PROJECTION_ORACLE_ROOT"
-            mkdir -p "$PROJECTION_ORACLE"
-            rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
-            # Check this acquisition's surfaces against their retained projection.
-            STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
-              STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
-              python3 -m unittest \
-                scripts.test_stockanalysis_surface_contract.StockanalysisSurfaceContractTest.test_surface_index_matches_fetcher_definitions \
-                scripts.test_stockanalysis_surface_contract.StockanalysisSurfaceContractTest.test_public_surface_index_matches_source_index \
-                scripts.test_stockanalysis_surface_contract.StockanalysisSurfaceContractTest.test_every_ok_surface_has_valid_source_and_public_json
-
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fetch-stockanalysis.yml \
-              --stage always_if_exists
-            python3 scripts/stockanalysis_artifact.py audit-stage \
-              --artifact-root "$ARTIFACT_ROOT"
-            python3 scripts/resolve_etf_detail_candidates.py \
-              --artifact-manifest "$ARTIFACT_ROOT/manifest.json"
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fetch-stockanalysis.yml \
-              --stage always_if_exists
-            (
-              cd 100xfenok-next
-              npm run build:data-supply-public
-              node scripts/sync-public-data.mjs --write
-              node sync-static-overrides.mjs
-              # The generic data->public copy adds and overwrites but never
-              # deletes, so a ticker dropping to `unavailable` leaves its
-              # public payload behind and every later directory-walking check
-              # reads it as an orphan (AKAF, 2026-09-07, run 34071869290).
-              # Reconcile the mirror here so the published commit already
-              # carries the deletion instead of failing the next build.
-              npm run reconcile:data-supply-public-mirror
-            )
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fetch-stockanalysis.yml \
-              --stage always_if_exists
-            git add -- \
-              data/computed/data-supply/etf-detail
-            if git diff --staged --quiet; then
-              COMMIT_ARGS=(--allow-empty)
-              COMMIT_SUBJECT="chore: record stockanalysis no-change run"
-              ACCEPTED_STATUS="accepted_no_changes"
-            else
-              COMMIT_ARGS=()
-              COMMIT_SUBJECT="chore: update stockanalysis data"
-              ACCEPTED_STATUS="published"
-            fi
-            git commit "${COMMIT_ARGS[@]}" \
-              -m "$COMMIT_SUBJECT" \
-              -m "StockAnalysis-Run-Number: ${{ github.run_number }}" \
-              -m "StockAnalysis-Run-Attempt: ${{ github.run_attempt }}" \
-              -m "StockAnalysis-Run-ID: ${{ github.run_id }}" \
-              -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
-            BUILT_TIP="$(git rev-parse HEAD)"
-            PUBLISHED_COMMIT="$BUILT_TIP"
-            elif ! git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main; then
-              # Never replay resolution/materialization after a push race. The
-              # generic public mirror reads across data/, and its scripts import
-              # registries/configuration transitively. Only documentation-only
-              # advances are known to leave ALL of those inputs/outputs intact.
-              # SEC 13F status/code changes therefore refuse reuse deliberately.
-              # New inputs need a fresh admission, not another 34-minute loop
-              # holding the shared writer. Keep the immutable artifact for it.
-              RETRY_REASON=""
-              if ! git merge-base --is-ancestor "$BUILT_BASE" origin/main; then
-                RETRY_REASON="main_history_changed"
-              elif [ -n "$(git log --format=%H --grep='^StockAnalysis-Artifact-Digest:' "$BUILT_BASE..origin/main")" ]; then
-                # Includes a newer accepted-no-changes publication with no diff.
-                RETRY_REASON="concurrent_stockanalysis_publication"
-              else
-                git diff --name-only --no-renames -z "$BUILT_BASE" origin/main > "$RUNNER_TEMP/stockanalysis-main-changes"
-                while IFS= read -r -d '' changed_path; do
-                  case "$changed_path" in
-                    docs/*.md) ;;
-                    *) RETRY_REASON="publication_inputs_changed"; break ;;
-                  esac
-                done < "$RUNNER_TEMP/stockanalysis-main-changes"
-              fi
-              if [ -z "$RETRY_REASON" ]; then
-                if MERGED_TREE="$(git merge-tree --write-tree origin/main "$BUILT_TIP")" && [[ "$MERGED_TREE" =~ ^[0-9a-f]{40}$ ]]; then
-                  # Reuse the full message: all four acquisition trailers remain
-                  # attached to the exact commit returned to the joined cycle.
-                  PUBLISHED_COMMIT="$(git log -1 --format=%B "$BUILT_TIP" | git commit-tree "$MERGED_TREE" -p "$(git rev-parse origin/main)" -p "$BUILT_TIP")"
-                else
-                  RETRY_REASON="publication_merge_conflict"
-                fi
-              fi
-              if [ -n "$RETRY_REASON" ]; then
-                echo "status=not_published" >> "$GITHUB_OUTPUT"
-                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-                echo "fence_reason=$RETRY_REASON" >> "$GITHUB_OUTPUT"
-                echo "candidate retained; retry refused: $RETRY_REASON" >&2
-                {
-                  echo "### StockAnalysis publish fence"
-                  echo "- status: not_published"
-                  echo "- confirmation: not_confirmed"
-                  echo "- fence_reason: $RETRY_REASON"
-                  echo "- immutable artifact: $ARTIFACT_NAME"
-                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
-                exit 75
-              fi
-            fi
-            # Capture the published commit BEFORE the push and the post-push
-            # checkout: the readback resets to origin/main, which by then can
-            # carry other lanes' commits, so HEAD afterwards is not necessarily
-            # this publication. The joined-cycle tuple needs this exact commit.
-            # If an ambiguous push already landed, confirm it without resending.
-            if git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main || git push origin "$PUBLISHED_COMMIT:refs/heads/main"; then
-              if ! git fetch origin main || ! git checkout -f -B main origin/main; then
-                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
-                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-                echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
-                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "post-publish main checkout/readback base was unavailable" >&2
-                {
-                  echo "### StockAnalysis publish fence"
-                  echo "- status: $ACCEPTED_STATUS"
-                  echo "- confirmation: not_confirmed"
-                  echo "- fence_reason: main_readback_infrastructure"
-                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
-                exit 75
-              fi
-              # Resolution consumes pending acquisition pointers before this
-              # commit. Confirm the delivered post-resolution Git tree rather
-              # than demanding the original acquisition layout remain intact.
-              COMPARE_STATUS=""
-              COMMIT_REACHABLE=""
-              for backoff in 15 30 60; do
-                git fetch origin main --deepen=50 2>/dev/null || git fetch origin main 2>/dev/null || true
-                if [ "$(git rev-parse "$PUBLISHED_COMMIT" 2>/dev/null)" = "$(git rev-parse origin/main 2>/dev/null)" ]; then
-                  COMPARE_STATUS="identical"; COMMIT_REACHABLE="yes"; break
-                elif git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main 2>/dev/null; then
-                  COMPARE_STATUS="ahead"; COMMIT_REACHABLE="yes"; break
-                elif git merge-base --is-ancestor origin/main "$PUBLISHED_COMMIT" 2>/dev/null; then
-                  COMPARE_STATUS="behind"; COMMIT_REACHABLE="no"; break
-                elif git cat-file -e "$PUBLISHED_COMMIT" 2>/dev/null && git cat-file -e origin/main 2>/dev/null; then
-                  COMPARE_STATUS="diverged"; COMMIT_REACHABLE="no"; break
-                fi
-                sleep $backoff
-              done
-              # Availability and identity are different failures. An absent or
-              # unrecognised comparison leaves the answer UNKNOWN after the
-              # bounded attempts, and an unknown must never be reported as a
-              # proven mismatch — that is what the pre-existing infrastructure
-              # fence is for. Only behind/diverged can reach the identity fence.
-              if [ -z "$COMPARE_STATUS" ] || [ -z "$COMMIT_REACHABLE" ]; then
-                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
-                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-                echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
-                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "remote comparison for $PUBLISHED_COMMIT did not yield a documented status after 3 attempts" >&2
-                {
-                  echo "### StockAnalysis publish fence"
-                  echo "- status: $ACCEPTED_STATUS"
-                  echo "- confirmation: not_confirmed"
-                  echo "- fence_reason: main_readback_infrastructure"
-                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
-                exit 75
-              fi
-              # The trailer is read locally by SHA on purpose. Git objects are
-              # content-addressed, so the local object at this commit is
-              # byte-identical to the remote's, and a second API call would add
-              # a failure mode without adding a fact.
-              COMMIT_ARTIFACT_DIGEST="$(
-                git log -1 --format=%B "$PUBLISHED_COMMIT" 2>/dev/null \
-                  | sed -n 's/^StockAnalysis-Artifact-Digest: //p' | tail -n 1
-              )" || COMMIT_ARTIFACT_DIGEST=""
-              if [ "$COMMIT_REACHABLE" != "yes" ] || [ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]; then
-                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
-                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-                echo "fence_reason=main_readback_identity" >> "$GITHUB_OUTPUT"
-                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "post-publish identity proof failed: compare_status=$COMPARE_STATUS reachable=$COMMIT_REACHABLE trailer_matches_acquisition=$([ "$COMMIT_ARTIFACT_DIGEST" = "$ARTIFACT_DIGEST" ] && echo yes || echo no)" >&2
-                {
-                  echo "### StockAnalysis publish fence"
-                  echo "- status: $ACCEPTED_STATUS"
-                  echo "- confirmation: not_confirmed"
-                  echo "- fence_reason: main_readback_identity"
-                  echo "- compare_status: $COMPARE_STATUS"
-                  echo "- commit_reachable: $COMMIT_REACHABLE"
-                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
-                exit 75
-              fi
-              echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
-              echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"
-              echo "fence_reason=confirmed" >> "$GITHUB_OUTPUT"
-              echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "git push failed on attempt ${attempt}; refreshing main without rebuilding candidate"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
+          python3 scripts/stockanalysis_artifact.py validate-plane \
+            --artifact-root "$RUNNER_TEMP/stockanalysis-artifact" \
+            --run-id "${{ github.run_id }}" --run-number "${{ github.run_number }}" \
+            --run-attempt "${{ github.run_attempt }}" --artifact-name "$ARTIFACT_NAME" \
+            --artifact-digest "$ARTIFACT_DIGEST"
+          node --input-type=module - <<'JS'
+          import path from "node:path";
+          import { readFile, mkdir, cp } from "node:fs/promises";
+          import { hydrateStockanalysisCatalogue } from "./scripts/materialize-cloud-data-plane-family.mjs";
+          import { runPublisherCli } from "./scripts/publish-cloud-data-generation.mjs";
+          const artifact = path.join(process.env.RUNNER_TEMP, "stockanalysis-artifact");
+          const manifest = JSON.parse(await readFile(path.join(artifact, "manifest.json"), "utf8"));
+          const basis = manifest.plane_basis?.["stockanalysis-catalogue"];
+          if (!basis) throw new Error("CATALOGUE_ACQUISITION_BASIS_MISSING");
+          const root = path.join(process.env.RUNNER_TEMP, "stockanalysis-catalogue");
+          const receipt = await hydrateStockanalysisCatalogue({ repoRoot: root });
+          if (basis.generation_id !== receipt.generation_id || basis.manifest_sha256 !== receipt.manifest_sha256) {
+            throw new Error("CATALOGUE_ACQUISITION_BASIS_CHANGED");
+          }
+          for (const { path: relative } of manifest.files) {
+            const target = path.join(root, relative);
+            await mkdir(path.dirname(target), { recursive: true });
+            await cp(path.join(artifact, "files", relative), target);
+          }
+          process.env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID = basis.generation_id;
+          process.env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256 = basis.manifest_sha256;
+          process.exitCode = await runPublisherCli({ argv: ["--family=stockanalysis-catalogue",
+            `--input-root=${root}/data/stockanalysis`, "--json"] });
+          JS
 
   publish-stockanalysis-etf-plane:
     needs: [clock-admission, acquire-stockanalysis]
@@ -1030,9 +830,9 @@ jobs:
           active_names = {path.name for path in candidate.iterdir() if path.is_file()}
           git_root = Path(prefix)
           if any(not path.is_file() or path.is_symlink() or not name_pattern.fullmatch(path.name)
-                 for path in git_root.iterdir()):
+                 for path in (git_root.iterdir() if git_root.exists() else [])):
               raise SystemExit("Git ETF LKG is not a flat ticker JSON tree")
-          git_names = {path.name for path in git_root.iterdir()}
+          git_names = {path.name for path in git_root.iterdir()} if git_root.exists() else set()
           git_only = sorted(git_names - active_names - overlay_names)
           def checked_payload(body, ticker, label, *, legacy_baseline=False):
               try:
@@ -1323,17 +1123,21 @@ jobs:
           node scripts/materialize-cloud-data-plane-family.mjs \
             --family stockanalysis-etf-detail \
             --verify-receipt "$RECEIPT" >/dev/null
-          python3 - "$RECEIPT" "$CANDIDATE_ROOT" "$GITHUB_ENV" <<'PYEOF'
+          python3 - "$RECEIPT" "$CANDIDATE_ROOT" "$GITHUB_ENV" "$RUNNER_TEMP/stockanalysis-artifact/manifest.json" <<'PYEOF'
           import json
           from pathlib import Path
           import sys
 
           receipt = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
           candidate = Path(sys.argv[2])
+          manifest = json.loads(Path(sys.argv[4]).read_text(encoding="utf-8"))
           if receipt.get("family") != "stockanalysis-etf-detail" or not candidate.is_dir():
               raise SystemExit("ETF active receipt/candidate is invalid")
           with Path(sys.argv[3]).open("a", encoding="utf-8") as env:
               env.write(f"ETF_CANDIDATE_ROOT={candidate}\n")
+              basis = manifest.get('plane_basis', {}).get('stockanalysis-etf-detail')
+              if not basis or any(receipt[key] != basis.get(key) for key in ('generation_id', 'manifest_sha256')):
+                  raise SystemExit('ETF_ACQUISITION_BASIS_CHANGED')
               env.write(f"PUBLISH_EXPECTED_ACTIVE_GENERATION_ID={receipt['generation_id']}\n")
               env.write(f"PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256={receipt['manifest_sha256']}\n")
           PYEOF
@@ -1346,6 +1150,46 @@ jobs:
           path: ${{ runner.temp }}/stockanalysis-etf-admission.json
           if-no-files-found: ignore
 
+      - name: Build selected projection and provider state in one bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          SOURCE_ROOT="$RUNNER_TEMP/stockanalysis-etf-resolution"
+          BUNDLE_ROOT="$RUNNER_TEMP/stockanalysis-etf-bundle"
+          python3 scripts/stockanalysis_artifact.py seed --candidate-root "$SOURCE_ROOT"
+          SOURCE_ROOT="$SOURCE_ROOT" node --input-type=module -e '
+            import { hydratePrivateFamily, hydratePublicCloudData, hydrateStockanalysisCatalogue } from "./scripts/materialize-cloud-data-plane-family.mjs";
+            const repoRoot = process.env.SOURCE_ROOT;
+            await hydratePrivateFamily("stockanalysis-etf-detail", { repoRoot });
+            await hydrateStockanalysisCatalogue({ repoRoot });
+            await hydratePublicCloudData({ relative: "admin/data-usage-manifest.json", family: "platform-projections", repoRoot });
+            await hydratePublicCloudData({ relative: "yf/finance/_index.json", family: "yahoo-finance", repoRoot });
+            await hydratePublicCloudData({ relative: "global-scouter/core/stocks_analyzer.json", family: "scouter-derived", repoRoot });
+          '
+          python3 - "$RUNNER_TEMP/stockanalysis-artifact" "$SOURCE_ROOT" "$ETF_CANDIDATE_ROOT" <<'PY'
+          import json, shutil, sys
+          from pathlib import Path
+          artifact, source, admitted = map(Path, sys.argv[1:])
+          for row in json.loads((artifact / 'manifest.json').read_text())['files']:
+              rel = row['path']
+              target = source / rel
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(artifact / 'files' / rel, target)
+          for payload in admitted.glob('*.json'):
+              shutil.copy2(payload, source / 'data/stockanalysis/etfs' / payload.name)
+          PY
+          python3 scripts/resolve_etf_detail_candidates.py \
+            --state-root "$SOURCE_ROOT/data/admin/data-supply-state/v1" \
+            --provider-truth-root "$SOURCE_ROOT" \
+            --artifact-manifest "$RUNNER_TEMP/stockanalysis-artifact/manifest.json"
+          python3 scripts/stockanalysis_etf_plane.py --source-root "$SOURCE_ROOT" --output-root "$BUNDLE_ROOT"
+          echo "ETF_CANDIDATE_ROOT=$BUNDLE_ROOT/data/stockanalysis/etfs" >> "$GITHUB_ENV"
+
       - name: Publish guarded stockanalysis-etf-detail generation
         id: publish_cloud_generation
         env:
@@ -1354,7 +1198,7 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           # Bind publication to the immutable acquisition artifact; this job
-          # runs independently of the Git publisher.
+          # runs independently of the catalogue publisher.
           PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ github.event.action == 'stockanalysis-plane-recovery' && steps.reuse.outputs.artifact_digest || needs.acquire-stockanalysis.outputs.artifact_digest }}
         run: |
           node --input-type=module -e '
@@ -1380,8 +1224,8 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
 
-  # Rebuild the shared projection after Git publication and the required cloud
-  # publication both succeed. Source-only runs keep their canonical path.
+  # Rebuild the shared projection after catalogue and required ETF generation
+  # publication both succeed. Source-only runs publish the catalogue family.
   # This job stages no Git commit and holds no shared writer lock.
   dispatch-stockanalysis-projection:
     needs:

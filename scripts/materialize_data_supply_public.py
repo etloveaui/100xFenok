@@ -568,7 +568,9 @@ class PublicDataSupplyMaterializer:
 
         cadence = detail_refresh_cadence(self.repo_root)
         if cadence is not None:
-            cadence_paths = {"data/stockanalysis/etf_universe.json", "data/admin/fenok-etf-core-daily-basket.json"}
+            selection_path = "data/admin/data-supply-state/v1/etf-detail-selection.json"
+            cadence_paths = ({selection_path} if (self.repo_root / selection_path).is_file() else
+                             {"data/stockanalysis/etf_universe.json", "data/admin/fenok-etf-core-daily-basket.json"})
             for relative in cadence_paths:
                 self._regular_file(self.repo_root / relative, root=self.repo_root, label="detail cadence")
             self._require_tracked(cadence_paths)

@@ -231,6 +231,10 @@ class Inputs:
                 offset = end + 1; self.frozen[path] = json.loads(raw[offset:offset + size]); offset += size + 1
         else:
             self.detail_tickers = {path.stem for path in (self.root / "data/stockanalysis/etfs").glob("*.json")}
+            selection = _read_json(self.root / "data/admin/data-supply-state/v1/etf-detail-selection.json")
+            if selection:
+                self.detail_tickers &= set(selection["selected"])
+
 
     def read(self, path):
         if self.frozen is not None:

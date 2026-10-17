@@ -6125,6 +6125,18 @@ def select_natural_general_incremental_candidates(
     limit: int,
 ) -> tuple[list[dict], dict]:
     """Rank source debt by explicit tier deadlines inside the existing budget."""
+    selection = read_json(STORAGE_ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json")
+    if selection:
+        members = set(selection["selected"])
+        daily = set(selection["daily"])
+        interval = selection["rotation_interval_days"]
+        rows = [row for row in candidates if row["ticker"] in members]
+        rows.sort(key=lambda row: (row.get("last_attempt_utc") or "", -(row.get("age_hours") or 0), row["ticker"]))
+        chosen = [{**row, "selection_bucket": "selected_rotation",
+                   "max_age_hours": (1 if row["ticker"] in daily else interval) * 24,
+                   "selection_reason": "selected_universe_oldest_attempt"} for row in rows[:limit]]
+        return chosen, {"profile": "selected_universe_rotation", "selected_counts": {"total": len(chosen)},
+                        "eligible_counts": {"total": len(rows)}, "rotation_interval_days": interval}
     buckets = {name: [] for name in (
         "new_listings", "missing", "oldest_stale", "pending_retry", "orphan_probe", "fresh",
     )}
@@ -6288,6 +6300,12 @@ def incremental_etf_backfill_candidates(
         source_records.append(("selected_serving", [{"ticker": ticker} for ticker in sorted(enrolled)]))
     if recovery_tickers:
         source_records.append(("pending_recovery", [{"ticker": ticker} for ticker in recovery_tickers]))
+    selected_universe = read_json(STORAGE_ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json")
+    if use_serving_freshness and selected_universe:
+        permitted = set(selected_universe["selected"])
+        source_records = [(name, [row for row in records if row_ticker(row) in permitted])
+                          for name, records in source_records]
+        orphan_tickers &= permitted
     sources = [
         (source_name, list(current_yahoo_universe_sources(
             {row_ticker(row): [source_name] for row in records if row_ticker(row)}, now_dt.isoformat())))
@@ -6449,7 +6467,7 @@ def incremental_etf_backfill_candidates(
             "selection": (
                 "primary StockAnalysis ETF detail files missing required history_periods only"
                 if history_gaps_only
-                else "new listings, missing source dates/details, furthest overdue tier deadline then first-pass cohort, pending retry reserve, closest tier deadline; tier 2 is the top 650 universe AUM names at 7 days, tier 3 is 30 days"
+                else "selected ETF universe only, oldest attempt first within the remaining 400-run capacity"
                 if priority_selector is not None
                 else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then deferred quote/history and multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
             ),
@@ -8263,6 +8281,17 @@ def _main() -> None:
     stocks = explicit_stocks[:]
     if args.fetch_financials and not stocks:
         stocks = DEFAULT_STOCKS[:]
+    if args.natural_run and args.stocks_only:
+        selection = read_json(STORAGE_ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json") or {}
+        paired = sorted(set(selection.get("paired_stocks", [])) - set(stocks))
+        if paired:
+            # Reuse the stock collector, rotating eight additional underlying
+            # names per run; price collection already contains these Yahoo names.
+            start = (datetime.now(timezone.utc).date().toordinal() * 8) % len(paired)
+            batch = (paired + paired)[start:start + min(8, len(paired))]
+            stocks = unique_symbols(stocks + batch)
+            if args.stock_limit > 0:
+                args.stock_limit += len(batch)
     explicit_surfaces = (
         parse_surface_names(args.surfaces, args.surface_set) if args.surfaces else []
     )
@@ -8444,6 +8473,16 @@ def _main() -> None:
             raise SystemExit(recovery_assessment["exit_code"])
         return
 
+    if args.natural_run and not args.stocks_only:
+        from stockanalysis_etf_plane import select as select_plane_universe, SELECTION
+        previous_selection = read_json(STORAGE_ROOT / SELECTION)
+        if not previous_selection:
+            raise SystemExit("natural ETF collection requires the active plane selection")
+        selection = select_plane_universe(STORAGE_ROOT, previous_selection["owner_tickers"],
+                                          prior_selected=previous_selection.get("prior_selected", previous_selection["selected"]))
+        (STORAGE_ROOT / SELECTION).write_text(json.dumps(selection, sort_keys=True) + "\n")
+        print(json.dumps({"etf_selection": selection["counts"], "rotation_days": selection["rotation_interval_days"]}), flush=True)
+
     reconcile_initial_missing = []
     reconcile_selected = []
     if args.reconcile_missing_etf_details:
@@ -8493,6 +8532,10 @@ def _main() -> None:
             # the score-selected basket, which can omit SPY/QQQ and bond benchmarks.
             etfs = unique_symbols(etfs + ROTATION_POLICY["daily_market_watch_tickers"])
         etfs = list(current_yahoo_universe_sources({ticker: [] for ticker in etfs}, now_iso()))
+    if bounded_natural_general:
+        selection = read_json(STORAGE_ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json")
+        if selection:
+            etfs = selection["daily"][:NATURAL_GENERAL_INCREMENTAL_LIMIT]
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:
         incremental_summary = incremental_etf_backfill_candidates(
@@ -8500,7 +8543,7 @@ def _main() -> None:
             limit=max(
                 0,
                 args.incremental_etf_limit
-                - (0 if bounded_natural_general else len(set(yahoo_retry_etfs) | set(retry_etfs))),
+                - (len(etfs) if bounded_natural_general else len(set(yahoo_retry_etfs) | set(retry_etfs))),
             ),
             max_age_hours=args.incremental_etf_max_age_hours,
             offset=args.offset,
