@@ -1512,10 +1512,15 @@ function scouterDerivedSourceDate(payload, relative) {
   return day === null ? null : { day, origin: "source" };
 }
 
-function stockAnalysisCatalogueSourceDate(payload) {
+function stockAnalysisCatalogueSourceDate(payload, relative) {
   // Catalogue/financial/surface snapshots can explicitly lack a source clock.
   // Preserve that absence; fetched_at remains an acquisition clock in the body.
   if (payload?.source_as_of === null || payload?.source_as_of === undefined) {
+    return { day: null, origin: "unknown" };
+  }
+  // Index maps contain independent child clocks, not an aggregate source date.
+  if (["index.json", "surfaces/index.json"].includes(relative)
+    && typeof payload.source_as_of === "object" && !Array.isArray(payload.source_as_of)) {
     return { day: null, origin: "unknown" };
   }
   const day = toIsoDay(payload.source_as_of);
