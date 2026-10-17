@@ -1,0 +1,11 @@
+[Unit]
+Description=Twice-weekly A1 FDIC lane collector
+
+[Timer]
+OnCalendar=Mon,Thu *-*-* 15:00:00 Asia/Seoul
+Persistent=true
+AccuracySec=1min
+Unit=feno-a1-fdic.service
+
+[Install]
+WantedBy=timers.target

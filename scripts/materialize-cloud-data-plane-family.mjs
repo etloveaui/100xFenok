@@ -891,7 +891,7 @@ export async function hydrateCanonicalCloudData(options = {}) {
 
 export async function hydrateSmallMacroData(options = {}) {
   const inputs = [["macro/stablecoins.json", "defillama-stablecoins"],
-    ["macro/tga.json", "treasury-tga"]];
+    ["macro/tga.json", "treasury-tga"], ["macro/fdic-tier1.json", "fdic-tier1"]];
   return Promise.all(inputs.map(([relative, family]) => hydratePublicCloudData({ ...options, relative, family })));
 }
 

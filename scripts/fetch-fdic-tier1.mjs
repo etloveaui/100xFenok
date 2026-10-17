@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { hydratePublicCloudData } from "./materialize-cloud-data-plane-family.mjs";
 
 import fs from "node:fs";
 import https from "node:https";
@@ -8,7 +9,6 @@ import { fileURLToPath } from "node:url";
 import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
-  LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
   systemicLkgFailureReason,
@@ -341,19 +341,8 @@ export async function runFdicTier1({
     throw new Error(`FDIC probe quarter must be newer than retained history: ${probeQuarter}`);
   }
   const injectedQuarter = controlledFailureQuarter(controlledFailureKey.trim(), eventName, retainedQuarters);
-  const lkgStore = new LaneLkgStore({
-    repoRoot,
-    laneId: "fdic_tier1",
-  });
-  const lkgArtifacts = [{
-    key: "fdic_tier1",
-    canonicalPath,
-    validateDocument: validFdicDocument,
-    sourceAsOf: fdicSourceAsOf,
-  }];
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const latestRetainedQuarter = retainedQuarters.at(-1);
-  const currentState = lkgStore.stateSnapshot().items.fdic_tier1;
   let canonicalDocument = null;
   if (fs.existsSync(canonicalPath)) {
     try {
@@ -364,8 +353,6 @@ export async function runFdicTier1({
   }
   let prefetchedProbeResult = null;
   if (injectedQuarter === null
-    && currentState?.resolution_state === "fresh_primary"
-    && currentState.retry === false
     && validFdicDocument(canonicalDocument)
     && fdicSourceAsOf(canonicalDocument) === quarterSourceDate(latestRetainedQuarter)) {
     const currentProbeQuarter = probeQuarter !== null && probeQuarter > latestRetainedQuarter
@@ -399,7 +386,7 @@ export async function runFdicTier1({
           reason: providerWaiting ? "provider_wait" : currentProbe.reason,
           updated: false,
           attempt,
-          retrySet: lkgStore.stateSnapshot().retry_set,
+          retrySet: ["fdic_tier1"],
           probe: {
             quarter: currentProbeQuarter,
             status: providerWaiting ? "not_yet_published" : "failed",
@@ -426,8 +413,7 @@ export async function runFdicTier1({
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.quarter === injectedQuarter);
     const failureReason = systemicLkgFailureReason([baselineWorst.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : baselineWorst.reason);
-    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
-    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
+    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: validFdicDocument(canonicalDocument), systemic: systemicOutage });
     const failureDetail = failureReason === "controlled_failure"
       ? null
       : baselineWorst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
@@ -436,7 +422,7 @@ export async function runFdicTier1({
       reason: failureReason,
       updated: false,
       attempt,
-      retrySet: failure.retrySet,
+      retrySet: ["fdic_tier1"],
       ...(failureDetail ? { failure_detail: failureDetail } : {}),
       ...outcome,
     };
@@ -486,39 +472,19 @@ export async function runFdicTier1({
     data,
   };
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
-  const candidate = {
-    key: "fdic_tier1",
-    currentRelativePath: "data/macro/fdic-tier1.json",
-    payloadBytes: Buffer.from(serialized),
-    sourceAsOf: fdicSourceAsOf(output),
-    validateDocument: validFdicDocument,
-    deriveSourceAsOf: fdicSourceAsOf,
-  };
-  const recoveryState = lkgStore.stateSnapshot();
-  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
-  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
-  if (promotable.length === 0) {
-    const reason = decisions[0].reason;
-    return {
-      ok: false,
-      reason,
-      updated: false,
-      attempt,
-      retrySet: lkgStore.stateSnapshot().retry_set,
-      probe,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
+  const sourceAsOf = Date.parse(fdicSourceAsOf(output));
+  if (!validFdicDocument(output) || !Number.isFinite(sourceAsOf) || sourceAsOf > Date.parse(observedAt) + 120_000) throw new Error("FDIC candidate has an invalid source clock");
+  if (!validFdicDocument(canonicalDocument)) throw new Error("Active FDIC baseline is invalid");
+  if (sourceAsOf < Date.parse(fdicSourceAsOf(canonicalDocument))) {
+    return { ok: false, reason: "source_regression", updated: false, attempt,
+      retrySet: ["fdic_tier1"], probe, degraded: true, corrupt: false, exitCode: 2 };
   }
   atomicWrite(canonicalPath, serialized);
-  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = recoveringKeys.has("fdic_tier1");
-  return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered, probe };
+  return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered: false, probe };
 }
 
 async function main() {
+  await hydratePublicCloudData({ relative: "macro/fdic-tier1.json", family: "fdic-tier1" });
   if ((process.env.INPUT_PERSISTENCE_MIGRATION_ONLY || "").trim().toLowerCase() === "true") {
     const result = runFdicPersistenceMigration();
     console.log(

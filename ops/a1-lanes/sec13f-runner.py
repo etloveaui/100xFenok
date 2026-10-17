@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A1 incremental SEC ingestion using the canonical CCH converter and 13F builders."""
+"""A1 generation-only SEC 13F and FDIC collection."""
 import argparse
 import calendar
 import json
@@ -79,6 +79,8 @@ def seed_tracker(output):
 
 
 def source_clock(output):
+    if LANE_ID == "fdic_tier1":
+        return None, max(row["date"] for row in read_json(output)["data"])
     summary = read_json(output / "summary.json")
     quarter = max(summary["metadata"]["quarters_covered"])
     year, number = quarter.split("-Q")
@@ -156,7 +158,7 @@ def build_state(outcome, error, collected_clock, served_clock, reconciled, rebui
     quarter, source_as_of = collected_clock if published_data else served_clock
     reason = error
     if reason is None:
-        reason = {"retained": "no_new_filings", "published": "new_filings",
+        reason = {"retained": "no_source_update", "published": "source_updated",
                   "deferred": "publication_deferred"}.get(outcome, outcome)
         if publication == "superseded":
             reason = "main already carries a newer lane report"
@@ -168,7 +170,7 @@ def build_state(outcome, error, collected_clock, served_clock, reconciled, rebui
         "updated_at": finished,
         "last_success_at": finished if success else reconciled.get("last_success_at"),
         "consecutive_failures": 0 if success else next_failure_count(reconciled),
-        "cadence_hours": 24, "grace_hours": 12,
+        "cadence_hours": 96 if LANE_ID == "fdic_tier1" else 24, "grace_hours": 12,
         "last_run": {"observed_at": finished, "outcome": outcome,
                      "source_as_of": source_as_of, "source_quarter": quarter,
                      "reason": reason, "rebuilds": rebuilds,
@@ -194,17 +196,23 @@ def publish_status_only(args, status, scratch):
         tree = command(["git", "write-tree"], args.repo, env=env)
         if tree == git(args.repo, "rev-parse", f"{remote}^{{tree}}"):
             return "no_change"
-        proposed = git(args.repo, "-c", "user.name=fenok-sec13f",
-                       "-c", "user.email=fenok-sec13f@local", "commit-tree", tree,
-                       "-p", remote, "-m", "ops: record scheduled SEC 13F lane status")
+        proposed = git(args.repo, "-c", "user.name=fenok-data",
+                       "-c", "user.email=fenok-data@local", "commit-tree", tree,
+                       "-p", remote, "-m", f"ops: record scheduled {LANE_ID} lane status")
         result = subprocess.run(["git", "push", "origin", f"{proposed}:refs/heads/main"],
                                 cwd=args.repo, text=True, capture_output=True, timeout=120)
         if result.returncode == 0:
             return "published"
-    raise PublicationFailed("13F status publication lost three push races")
+    raise PublicationFailed("Lane status publication lost three push races")
 
 
 def collect(args, candidate, runtime):
+    if LANE_ID == "fdic_tier1":
+        target = candidate / DATA_ROOT
+        before = target.read_bytes()
+        command(["node", "scripts/fetch-fdic-tier1.mjs"], candidate,
+                timeout=60 * 60, capture=False)
+        return "candidate_ready" if target.read_bytes() != before else "retained"
     # Importing yaml explicitly prevents the converter's reduced fallback universe.
     import yaml
     configured = yaml.safe_load((args.converter_root / "config/investors.yaml").read_text())
@@ -249,14 +257,23 @@ def _now():
 
 
 def main():
+    global LANE_ID, DATA_ROOT, STATUS_PATH
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", required=True, type=Path)
-    parser.add_argument("--converter-root", required=True, type=Path)
+    parser.add_argument("--converter-root", type=Path)
+    parser.add_argument("--lane", choices=("sec_13f", "fdic_tier1"), default="sec_13f")
     parser.add_argument("--state-root", required=True, type=Path)
     parser.add_argument("--publish", action="store_true")
     args = parser.parse_args()
-    args.repo, args.converter_root, args.state_root = (
-        value.resolve() for value in (args.repo, args.converter_root, args.state_root))
+    LANE_ID = args.lane
+    family = "fdic-tier1" if LANE_ID == "fdic_tier1" else "sec-13f"
+    DATA_ROOT = "data/macro/fdic-tier1.json" if LANE_ID == "fdic_tier1" else "data/sec-13f"
+    STATUS_PATH = f"ops/a1-lanes/{LANE_ID}.json"
+    args.repo, args.state_root = args.repo.resolve(), args.state_root.resolve()
+    if args.converter_root:
+        args.converter_root = args.converter_root.resolve()
+    elif LANE_ID == "sec_13f":
+        parser.error("SEC 13F requires --converter-root")
     if sys.platform != "linux":
         raise RuntimeError("This producer runs on the authorized A1 Linux host")
     if git(args.repo, "status", "--porcelain"):
@@ -276,13 +293,23 @@ def main():
     served_clock = (None, None)
     collected_clock = served_clock
     try:
-        basis = json.loads(command(["node", "scripts/materialize-cloud-data-plane-family.mjs",
-                                    "--hydrate-sec-13f"], args.repo, env=env, timeout=15 * 60))
+        if LANE_ID == "fdic_tier1":
+            basis = json.loads(command(["node", "scripts/materialize-cloud-data-plane-family.mjs",
+                                        "--family", family, "--manifest-prefix", "public/data/macro",
+                                        "--output-root", str(runtime / "active")], args.repo,
+                                       env=env, timeout=15 * 60))
+            target = args.repo / DATA_ROOT
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(Path(basis["output_root"]) / "fdic-tier1.json", target)
+        else:
+            basis = json.loads(command(["node", "scripts/materialize-cloud-data-plane-family.mjs",
+                                        "--hydrate-sec-13f"], args.repo, env=env, timeout=15 * 60))
         served_clock = source_clock(args.repo / DATA_ROOT)
         collected_clock = served_clock
-        for flag in ("--hydrate-global-scouter-build", "--hydrate-scouter-derived", "--hydrate-yahoo-analytics"):
-            command(["node", "scripts/materialize-cloud-data-plane-family.mjs", flag],
-                    args.repo, env=env, timeout=15 * 60)
+        if LANE_ID == "sec_13f":
+            for flag in ("--hydrate-global-scouter-build", "--hydrate-scouter-derived", "--hydrate-yahoo-analytics"):
+                command(["node", "scripts/materialize-cloud-data-plane-family.mjs", flag],
+                        args.repo, env=env, timeout=15 * 60)
         outcome = collect(args, args.repo, runtime)
         collected_clock = source_clock(args.repo / DATA_ROOT)
         if outcome == "candidate_ready" and args.publish:
@@ -290,10 +317,10 @@ def main():
                 PUBLISH_EXPECTED_ACTIVE_GENERATION_ID=basis["generation_id"],
                 PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256=basis["manifest_sha256"])
             result = json.loads(command(["node", "scripts/publish-cloud-data-generation.mjs",
-                                        "--family=sec-13f", "--json"], args.repo,
+                                        f"--family={family}", "--json"], args.repo,
                                        env=publish_env, timeout=15 * 60))
             if result.get("result") not in ("published", "resumed"):
-                raise RuntimeError(f"13F generation was not promoted: {result.get('result')}")
+                raise RuntimeError(f"{family} generation was not promoted: {result.get('result')}")
             generation = result.get("generation_id")
             outcome = "published"
         elif outcome == "retained":

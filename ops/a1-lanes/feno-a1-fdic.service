@@ -1,0 +1,16 @@
+[Unit]
+Description=100xFenok FDIC generation collection
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=6h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+WorkingDirectory=/data/100xFenok-a1
+EnvironmentFile=%h/.config/fenok/external-clock.env
+ExecStart=/usr/bin/flock -n %h/.cache/feno-a1-lanes/fdic_tier1.lock %h/.local/lib/fenok-sec13f/venv/bin/python %h/.local/lib/fenok-sec13f/sec13f-runner.py --lane fdic_tier1 --repo /data/100xFenok-a1 --state-root %h/.local/state/fenok-fdic --publish
+TimeoutStartSec=90min
+Restart=on-failure
+RestartSec=20min
+UMask=0077
