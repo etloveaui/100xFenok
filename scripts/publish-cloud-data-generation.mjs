@@ -572,6 +572,27 @@ export const FAMILIES = {
     manifest_prefix: "public/data/indices",
     files: ["sp500.json","nasdaq.json","nasdaq100.json","sox.json"],
     privacy_class: "public",
+    reuse_active_generation: true,
+    // Timestamp-free promotion anchors retain an explicitly unknown source date.
+    private_assets: [
+      {"path": "data/admin/us-indices-daily/index.json", "source_as_of": {"key": "generated_at"}},
+      {"path": "data/admin/us-indices-daily/keys/nasdaq.json", "source_as_of": {"key": "updated_at"}},
+      {"path": "data/admin/us-indices-daily/keys/nasdaq100.json", "source_as_of": {"key": "updated_at"}},
+      {"path": "data/admin/us-indices-daily/keys/sox.json", "source_as_of": {"key": "updated_at"}},
+      {"path": "data/admin/us-indices-daily/keys/sp500.json", "source_as_of": {"key": "updated_at"}},
+      {"path": "data/admin/us-indices-daily/lkg/nasdaq.json", "source_as_of": {"max_date": {"array": null, "key": "date"}}},
+      {"path": "data/admin/us-indices-daily/lkg/nasdaq100.json", "source_as_of": {"max_date": {"array": null, "key": "date"}}},
+      {"path": "data/admin/us-indices-daily/lkg/sox.json", "source_as_of": {"max_date": {"array": null, "key": "date"}}},
+      {"path": "data/admin/us-indices-daily/lkg/sp500.json", "source_as_of": {"max_date": {"array": null, "key": "date"}}},
+      {"path": "data/admin/us-indices-daily/parity-report.json", "source_as_of": {"key": "observed_at"}},
+      {"path": "data/admin/us-indices-daily/persistence.json", "source_as_of": {"key": "updated_at"}},
+      {"path": "data/admin/us-indices-daily/promotion-contracts/nasdaq.json", "source_as_of": null},
+      {"path": "data/admin/us-indices-daily/promotion-contracts/nasdaq100.json", "source_as_of": null},
+      {"path": "data/admin/us-indices-daily/promotion-contracts/sox.json", "source_as_of": null},
+      {"path": "data/admin/us-indices-daily/promotion-contracts/sp500.json", "source_as_of": null},
+      {"path": "data/admin/us-indices-daily/shadow/nasdaq.json", "source_as_of": {"max_date": {"array": null, "key": "date"}}},
+      {"path": "data/admin/us-indices-daily/shadow/sp500.json", "source_as_of": {"max_date": {"array": null, "key": "date"}}},
+    ],
     // Each independent series is a plain top-level array of { date, value }
     // rows. Resolve every asset from ITS OWN latest row date; the producer's
     // parity gate is per-series and does not promise cross-series date
@@ -585,8 +606,8 @@ export const FAMILIES = {
       },
     },
     // Gate declaration: >= 2x the measured 4 PutObject / 1,304,515 bytes.
-    plan: { class_a: 10, bytes: 2_700_000 },
-    policy: { max_assets: 20, max_total_bytes: 5_400_000 },
+    plan: { class_a: 50, class_b: 100, bytes: 8_000_000 },
+    policy: { max_assets: 24, max_total_bytes: 5_400_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
@@ -1756,7 +1777,7 @@ export async function buildFamilyManifest({
       || payloads.has(assetPath)) fail("PRIVATE_ASSET_PATH_INVALID", assetPath);
     const bytes = new Uint8Array(await readFile(path.join(repoRoot, assetPath)));
     const sha256 = sha256Bytes(bytes);
-    const retainedDate = resolveSourceAsOf({ family: { root: path.posix.dirname(assetPath),
+    const retainedDate = retained.source_as_of === null ? { value: null } : resolveSourceAsOf({ family: { root: path.posix.dirname(assetPath),
       source_as_of: { ...retained.source_as_of, file: path.posix.basename(assetPath) } },
       payloads: new Map([[assetPath, bytes]]), createdIsoDay, relRoot: path.posix.dirname(assetPath) });
     assets.push({ path: assetPath, object_key: `objects/sha256/${sha256}`,
