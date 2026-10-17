@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
+import { createDefaultMaterializePlane, readActiveFamilyIdentity } from "../materialize-cloud-data-plane-family.mjs";
+import { sha256Bytes, validateGenerationManifest } from "../lib/cloud-data-plane-generation.mjs";
 import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
 import { STATE_TITLE as RETENTION_STATE_TITLE, classifyRetentionSchedule } from "./retention-schedule.mjs";
 import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot, externalClockEvent } from "../../ops/a1-lanes/external-clock.mjs";
@@ -442,23 +444,6 @@ async function readApiJson(response, url) {
   return payload;
 }
 
-function buildKpiHistoryCommitsUrl({ owner, repo, branch = "main" }) {
-  const segments = [owner, repo].map((segment) => encodeURIComponent(segment));
-  const query = new URLSearchParams({
-    path: DATA_HEALTH_KPI_PATH,
-    sha: branch,
-    per_page: "2",
-  });
-  return `${GITHUB_API}/repos/${segments[0]}/${segments[1]}/commits?${query}`;
-}
-
-function buildKpiGenerationContentUrl({ owner, repo, sha }) {
-  const segments = [owner, repo].map((segment) => encodeURIComponent(segment));
-  const file = DATA_HEALTH_KPI_PATH.split("/").map(encodeURIComponent).join("/");
-  const query = new URLSearchParams({ ref: sha });
-  return `${GITHUB_API}/repos/${segments[0]}/${segments[1]}/contents/${file}?${query}`;
-}
-
 function kpiGenerationStatuses(generation) {
   if (!generation || typeof generation !== "object" || Array.isArray(generation)
     || typeof generation.generated_at !== "string"
@@ -554,28 +539,35 @@ export function classifyKpiGenerationStoppage(generations, { now = Date.now(), c
   };
 }
 
-/** Load exactly the latest two committed versions of the slim KPI from GitHub. */
-export async function fetchKpiGenerationSnapshots({ token, owner, repo, branch = "main", fetchFn = fetch } = {}) {
-  if (typeof owner !== "string" || owner === "" || typeof repo !== "string" || repo === "") {
-    throw new Error("KPI history requires an owner and repository");
+/** Read the active and previous promoted KPI, never a Git snapshot. */
+export async function fetchKpiGenerationSnapshots({ env = process.env, plane = null } = {}) {
+  const family = "platform-projections";
+  plane ??= createDefaultMaterializePlane({ family, accountId: env.CLOUDFLARE_ACCOUNT_ID,
+    token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
+    writeKey: env.DATA_PLANE_WRITE_KEY });
+  const { pointer, manifest: active } = await readActiveFamilyIdentity({ plane, family });
+  if (!pointer.previous || pointer.previous.generation_id === pointer.active.generation_id) {
+    throw new Error("Fewer than two promoted KPI generations");
   }
-  const commitsUrl = buildKpiHistoryCommitsUrl({ owner, repo, branch });
-  const commits = await readApiJson(
-    await fetchFn(commitsUrl, { headers: authHeaders(token) }),
-    commitsUrl,
-  );
-  const shas = Array.isArray(commits)
-    ? commits.slice(0, 2).map((row) => row?.sha).filter((sha) => typeof sha === "string" && /^[0-9a-f]{40}$/i.test(sha))
-    : [];
-  if (shas.length !== 2 || shas[0] === shas[1]) {
-    throw new Error("GitHub returned fewer than two committed KPI generations");
+  const previousBytes = await plane.objectStore.get(pointer.previous.manifest_key);
+  if (!(previousBytes instanceof Uint8Array) || sha256Bytes(previousBytes) !== pointer.previous.manifest_sha256) {
+    throw new Error("Previous KPI manifest integrity mismatch");
   }
-  return Promise.all(shas.map(async (sha) => {
-    const url = buildKpiGenerationContentUrl({ owner, repo, sha });
-    const response = await fetchFn(url, {
-      headers: { ...authHeaders(token), Accept: "application/vnd.github.raw+json" },
-    });
-    return readApiJson(response, url);
+  const previous = JSON.parse(new TextDecoder().decode(previousBytes));
+  const summary = validateGenerationManifest(previous);
+  if (summary.generation_id !== pointer.previous.generation_id
+    || summary.manifest_sha256 !== pointer.previous.manifest_sha256) {
+    throw new Error("Previous KPI generation identity mismatch");
+  }
+  return Promise.all([active, previous].map(async manifest => {
+    const asset = manifest.assets.find(row => row.path === `public/${DATA_HEALTH_KPI_PATH}`
+      && row.privacy_class === "public");
+    if (!asset) throw new Error("Promoted KPI asset is missing");
+    const bytes = await plane.objectStore.get(asset.object_key);
+    if (!(bytes instanceof Uint8Array) || bytes.byteLength !== asset.bytes || sha256Bytes(bytes) !== asset.sha256) {
+      throw new Error("Promoted KPI payload integrity mismatch");
+    }
+    return JSON.parse(new TextDecoder().decode(bytes));
   }));
 }
 
@@ -1047,7 +1039,7 @@ export function buildIssueBody(alarms) {
     "[alert] Pipeline health incidents detected.",
     "",
     "A watched workflow failed or missed its scheduled slots in GitHub run history,",
-    "or a data set remained stopped in two committed health KPI generations.",
+    "or a data set remained stopped in two promoted health KPI generations.",
     "",
   ];
   for (const alarm of alarms) {
@@ -1254,12 +1246,7 @@ export async function main() {
     };
   } else {
     try {
-      dataHealthKpi = classifyKpiGenerationStoppage(await fetchKpiGenerationSnapshots({
-        token,
-        owner,
-        repo,
-        branch,
-      }));
+      dataHealthKpi = classifyKpiGenerationStoppage(await fetchKpiGenerationSnapshots());
     } catch {
       dataHealthKpi = {
         status: "unknown",

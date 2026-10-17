@@ -21,7 +21,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   issues: write
   actions: read
 
@@ -50,15 +50,12 @@ jobs:
         run: node scripts/check-external-clock-slot.mjs pipeline-failure-alarm.yml
 
   check:
-    outputs:
-      changed: ${{ steps.transfer.outputs.changed }}
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Serialize only the short detector/reporting critical section. The state
-    # persistence job below has its own global writer lock, so a long writer
-    # queue cannot delay the next alarm check.
+    timeout-minutes: 30
+    environment: production
+    # Detection, reporting and promotion share one family lock.
     concurrency:
       group: pipeline-failure-alarm
       cancel-in-progress: false
@@ -75,31 +72,30 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /.github/workflows/
-            /scripts/ops/check-pipeline-job-health.mjs
-            /scripts/check-external-clock-slot.mjs
-            /scripts/ops/retention-schedule.mjs
-            /scripts/ops/check-a1-lane-health.mjs
-            /scripts/ops/emit-alarm-state.mjs
-            /scripts/lib/
+            /scripts/
             /ops/a1-lanes/
-            /data/admin/alarm-state.json
-            /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
-
-      - name: Record alarm-state base fingerprint
-        run: |
-          set -euo pipefail
-          mkdir -p pipeline-alarm-state-transfer
-          if [ -f data/admin/alarm-state.json ]; then
-            sha256sum data/admin/alarm-state.json | awk '{print $1}' > pipeline-alarm-state-transfer/base.sha256
-          else
-            printf '%s\n' missing > pipeline-alarm-state-transfer/base.sha256
-          fi
+            /100xfenok-next/scripts/cloud-data-plane/
 
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           package-manager-cache: false
           node-version: 22
+
+      - name: Hydrate active alarm transition state
+        id: baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family pipeline-alarm-state --privacy-class public --manifest-prefix public/data --output-root "$RUNNER_TEMP/alarm-state-active")"
+          mkdir -p data
+          cp -R "$RUNNER_TEMP/alarm-state-active/." data/
+          echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
+          echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
 
       - name: Check pipeline job health
         id: pipeline
@@ -110,6 +106,8 @@ jobs:
           PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
           set +e
           node scripts/ops/check-pipeline-job-health.mjs
@@ -122,7 +120,7 @@ jobs:
 
       - name: Emit alarm state
         id: alarm_state
-        if: always()
+        if: ${{ always() && steps.baseline.outcome == 'success' }}
         env:
           PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
         run: node scripts/ops/emit-alarm-state.mjs
@@ -193,8 +191,8 @@ jobs:
           gh issue comment "$existing" --body "$(printf '%s\n' \
             '[all-clear] The pipeline alarm has cleared.' \
             '' \
-            'The detector observed `clear`; the Git state snapshot may still be' \
-            'waiting in the writer queue. This issue records the recovery now.' \
+            'The detector observed `clear`; the plane state promotion follows' \
+            'reporting. This issue records the recovery now.' \
             '' \
             "Observed by: $RUN_URL")"
           # Close on all-clear so each incident owns one bounded issue. Leaving
@@ -203,204 +201,12 @@ jobs:
           # timeline instead of appending to a finished one.
           gh issue close "$existing" --reason completed --comment "Closed by all-clear; the next incident opens a new issue."
 
-      # Persist only after incident/recovery reporting has succeeded. The
-      # artifact carries both the newly emitted public-safe state and the exact
-      # canonical state fingerprint that detection started from.
-      - name: Prepare alarm state for persistence
-        id: transfer
-        run: |
-          set -euo pipefail
-          test -f pipeline-alarm-state-transfer/base.sha256
-          test -f data/admin/alarm-state.json
-          base_fingerprint="$(cat pipeline-alarm-state-transfer/base.sha256)"
-          prepared_fingerprint="$(sha256sum data/admin/alarm-state.json | awk '{print $1}')"
-          if [ "$base_fingerprint" = "$prepared_fingerprint" ]; then
-            echo 'changed=false' >> "$GITHUB_OUTPUT"
-            echo 'alarm-state unchanged; skip the writer queue'
-            exit 0
-          fi
-          cp data/admin/alarm-state.json pipeline-alarm-state-transfer/alarm-state.json
-          echo 'changed=true' >> "$GITHUB_OUTPUT"
-
-      - name: Upload alarm state for persistence
-        if: steps.transfer.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-alarm-state-${{ github.run_id }}-${{ github.run_attempt }}
-          path: pipeline-alarm-state-transfer
-          if-no-files-found: error
-
-  persist-alarm-state:
-    # Issue alert/all-clear failure, emitter failure, or state-artifact failure
-    # must block persistence. A successful report is already durable in the OPS
-    # issue even if this bounded writer job later waits or fails.
-    needs: [clock-admission, check]
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (needs.check.result == 'success' && needs.check.outputs.changed == 'true') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 9
-    permissions:
-      contents: write
-      actions: read
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
-    steps:
-      - name: Skip superseded prepared writer
-        id: freshness
-        timeout-minutes: 1
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.setOutput('skip', 'false');
-            const repo = context.repo;
-            const api = github.rest.actions;
-            const request = { timeout: 10000 };
-            try {
-              const { data: current } = await api.getWorkflowRun({ ...repo, run_id: context.runId, request });
-              const { data: currentJobs } = await api.listJobsForWorkflowRun({ ...repo, run_id: context.runId, per_page: 100, request });
-              const preparedAt = currentJobs.jobs.find(job => job.name === 'check')?.completed_at;
-              if (!preparedAt) return;
-              const { data } = await api.listWorkflowRuns({ ...repo, workflow_id: current.workflow_id,
-                branch: current.head_branch, per_page: 100, request });
-              for (const run of data.workflow_runs) {
-                if (run.run_number <= current.run_number || run.conclusion === 'cancelled') continue;
-                const { data: newer } = await api.listJobsForWorkflowRun({ ...repo, run_id: run.id, per_page: 100, request });
-                const prepared = newer.jobs.find(job => job.name === 'check');
-                const writer = newer.jobs.find(job => job.name === 'persist-alarm-state');
-                const ready = writer && (['queued', 'waiting', 'pending', 'in_progress'].includes(writer.status)
-                  || writer.conclusion === 'success');
-                if (prepared?.conclusion === 'success' && prepared.completed_at > preparedAt && ready) {
-                  core.setOutput('skip', 'true');
-                  core.notice(`Prepared input from run ${run.id} supersedes this writer; no checkout needed.`);
-                  return;
-                }
-              }
-            } catch (error) {
-              // Supersession is an optimization. Existing candidate/source
-              // checks still protect a writer when the API is unavailable.
-              core.warning(`Could not check newer prepared input (${error.status ?? 'network'}); retaining this writer.`);
-            }
-      - name: Checkout
-        if: steps.freshness.outputs.skip != 'true'
-        timeout-minutes: 2
-        uses: actions/checkout@v7
-        with:
-          ref: main
-          fetch-depth: 1
-          filter: blob:none
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /data/admin/alarm-state.json
-            /scripts/ops/carry-alarm-resolution.mjs
-            /scripts/stage-lane-manifest.sh
-            /scripts/lib/lane-registry.mjs
-            /scripts/lib/slickcharts-composite-recovery.mjs
-            /scripts/lib/json-canonical.mjs
-            /100xfenok-next/scripts/cloud-data-plane/json-canonical.mjs
-
-      - name: Download alarm state
-        if: steps.freshness.outputs.skip != 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: pipeline-alarm-state-${{ github.run_id }}-${{ github.run_attempt }}
-          path: pipeline-alarm-state
-
-      - name: Commit alarm state
-        if: steps.freshness.outputs.skip != 'true'
-        id: persist
-        continue-on-error: true
-        run: |
-          # [skip ci] keeps this ops-metadata commit from re-triggering the
-          # pipeline it is reporting on.
-          set -euo pipefail
-          for required in pipeline-alarm-state/base.sha256 pipeline-alarm-state/alarm-state.json; do
-            if [ ! -f "$required" ]; then
-              echo "::error::alarm-state artifact is incomplete: ${required} is missing; the detector produced no usable state" >&2
-              exit 1
-            fi
-          done
-
-          base_fingerprint="$(tr -d '\r\n' < pipeline-alarm-state/base.sha256)"
-          if [ "$base_fingerprint" != missing ] \
-            && ! printf '%s\n' "$base_fingerprint" | grep -Eq '^[0-9a-f]{64}$'; then
-            echo "::error::alarm-state base fingerprint artifact is malformed; the detector wrote an unusable base" >&2
-            exit 1
-          fi
-
-          # Refresh after acquiring the global writer lock. A stale detector
-          # artifact must never overwrite a newer alarm transition on main.
-          timeout 60s git fetch --depth=1 origin main
-          timeout 30s git checkout -B main origin/main
-          if [ -f data/admin/alarm-state.json ]; then
-            current_fingerprint="$(sha256sum data/admin/alarm-state.json | awk '{print $1}')"
-          else
-            current_fingerprint=missing
-          fi
-          # A newer writer landed while this run waited for the global writer
-          # lock. Refusing is correct - a stale document must not overwrite a
-          # newer one - and it used to exit 1, which turned a guard behaving
-          # correctly into 4 of the last 5 job failures and shared one error
-          # line with three genuine faults. Nothing is lost by standing down:
-          # every incident field is recomputed from the live API each run and
-          # the OPS issue was already written by the check job.
-          #
-          # One field is not recomputed. last_resolved_at is carried forward by
-          # the emitter rather than derived, so if this run were the only
-          # observer of an open -> clear transition it would vanish. Carry that
-          # one field, then stand down without raising an error.
-          if [ "$base_fingerprint" != "$current_fingerprint" ]; then
-            carry="$(node scripts/ops/carry-alarm-resolution.mjs \
-              pipeline-alarm-state/alarm-state.json data/admin/alarm-state.json)"
-            if [ "$carry" = carried ]; then
-              git config user.name "github-actions[bot]"
-              git config user.email "github-actions[bot]@users.noreply.github.com"
-              git add data/admin/alarm-state.json
-              timeout 30s git commit -m "ops: carry alarm resolution timestamp [skip ci]"
-              for attempt in 1 2 3; do
-                if timeout 60s git push origin HEAD:main; then break; fi
-                if [ "$attempt" = 3 ]; then
-                  echo "::error::alarm-state resolution carry could not be pushed; last_resolved_at may be lost" >&2
-                  exit 1
-                fi
-                sleep $((attempt * 3))
-              done
-              echo "::notice::alarm-state superseded by a newer writer on main; carried last_resolved_at forward"
-            else
-              echo "::notice::alarm-state superseded by a newer writer on main; nothing to persist (${carry})"
-            fi
-            exit 0
-          fi
-
-          cp pipeline-alarm-state/alarm-state.json data/admin/alarm-state.json
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/pipeline-failure-alarm.yml \
-            --stage always_if_exists
-          git add data/admin/alarm-state.json
-          if git diff --cached --quiet; then
-            echo "alarm-state unchanged; nothing to commit"
-            exit 0
-          fi
-          timeout 30s git commit -m "ops: refresh alarm-state.json [skip ci]"
-          for attempt in 1 2 3; do
-            if timeout 60s git push origin HEAD:main; then
-              exit 0
-            fi
-            sleep $((attempt * 3))
-          done
-          echo "::error::alarm-state persistence push failed after bounded retries; the OPS issue remains the primary incident record" >&2
-          exit 1
-
-      # The commit is best-effort with respect to the already-reported issue,
-      # but a genuine failure remains a visible job error. This no longer
-      # asserts a cause: the persist step above now emits its own ::error:: per
-      # fault, and a compare-and-swap refusal - which was 4 of the last 5
-      # failures and is a guard working correctly - stands down there instead of
-      # reaching here at all.
-      - name: Surface alarm-state persistence failure
-        if: steps.persist.outcome == 'failure'
-        run: |
-          echo "::error::alarm-state persistence failed; see the Commit alarm state step for which fault"
-          exit 1
+      - name: Publish alarm transition state
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: ${{ steps.baseline.outputs.generation }}
+          PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: ${{ steps.baseline.outputs.manifest }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=pipeline-alarm-state --json

@@ -1330,7 +1330,7 @@ const declared_exceptions = [
   {
     path: "data/admin/alarm-state.json",
     kind: "file",
-    reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); committed by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",
+    reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); promoted by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",
     owner: "platform",
   },
   {
@@ -1720,11 +1720,7 @@ workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
     ].map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
   ],
 });
-workflow_policies[".github/workflows/pipeline-failure-alarm.yml"] = policy([], {
-  always_if_exists: [
-    commitSpec("data/admin/alarm-state.json", "file"),
-  ],
-});
+workflow_policies[".github/workflows/pipeline-failure-alarm.yml"] = policy([], {});
 workflow_policies[".github/workflows/pins-autosync.yml"] = policy([], {
   success_if_exists: [
     commitSpec("scripts/fixtures/lane-registry/registry.expected.json", "file"),

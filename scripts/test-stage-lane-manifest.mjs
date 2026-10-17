@@ -291,13 +291,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
-// Alarm-state publication is optional and non-primary: the manifest stages
-// only the private alarm state while the workflow preserves its issue path.
+// Alarm transitions are promoted through their plane family.
 {
   const fixture = makeFixture({ workflow: PIPELINE_FAILURE_ALARM_WORKFLOW });
-  const always = run(fixture.root, "always_if_exists", [], PIPELINE_FAILURE_ALARM_WORKFLOW);
-  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  assert.deepEqual(fixture.paths.always, []);
+  assert.deepEqual(fixture.paths.success, []);
 }
 
 // Stocks Analyzer pins 16 literal canonical pathspecs plus the canonical

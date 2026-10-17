@@ -1,5 +1,6 @@
 export const PLANE_ENROLLMENT_SCHEMA_VERSION = "cloud-data-plane-enrollment/v1";
 export const PLANE_ENROLLMENT_EXACT = Object.freeze([
+  ["/data/admin/alarm-state.json", "pipeline-alarm-state"],
   ["/data/slickcharts/1929crash.json", "slickcharts"],
   ["/data/computed/stock_action_index.json", "platform-projections"],
   ["/data/computed/stock_action_summary.json", "platform-projections"],

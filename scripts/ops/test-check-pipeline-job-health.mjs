@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { canonicalJson } from "../lib/json-canonical.mjs";
+import { sha256Bytes, sha256Canonical } from "../lib/cloud-data-plane-generation.mjs";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -232,35 +234,29 @@ import {
     previous_generated_at: previous.generated_at,
   }]);
   assert.match(kpiBody, /stockanalysis_etf_detail/);
-  assert.match(kpiBody, /two committed health KPI generations/);
+  assert.match(kpiBody, /two promoted health KPI generations/);
   assert.match(kpiBody, /2026-09-28T11:34:19\.757Z/);
 
-  const requested = [];
-  const snapshots = await fetchKpiGenerationSnapshots({
-    token: "test-token",
-    owner: "owner",
-    repo: "repo",
-    branch: "main",
-    fetchFn: async (url, options) => {
-      requested.push({ url: String(url), options });
-      if (requested.length === 1) {
-        return new Response(JSON.stringify([{ sha: "a".repeat(40) }, { sha: "b".repeat(40) }]), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify(requested.length === 2 ? current : previous), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
-    },
+  const objects = new Map();
+  const manifests = [current, previous].map((document, index) => {
+    const bytes = new TextEncoder().encode(JSON.stringify(document));
+    const hash = sha256Bytes(bytes), generation = `platform-projections-test-${index}`;
+    const manifest = { schema_version: "100x-cloud-data-generation/v1", generation_id: generation,
+      source_sha: "a".repeat(64), created_at: document.generated_at,
+      assets: [{ path: "public/data/admin/fenok-data-health-kpi.json", object_key: `objects/sha256/${hash}`,
+        sha256: hash, bytes: bytes.length, content_type: "application/json", source_as_of: null, privacy_class: "public" }] };
+    const manifestBytes = new TextEncoder().encode(canonicalJson(manifest));
+    const key = `manifests/${generation}.json`;
+    objects.set(key, manifestBytes); objects.set(`objects/sha256/${hash}`, bytes);
+    return { generation_id: generation, manifest_key: key, manifest_sha256: sha256Canonical(manifest) };
   });
-  assert.deepEqual(snapshots, [current, previous], "the API snapshots remain newest-first");
-  assert.match(requested[0].url, /commits\?.*path=data%2Fadmin%2Ffenok-data-health-kpi\.json.*per_page=2/);
-  assert.match(requested[0].url, /sha=main/);
-  assert.equal(requested[0].options.headers.Authorization, "Bearer test-token");
-  assert.match(requested[1].url, /contents\/data\/admin\/fenok-data-health-kpi\.json\?ref=/);
-  assert.equal(requested[1].options.headers.Accept, "application/vnd.github.raw+json");
+  const pointer = { schema_version: "100x-cloud-data-pointer/v1", sequence: 2,
+    active: manifests[0], previous: manifests[1], source_sha: "a".repeat(64),
+    prepared_receipt_id: "test-receipt", promoted_at: current.generated_at };
+  const snapshots = await fetchKpiGenerationSnapshots({ plane: {
+    pointerStore: { get: async () => pointer }, objectStore: { get: async key => objects.get(key) },
+  } });
+  assert.deepEqual(snapshots, [current, previous], "promoted snapshots remain newest-first");
 }
 
 assert.equal(deriveFailureStreakThreshold([{ cron: "0 7 * * 0" }]), 1,
