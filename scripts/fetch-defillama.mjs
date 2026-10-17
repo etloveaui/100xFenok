@@ -283,6 +283,7 @@ export async function runDefillama({
 async function main() {
   await hydratePublicCloudData({ relative: "macro/stablecoins.json", family: "defillama-stablecoins" });
   const result = await runDefillama();
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `updated=${result.ok && result.updated === true}\n`);
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
     const message = `${prefix} DefiLlama stablecoins ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;

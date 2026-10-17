@@ -494,6 +494,7 @@ export async function runTreasuryTga({
     };
   }
 
+  if (!validTgaDocument(output) || !Number.isFinite(Date.parse(tgaSourceAsOf(output)))) throw new Error("Treasury candidate is invalid");
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
   const candidate = {
     key: LKG_KEY,
@@ -540,6 +541,7 @@ export async function runTreasuryTga({
 async function main() {
   await hydratePublicCloudData({ relative: "macro/tga.json", family: "treasury-tga" });
   const resultValue = await runTreasuryTga();
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `updated=${resultValue.ok && resultValue.updated === true}\n`);
   if (!resultValue.ok) {
     const prefix = resultValue.degraded ? "[degraded]" : "[corrupt]";
     const message = `${prefix} Treasury TGA ${resultValue.reason}; retry set: ${(resultValue.retrySet || []).join(", ") || "none"}${diagnosticSuffix(resultValue.failure_detail)}`;
