@@ -361,6 +361,23 @@ function validateEarningsOverviewPublicPayload({ asset, bytes }) {
 
 // P5+ adds more families here.
 export const FAMILIES = {
+  "slickcharts": {
+    root: "data/slickcharts",
+    manifest_prefix: "public/data/slickcharts",
+    privacy_class: "public",
+    reuse_active_generation: true,
+    incremental_write_budget: true,
+    source_as_of: { per_asset_resolver: "slickcharts_source_date" },
+    private_assets: [{ path: "data/admin/slickcharts-composite-recovery/index.json", source_as_of: null }],
+    private_roots: ["data/admin/slickcharts-daily-delivery"],
+    plan: { class_a: 2_400, class_b: 4_800 },
+    policy: { max_assets: 3_000, max_total_bytes: 150_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value !== null && typeof value === "object"
+        && !Object.keys(value).some(key => /token|secret|password|cookie/i.test(key));
+    },
+  },
   "platform-projections": {
     root: "data",
     manifest_prefix: "public/data",
@@ -1527,7 +1544,16 @@ function stockAnalysisCatalogueSourceDate(payload, relative) {
   return day === null ? null : { day, origin: "source" };
 }
 
+function slickchartsSourceDate(payload) {
+  const source = payload.source_as_of ?? payload.source_date;
+  const raw = source ?? payload.updated;
+  if (raw === null || raw === undefined) return { day: null, origin: "unknown" };
+  const day = toIsoDay(raw);
+  return day === null ? null : { day, origin: source === undefined ? "acquisition-observation" : "source" };
+}
+
 const PER_ASSET_SOURCE_RESOLVERS = new Map([
+  ["slickcharts_source_date", slickchartsSourceDate],
   ["stockanalysis_catalogue_source_date", stockAnalysisCatalogueSourceDate],
   ["scouter_derived_source_date", scouterDerivedSourceDate],
   [STOCKANALYSIS_DETAIL_SOURCE_RESOLVER, stockAnalysisDetailSourceObservation],
@@ -1868,6 +1894,9 @@ export async function buildFamilyManifest({
   const catalogueFiles = familyName === "stockanalysis-catalogue" && explicitFiles === null
     ? (await walkFiles(absRoot)).filter((relative) => relative.endsWith(".json") && !relative.startsWith("etfs/"))
     : null;
+  const slickchartsFiles = familyName === "slickcharts" && explicitFiles === null
+    ? (await walkFiles(absRoot)).filter(relative => relative.endsWith(".json")
+      && !["schema.json", "discovery-summary.json", "membership-changes.json", "universe.json"].includes(relative)) : null;
   const publicRootFiles = explicitFiles === null && family.public_roots
     ? [...(family.files ?? []), ...(await Promise.all(family.public_roots.map(async (root) =>
       (await walkFiles(path.join(absRoot, root))).map((relative) => `${root}/${relative}`)))).flat()]

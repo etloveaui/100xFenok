@@ -1756,6 +1756,7 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
 
 // Family-to-workflow attribution used for publish admission and workflow health.
 export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "slickcharts": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-daily.yml" }),
   "platform-projections": Object.freeze({ lane_id: null, workflow: ".github/workflows/update-manifest.yml" }),
   "pipeline-alarm-state": Object.freeze({ lane_id: null, workflow: ".github/workflows/pipeline-failure-alarm.yml" }),
   "slickcharts-recovery": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-daily.yml" }),
