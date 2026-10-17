@@ -362,6 +362,7 @@ await assert.rejects(() => runNasdaqGiwSox({
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-history-"));
   const paths = makePaths(root);
+  await seedBaseline(paths, { asOf: DATES[1] });
   const seed = await runNasdaqGiwSox({
     ...paths,
     dates: DATES,
@@ -373,7 +374,7 @@ await assert.rejects(() => runNasdaqGiwSox({
     publicMirror: false,
   });
   assert.equal(seed.ok, true);
-  assert.equal(seed.history.entries_retained, 1, "a fresh-primary promotion rotates the sidecar");
+  assert.equal(seed.history.entries_retained, 2, "a fresh-primary promotion rotates the sidecar");
   const historyFile = soxHistoryPathFor(root);
   assert.equal(validSoxHistory(readJson(historyFile)), true);
 
