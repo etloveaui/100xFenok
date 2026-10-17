@@ -889,6 +889,26 @@ export async function hydrateCanonicalCloudData(options = {}) {
   return hydratePublicCloudData({ ...options, relative: "macro/fred-macro.json", family: "fred-macro" });
 }
 
+// Private derived inputs use the same authenticated materializer as their producers.
+export async function hydratePrivateFamily(family, { repoRoot = REPO_ROOT, env = process.env } = {}) {
+  const plane = createDefaultMaterializePlane({
+    accountId: env.CLOUDFLARE_ACCOUNT_ID, token: env.CLOUDFLARE_API_TOKEN,
+    endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY, family,
+  });
+  const base = await realpath(env.RUNNER_TEMP || env.TMPDIR || os.tmpdir());
+  const temporary = await mkdtemp(path.join(base, "private-family-"));
+  try {
+    const receipt = await materializeCloudDataPlaneFamily({
+      plane, family, manifestPrefix: "data", privacyClass: "private", env, repoRoot,
+      outputRoot: path.join(temporary, "active"), canonicalReuseRoot: repoRoot,
+    });
+    await cp(receipt.output_root, path.join(repoRoot, "data"), { recursive: true });
+    return receipt;
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+}
+
 // Public consumer inputs use the existing generated route inventory.
 export async function hydratePublicFamily(family, options = {}) {
   const { PLANE_ENROLLMENT_EXACT } = await import("../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs");
@@ -911,7 +931,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv[2] === "--hydrate-public-family" && process.argv.length === 4) {
+    if (process.argv[2] === "--hydrate-private-family" && process.argv.length === 4) {
+      console.log(JSON.stringify(await hydratePrivateFamily(process.argv[3])));
+    } else if (process.argv[2] === "--hydrate-public-family" && process.argv.length === 4) {
       console.log(JSON.stringify(await hydratePublicFamily(process.argv[3])));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-small-macro") {
       console.log(JSON.stringify((await hydrateSmallMacroData()).map(({ generation }) => ({ generation }))));
