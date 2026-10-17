@@ -229,7 +229,7 @@ export function validateGenerationManifest(value) {
 
 // Physical manifests retain the same content-addressed contract. The index
 // binds each logical JSON response to a byte range of one physical pack.
-export function packMarketFactsAssets(assets, payloads) {
+export function packMarketFactsAssets(assets, payloads, { normalizeFallbackSourceAsOf = false } = {}) {
   if (assets.some(asset => [MARKET_FACTS_PACK_PATH, MARKET_FACTS_PACK_INDEX_PATH].includes(asset.path))) {
     fail("PACK_INPUT_RESERVED", "pack outputs cannot be canonical inputs");
   }
@@ -249,7 +249,8 @@ export function packMarketFactsAssets(assets, payloads) {
     if (!plainObject(document)) fail("PACK_INPUT_INVALID", asset.path);
     packed.set(bytes, offset);
     const { object_key, ...entry } = asset;
-    entries.push({ ...entry, offset });
+    // Acquisition-only dates stay in manifest metadata, outside payload identity.
+    entries.push({ ...entry, source_as_of: normalizeFallbackSourceAsOf ? null : entry.source_as_of, offset });
     offset += bytes.byteLength;
     payloads.delete(asset.path);
   }
@@ -300,7 +301,8 @@ export async function listGenerationAssets({ manifest, objectStore }) {
       || !Number.isSafeInteger(entry.bytes) || entry.bytes <= 0) fail("PACK_INDEX_INVALID", "invalid member range");
     offset += entry.bytes;
     const { offset: memberOffset, ...asset } = entry;
-    return { ...asset, object_key: `objects/sha256/${entry.sha256}`, memberOffset };
+    return { ...asset, source_as_of: asset.source_as_of ?? packAsset.source_as_of,
+      object_key: `objects/sha256/${entry.sha256}`, memberOffset };
   });
   if (!Number.isSafeInteger(offset) || offset !== packAsset.bytes) fail("PACK_INDEX_INVALID", "pack length mismatch");
   validateGenerationManifest({ ...manifest, assets: logical.map(({ memberOffset, ...asset }) => asset) });

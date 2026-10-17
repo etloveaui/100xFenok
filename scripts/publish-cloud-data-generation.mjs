@@ -2087,7 +2087,9 @@ export async function buildFamilyManifest({
     payloads.set(assetPath, bytes);
   }
   assets.sort((left, right) => left.path.localeCompare(right.path));
-  if (familyName === "platform-projections") packMarketFactsAssets(assets, payloads);
+  if (familyName === "platform-projections") {
+    packMarketFactsAssets(assets, payloads, { normalizeFallbackSourceAsOf: sourceAsOf.origin === "created_at-fallback" });
+  }
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
   const fingerprint = generationSemanticFingerprint({
     sourceSha,
