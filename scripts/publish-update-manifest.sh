@@ -16,7 +16,8 @@ for family in apewisdom-attention finra-short-volume; do
   node scripts/materialize-cloud-data-plane-family.mjs --hydrate-private-family "$family"
 done
 stockanalysis_basis="$(node scripts/materialize-cloud-data-plane-family.mjs --hydrate-stockanalysis)"
-node scripts/materialize-update-manifest-routes.mjs --all --validate-only
+# The projection runner hydrates the remaining macro/index families before
+# its S3 materialization validates every required source.
 bash scripts/update-manifest-projections.sh
 # Retain the existing source-generation fence without restoring a Git LKG tree.
 node --input-type=module - "$stockanalysis_basis" <<'JS'
