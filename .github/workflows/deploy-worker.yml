@@ -334,14 +334,12 @@ jobs:
         run: |
           set -euo pipefail
           expected_build_id_path=".open-next/assets/BUILD_ID"
-          expected_kpi_path=".open-next/assets/data/admin/fenok-data-health-kpi.json"
-          if [ ! -s "$expected_build_id_path" ] || [ ! -f "$expected_kpi_path" ]; then
+          if [ ! -s "$expected_build_id_path" ]; then
             echo "::error::Cannot establish deploy identity from the current hosted build."
             exit 1
           fi
           {
             echo "EXPECTED_BUILD_ID=$(tr -d '\r\n' < "$expected_build_id_path")"
-            echo "EXPECTED_KPI_SHA256=$(sha256sum "$expected_kpi_path" | awk '{print $1}')"
           } >> "$GITHUB_ENV"
 
       - name: Re-check recovery gate (check-then-start race)
@@ -410,13 +408,11 @@ jobs:
 
           base_url="https://100xfenok.etloveaui.workers.dev"
           expected_build_id_path=".open-next/assets/BUILD_ID"
-          expected_kpi_path=".open-next/assets/data/admin/fenok-data-health-kpi.json"
-          if [ ! -s "$expected_build_id_path" ] || [ ! -f "$expected_kpi_path" ]; then
+          if [ ! -s "$expected_build_id_path" ]; then
             echo "::error::Cannot establish deploy identity from the built artifact."
             exit 1
           fi
           expected_build_id="$(tr -d '\r\n' < "$expected_build_id_path")"
-          expected_kpi_sha256="$(sha256sum "$expected_kpi_path" | awk '{print $1}')"
           if [ -z "$expected_build_id" ]; then
             echo "::error::Built artifact has an empty BUILD_ID."
             exit 1
@@ -551,10 +547,9 @@ jobs:
 
           {
             echo "EXPECTED_BUILD_ID=$expected_build_id"
-            echo "EXPECTED_KPI_SHA256=$expected_kpi_sha256"
             echo "DEPLOY_VERSION_ID=$deploy_version_id"
           } >> "$GITHUB_ENV"
-          echo "::notice::Deployed artifact identity: wrangler_version_id=$deploy_version_id build_id=$expected_build_id kpi_sha256=$expected_kpi_sha256"
+          echo "::notice::Deployed artifact identity: wrangler_version_id=$deploy_version_id build_id=$expected_build_id"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -572,21 +567,18 @@ jobs:
           interval_seconds="${SMOKE_PROPAGATION_INTERVAL_SECONDS:-5}"
           live_build_id_path="$RUNNER_TEMP/live-BUILD_ID"
           live_kpi_path="$RUNNER_TEMP/live-fenok-data-health-kpi.json"
-
-          bundle_identity_matches() {
-            [ "$1" = "$EXPECTED_BUILD_ID" ] && [ "$2" = "$EXPECTED_KPI_SHA256" ]
-          }
+          live_kpi_headers_path="$RUNNER_TEMP/live-fenok-data-health-kpi.headers"
 
           deadline=$((SECONDS + timeout_seconds))
           attempt=0
           matched=false
           observed_build_id="unavailable"
-          observed_kpi_sha256="unavailable"
+          observed_kpi_generation="unavailable"
           verify_header="$(node ../scripts/lib/live-request-headers.mjs --print)"
           while [ "$SECONDS" -le "$deadline" ]; do
             attempt=$((attempt + 1))
             cache_bust="postdeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}"
-            rm -f "$live_build_id_path" "$live_kpi_path"
+            rm -f "$live_build_id_path" "$live_kpi_path" "$live_kpi_headers_path"
             if curl -fsS --connect-timeout 5 --max-time 15 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
               -H "x-fenok-verify: $verify_header" \
@@ -595,19 +587,19 @@ jobs:
                 -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
                 -H "x-fenok-verify: $verify_header" \
                 "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
-                -o "$live_kpi_path"; then
+                -D "$live_kpi_headers_path" -o "$live_kpi_path"; then
               observed_build_id="$(tr -d '\r\n' < "$live_build_id_path")"
-              observed_kpi_sha256="$(sha256sum "$live_kpi_path" | awk '{print $1}')"
-              if bundle_identity_matches "$observed_build_id" "$observed_kpi_sha256"; then
+              observed_kpi_generation="$(awk 'tolower($1) == "x-data-plane-generation:" {print $2}' "$live_kpi_headers_path" | tr -d '\r')"
+              if [ "$observed_build_id" = "$EXPECTED_BUILD_ID" ] && [[ "$observed_kpi_generation" == platform-projections-* ]]; then
                 matched=true
                 break
               fi
             else
               observed_build_id="unavailable"
-              observed_kpi_sha256="unavailable"
+              observed_kpi_generation="unavailable"
             fi
 
-            echo "::warning::Propagation attempt $attempt rejected stale or unavailable bundle: observed_build_id=$observed_build_id observed_kpi_sha256=$observed_kpi_sha256 expected_build_id=$EXPECTED_BUILD_ID expected_kpi_sha256=$EXPECTED_KPI_SHA256"
+            echo "::warning::Propagation attempt $attempt rejected stale or unavailable response: observed_build_id=$observed_build_id expected_build_id=$EXPECTED_BUILD_ID observed_kpi_generation=$observed_kpi_generation"
             if [ $((SECONDS + interval_seconds)) -gt "$deadline" ]; then
               break
             fi
@@ -615,11 +607,11 @@ jobs:
           done
 
           if [ "$matched" != "true" ]; then
-            echo "::error::Timed out after ${timeout_seconds}s waiting for this deploy's bundle: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 observed_kpi_sha256=$observed_kpi_sha256"
+            echo "::error::Timed out after ${timeout_seconds}s waiting for this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id observed_kpi_generation=$observed_kpi_generation"
             exit 1
           fi
 
-          echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 live_kpi_sha256=$observed_kpi_sha256 attempts=$attempt"
+          echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id kpi_generation=$observed_kpi_generation attempts=$attempt"
           node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = ["fenok-data-health-kpi/v3","fenok-data-health-kpi/v4"].includes(p.schema_version); const validTimestamp = typeof p.generated_at === "string" && Number.isFinite(Date.parse(p.generated_at)); const validSets = Array.isArray(p.sets) && p.sets.every(s => s && typeof s.set === "string" && (s.served_path === null || typeof s.served_path === "string") && (s.newest_source_date === null || /^\d{4}-\d{2}-\d{2}$/.test(s.newest_source_date)) && (s.max_age === null || typeof s.max_age === "string") && ["fresh","delayed","stopped","unknown"].includes(s.status) && (!Object.hasOwn(s,"serving_lkg") || typeof s.serving_lkg === "boolean")); if (!okSchema || !validTimestamp || !validSets) { console.error(JSON.stringify({schema_version:p.schema_version,generated_at:p.generated_at,sets:Array.isArray(p.sets)})); process.exit(1); } const counts = Object.fromEntries(["fresh","delayed","stopped","unknown"].map(status => [status,p.sets.filter(s => s.status === status).length])); console.log(JSON.stringify({ok:true,schema:p.schema_version,generated_at:p.generated_at,sets:p.sets.length,status_counts:counts},null,2));' < "$live_kpi_path"
 
 
