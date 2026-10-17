@@ -175,9 +175,10 @@ export function deriveWorkerFirstPatterns(
   for (const { prefix } of prefixes) familyPatterns.add(familyRootPattern(prefix, "prefix"));
 
   const sortedFamilies = [...familyPatterns].sort();
-  const isolatedPrivatePaths = PRIVATE_PUBLIC_PATH_VALUES
+  const isolatedPrivatePaths = [...new Set(PRIVATE_PUBLIC_PATH_VALUES
     .filter((pathname) => !sortedFamilies.some((pattern) => coversPath(pattern, pathname)))
-    .sort();
+    .map((pathname) => pathname.startsWith("/data/edgar/rim-dow/")
+      ? "/data/edgar/rim-dow/*" : pathname))].sort();
   const isolatedWorkerFirstPaths = EXPLICIT_WORKER_FIRST_PATH_VALUES
     .filter((pattern) => !sortedFamilies.some((familyPattern) => coversPath(familyPattern, pattern)))
     .sort();
