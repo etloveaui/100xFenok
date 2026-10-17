@@ -88,9 +88,9 @@ test("private generation reader binds the one family to one ETF path before reso
 });
 
 test("parity: normalize accepts exactly what familyForPath enrolls for a clean path", () => {
-  const clean = "/data/slickcharts/sp500.json"; // enrolled exact path (family slickcharts-weekly)
+  const clean = "/data/slickcharts/sp500.json"; // enrolled exact path (unified slickcharts family)
   assert.equal(normalizeDataAssetPublicPath(clean), clean);
-  assert.equal(familyForPath(clean), "slickcharts-weekly");
+  assert.equal(familyForPath(clean), "slickcharts");
   // A query/fragment variant is rejected by normalize and is not enrolled.
   assert.equal(normalizeDataAssetPublicPath("/data/slickcharts/sp500.json?v=1"), null);
   assert.equal(familyForPath("/data/slickcharts/sp500.json?v=1"), null);
