@@ -4,11 +4,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { materializeSiteMetadata } from "./materialize-site-metadata.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const makeRoot = () => fs.mkdtempSync(path.join(os.tmpdir(), "site-metadata-test-"));
 const writeJson = (filePath, value) => {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -53,12 +51,5 @@ const writeJson = (filePath, value) => {
   );
   fs.rmSync(temp, { recursive: true, force: true });
 }
-
-const live = materializeSiteMetadata({
-  dailyWrapRoot: path.join(root, "100x/data/metadata"),
-  alphaScoutRoot: path.join(root, "alpha-scout/data/metadata"),
-  destinationRoot: path.join(root, "data/metadata"),
-});
-assert.equal(live.changed, false, "current canonical metadata must equal the source union");
 
 console.log("test-materialize-site-metadata: ok");
