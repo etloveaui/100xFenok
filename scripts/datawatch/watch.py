@@ -3,14 +3,14 @@
 python watch.py [--dry-run] [--state-dir DIR] [--tag TEXT] [--now ISO]
 
 It tells the owner when 100x data collection breaks or a watcher stops: one Korean line per state CHANGE through AA's
-ops-alert route (briefing.alert.ops_send, Gateway class ops_alert). Four reads per run on etloveaui/100xFenok, at
+ops-alert route (briefing.alert.ops_send, Gateway class ops_alert). Workflow metadata and the active plane ledger use at
 most 7 GitHub API calls:
 
   issues  open issues whose title ends with "alarm" (every alarm workflow titles its issue so; none sets a label)
   alarm   completion time of the newest successful `check` job of pipeline-failure-alarm.yml (the job that judges
-          and writes the issue; the persist job after it waits in the shared writer queue and says nothing here)
+          and writes the issue and promotes alarm state)
   clock   creation time of the newest workflow_dispatch run titled "external-clock/a1/v1 ..."
-  ledger  generated_at and the declared Update Manifest calendar on main
+  ledger  active plane generated_at and the declared Update Manifest calendar on main
 
 The first run records a baseline and sends nothing. A line the Gateway did not deliver is retried on the next run.
 """
@@ -211,7 +211,11 @@ def ledger_deadline(generated: dt.datetime, workflow: str) -> dt.datetime:
 
 
 def read_ledger() -> dt.datetime:
-    generated = ts(gh("/contents/data/admin/fenok-data-health-kpi.json?ref=main", "application/vnd.github.raw+json")["generated_at"])
+    request = urllib.request.Request("https://100xfenok.etloveaui.workers.dev/data/admin/fenok-data-health-kpi.json", headers={"User-Agent": "100x-data-watch/1"})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        if not response.headers.get("x-data-plane-generation", "").startswith("platform-projections-"):
+            raise ValueError("health ledger has no active plane generation")
+        generated = ts(json.load(response)["generated_at"])
     workflow = gh("/contents/.github/workflows/update-manifest.yml?ref=main", "application/vnd.github.raw+json", as_text=True)
     deadline = ledger_deadline(generated, workflow)
     noun, particle, _, reason = CHECKS["ledger"]
