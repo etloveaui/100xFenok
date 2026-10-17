@@ -786,6 +786,7 @@ export function runDamodaranShadow({
 
 export function main() {
   const result = runDamodaranShadow();
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `promoted=${result.recovery?.ok === true}\n`);
   console.log(JSON.stringify(result.report.summary));
   return result.exitCode;
 }

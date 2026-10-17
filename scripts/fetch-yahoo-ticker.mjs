@@ -463,6 +463,7 @@ async function main() {
     eventName,
   );
   const result = await runYahooTicker({ eventName, controlledFailureTickers });
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `promoted=${result.ok === true && result.updated === true}\n`);
   console.log(JSON.stringify({ ok: result.ok, exit_code: result.exitCode, degraded_keys: result.degradedKeys, reason: result.reason, reasons: result.reasons, attempt: result.row }));
   process.exitCode = result.exitCode;
 }
