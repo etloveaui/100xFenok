@@ -743,7 +743,9 @@ const PUBLIC_MIRROR_PREFIX = "100xfenok-next/public/";
 // A declared runtime input may live in the serving plane instead of checkout.
 function isPlaneCanonicalPath(relative) {
   const publicPath = `/${relative}`;
-  return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
+  return ["data/computed/fenok_news_tone_proxy.json",
+    "data/computed/fenok_news_tone_proxy_history.json"].includes(relative)
+    || PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
     || PLANE_ENROLLMENT_PREFIXES.some(({ prefix }) =>
       publicPath === prefix.replace(/\/$/, "") || publicPath.startsWith(prefix));
 }

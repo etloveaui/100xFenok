@@ -27,6 +27,9 @@ for attempt in 1 2 3; do
     git reset --hard origin/main
     node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset
     node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset
+    # Git no longer carries the generated public tree. Recreate its empty root
+    # before the existing route validator inspects it in this disposable checkout.
+    mkdir -p 100xfenok-next/public/data
     node scripts/materialize-update-manifest-routes.mjs --all --validate-only --assert-no-untracked
     bash scripts/update-manifest-projections.sh
 

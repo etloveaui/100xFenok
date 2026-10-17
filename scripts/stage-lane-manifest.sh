@@ -50,7 +50,6 @@ if [[ $LIST_EXCLUDES -eq 1 ]]; then
 fi
 jq -e --arg workflow "$WORKFLOW" --arg stage "$STAGE" '
   (.[$workflow].stages[$stage] | type == "array")
-  and (.[$workflow].stages[$stage] | length > 0)
   and all(.[$workflow].stages[$stage][];
     (.path | type == "string" and length > 0 and (startswith("/") | not))
     and ((.path | split("/")) | index("..") | not)
