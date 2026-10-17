@@ -195,7 +195,6 @@ jobs:
             /100xfenok-next/
             !/100xfenok-next/public/data/
             /data/catalog/macro-series.json
-            /data/stockanalysis/etf_universe.json
             /scripts/lib/
             /scripts/materialize-family-health.mjs
 
@@ -216,9 +215,8 @@ jobs:
         run: |
           set -euo pipefail
           npm run build:version
-          mkdir -p public/data/catalog public/data/stockanalysis
+          mkdir -p public/data/catalog
           cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
-          cp ../data/stockanalysis/etf_universe.json public/data/stockanalysis/etf_universe.json
           NEXT_BUILD_TARGET=cloudflare npx --no-install next typegen
           npm run typecheck
 
@@ -279,7 +277,10 @@ jobs:
         run: |
           # Code/configuration supplies the bundle imports. Enrolled data is
           # served from active generations at request time.
-          git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
+          git sparse-checkout set --no-cone \
+            '/*' '!/docs/' '!/ops/' '!/data/' \
+            '/data/catalog/macro-series.json' \
+            '!/100xfenok-next/public/data/'
           echo 'Deploy active-family payload hydration count: 0 (runtime reads)'
 
       - name: Restore current Next build cache
