@@ -437,28 +437,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
-// Required Yahoo directories stage their concrete files while the declared
-// summary exclusion is removed from the index by the manifest helper itself.
+// Yahoo Finance is shadow-only and publishes no files through the Git lane.
 {
   const fixture = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
-  const always = run(fixture.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
-  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-  assert.equal(
-    cached(fixture.root).includes("data/yf/finance/_summary.json"),
-    false,
-    "the manifest exclusion must keep the generated YF summary unstaged",
-  );
-
-  const tracked = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
-  execFileSync("git", ["add", "-A"], { cwd: tracked.root });
-  execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: tracked.root });
-  for (const file of [...tracked.materialized.always, ...tracked.materialized.exclude]) {
-    fs.appendFileSync(path.join(tracked.root, file), "changed\n");
-  }
-  const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
-  assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
+  assert.deepEqual(fixture.paths.always, []);
+  assert.deepEqual(fixture.paths.success, []);
 }
 
 // Directory policy selects one manifest entry while git stages its concrete files.
