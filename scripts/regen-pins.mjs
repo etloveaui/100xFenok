@@ -5,15 +5,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  DEFAULT_PROJECTION_OUTPUT_PATHS,
-  buildLaneRegistryProjection,
-  emitLaneRegistryProjection,
-} from "./build-lane-registry-projection.mjs";
-import {
-  COMMITTED_REPORT_PATH,
   EXPECTED_FIXTURE_PATH as DETECTION_EXPECTED_PATH,
   emitDetectionExpectedFixture,
-  emitPinnedDetectionReport,
 } from "./build-data-supply-detection-floor.mjs";
 import { DERIVED_ASSET_REGISTRY, derivedAssetRegistryDigest } from "./lib/derived-asset-registry.mjs";
 import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
@@ -35,25 +28,6 @@ function writeDigestFixture(sourcePath, outputPath, field, value) {
   fs.writeFileSync(outputPath, `${JSON.stringify(fixture, null, 2)}\n`);
 }
 
-function projectionNow() {
-  const fresh = new Date().toISOString();
-  let old = null;
-  try {
-    const current = JSON.parse(fs.readFileSync(DEFAULT_PROJECTION_OUTPUT_PATHS[0], "utf8"));
-    if (typeof current.generated_at === "string" && !Number.isNaN(Date.parse(current.generated_at))) {
-      old = current.generated_at;
-    }
-  } catch {}
-  if (!old) return fresh;
-  try {
-    buildLaneRegistryProjection(undefined, { now: old });
-    return old;
-  } catch (error) {
-    if (error?.message?.includes("precedes")) return fresh;
-    throw error;
-  }
-}
-
 async function emitAll(outputFor) {
   writeDigestFixture(LANE_DIGEST_PATH, outputFor(LANE_DIGEST_PATH), "registry_digest", registryDigest());
   writeDigestFixture(
@@ -65,17 +39,10 @@ async function emitAll(outputFor) {
   const policyRegistry = loadDataSupplyPolicyRegistry(DATA_SUPPLY_POLICY_REGISTRY_PATH);
   writeDigestFixture(POLICY_DIGEST_PATH, outputFor(POLICY_DIGEST_PATH), "policy_digest", policyRegistryDigest(policyRegistry));
 
-  emitLaneRegistryProjection({
-    outputPaths: DEFAULT_PROJECTION_OUTPUT_PATHS.map(outputFor),
-    options: { now: projectionNow() },
-  });
-
   emitDetectionExpectedFixture({
     sourcePath: DETECTION_EXPECTED_PATH,
     outputPath: outputFor(DETECTION_EXPECTED_PATH),
   });
-  const projectedReportPath = outputFor(COMMITTED_REPORT_PATH);
-  emitPinnedDetectionReport({ sourcePath: COMMITTED_REPORT_PATH, outputPath: projectedReportPath });
 }
 
 function generatedPaths() {
@@ -83,9 +50,7 @@ function generatedPaths() {
     LANE_DIGEST_PATH,
     DERIVED_DIGEST_PATH,
     POLICY_DIGEST_PATH,
-    ...DEFAULT_PROJECTION_OUTPUT_PATHS,
     DETECTION_EXPECTED_PATH,
-    COMMITTED_REPORT_PATH,
   ];
 }
 
