@@ -11,15 +11,17 @@ for (const [gb, verdict] of [[7, "ok"], [9, "ok"], [39.999, "ok"], [40, "warn"],
 assert.equal(verdictFor(summary(39), { ...plan, bytes: 1e9 }, false).verdict, "warn");
 assert.equal(verdictFor(summary(69), { ...plan, bytes: 1e9 }, false).verdict, "fail");
 for (const [axis, allowance] of [["class_a", 1e6], ["class_b", 1e7]]) {
-  for (const [fraction, verdict] of [[0.699, "ok"], [0.7, "warn"], [0.899, "warn"], [0.9, "fail"], [1, "fail"]]) {
+  for (const [fraction, verdict] of [[0.699, "ok"], [0.7, "warn"], [0.899, "warn"], [0.9, "warn"], [1, "warn"]]) {
     const item = summary(1); item[axis].projected_month = allowance * fraction;
-    assert.equal(verdictFor(item, plan, false).verdict, verdict, `${axis} allowance unchanged`);
+    assert.equal(verdictFor(item, plan, false).verdict, verdict, `${axis} free allowance warning`);
   }
   const item = summary(1); item[axis].projected_month = allowance * 0.89;
-  assert.equal(verdictFor(item, { ...plan, [axis]: allowance * 0.01 }, false).verdict, "fail");
+  assert.equal(verdictFor(item, { ...plan, [axis]: allowance * 0.01 }, false).verdict, "warn");
 }
 assert.deepEqual(verdictFor(summary(1), plan, true).breaches, ["measurement_blind"]);
-assert.equal(verdictFor(summary(70, 900000), plan, false).breaches.length, 2);
+assert.equal(verdictFor(summary(70, 900000), plan, false).breaches.length, 1);
+assert.equal(verdictFor(summary(1, 1000001), plan, false).with_plan.estimated_cost_krw, 6750);
+assert.equal(verdictFor(summary(1, 2000001), plan, false).verdict, "fail");
 assert.equal(storageCostUsd(10), 0);
 assert.equal(storageCostUsd(70), 0.9);
 assert.equal(storageCostUsd(76), 0.99);
@@ -30,4 +32,4 @@ const result = summarise({ r2StorageAdaptiveGroups: [{ dimensions: { date: "2026
 assert.equal(result.storage.peak_bytes, 41e9, "historic peak still bounds the full-cycle projection");
 assert.equal(verdictFor(result, plan, false).verdict, "warn");
 assert.equal(result.storage.free_gb_month, 10, "the paid storage decision does not relabel the free allowance");
-console.log("R2 storage budget: PASS (40/70 GB, planned increments, free operation thresholds, blind measurement, billing rounding)");
+console.log("R2 storage budget: PASS (40/70 GB, planned increments, paid operation cost thresholds, blind measurement, billing rounding)");

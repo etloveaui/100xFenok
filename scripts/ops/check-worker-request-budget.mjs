@@ -3,7 +3,11 @@ import { pathToFileURL } from "node:url";
 
 const GRAPHQL_ENDPOINT = "https://api.cloudflare.com/client/v4/graphql";
 const REST_ENDPOINT = "https://api.cloudflare.com/client/v4";
-const DEFAULT_DAILY_THRESHOLD = 50_000;
+// Paid allowance is monthly; a trailing 31-day window conservatively covers
+// any billing anchor. Daily/hourly limits detect bursts, not Free-plan quotas.
+const MONTHLY_INCLUDED_REQUESTS = 10_000_000;
+const DEFAULT_MONTHLY_THRESHOLD = 7_000_000;
+const DEFAULT_DAILY_THRESHOLD = 225_000;
 const DEFAULT_HOURLY_THRESHOLD = 20_000;
 const CONFIG_EXIT = 78;
 const ALERT_EXIT = 2;
@@ -117,30 +121,38 @@ function sumRequests(rows) {
 
 export function parseWorkerUsage(account) {
   if (!Array.isArray(account?.day) || !account.day.length
-    || !Array.isArray(account?.hour) || !account.hour.length) {
+    || !Array.isArray(account?.hour) || !account.hour.length
+    || !Array.isArray(account?.month) || !account.month.length) {
     throw new Error("Cloudflare Worker usage rows are missing; usage is unknown.");
   }
   const dayRows = account.day;
   const hourRows = account.hour;
   return {
+    monthRows: account.month.length,
+    monthlyRequests: sumRequests(account.month),
     dayRows: dayRows.length,
     hourRows: hourRows.length,
     todayRequests: sumRequests(dayRows),
     lastHourRequests: sumRequests(hourRows),
-    truncated: dayRows.length >= 10000 || hourRows.length >= 10000,
+    truncated: dayRows.length >= 10000 || hourRows.length >= 10000 || account.month.length >= 10000,
   };
 }
 
-export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, now }) {
+export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, now, monthStart = new Date(now.getTime() - 31 * 86400_000) }) {
   const query = `
     query WorkerRequestBudget(
       $accountTag: string,
+      $monthStart: string,
       $dayStart: string,
       $hourStart: string,
       $end: string
     ) {
       viewer {
         accounts(filter: { accountTag: $accountTag }) {
+          month: workersInvocationsAdaptive(
+            limit: 10000,
+            filter: { datetime_geq: $monthStart, datetime_leq: $end }
+          ) { sum { requests } }
           day: workersInvocationsAdaptive(
             limit: 10000,
             filter: {
@@ -175,6 +187,7 @@ export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, 
       query,
       variables: {
         accountTag: accountId,
+        monthStart: toIso(monthStart),
         dayStart: toIso(dayStart),
         hourStart: toIso(hourStart),
         end: toIso(now),
@@ -195,6 +208,13 @@ export async function queryWorkerUsage({ token, accountId, dayStart, hourStart, 
 }
 
 function buildIssueBody(result) {
+  const paid = [
+    `Paid included requests: ${MONTHLY_INCLUDED_REQUESTS}/month; overage USD 0.30/M`,
+    `Trailing 31-day requests: ${result.monthlyRequests} / warning ${result.monthlyThreshold}`,
+    `Request-only estimated overage: USD ${result.requestOverageUsd} (KRW ${result.requestOverageKrw}, planning rate 1,500 KRW/USD)`,
+    "Extra-charge allowance: about KRW 10,000/month; early warning KRW 5,000.",
+    "Coverage: Worker requests only; excludes CPU, Builds, KV, D1, Queues, R2 and tax. R2 publisher gate measures its own costs; this is not an account-wide billing cap.",
+  ];
   if (result.status === "blocked") {
     return [
       "[blocked] Worker request budget check could not run.",
@@ -213,6 +233,7 @@ function buildIssueBody(result) {
   if (result.status === "ok") {
     return [
       "Worker request budget check passed.",
+      ...paid,
       "",
       "Scope: all Workers in the Cloudflare account",
       `Checked at UTC: ${result.checkedAtUtc}`,
@@ -223,6 +244,7 @@ function buildIssueBody(result) {
 
   return [
     "[alert] Worker request budget threshold crossed.",
+    ...paid,
     "",
     "Scope: all Workers in the Cloudflare account",
     `Checked at UTC: ${result.checkedAtUtc}`,
@@ -238,6 +260,7 @@ function buildIssueBody(result) {
 }
 
 async function main() {
+  const monthlyThreshold = envInt("MONTHLY_REQUEST_THRESHOLD", DEFAULT_MONTHLY_THRESHOLD);
   const dailyThreshold = envInt("DAILY_REQUEST_THRESHOLD", DEFAULT_DAILY_THRESHOLD);
   const hourlyThreshold = envInt("HOURLY_REQUEST_THRESHOLD", DEFAULT_HOURLY_THRESHOLD);
   const resultPath = process.env.WORKER_REQUEST_BUDGET_RESULT || "worker-request-budget-result.json";
@@ -247,6 +270,7 @@ async function main() {
   const hourStart = new Date(now.getTime() - 60 * 60 * 1000);
 
   const base = {
+    monthlyThreshold,
     checkedAtUtc: toIso(now),
     dailyThreshold,
     dayStartUtc: toIso(dayStart),
@@ -278,7 +302,10 @@ async function main() {
       token,
     });
 
+    const requestOverageUsd = Math.max(0, usage.monthlyRequests - MONTHLY_INCLUDED_REQUESTS) / 1_000_000 * 0.30;
+    const requestOverageKrw = Math.ceil(requestOverageUsd * 1500);
     const alert =
+      usage.monthlyRequests >= monthlyThreshold || requestOverageKrw >= 5000 ||
       usage.truncated ||
       usage.todayRequests > dailyThreshold ||
       usage.lastHourRequests > hourlyThreshold;
@@ -286,6 +313,8 @@ async function main() {
     const result = {
       ...base,
       ...usage,
+      requestOverageUsd,
+      requestOverageKrw,
       accountIdMasked: maskAccountId(account.id),
       accountName: account.name,
       accountSource: account.source,
@@ -300,6 +329,7 @@ async function main() {
         `status=${result.status}`,
         "scope=account",
         `account=${account.name} (${result.accountIdMasked}, ${account.source})`,
+        `trailing31d=${result.monthlyRequests}/${monthlyThreshold}`,
         `todayUtc=${result.todayRequests}/${dailyThreshold}`,
         `lastHour=${result.lastHourRequests}/${hourlyThreshold}`,
         `rows=day:${result.dayRows},hour:${result.hourRows}`,

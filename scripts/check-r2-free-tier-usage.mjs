@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Measure Cloudflare R2 against the owner's 2026-10-11 storage-only budget.
-// Before this decision, storage warned at 7 GB and failed at 9 GB (70/90%
-// of the 10 GB free allowance). Storage now warns at 40 GB and fails at 70 GB;
-// Standard storage at 70 GB-month costs $0.90 above the 10 GB allowance.
-// Class A/B thresholds remain 70/90% of their free operation allowances.
-// Unknown measurements still block publication. The service does not provide
-// a hard billing cap, so this measured pre-write guard remains required.
+// Owner 2026-10-17: Workers Paid, with about KRW 10,000/month extra charges.
+// R2 retains its own 10 GB / 1M Class A / 10M Class B free allowances.
+// Warn at 70% of free operations, but permit budgeted overages. Estimated R2
+// costs warn at KRW 5,000 and block at KRW 8,000, leaving headroom for other
+// services/tax. 1,500 KRW/USD is a conservative planning rate, not live FX.
+// Retain the existing 40/70 GB storage limits. This is not an account billing cap.
+// Unknown measurements still block publication.
 //
 // Every measurement fetch carries a bounded deadline (default 60s; override
 // with R2_MEASURE_FETCH_TIMEOUT_MS). A timed-out measurement throws and fails
@@ -51,9 +51,11 @@ const FREE = {
   class_b_operations: 10_000_000,
 };
 
-// Operation fractions are unchanged; storage has its explicit owner budget.
+// Free-operation use warns early; paid cost, not 90% free use, blocks writes.
 const WARN_AT = 0.7;
-const FAIL_AT = 0.9;
+const COST_WARN_KRW = 5000;
+const COST_FAIL_KRW = 8000;
+const PLANNING_KRW_PER_USD = 1500;
 export const STORAGE_WARN_GB = 40;
 export const STORAGE_FAIL_GB = 70;
 const STORAGE_USD_PER_GB_MONTH = 0.015;
@@ -380,9 +382,14 @@ export function verdictFor(summary, plan, blind) {
   // depend on a dataset that reports late.
   const axes = [
     ["storage", (summary.storage.peak_bytes + plan.bytes) / 1e9 / FREE.storage_gb_month, STORAGE_WARN_GB / FREE.storage_gb_month, STORAGE_FAIL_GB / FREE.storage_gb_month],
-    ["class_a", (summary.class_a.projected_month + plan.class_a) / FREE.class_a_operations, WARN_AT, FAIL_AT],
-    ["class_b", (summary.class_b.projected_month + plan.class_b) / FREE.class_b_operations, WARN_AT, FAIL_AT],
+    ["class_a", (summary.class_a.projected_month + plan.class_a) / FREE.class_a_operations, WARN_AT, Infinity],
+    ["class_b", (summary.class_b.projected_month + plan.class_b) / FREE.class_b_operations, WARN_AT, Infinity],
   ];
+  // Standard R2 rounds operation overages up to the next million.
+  const storageUsd = storageCostUsd((summary.storage.peak_bytes + plan.bytes) / 1e9);
+  const classAUsd = Math.ceil(Math.max(0, summary.class_a.projected_month + plan.class_a - FREE.class_a_operations) / 1e6) * 4.50;
+  const classBUsd = Math.ceil(Math.max(0, summary.class_b.projected_month + plan.class_b - FREE.class_b_operations) / 1e6) * 0.36;
+  axes.push(["estimated_cost_krw", Math.ceil((storageUsd + classAUsd + classBUsd) * PLANNING_KRW_PER_USD), COST_WARN_KRW, COST_FAIL_KRW]);
   const breaches = axes.filter(([, f, , fail]) => f >= fail).map(([name]) => name);
   const warnings = axes.filter(([, f, warn, fail]) => f >= warn && f < fail).map(([name]) => name);
   const with_plan = Object.fromEntries(axes);
@@ -433,10 +440,14 @@ async function main() {
   const report = {
     schema_version: "r2-free-tier-usage/v2",
     verdict, breaches, warnings,
-    thresholds: { warn_at: WARN_AT, fail_at: FAIL_AT,
-      operation_fractions: { warn_at: WARN_AT, fail_at: FAIL_AT },
+    thresholds: {
+      operation_fractions: { warn_at: WARN_AT, fail_at: null },
+      estimated_cost_krw: { warn_at: COST_WARN_KRW, fail_at: COST_FAIL_KRW },
+      planning_krw_per_usd: PLANNING_KRW_PER_USD,
+      standard_operation_usd_per_million: { class_a: 4.50, class_b: 0.36 },
       storage_gb_month: { warn_at: STORAGE_WARN_GB, fail_at: STORAGE_FAIL_GB },
-      decision_date: "2026-10-11", storage_budget_usd: 1 },
+      decision_date: "2026-10-17", owner_extra_charge_allowance_krw: 10000,
+      coverage: "R2 only; excludes Workers and other services, tax and FX variation" },
     planned_operations: plan,
     used_fraction_including_plan: with_plan,
     bucket_count: buckets.buckets,
@@ -460,14 +471,15 @@ async function main() {
       console.log(`  planned run: +${plan.class_a} class A, +${plan.class_b} class B, +${plan.bytes} bytes`);
       console.log(`  including plan: storage ${(with_plan.storage * FREE.storage_gb_month).toFixed(4)} GB-month, class A ${pct(with_plan.class_a)}, class B ${pct(with_plan.class_b)}`);
     }
+    console.log(`  estimated R2 including plan: KRW ${with_plan.estimated_cost_krw}; warn ${COST_WARN_KRW}, block ${COST_FAIL_KRW} (planning FX ${PLANNING_KRW_PER_USD} KRW/USD)`);
     console.log(`  storage policy: warn ${STORAGE_WARN_GB} GB-month / fail ${STORAGE_FAIL_GB} GB-month; projected storage cost $${summary.storage.projected_storage_cost_usd.toFixed(3)} (before plan)`);
     if (summary.storage.pending_multipart_uploads > 0) {
       console.log(`  WARN: ${summary.storage.pending_multipart_uploads} pending multipart upload(s) hold bytes this projection may not cover`);
     }
     console.log(`  measured   ${summary.storage.measured_from_listing.objects} objects / ${summary.storage.measured_from_listing.bytes} bytes from the listing across ${buckets.buckets} bucket(s); analytics peak ${summary.storage.analytics_peak_bytes} bytes`);
     if (blind) console.log(`  BLIND: object listing truncated — cannot certify bytes that were not counted`);
-    else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above its axis fail threshold (storage ${STORAGE_FAIL_GB} GB-month; operations ${pct(FAIL_AT)} free)`);
-    else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above its axis warning threshold (storage ${STORAGE_WARN_GB} GB-month; operations ${pct(WARN_AT)} free)`);
+    else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above its axis fail threshold (storage ${STORAGE_FAIL_GB} GB-month; estimated R2 cost KRW ${COST_FAIL_KRW})`);
+    else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above its axis warning threshold (storage ${STORAGE_WARN_GB} GB-month; operations ${pct(WARN_AT)} free or cost KRW ${COST_WARN_KRW})`);
   }
   process.exit(verdict === "fail" ? 2 : verdict === "warn" ? 1 : 0);
 }
