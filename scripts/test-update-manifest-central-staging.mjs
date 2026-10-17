@@ -8,7 +8,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  UPDATE_MANIFEST_MATERIALIZATIONS,
   deriveCentralCommitPaths,
   centralCommitPathKind,
 } from "./materialize-update-manifest-routes.mjs";
@@ -21,7 +20,9 @@ const isDirectoryPath = (pathValue) => centralCommitPathKind(pathValue) === "dir
 // Behavior samples derived from the declared contract (no second list).
 const fileSample = centralPaths.find((pathValue) => !isDirectoryPath(pathValue));
 const directorySample = centralPaths.find(isDirectoryPath);
-const treeDestination = UPDATE_MANIFEST_MATERIALIZATIONS.find((route) => route.mode === "rsync_tree").destination;
+// Public mirrors are no longer Git outputs. Exercise tree staging inside
+// the current canonical directory contract instead.
+const treeDestination = path.posix.join(directorySample, "fixture-tree");
 
 function write(target, contents) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
