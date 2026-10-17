@@ -3,8 +3,8 @@
 //
 // The property under test is almost entirely about refusal. Serving the right
 // bytes when everything is healthy is the easy half; the half that protects the
-// product is that every unhealthy outcome declines, so the caller falls back to
-// the copy published through git. A 200 carrying anything other than the exact
+// product is that every unhealthy enrolled outcome fails closed.
+// A 200 carrying anything other than the exact
 // published payload is the failure this file exists to make impossible.
 //
 // Miniflare-emulated bindings only. No Cloudflare resource is created.
@@ -194,9 +194,9 @@ try {
     "trailing slash declines",
   );
   assert.equal(
-    await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/computed/signals.json"), env),
-    null,
-    "computed-signals falls through before its family is published",
+    (await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/computed/signals.json"), env)).status,
+    503,
+    "computed-signals fails closed before its family is published",
   );
 
   // --- publish the enrolled asset ------------------------------------------
@@ -375,9 +375,9 @@ try {
   );
 
   assert.equal(
-    await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/sentiment/vix.json"), env),
-    null,
-    "a family with its own empty pointer declines",
+    (await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/sentiment/vix.json"), env)).status,
+    503,
+    "a family with its own empty pointer fails closed",
   );
 
   // --- a tree family serves any child under its bounded prefix ---------------
@@ -470,7 +470,7 @@ try {
   console.log("test-cloud-data-plane-worker-read: ok"
     + " (FAMILIES-derived enrolment: exact single files, per-family pointer isolation,"
     + " bounded tree prefixes with sibling/near-prefix fall-through and deep child serving;"
-    + " declines with no pointer, on non-GET, off-path, unbound, missing binding, and"
+    + " fails closed for missing pointers/bindings and unbound assets; declines off-path;"
     + " on payload corruption; serves exact bytes with generation attribution, 304, and HEAD)");
 } finally {
   await miniflare.dispose();
