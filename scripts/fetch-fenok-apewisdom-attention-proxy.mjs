@@ -716,6 +716,7 @@ export async function runApeWisdomAttention({
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const outcome = await runApeWisdomAttention(args);
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `promoted=${outcome.ok === true && outcome.wrote === true}\n`);
   if (!outcome.ok) {
     const prefix = outcome.degraded ? "[degraded]" : "[corrupt]";
     const message = `${prefix} ApeWisdom attention ${outcome.reason}${diagnosticSuffix(outcome.failure_detail)}; retry set: ${(outcome.retrySet ?? []).join(", ") || "none"}`;
