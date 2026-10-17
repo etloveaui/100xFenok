@@ -1901,7 +1901,7 @@ export async function buildFamilyManifest({
     ? [...(family.files ?? []), ...(await Promise.all(family.public_roots.map(async (root) =>
       (await walkFiles(path.join(absRoot, root))).map((relative) => `${root}/${relative}`)))).flat()]
     : null;
-  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? catalogueFiles ?? publicRootFiles ?? family.files ?? (
+  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? catalogueFiles ?? slickchartsFiles ?? publicRootFiles ?? family.files ?? (
     family.source_lane_id
       ? await filesFromCanonicalRoots({ sourceLaneId: family.source_lane_id, absRoot, familyRoot: family.root })
       : null
