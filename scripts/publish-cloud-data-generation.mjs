@@ -138,6 +138,7 @@ import {
 } from "./lib/cloudflare-rate-limit.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
+import { createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mjs");
@@ -3477,8 +3478,17 @@ async function runRetention({
 function createDefaultPublishPlane({ accountId, token, endpoint, writeKey, family }) {
   const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
   let objectsWritten = 0;
+  let readClient;
   const countingR2Bucket = {
     ...r2Bucket,
+    async get(key) {
+      // Reuse the materializer's S3 read path for preflight/parity bulk reads.
+      readClient ??= createR2S3ClientFromExistingToken({
+        env: { CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+      });
+      const object = await (await readClient).getObject(key);
+      return object === null ? null : { async arrayBuffer() { return object.bytes; } };
+    },
     async put(key, bytes) {
       await r2Bucket.put(key, bytes);
       objectsWritten += 1;
