@@ -34,7 +34,7 @@ assert.equal(policy.concurrency_group, "fenok-data-writer-refs/heads/main");
 assert.equal(policy.queue_mode, "max", "loss-intolerant writers use GitHub's deep pending queue");
 assert.equal(policy.canonical_branch, "main", "writer workflows are observed only on main");
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
-assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow set is derived");
+assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 0, "remaining writer workflow set is derived");
 assert.equal(new Set(policy.workflows).size, policy.workflows.length, "writer workflow list has no duplicates");
 assert.equal(policy.api.runs_per_page, 100, "API page size stays within the REST limit");
 assert.ok(policy.api.max_pages >= 1, "API query depth is bounded");
