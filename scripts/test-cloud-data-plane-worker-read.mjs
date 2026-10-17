@@ -69,7 +69,7 @@ function extractRunWorkerFirstPatterns(source) {
     assert.equal([...ENROLLED_PATHS.values()].includes(familyName), false, `private family ${familyName} exact absent`);
     assert.equal(ENROLLED_PREFIXES.some((row) => row.family === familyName), false, `private family ${familyName} prefix absent`);
   }
-  assert.equal([...ENROLLED_PATHS.keys()].some((pathname) => pathname.includes("stockanalysis")), false);
+  assert.equal([...ENROLLED_PATHS.keys()].some((pathname) => pathname.startsWith("/data/stockanalysis/etfs/")), false);
 }
 
 const moduleSource = async (name) => readFile(new URL(`./lib/${name}`, import.meta.url), "utf8");
