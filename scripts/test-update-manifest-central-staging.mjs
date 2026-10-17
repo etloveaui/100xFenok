@@ -148,8 +148,8 @@ for (const relative of [fileSample, directorySample]) {
   assert.equal(runHelper(fixture, "--check").status, 0);
   assert.equal(runHelper(fixture, "--stage").status, 0);
   assert.deepEqual(cached(fixture.repoRoot), [
-    path.posix.join(directorySample, "rebuilt.json"),
     fileSample,
+    path.posix.join(directorySample, "rebuilt.json"),
   ]);
 }
 
