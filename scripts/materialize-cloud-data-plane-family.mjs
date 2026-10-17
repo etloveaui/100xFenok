@@ -777,6 +777,39 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
   }
 }
 
+// Catalogue/stock sources and their recovery state are one public/private family.
+export async function hydrateStockanalysisCatalogue({ repoRoot = REPO_ROOT, env = process.env } = {}) {
+  const family = "stockanalysis-catalogue";
+  const plane = createDefaultMaterializePlane({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
+    token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
+    writeKey: env.DATA_PLANE_WRITE_KEY, family });
+  const temporary = await mkdtemp(path.join(await realpath(env.RUNNER_TEMP || env.TMPDIR || os.tmpdir()), "stockanalysis-"));
+  try {
+    const receipt = await materializeCloudDataPlaneFamily({ plane, family,
+      manifestPrefix: "public/data", privateManifestPrefix: "data", privacyClass: "public",
+      env, repoRoot, canonicalReuseRoot: repoRoot, outputRoot: path.join(temporary, "active") });
+    const copyTree = async (directory, relative = "") => {
+      for (const entry of await readdir(directory, { withFileTypes: true })) {
+        const rel = relative ? `${relative}/${entry.name}` : entry.name;
+        const source = path.join(directory, entry.name), target = path.join(repoRoot, "data", rel);
+        if (entry.isDirectory()) { await copyTree(source, rel); continue; }
+        await mkdir(path.dirname(target), { recursive: true });
+        if (rel.startsWith("admin/data-supply-state/v1/history/") && rel.endsWith(".jsonl")) {
+          // ETF and stock generations retain disjoint events under shared date files.
+          const prior = await readFile(target, "utf8").catch(error => {
+            if (error.code === "ENOENT") return "";
+            throw error;
+          });
+          const lines = [...new Set((prior + "\n" + await readFile(source, "utf8")).split("\n").filter(Boolean))];
+          await writeFile(target, lines.join("\n") + "\n");
+        } else await cp(source, target);
+      }
+    };
+    await copyTree(receipt.output_root);
+    return receipt;
+  } finally { await rm(temporary, { recursive: true, force: true }); }
+}
+
 // SEC source/analytics and its private Griffin asset share one generation.
 export async function hydrateSec13f({ repoRoot = REPO_ROOT, env = process.env } = {}) {
   const family = "sec-13f";
@@ -946,6 +979,10 @@ if (invokedDirectly) {
     } else if (process.argv.slice(2).join(" ") === "--hydrate-global-scouter") {
       const { generation_id } = await hydrateGlobalScouter();
       console.log(JSON.stringify({ family: "global-scouter", generation_id }));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-stockanalysis") {
+      const etf = await hydratePrivateFamily("stockanalysis-etf-detail");
+      const catalogue = await hydrateStockanalysisCatalogue();
+      console.log(JSON.stringify({ etf: etf.generation_id, catalogue: catalogue.generation_id }));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-canonical") {
       const { generation } = await hydrateCanonicalCloudData();
       console.log(JSON.stringify({ family: "fred-macro", generation }));

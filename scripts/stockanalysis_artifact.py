@@ -324,6 +324,7 @@ def pack_artifact(
     run_number: int,
     run_attempt: int,
     artifact_name: str,
+    baseline_manifest: Path | None = None,
 ) -> dict:
     repo = repo_root.resolve(strict=True)
     candidate = external_root(repo, candidate_root, "candidate root")
@@ -335,6 +336,18 @@ def pack_artifact(
     if int(run_number) < 1 or int(run_attempt) < 1 or not str(run_id) or not str(artifact_name):
         fail("artifact run identity is invalid")
     specs, excludes = load_policy(repo, workflow)
+    baseline = {}
+    plane_basis = {}
+    if baseline_manifest is not None:
+        baseline_path = external_root(repo, baseline_manifest, "baseline manifest")
+        baseline_document = json.loads(baseline_path.read_text())
+        baseline = baseline_document["files"]
+        plane_basis = baseline_document["plane_basis"]
+        if not isinstance(baseline, dict) or any(
+            normalize_rel(rel) != rel or not isinstance(digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", digest) for rel, digest in baseline.items()
+        ):
+            fail("candidate baseline manifest is invalid")
     all_leaves = candidate_files(candidate)
     leaves: dict[str, Path] = {}
     for rel, path in all_leaves.items():
@@ -344,7 +357,7 @@ def pack_artifact(
             continue
         # Yahoo owns finance publication. Acquisition may use and update these
         # working copies, but ETF detail already embeds its Yahoo observation.
-        if rel.startswith("data/yf/finance/"):
+        if rel.startswith(("data/yf/finance/", "data/computed/data-supply/etf-detail/")) or rel == "data/global-scouter/core/stocks_analyzer.json":
             continue
         if any(spec_matches(rel, excluded) for excluded in excludes):
             source = repo / rel
@@ -368,7 +381,9 @@ def pack_artifact(
             or after_hash.st_mtime_ns != before_hash.st_mtime_ns
             or after_hash.st_ino != before_hash.st_ino
         )
-        if not changed_during_hash and source.is_file() and sha256_file(source) == digest:
+        original_digest = (baseline.get(rel) if baseline_manifest is not None
+                           else sha256_file(source) if source.is_file() else None)
+        if not changed_during_hash and original_digest == digest:
             continue
         size = before_hash.st_size
         total += size
@@ -448,6 +463,8 @@ def pack_artifact(
         "paths": [row["path"] for row in file_rows],
         "files": file_rows,
     }
+    if plane_basis:
+        manifest["plane_basis"] = plane_basis
     (artifact / "manifest.json").write_text(canonical_json(manifest) + "\n", encoding="utf-8")
     assert_regular_tree(artifact)
     return manifest
@@ -474,8 +491,17 @@ def load_and_validate_artifact(
         "protocol", "workflow", "base_sha", "run_id", "run_number", "run_attempt",
         "artifact_name", "file_count", "total_bytes", "paths", "files",
     }
-    if not isinstance(manifest, dict) or set(manifest) != expected_keys:
+    if not isinstance(manifest, dict) or set(manifest) - {"plane_basis"} != expected_keys:
         fail("artifact manifest shape is invalid")
+    if "plane_basis" in manifest:
+        basis = manifest["plane_basis"]
+        if not isinstance(basis, dict) or set(basis) != {"stockanalysis-catalogue", "stockanalysis-etf-detail"}:
+            fail("artifact plane basis is invalid")
+        for family, identity in basis.items():
+            if (not isinstance(identity, dict) or set(identity) != {"generation_id", "manifest_sha256"}
+                or not re.fullmatch(re.escape(family) + r"-[a-f0-9]{16}", str(identity["generation_id"]))
+                or not re.fullmatch(r"[a-f0-9]{64}", str(identity["manifest_sha256"]))):
+                fail("artifact plane basis identity is invalid")
     expected_context = {
         "protocol": PROTOCOL,
         "workflow": workflow,
@@ -766,6 +792,7 @@ def main() -> None:
     seed.add_argument("--replace", action="store_true")
     pack.add_argument("--candidate-root", required=True)
     pack.add_argument("--artifact-root", required=True)
+    pack.add_argument("--baseline-manifest", type=Path)
     pack.add_argument("--base-sha", required=True)
     for item in (pack, apply, validate_plane):
         item.add_argument("--run-id", required=True)
@@ -794,6 +821,7 @@ def main() -> None:
             run_number=args.run_number,
             run_attempt=args.run_attempt,
             artifact_name=args.artifact_name,
+            baseline_manifest=args.baseline_manifest,
         )
     elif args.command in {"apply", "validate-plane"}:
         operation = apply_artifact if args.command == "apply" else validate_plane_artifact

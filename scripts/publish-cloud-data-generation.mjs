@@ -1706,7 +1706,7 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       : observationFallbackCount === perAsset.size
         ? "per-asset-observation"
         : "per-asset-mixed-source-observation";
-    return { value: values[0], origin, perAsset, observationFallbackCount };
+    return { value: values.includes(null) ? null : values[0], origin, perAsset, observationFallbackCount };
   }
   if (config.files) {
     if (typeof config.files !== "object" || config.files === null || Array.isArray(config.files)) {
