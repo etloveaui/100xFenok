@@ -115,6 +115,8 @@ import { STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
 
 import {
   GENERATION_MANIFEST_SCHEMA,
+  MARKET_FACTS_PACK_PATH,
+  packMarketFactsAssets,
   planActiveGenerationReuse,
   planGenerationObjectWrites,
   publishGeneration,
@@ -400,7 +402,9 @@ export const FAMILIES = {
     ],
     plan: { class_a: 24_000, class_b: 50_000 },
     policy: { max_assets: 12_000, max_total_bytes: 500_000_000 },
-    validate_public_payload({ bytes }) {
+    validate_public_payload({ asset, bytes }) {
+      // The pack builder validates every original public JSON before encoding.
+      if (asset?.path === MARKET_FACTS_PACK_PATH) return bytes.byteLength > 0;
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return value !== null && typeof value === "object";
     },
@@ -2083,6 +2087,7 @@ export async function buildFamilyManifest({
     payloads.set(assetPath, bytes);
   }
   assets.sort((left, right) => left.path.localeCompare(right.path));
+  if (familyName === "platform-projections") packMarketFactsAssets(assets, payloads);
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
   const fingerprint = generationSemanticFingerprint({
     sourceSha,
@@ -3483,12 +3488,14 @@ function createDefaultPublishPlane({ accountId, token, endpoint, writeKey, famil
   let readClient;
   const countingR2Bucket = {
     ...r2Bucket,
-    async get(key) {
+    async get(key, options) {
       // Reuse the materializer's S3 read path for preflight/parity bulk reads.
       readClient ??= createR2S3ClientFromExistingToken({
         env: { CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
       });
-      const object = await (await readClient).getObject(key);
+      const object = options?.range
+        ? await (await readClient).getObjectRange(key, options.range)
+        : await (await readClient).getObject(key);
       return object === null ? null : { async arrayBuffer() { return object.bytes; } };
     },
     async put(key, bytes) {

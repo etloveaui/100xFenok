@@ -12,6 +12,10 @@ const MIME_TYPE = /^[a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*$/i;
 const PUBLIC_PREFIXES = Object.freeze(["public/data/", "public/generated/"]);
 const PRIVATE_PREFIXES = Object.freeze(["data/"]);
 export const DEFAULT_REMOTE_IO_CONCURRENCY = 8;
+export const MARKET_FACTS_TICKER_PREFIX = "public/data/computed/market_facts/tickers/";
+export const MARKET_FACTS_PACK_PATH = "public/data/computed/market_facts/facts.pack";
+export const MARKET_FACTS_PACK_INDEX_PATH = "public/data/computed/market_facts/packed-index.json";
+const MARKET_FACTS_PACK_SCHEMA = "market-facts-pack/v1";
 const PROGRESS_EVERY = 500;
 
 function fail(code, detail) {
@@ -221,6 +225,104 @@ export function validateGenerationManifest(value) {
     asset_count: value.assets.length,
     total_bytes: value.assets.reduce((sum, asset) => sum + asset.bytes, 0),
   };
+}
+
+// Physical manifests retain the same content-addressed contract. The index
+// binds each logical JSON response to a byte range of one physical pack.
+export function packMarketFactsAssets(assets, payloads) {
+  if (assets.some(asset => [MARKET_FACTS_PACK_PATH, MARKET_FACTS_PACK_INDEX_PATH].includes(asset.path))) {
+    fail("PACK_INPUT_RESERVED", "pack outputs cannot be canonical inputs");
+  }
+  const members = assets.filter(asset => asset.path.startsWith(MARKET_FACTS_TICKER_PREFIX));
+  if (!members.length) return;
+  const total = members.reduce((sum, asset) => sum + asset.bytes, 0);
+  const packed = new Uint8Array(total);
+  const entries = [];
+  let offset = 0;
+  for (const asset of members) {
+    const bytes = payloads.get(asset.path);
+    if (!asset.path.endsWith(".json") || asset.privacy_class !== "public" || !(bytes instanceof Uint8Array)
+      || bytes.byteLength !== asset.bytes || sha256Bytes(bytes) !== asset.sha256) {
+      fail("PACK_INPUT_INVALID", asset.path);
+    }
+    const document = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    if (!plainObject(document)) fail("PACK_INPUT_INVALID", asset.path);
+    packed.set(bytes, offset);
+    const { object_key, ...entry } = asset;
+    entries.push({ ...entry, offset });
+    offset += bytes.byteLength;
+    payloads.delete(asset.path);
+  }
+  const indexBytes = new TextEncoder().encode(JSON.stringify({
+    schema_version: MARKET_FACTS_PACK_SCHEMA, pack_path: MARKET_FACTS_PACK_PATH, entries,
+  }) + "\n");
+  const sourceDates = members.map(asset => asset.source_as_of);
+  const sourceAsOf = sourceDates.includes(null) ? null : sourceDates.sort()[0];
+  const remaining = assets.filter(asset => !asset.path.startsWith(MARKET_FACTS_TICKER_PREFIX));
+  for (const [assetPath, bytes, contentType] of [
+    [MARKET_FACTS_PACK_PATH, packed, "application/octet-stream"],
+    [MARKET_FACTS_PACK_INDEX_PATH, indexBytes, "application/json"],
+  ]) {
+    const sha256 = sha256Bytes(bytes);
+    remaining.push({ path: assetPath, object_key: `objects/sha256/${sha256}`, sha256,
+      bytes: bytes.byteLength, content_type: contentType, source_as_of: sourceAsOf, privacy_class: "public" });
+    payloads.set(assetPath, bytes);
+  }
+  assets.splice(0, assets.length, ...remaining.sort((a, b) => a.path.localeCompare(b.path)));
+}
+
+// All readers use these logical descriptors. Only physical manifest entries
+// participate in storage accounting, retention, publication and CAS parity.
+export async function listGenerationAssets({ manifest, objectStore }) {
+  const indexAsset = manifest.assets.find(asset => asset.path === MARKET_FACTS_PACK_INDEX_PATH);
+  if (!indexAsset) {
+    if (manifest.assets.some(asset => asset.path === MARKET_FACTS_PACK_PATH)) {
+      fail("PACK_BINDING_INVALID", "pack index is missing");
+    }
+    return manifest.assets;
+  }
+  const packAsset = manifest.assets.find(asset => asset.path === MARKET_FACTS_PACK_PATH);
+  if (!packAsset || packAsset.privacy_class !== "public" || indexAsset.privacy_class !== "public") {
+    fail("PACK_BINDING_INVALID", "public pack and index are both required");
+  }
+  const bytes = await readGenerationAssetBytes({ asset: indexAsset, objectStore });
+  const index = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  exactKeys(index, ["schema_version", "pack_path", "entries"], "market facts pack index");
+  if (index.schema_version !== MARKET_FACTS_PACK_SCHEMA || index.pack_path !== MARKET_FACTS_PACK_PATH
+    || !Array.isArray(index.entries) || !index.entries.length) fail("PACK_INDEX_INVALID", "invalid index");
+  let offset = 0;
+  const logical = index.entries.map(entry => {
+    exactKeys(entry, ["path", "sha256", "bytes", "content_type", "source_as_of", "privacy_class", "offset"], "packed asset");
+    if (!entry.path.startsWith(MARKET_FACTS_TICKER_PREFIX) || !entry.path.endsWith(".json")
+      || entry.path.slice(MARKET_FACTS_TICKER_PREFIX.length).includes("/")
+      || entry.privacy_class !== "public" || entry.content_type !== "application/json"
+      || !Number.isSafeInteger(entry.offset) || entry.offset !== offset
+      || !Number.isSafeInteger(entry.bytes) || entry.bytes <= 0) fail("PACK_INDEX_INVALID", "invalid member range");
+    offset += entry.bytes;
+    const { offset: memberOffset, ...asset } = entry;
+    return { ...asset, object_key: `objects/sha256/${entry.sha256}`, memberOffset };
+  });
+  if (!Number.isSafeInteger(offset) || offset !== packAsset.bytes) fail("PACK_INDEX_INVALID", "pack length mismatch");
+  validateGenerationManifest({ ...manifest, assets: logical.map(({ memberOffset, ...asset }) => asset) });
+  const physical = manifest.assets.filter(asset => ![MARKET_FACTS_PACK_PATH, MARKET_FACTS_PACK_INDEX_PATH].includes(asset.path));
+  if (physical.some(asset => asset.path.startsWith(MARKET_FACTS_TICKER_PREFIX))) {
+    fail("PACK_INDEX_INVALID", "logical and physical ticker paths cannot overlap");
+  }
+  return [...physical, ...logical.map(({ memberOffset, ...asset }) => ({
+    ...asset, object_key: packAsset.object_key,
+    packed: { offset: memberOffset, bytes: packAsset.bytes, sha256: packAsset.sha256 },
+  }))].sort((a, b) => a.path.localeCompare(b.path));
+}
+
+export async function readGenerationAssetBytes({ asset, objectStore }) {
+  const bytes = asset.packed
+    ? await objectStore.getRange(asset.object_key, { offset: asset.packed.offset, length: asset.bytes })
+    : await objectStore.get(asset.object_key);
+  if (!(bytes instanceof Uint8Array)) fail("PAYLOAD_MISSING", asset.path);
+  if (bytes.byteLength !== asset.bytes || sha256Bytes(bytes) !== asset.sha256) {
+    fail("PAYLOAD_INTEGRITY_UNAVAILABLE", asset.path);
+  }
+  return bytes;
 }
 
 function validatePointerTarget(value, context) {
@@ -846,7 +948,9 @@ async function verifiedReadManifest(pointer, objectStore, scope) {
     const manifest = JSON.parse(new TextDecoder().decode(bytes));
     const summary = validateGenerationManifest(manifest);
     return {
-      kind: "ok", manifest, summary, bytes: bytes.byteLength,
+      kind: "ok", manifest, summary,
+      // Account for the logical index in this existing cache's byte limit.
+      bytes: bytes.byteLength + (manifest.assets.find(asset => asset.path === MARKET_FACTS_PACK_INDEX_PATH)?.bytes ?? 0),
       assets: new Map(manifest.assets.map((asset) => [asset.path, asset])),
     };
   };
@@ -918,16 +1022,16 @@ export async function resolveGenerationAsset({
     ) {
       return { kind: "unavailable", reason: "MANIFEST_CROSS_BIND_INVALID" };
     }
-    const asset = assets.get(normalized);
-    if (!asset || asset.privacy_class !== expectedPrivacyClass) return { kind: "not_enrolled" };
-    const payload = await objectStore.get(asset.object_key);
-    if (
-      !(payload instanceof Uint8Array)
-      || payload.byteLength !== asset.bytes
-      || sha256Bytes(payload) !== asset.sha256
-    ) {
-      return { kind: "unavailable", reason: "PAYLOAD_INTEGRITY_UNAVAILABLE" };
+    let asset = assets.get(normalized);
+    if (!asset && normalized.startsWith(MARKET_FACTS_TICKER_PREFIX)) {
+      verified.logicalAssets ??= listGenerationAssets({ manifest, objectStore })
+        .then(entries => new Map(entries.map(entry => [entry.path, entry])))
+        .catch(error => { delete verified.logicalAssets; throw error; });
+      asset = (await verified.logicalAssets).get(normalized);
+      if (!asset) return { kind: "not_found" };
     }
+    if (!asset || asset.privacy_class !== expectedPrivacyClass) return { kind: "not_enrolled" };
+    const payload = await readGenerationAssetBytes({ asset, objectStore });
     return {
       kind: "ok",
       bytes: payload,
@@ -936,8 +1040,9 @@ export async function resolveGenerationAsset({
       generation_id: manifest.generation_id,
       published_at: manifest.created_at,
     };
-  } catch {
-    return { kind: "unavailable", reason: "DATA_PLANE_INTEGRITY_UNAVAILABLE" };
+  } catch (error) {
+    return { kind: "unavailable", reason: ["PAYLOAD_MISSING", "PAYLOAD_INTEGRITY_UNAVAILABLE"].includes(error?.code)
+      ? "PAYLOAD_INTEGRITY_UNAVAILABLE" : "DATA_PLANE_INTEGRITY_UNAVAILABLE" };
   }
 }
 
@@ -974,6 +1079,10 @@ export function createMemoryCloudDataPlane() {
       async get(key) {
         const value = objects.get(key);
         return value ? new Uint8Array(value) : null;
+      },
+      async getRange(key, { offset, length }) {
+        const value = objects.get(key);
+        return value ? new Uint8Array(value.slice(offset, offset + length)) : null;
       },
       async list() {
         return [...objects.entries()].map(([key, value]) => ({ key, bytes: value.byteLength }));

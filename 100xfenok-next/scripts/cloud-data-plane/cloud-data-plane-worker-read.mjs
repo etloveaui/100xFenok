@@ -74,6 +74,11 @@ export async function handleCloudDataPlaneAsset(request, env) {
   } catch {
     return unavailable();
   }
+  if (resolved?.kind === "not_found") {
+    return new Response(request.method === "HEAD" ? null : '{"error":"DATA_PLANE_ASSET_NOT_FOUND"}', {
+      status: 404, headers: { "content-type": "application/json", "cache-control": "no-store" },
+    });
+  }
   if (resolved?.kind !== "ok") return unavailable();
 
   const etag = `"${resolved.generation_id}"`;

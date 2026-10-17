@@ -9,7 +9,7 @@ import {
 } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { PRIVATE_PUBLIC_PATHS } from "../../../scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 import { createCloudflareCloudDataPlane } from "../../../scripts/cloud-data-plane/cloud-data-plane-cloudflare-adapter.mjs";
-import { resolveGenerationAsset, sha256Bytes, validateActivePointer, validateGenerationManifest } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
+import { listGenerationAssets, resolveGenerationAsset, sha256Bytes, validateActivePointer, validateGenerationManifest } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
 import {
   readDataShardRecord,
   resolveLegacyDataShard,
@@ -241,7 +241,7 @@ export async function listDataAssets(
         || manifest.source_sha !== pointer.source_sha) {
         return { kind: "unavailable", reason: "MANIFEST_CROSS_BIND_INVALID" };
       }
-      for (const asset of manifest.assets) {
+      for (const asset of await listGenerationAssets({ manifest, objectStore: plane.objectStore })) {
         if (asset.privacy_class !== "public" || !asset.path.startsWith(`public${prefix}`)) continue;
         const publicPath = asset.path.slice("public".length);
         const name = publicPath.slice(prefix.length);

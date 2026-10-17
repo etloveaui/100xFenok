@@ -63,6 +63,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
+  listGenerationAssets,
+  readGenerationAssetBytes,
   runBoundedAsyncPool,
   sha256Bytes,
   validateActivePointer,
@@ -557,7 +559,7 @@ export async function materializeCloudDataPlaneFamily({
   // with a unique safe relative remainder of one or more segments.
   const entries = [];
   const relativePaths = new Set();
-  for (const asset of manifest.assets) {
+  for (const asset of await listGenerationAssets({ manifest, objectStore: plane.objectStore })) {
     const assetPrefix = asset.privacy_class === "private" && privatePrefix !== null ? privatePrefix : prefix;
     const expectedPrivacy = assetPrefix === privatePrefix ? "private" : privacyClass;
     if (asset.privacy_class !== expectedPrivacy) {
@@ -593,6 +595,23 @@ export async function materializeCloudDataPlaneFamily({
   await mkdir(stageDir);
   let stageCreated = true;
   try {
+    // Build hydration needs the whole canonical tree. Fetch each pack once;
+    // the shared range reader still verifies every restored logical member.
+    const packs = new Map();
+    const bulkStore = {
+      ...plane.objectStore,
+      async getRange(key, { offset, length }) {
+        if (!packs.has(key)) {
+          const asset = entries.find(entry => entry.asset.object_key === key)?.asset;
+          packs.set(key, Promise.resolve(plane.objectStore.get(key)).then(bytes => {
+            if (!(bytes instanceof Uint8Array) || bytes.byteLength !== asset.packed.bytes
+              || sha256Bytes(bytes) !== asset.packed.sha256) fail("PAYLOAD_INTEGRITY_INVALID", key);
+            return bytes;
+          }));
+        }
+        return (await packs.get(key)).slice(offset, offset + length);
+      },
+    };
     await runBoundedAsyncPool(entries, async ({ asset, segments }) => {
       let payload = reuseRoot === null
         ? null
@@ -605,10 +624,11 @@ export async function materializeCloudDataPlaneFamily({
       if (payload === null) {
         // Build/CI hydration must never spend one Worker request per asset.
         // The authenticated manifest already names the immutable R2 object.
-        payload = await plane.objectStore.get(asset.object_key);
-        if (!(payload instanceof Uint8Array)) fail("PAYLOAD_MISSING", asset.path);
-        if (payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
-          fail("PAYLOAD_INTEGRITY_INVALID", asset.path);
+        try {
+          payload = await readGenerationAssetBytes({ asset, objectStore: bulkStore });
+        } catch (error) {
+          if (error.code === "PAYLOAD_INTEGRITY_UNAVAILABLE") fail("PAYLOAD_INTEGRITY_INVALID", asset.path);
+          throw error;
         }
       }
       const filePath = path.join(stageDir, ...segments);
@@ -647,11 +667,13 @@ export function createDefaultMaterializePlane({ accountId, token, endpoint, writ
   }
   let client;
   const r2Bucket = {
-    async get(key) {
+    async get(key, options) {
       client ??= createR2S3ClientFromExistingToken({
         env: { CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
       });
-      const object = await (await client).getObject(key);
+      const object = options?.range
+        ? await (await client).getObjectRange(key, options.range)
+        : await (await client).getObject(key);
       if (object === null) return null;
       return { async arrayBuffer() { return object.bytes; } };
     },
@@ -896,12 +918,10 @@ export async function hydratePublicCloudData({ relative, family, repoRoot = REPO
   });
   const { manifest, summary } = await readActiveFamilyIdentity({ plane, family });
   const assetPath = `public/data/${relative}`;
-  const asset = manifest.assets.find(entry => entry.path === assetPath && entry.privacy_class === "public");
+  const asset = (await listGenerationAssets({ manifest, objectStore: plane.objectStore }))
+    .find(entry => entry.path === assetPath && entry.privacy_class === "public");
   if (!asset) fail("CANONICAL_GENERATION_UNAVAILABLE", assetPath);
-  const payload = await plane.objectStore.get(asset.object_key);
-  if (!(payload instanceof Uint8Array) || payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
-    fail("PAYLOAD_INTEGRITY_INVALID", assetPath);
-  }
+  const payload = await readGenerationAssetBytes({ asset, objectStore: plane.objectStore });
   const generation = summary.generation_id;
   const body = new TextDecoder("utf-8", { fatal: true }).decode(payload);
   const document = JSON.parse(body);

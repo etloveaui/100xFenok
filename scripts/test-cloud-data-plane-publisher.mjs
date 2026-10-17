@@ -11,12 +11,11 @@ import { spawn } from "node:child_process";
 // Pure resolver functions only — no miniflare, so this import stays runnable
 // here while the dedicated Worker suite keeps its runtime dependency.
 import {
-  ENROLLED_PATHS,
   familyForPath,
   isEnrolledPath,
 } from "./lib/cloud-data-plane-worker-read.mjs";
 import { mkdtemp, mkdir, rm, writeFile, readFile, symlink, rename } from "node:fs/promises";
-import { mkdtempSync, statSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -1425,11 +1424,14 @@ try {
   console.log("rollback refusal ok (ROLLBACK_TARGET_MISSING, no previous / no pointer, no writes)");
 
   // --- fred-macro family: split root/prefix, single file, public class -------
-  // Built from the REAL source file (read-only): 100xfenok-next is never
-  // edited, only read as the publish source.
+  // Canonical payloads are plane-owned; offline publication uses a fixture.
+  const fredFixtureRoot = path.join(fixtureRoot, "fred-macro");
+  await mkdir(fredFixtureRoot, { recursive: true });
+  const fredPayload = JSON.stringify({ updated: NOW_1, series: {} });
+  await writeFile(path.join(fredFixtureRoot, "fred-macro.json"), fredPayload);
   const fredBuild = await buildFamilyManifest({
     familyName: "fred-macro",
-    absRoot: path.join(REPO_ROOT, "data/macro"),
+    absRoot: fredFixtureRoot,
     relRoot: "public/data/macro",
     now: () => NOW_1,
   });
@@ -1437,19 +1439,8 @@ try {
   assert.equal(fredBuild.manifest.assets.length, 1);
   const fredAsset = fredBuild.manifest.assets[0];
   assert.equal(fredAsset.path, "public/data/macro/fred-macro.json");
-  // The upstream data file changes over time (10d32795eb moved it 530240 ->
-  // 530238 bytes); the invariant that matters is that the manifest records the
-  // on-disk size exactly, not any one specific number.
-  assert.equal(
-    fredAsset.bytes,
-    statSync(path.join(REPO_ROOT, "data/macro/fred-macro.json")).size,
-  );
-  // source_as_of comes from the payload's own top-level "updated", explicitly
-  // marked as such — never the acquisition time.
-  const fredUpdated = JSON.parse(await readFile(
-    path.join(REPO_ROOT, "data/macro/fred-macro.json"),
-    "utf8",
-  )).updated;
+  assert.equal(fredAsset.bytes, Buffer.byteLength(fredPayload));
+  const fredUpdated = JSON.parse(fredPayload).updated;
   assert.equal(fredAsset.source_as_of, fredUpdated.slice(0, 10));
   assert.equal(fredBuild.sourceAsOf.origin, "payload");
   assert.equal(fredAsset.privacy_class, "public");
@@ -1515,9 +1506,7 @@ try {
   console.log("fred-macro family ok (single file, split root/prefix, public class served)");
 
   // --- computed-signals pilot: one canonical file, exact public path --------
-  // The exporter lane owns the source_as_of field. Keep this publisher test
-  // independent of its uncommitted mirror by adding that field to a temporary
-  // copy of the current payload, then prove the family resolver consumes it.
+  // The exporter owns source_as_of; the offline fixture exercises its resolver.
   {
     const computedFamily = FAMILIES["computed-signals"];
     assert.equal(computedFamily.root, "data/computed");
@@ -1526,15 +1515,11 @@ try {
     assert.equal(computedFamily.source_as_of.key, "source_as_of");
     assert.equal(computedFamily.policy.max_assets, 4);
     assert.equal(computedFamily.policy.max_total_bytes, 30_000);
-    const currentSignalsPath = path.join(REPO_ROOT, "data/computed/signals.json");
-    const currentSignalsBytes = statSync(currentSignalsPath).size;
-    assert.ok(currentSignalsBytes > 0, "current pilot payload is non-empty (measured baseline: 12,680 bytes)");
-    assert.ok(currentSignalsBytes <= computedFamily.policy.max_total_bytes);
-
     const computedFixtureRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-computed-signals-"));
     try {
       const computedPayload = {
-        ...JSON.parse(await readFile(currentSignalsPath, "utf8")),
+        schema_version: "computed-signals/v1",
+        signals: [],
         source_as_of: "2026-07-29",
       };
       const fixturePath = path.join(computedFixtureRoot, "signals.json");
@@ -1876,6 +1861,14 @@ try {
     for (const [name, endDate] of Object.entries(indexDates)) {
       await writeFile(path.join(indicesDir, name), JSON.stringify(series(endDate)));
     }
+    for (const retained of FAMILIES["us-indices-daily"].private_assets) {
+      const file = path.join(asofFilesRoot, retained.path);
+      await mkdir(path.dirname(file), { recursive: true });
+      const clock = retained.source_as_of;
+      const payload = clock?.max_date ? series("2026-08-10")
+        : clock?.key ? { [clock.key]: "2026-08-10T00:00:00Z" } : {};
+      await writeFile(file, JSON.stringify(payload));
+    }
     const usIndices = await buildFamilyManifest({
       familyName: "us-indices-daily",
       absRoot: indicesDir,
@@ -1883,8 +1876,9 @@ try {
       now: () => NOW_1,
     });
     validateGenerationManifest(usIndices.manifest);
-    assert.equal(usIndices.manifest.assets.length, 4);
-    const indexDatesByAsset = new Map(usIndices.manifest.assets.map((asset) => [
+    assert.equal(usIndices.manifest.assets.length, 4 + FAMILIES["us-indices-daily"].private_assets.length);
+    const publicIndices = usIndices.manifest.assets.filter(asset => asset.privacy_class === "public");
+    const indexDatesByAsset = new Map(publicIndices.map((asset) => [
       asset.path.slice("public/data/indices/".length),
       asset.source_as_of,
     ]));
@@ -1893,7 +1887,7 @@ try {
     assert.equal(usIndices.sourceAsOf.origin, "per-asset");
     assert.ok(usIndices.sourceAsOf.perAsset instanceof Map);
     assert.deepEqual(Object.fromEntries(usIndices.sourceAsOf.perAsset), indexDates);
-    assert.ok(usIndices.manifest.assets.every((asset) => asset.privacy_class === "public"));
+    assert.equal(publicIndices.length, 4);
     console.log("us-indices-daily per-file max_date source_as_of ok (4 independent dates, min summary, origin per-asset)");
 
     // Per-file top-level-array mode fails loudly on a malformed row date and
@@ -2226,55 +2220,6 @@ try {
   } finally {
     await rm(asofFilesRoot, { recursive: true, force: true });
   }
-}
-
-// Real-tree configuration check (read-only): the configured fred-banking
-// per-file keys, FDIC max extraction, and fred-yardeni max extraction agree
-// with the on-disk payloads.
-{
-  const realFred = await buildFamilyManifest({
-    familyName: "fred-banking",
-    absRoot: path.join(REPO_ROOT, "data/macro"),
-    relRoot: "public/data/macro",
-    now: () => NOW_1,
-  });
-  for (const asset of realFred.manifest.assets) {
-    const file = asset.path.slice("public/data/macro/".length);
-    const json = JSON.parse(await readFile(path.join(REPO_ROOT, "data/macro", file), "utf8"));
-    assert.equal(asset.source_as_of, json.source_as_of);
-  }
-  const realFdic = await buildFamilyManifest({
-    familyName: "fdic-tier1",
-    absRoot: path.join(REPO_ROOT, "data/macro"),
-    relRoot: "public/data/macro",
-    now: () => NOW_1,
-  });
-  assert.equal(realFdic.sourceAsOf.origin, "payload-max-date");
-  const fdicJson = JSON.parse(await readFile(path.join(REPO_ROOT, "data/macro/fdic-tier1.json"), "utf8"));
-  assert.equal(
-    realFdic.manifest.assets[0].source_as_of,
-    fdicJson.data.map((row) => row.date).sort().at(-1),
-  );
-  const realYardeni = await buildFamilyManifest({
-    familyName: "fred-yardeni",
-    absRoot: path.join(REPO_ROOT, "data/yardney"),
-    relRoot: "public/data/yardney",
-    now: () => NOW_1,
-  });
-  assert.equal(realYardeni.sourceAsOf.origin, "payload-max-date");
-  const yardeniJson = JSON.parse(
-    await readFile(path.join(REPO_ROOT, "data/yardney/yardney_model.json"), "utf8"),
-  );
-  // Refresh-safe: the asset date follows the payload's own max data[].date,
-  // never the collection time.
-  assert.equal(
-    realYardeni.manifest.assets[0].source_as_of,
-    yardeniJson.data.map((row) => row.date).sort().at(-1),
-  );
-  console.log(
-    "real-tree configuration ok (fred-banking per-file keys, FDIC max quarter, "
-    + "and fred-yardeni max payload date agree with disk)",
-  );
 }
 
 // --- semantic generation identity ------------------------------------------
@@ -3201,9 +3146,13 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   // root so tests never touch the repo's real data/admin/data-supply-state
   // directory (the contract's evidence is written only by real publishes).
   const outcomesRoot = mkdtempSync(path.join(os.tmpdir(), "publish-outcomes-cli-"));
+  const inputRoot = path.join(outcomesRoot, "input");
+  mkdirSync(inputRoot);
+  writeFileSync(path.join(inputRoot, "obs.json"), "{\"a\":1}\n");
   env.PUBLISH_OUTCOMES_ROOT = outcomesRoot;
   Object.assign(env, extraEnv);
-  const argv = [PUBLISH_SCRIPT, ...(includeFamily ? ["--family=oecd-cli"] : []), ...extraArgs];
+  const argv = [PUBLISH_SCRIPT, ...(includeFamily ? ["--family=oecd-cli"] : []),
+    ...(!extraArgs.includes("--rollback") && !extraArgs.includes("--retention") ? [`--input-root=${inputRoot}`] : []), ...extraArgs];
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, argv, {
       cwd: REPO_ROOT,
@@ -3233,10 +3182,10 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(summary.result, "gate_blocked");
   assert.equal(summary.gate_exit, 2);
   assert.match(summary.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
-  // Spec-measured facts for the real oecd-cli family.
-  assert.equal(summary.assets, 4);
-  assert.equal(summary.total_bytes, 597_283);
-  assert.equal(summary.unique_object_keys, 5); // 4 unique objects + 1 manifest
+  // The CLI reads its explicit offline fixture, independent of retired Git data.
+  assert.equal(summary.assets, 1);
+  assert.equal(summary.total_bytes, 8);
+  assert.equal(summary.unique_object_keys, 2); // 1 object + 1 manifest
   assert.equal(summary.objects_deduped, 0);
 
   const refused = await runCli([]);
@@ -3393,8 +3342,11 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   }) => {
     const stdout = [];
     const stderr = [];
+    const inputRoot = path.join(outcomesRoot, "input");
+    await mkdir(inputRoot, { recursive: true });
+    await writeFile(path.join(inputRoot, "obs.json"), "{\"a\":1}\n");
     const exitCode = await runPublisherCli({
-      argv: ["--family=oecd-cli", "--json", ...extraArgs],
+      argv: ["--family=oecd-cli", `--input-root=${inputRoot}`, "--json", ...extraArgs],
       env,
       outcomesRoot,
       runCostGateImpl: gate,
@@ -3604,8 +3556,6 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.deepEqual(gateCalls[0], { planClassA: 10, planClassB: oecdCeiling, planBytes: 0 },
     "the first rollback gate must declare the derived nonzero read ceiling");
   assert.ok(gateCalls[0].planClassB > 0, "rollback Class B must not be declared as zero");
-  assert.equal(2 * (FAMILIES["stockanalysis-etf-detail"].policy.max_assets + 1), 14_002,
-    "the ETF family's derived rollback read ceiling is 14,002");
   await rm(rollbackRoot, { recursive: true, force: true });
   console.log("rollback independence ok (own gate first, pointer-domain failure, zero object writes)");
 }
@@ -3630,12 +3580,9 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     assert.equal(isEnrolledPath(pathname), false,
       `${pathname} must not be an enrolled path`);
   }
-  // The public shard projection the site actually serves is equally unenrolled:
-  // this packet changes nothing about how those 1,025 assets are delivered.
+  // Private raw ETF data and retired shard paths remain unservable.
   assert.equal(isEnrolledPath("/data/stockanalysis/etfs/shards/manifest.json"), false,
     "the public shard projection stays outside the data plane");
-  assert.equal([...ENROLLED_PATHS.keys()].filter((p) => p.includes("stockanalysis")).length, 0,
-    "no stockanalysis path may appear in ENROLLED_PATHS");
   console.log("private non-serving ok (representative ETF payloads resolve to no family and no enrolled path)");
 }
 

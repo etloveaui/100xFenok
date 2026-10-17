@@ -228,7 +228,7 @@ export function createR2S3Client({
     await sleepImpl(ms);
   }
 
-  async function once({ method, key, query, body, contentMd5, deadline }) {
+  async function once({ method, key, query, body, contentMd5, deadline, range }) {
     const remaining = remainingMs(deadline);
     if (remaining <= DEADLINE_MARGIN_MS) fail("S3_DEADLINE", "deadline reached before request");
     const attemptTimeoutMs = Math.max(1, Math.floor(Math.min(effectiveTimeoutMs, remaining - DEADLINE_MARGIN_MS)));
@@ -239,6 +239,7 @@ export function createR2S3Client({
       host,
       "x-amz-content-sha256": payloadHash,
       "x-amz-date": amz,
+      ...(range ? { range } : {}),
       ...(contentMd5 ? { "content-md5": contentMd5 } : {}),
       ...(body && body.length > 0 ? { "content-type": "application/xml" } : {}),
     };
@@ -376,6 +377,18 @@ export function createR2S3Client({
         etag: etagHeader !== null ? String(etagHeader).replace(/^"|"$/g, "") : null,
         last_modified: lastModifiedHeader,
       };
+    },
+
+    async getObjectRange(key, { offset, length, deadline } = {}) {
+      if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(length) || length <= 0
+        || !Number.isSafeInteger(offset + length)) fail("S3_RANGE_INVALID", "invalid range");
+      const end = offset + length - 1;
+      const { response, body } = await request({ method: "GET", key, deadline, range: `bytes=${offset}-${end}` });
+      if (response.status === 404) return null;
+      const contentRange = response.headers?.get?.("content-range") ?? "";
+      if (response.status !== 206 || !contentRange.startsWith(`bytes ${offset}-${end}/`)
+        || body.byteLength !== length) fail("S3_RANGE_INVALID", `range http ${response.status}`);
+      return { bytes: body };
     },
 
     async deleteObjects(keys, { deadline } = {}) {

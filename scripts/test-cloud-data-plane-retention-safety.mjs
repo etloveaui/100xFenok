@@ -33,6 +33,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  FAMILIES,
   RETENTION_DELETE_THROTTLE_MS,
   RETENTION_MANIFEST_READ_THROTTLE_MS,
   RETENTION_RATE_LIMIT_DEFAULT_MS,
@@ -1076,9 +1077,9 @@ try {
         }}),
       }),
     });
-    assert.equal(states.length, 27);
-    assert.equal(calls.length, 27);
-    assert.equal(new Set(calls).size, 27);
+    assert.equal(states.length, Object.keys(FAMILIES).length);
+    assert.equal(calls.length, Object.keys(FAMILIES).length);
+    assert.equal(new Set(calls).size, Object.keys(FAMILIES).length);
     assert.deepEqual(states.map(row => row.name), calls);
     console.log("retention safety 17 ok (fresh coordinator states reuse one listing snapshot)");
   }
