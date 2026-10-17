@@ -12,7 +12,7 @@
 // Read-only guarantee: the ONLY plane surface used is pointerStore.get and
 // objectStore.get. No pointer write, no compare-and-swap, no ledger call, no
 // object list, no delete, and no R2 mutation of any kind. This file carries no
-// write/auth logic of its own. All bulk payloads use the R2 REST bridge;
+// write/auth logic of its own. All bulk payloads use the existing R2 S3 client;
 // only the family pointer uses the existing coordinator adapter.
 //
 // Reader-side safety contract (all fail closed before any payload byte is
@@ -69,11 +69,10 @@ import {
   validateGenerationManifest,
 } from "./lib/cloud-data-plane-generation.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
-import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
+import { createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
-const R2_BUCKET = "fenok-data-plane";
 const MATERIALIZE_RECEIPT_KEYS = Object.freeze([
   "family",
   "generation_id",
@@ -640,14 +639,23 @@ export async function materializeCloudDataPlaneFamily({
   };
 }
 
-// Live plane: the same REST bridge + remote coordinator + adapter wiring the
-// writer uses, bound to the family's own coordinator instance. No new
-// HTTP/auth logic; configuration is enforced before any remote call.
+// Live plane: reuse the existing S3 GetObject client for bulk reads, keeping
+// the family's coordinator wiring unchanged. Derive its client lazily once.
 export function createDefaultMaterializePlane({ accountId, token, endpoint, writeKey, family }) {
   if (!accountId || !token || !endpoint || !writeKey) {
     fail("PLANE_CONFIG_INVALID", "accountId, token, endpoint and writeKey are required");
   }
-  const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
+  let client;
+  const r2Bucket = {
+    async get(key) {
+      client ??= createR2S3ClientFromExistingToken({
+        env: { CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+      });
+      const object = await (await client).getObject(key);
+      if (object === null) return null;
+      return { async arrayBuffer() { return object.bytes; } };
+    },
+  };
   const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family });
   return createCloudflareCloudDataPlane({
     r2Bucket,
