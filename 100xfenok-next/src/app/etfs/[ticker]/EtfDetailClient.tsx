@@ -1337,8 +1337,8 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     ? etfResult.dataSupply
     : parseEtfDataSupply(etfData?.data_supply);
   const dataSupplyPresentation = getEtfDataSupplyPresentation(dataSupply);
-  const marketFacts = factsResult?.status === "ok" ? factsResult.data : factsResult === undefined ? undefined : null;
-  const etfSignals = signalsResult?.status === "ok" ? signalsResult.data : signalsResult === undefined ? undefined : null;
+  const marketFacts = etfData?.detail_status === "universe_only" ? null : factsResult?.status === "ok" ? factsResult.data : factsResult === undefined ? undefined : null;
+  const etfSignals = etfData?.detail_status === "universe_only" ? null : signalsResult?.status === "ok" ? signalsResult.data : signalsResult === undefined ? undefined : null;
   const etfLoadFailed = etfResult?.status === "failed";
   const factsLoadFailed = factsResult?.status === "failed";
   const hasLoadFailure = etfLoadFailed || factsLoadFailed;

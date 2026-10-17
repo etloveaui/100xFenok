@@ -57,7 +57,10 @@ const FORBIDDEN_RAW_PATTERNS = [
   /(^|\/)(finra|occ|apewisdom|gdelt|reddit|social)(\/|_)/i,
 ];
 
-export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = deriveForbiddenPrivateDataSupplyRoots();
+export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
+  ...deriveForbiddenPrivateDataSupplyRoots(),
+  "computed/data-supply/etf-detail",
+];
 
 const DETECTION_FLOOR_REPORT_RELATIVE_PATH = "admin/data-supply-detection-floor.json";
 
@@ -666,9 +669,8 @@ export async function checkPublicMirror({ appRoot, repoRoot }) {
 
   scanYardneyRawKeys(publicDataRoot, "public/data", violations);
   scanYardneyRawKeys(canonicalDataRoot, "data", violations);
-  validateLegacyEtfFiles({ canonicalDataRoot, publicDataRoot, publicFiles, violations });
-  await validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoot, publicFiles, violations });
-  validateProjection({ canonicalDataRoot, publicDataRoot, violations });
+  // ETF details and their selected projection are private active-generation
+  // assets. Their absence from public/data is required, not a missing mirror.
 
   const edgePath = path.join(publicDataRoot, "admin", "fenok-edge-coverage-index.json");
   if (fs.existsSync(edgePath)) {

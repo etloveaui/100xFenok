@@ -539,91 +539,9 @@ function buildStockanalysisEtfShardBody(shardId, members) {
   return { body, byteLength: Buffer.byteLength(body), sha256: sha256Text(body) };
 }
 
-function buildStockanalysisEtfShardProjection(sourceRoot) {
-  const absolutePath = path.join(sourceRoot, ...STOCKANALYSIS_ETF_ROOT.split("/"));
-  if (!lstatIfPresent(absolutePath)) return null;
-  const sourceBinding = captureSourceBinding(absolutePath, "StockAnalysis ETF root", "directory");
-  const sourceBindings = [sourceBinding];
-  const shards = Array.from({ length: STOCKANALYSIS_ETF_SHARD_COUNT }, () => ({}));
-  const sourceRows = [];
-  const sourceAsOf = [];
-  const fetchedAt = [];
-  const entries = readStableDirectoryEntries(sourceBinding)
-    .sort((left, right) => left.name.localeCompare(right.name));
-
-  for (const entry of entries) {
-    const filePath = path.join(absolutePath, entry.name);
-    const stat = fs.lstatSync(filePath);
-    if (stat.isSymbolicLink()) throw new Error(`StockAnalysis ETF source path is a symlink: ${filePath}`);
-    if (!stat.isFile() || !entry.name.endsWith(".json")) {
-      throw new Error(`StockAnalysis ETF source root may contain only JSON files: ${filePath}`);
-    }
-    const ticker = entry.name.slice(0, -5);
-    if (stockanalysisEtfTickerKey(ticker) !== ticker) {
-      throw new Error(`StockAnalysis ETF filename must use the canonical ticker: ${filePath}`);
-    }
-    const { binding, body } = readBoundStockanalysisEtfFile(filePath);
-    const payload = parseStockanalysisEtfPayload(body, filePath, ticker);
-    const sha256 = sha256Text(body);
-    sourceBindings.push(binding);
-    shards[stockanalysisEtfShardId(ticker)][ticker] = {
-      binding,
-      sha256,
-    };
-    sourceRows.push({ ticker, sha256 });
-    if (isoTimestamp(payload.source_as_of)) sourceAsOf.push(payload.source_as_of);
-    fetchedAt.push(payload.fetched_at);
-  }
-  revalidateSourceBindings([sourceBinding], "after StockAnalysis ETF projection");
-
-  const sourceSha256 = stockanalysisEtfSourceBindingSha256(sourceRows);
-  const snapshotId = stockanalysisEtfSnapshotId(sourceSha256);
-  // Preflight one shard at a time; retain its source bindings and digest, not
-  // the full cohort's raw payloads or serialized shard bodies.
-  const shardFiles = shards.map((members, shardId) => {
-    const { byteLength, sha256 } = buildStockanalysisEtfShardBody(shardId, members);
-    return {
-      shardId,
-      relativePath: `snapshots/${snapshotId}/${stockanalysisEtfShardFileNameForId(shardId)}`,
-      members,
-      sha256,
-      byteLength,
-      memberCount: Object.keys(members).length,
-    };
-  });
-  const manifest = {
-    schema_version: STOCKANALYSIS_ETF_SHARD_MANIFEST_SCHEMA,
-    compatibility_mode: STOCKANALYSIS_ETF_PUBLIC_MODE,
-    shard_algorithm: STOCKANALYSIS_ETF_SHARD_ALGORITHM,
-    shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
-    payload_count: sourceRows.length,
-    snapshot_id: snapshotId,
-    generated_at: timestampRange(fetchedAt).max,
-    source_timestamp_range: {
-      source_as_of: timestampRange(sourceAsOf),
-      fetched_at: timestampRange(fetchedAt),
-    },
-    provenance: {
-      canonical_root: "data/stockanalysis/etfs",
-      source_payload_sha256: sourceSha256,
-    },
-    shards: shardFiles.map((item) => ({
-      id: item.shardId,
-      path: item.relativePath,
-      sha256: item.sha256,
-      member_count: item.memberCount,
-      byte_length: item.byteLength,
-    })),
-  };
-  manifest.manifest_sha256 = stockanalysisEtfManifestSha256(manifest);
-  return {
-    tickerFiles: sourceRows.length,
-    sourceBindings,
-    snapshotId,
-    shardFiles,
-    manifestBody: `${JSON.stringify(manifest)}\n`,
-    bytes: shardFiles.reduce((sum, item) => sum + item.byteLength, 0),
-  };
+function buildStockanalysisEtfShardProjection() {
+  // ETF detail is read from its private active generation at request time.
+  return null;
 }
 
 function collectRemovalTree(directory, stat, files, directories, capture) {
@@ -1059,9 +977,6 @@ export function planPublicDataSync({ sourceRoot, destinationRoot }) {
   const stockanalysisEtfProjection = buildStockanalysisEtfShardProjection(source);
   if (!marketFactsProjection) {
     assertNoOrphanedDestinationMarketFactsProjection(destination);
-  }
-  if (!stockanalysisEtfProjection && !sourcePlan.stockanalysisEtfRootSeen) {
-    assertNoOrphanedDestinationStockanalysisEtfProjection(destination);
   }
   preflightDestinationPaths(destination, sourcePlan);
   const transformedRelativeRoots = marketFactsProjection

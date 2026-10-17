@@ -57,16 +57,8 @@ export interface EtfDataSupplyMetadata {
 // Internal comparison evidence only; the public route always serves the shard document.
 export type EtfPlaneShadowParity = "match" | "mismatch" | "unavailable";
 
-// ETF authority boundary.
-//
-// The committed static shard is canonical and LKG, and is the only document
-// this resolver ever serves. The private Cloud generation is read solely to
-// compare against it, and never becomes a served payload. That has always been
-// true structurally; naming it gives the decision one site, so a later cutover
-// is a single reviewed change behind its own gate rather than an edit spread
-// across the return paths.
-//
-// Deliberately not a generic reader: one mode, one family, no registry.
+// Legacy shard comparison helper retained for existing consumers and fixtures.
+// The serving resolver below reads the selected projection from the active plane.
 export type EtfAuthorityMode = "static_primary_cloud_shadow";
 
 export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
@@ -125,10 +117,9 @@ export interface EtfDetailResolverDependencies {
 }
 
 let defaultDependenciesPending: Promise<EtfDetailResolverDependencies> | undefined;
-let defaultEnrollmentReader: EtfDetailResolverDependencies["readEnrollment"] | undefined;
 function defaultDependencies(): Promise<EtfDetailResolverDependencies> {
   return defaultDependenciesPending ??= import("./data-loader").then((loader) => ({
-    readEnrollment: defaultEnrollmentReader = loader.getDataSupplyEtfEnrollmentDocument,
+    readEnrollment: loader.getDataSupplyEtfEnrollmentDocument,
     readIndex: loader.getDataSupplyEtfIndexDocument,
     readIndexShard: loader.getDataSupplyEtfIndexShardDocument,
     readProjectionPayload: loader.getDataSupplyEtfPayloadDocument,
@@ -594,78 +585,25 @@ export async function resolveDataSupplyEtfDetail(
     ? overrides as EtfDetailResolverDependencies
     : { ...await defaultDependencies(), ...overrides };
   const guard = await readGuard(dependencies.readEnrollment,
-    dependencies.readEnrollment === defaultEnrollmentReader || dependencies.cacheImmutableEnrollment === true);
+    dependencies.cacheImmutableEnrollment === true);
   if (!guard) return { kind: "error", code: "DATA_SUPPLY_GUARD_UNAVAILABLE", projectionDigest: null };
 
   const enrolled = guard.tickers.has(ticker);
-  const resolveShard = async (): Promise<EtfDetailResolution> => {
-    const shard = await dependencies.readShardPayload(ticker);
-    if (shard.kind === "shard_integrity_unavailable") {
-      return {
-        kind: "shard_unavailable",
-        reason: shard.reason,
-        projectionDigest: shard.manifestSha256,
-      };
-    }
-    if (shard.kind === "ticker_not_found") {
-      return { kind: "not_found", projectionDigest: shard.manifestSha256 };
-    }
-    if (!isStrictShardEtfPayload(shard.document.value, ticker)) {
-      return {
-        kind: "shard_unavailable",
-        reason: "invalid_shard_payload",
-        projectionDigest: shard.manifestSha256,
-      };
-    }
-
-    const plane = await dependencies.readPlanePayload(ticker).catch(() => ({
-      kind: "unavailable" as const,
-      reason: "plane_shadow_exception",
-    }));
-    if (plane.kind !== "ok") {
-      return {
-        kind: "shard",
-        document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, null),
-        projectionDigest: shard.manifestSha256,
-        planeShadowParity: "unavailable",
-      };
-    }
-    if (!isStrictShardEtfPayload(plane.document.value, ticker)) {
-      return {
-        kind: "shard",
-        document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, plane.document),
-        projectionDigest: shard.manifestSha256,
-        planeShadowParity: "mismatch",
-      };
-    }
-    return {
-      kind: "shard",
-      document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, plane.document),
-      projectionDigest: shard.manifestSha256,
-      planeShadowParity: matchesUtf8Bytes(plane.document.bytes, shard.document.raw)
-        ? "match"
-        : "mismatch",
-    };
-  };
+  if (!enrolled) return { kind: "not_found", projectionDigest: guard.indexSha };
   const parsedIndex = guard.shards
     ? await readValidatedShard(ticker, guard, dependencies)
     : await readValidatedIndex(guard, dependencies);
   if (!parsedIndex) {
-    if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveShard();
+    return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
   }
 
   if (parsedIndex.kind === "crossbind") {
     return { kind: "error", code: "DATA_SUPPLY_GUARD_UNAVAILABLE", projectionDigest: guard.indexSha };
   }
   if (parsedIndex.kind === "invalid") {
-    if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveShard();
+    return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
   }
   const entries = parsedIndex.entries;
-  if (!enrolled) {
-    return resolveShard();
-  }
 
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());
   if (!parsed) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };

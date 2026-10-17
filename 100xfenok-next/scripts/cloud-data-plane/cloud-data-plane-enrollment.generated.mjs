@@ -1,5 +1,9 @@
 export const PLANE_ENROLLMENT_SCHEMA_VERSION = "cloud-data-plane-enrollment/v1";
 export const PLANE_ENROLLMENT_EXACT = Object.freeze([
+  ["/data/stockanalysis/index.json","stockanalysis-catalogue"],
+  ["/data/stockanalysis/etf_universe.json","stockanalysis-catalogue"],
+  ["/data/stockanalysis/schema.json","stockanalysis-catalogue"],
+  ["/data/stockanalysis/surface_consumers.json","stockanalysis-catalogue"],
   ["/data/global-scouter/core/stocks_analyzer.json","scouter-derived"],
   ["/data/global-scouter/core/per_bands_index.json","scouter-derived"],
   ["/data/global-scouter/core/slick_index.json","scouter-derived"],
@@ -622,6 +626,13 @@ export const PLANE_ENROLLMENT_EXACT = Object.freeze([
   ["/data/yardney/yardney_model.json","fred-yardeni"],
 ]);
 export const PLANE_ENROLLMENT_PREFIXES = Object.freeze([
+  {"prefix":"/data/stockanalysis/stocks/","family":"stockanalysis-catalogue"},
+  {"prefix":"/data/stockanalysis/financials/","family":"stockanalysis-catalogue"},
+  {"prefix":"/data/stockanalysis/surfaces/","family":"stockanalysis-catalogue"},
+  {"prefix":"/data/stockanalysis/backfill/","family":"stockanalysis-catalogue"},
+  {"prefix":"/data/stockanalysis/classification/","family":"stockanalysis-catalogue"},
+  {"prefix":"/data/stockanalysis/coverage/","family":"stockanalysis-catalogue"},
+  {"prefix":"/data/stockanalysis/canary/","family":"stockanalysis-catalogue"},
   {"prefix":"/data/sec-13f/","family":"sec-13f"},
   {"prefix":"/data/yf/finance/","family":"yahoo-finance"},
   {"prefix":"/data/briefing/","family":"briefing"},

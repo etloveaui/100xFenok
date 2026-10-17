@@ -1,4 +1,5 @@
 import type { Dirent } from "node:fs";
+import { isEnrolledPath } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
@@ -121,6 +122,12 @@ async function readJson<T>(filePath: string, schema: z.ZodType<T>): Promise<T> {
 }
 
 async function readPublicDataFile(filePath: string): Promise<string> {
+  const enrolledPath = toPublicPath(filePath);
+  if (enrolledPath && isEnrolledPath(enrolledPath)) {
+    const result = await readDataAsset(enrolledPath);
+    if (result.kind === "ok") return result.raw;
+    throw new Error(`DATA_PLANE_ASSET_UNAVAILABLE:${enrolledPath}`);
+  }
   try {
     return await readFile(filePath, "utf-8");
   } catch (fsError) {
@@ -1020,8 +1027,7 @@ export async function getStockanalysisAsset(
   const normalizedTicker = normalizeStockanalysisTicker(ticker);
   if (!normalizedTicker) return null;
   if (assetKind === "etfs") {
-    const sharded = await getStockanalysisEtfShardDocument(normalizedTicker);
-    return sharded.kind === "ok" ? sharded.document.value : null;
+    return (await getDataSupplyEtfPayloadDocument(normalizedTicker))?.value ?? null;
   }
   const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${normalizedTicker}.json`);
   return readOptionalJsonRecord(assetPath);
@@ -1034,8 +1040,7 @@ export async function getStockanalysisAssetDocument(
   const normalizedTicker = normalizeStockanalysisTicker(ticker);
   if (!normalizedTicker) return null;
   if (assetKind === "etfs") {
-    const sharded = await getStockanalysisEtfShardDocument(normalizedTicker);
-    return sharded.kind === "ok" ? sharded.document : null;
+    return getDataSupplyEtfPayloadDocument(normalizedTicker);
   }
   const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${normalizedTicker}.json`);
   return readStrictPublicJsonDocument(assetPath);
@@ -1048,56 +1053,31 @@ export async function getAlarmStateDocument() {
   return readStrictPublicJsonDocument(path.join(PUBLIC_DATA_ROOT, "admin", "alarm-state.json"));
 }
 
-// These bundled assets cannot change within a deployed Worker version. Share
-// successful reads only; an unavailable asset must remain retryable.
-let etfEnrollmentPending: Promise<PublicJsonDocument | null> | undefined;
-export async function getDataSupplyEtfEnrollmentDocument() {
-  if (etfEnrollmentPending) return etfEnrollmentPending;
-  const pending = readStrictPublicJsonDocument(path.join(
-    PUBLIC_DATA_ROOT,
-    "computed",
-    "data-supply",
-    "etf-detail",
-    "enrollment.json",
-  ));
-  etfEnrollmentPending = pending;
+// Enrollment, indexes and selected payloads now come from one promoted family.
+// Do not retain enrollment across promotions in a long-lived Worker isolate.
+async function readEtfProjection(relative: string): Promise<PublicJsonDocument | null> {
+  const result = await readPrivateCloudGenerationAsset({ family: "stockanalysis-etf-detail",
+    manifestPath: `data/computed/data-supply/etf-detail/${relative}` });
+  if (result.kind !== "ok") return null;
   try {
-    const document = await pending;
-    if (!document) etfEnrollmentPending = undefined;
-    return document;
-  } catch (error) {
-    etfEnrollmentPending = undefined;
-    throw error;
-  }
+    const value = asJsonRecord(JSON.parse(result.raw) as unknown);
+    return value ? { raw: result.raw, value } : null;
+  } catch { return null; }
 }
 
+export async function getDataSupplyEtfEnrollmentDocument() {
+  return readEtfProjection("enrollment.json");
+}
 export async function getDataSupplyEtfIndexShardDocument(id: number) {
   if (!Number.isInteger(id) || id < 0 || id >= 64) return null;
-  return readStrictPublicJsonDocument(path.join(
-    PUBLIC_DATA_ROOT, "computed", "data-supply", "etf-detail", "index-shards",
-    `${String(id).padStart(2, "0")}.json`,
-  ));
+  return readEtfProjection(`index-shards/${String(id).padStart(2, "0")}.json`);
 }
-
 export async function getDataSupplyEtfIndexDocument() {
-  return readStrictPublicJsonDocument(path.join(
-    PUBLIC_DATA_ROOT,
-    "computed",
-    "data-supply",
-    "etf-detail",
-    "index.json",
-  ));
+  return readEtfProjection("index.json");
 }
-
 export async function getDataSupplyEtfPayloadDocument(ticker: string) {
-  return readStrictPublicJsonDocument(path.join(
-    PUBLIC_DATA_ROOT,
-    "computed",
-    "data-supply",
-    "etf-detail",
-    "payloads",
-    `${ticker}.json`,
-  ));
+  const normalized = normalizeStockanalysisTicker(ticker);
+  return normalized ? readEtfProjection(`payloads/${normalized}.json`) : null;
 }
 
 export async function getStockanalysisEtfUniverse() {

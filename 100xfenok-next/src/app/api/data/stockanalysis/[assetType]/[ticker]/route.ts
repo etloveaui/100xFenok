@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getStockanalysisAsset,
+  getStockanalysisEtfUniverse,
   normalizeStockanalysisAssetKind,
   normalizeStockanalysisTicker,
 } from "@/lib/server/data-loader";
@@ -29,6 +30,17 @@ export async function getEtfResponse(
     300,
     async () => {
       const resolution = await resolve(ticker);
+      if (resolution.kind === "not_found") {
+        const universe = await getStockanalysisEtfUniverse();
+        const records = Array.isArray(universe?.records) ? universe.records : [];
+        const row = records.find((value: Record<string, unknown>) => value.ticker === ticker);
+        if (row) return NextResponse.json({ ticker, asset_type: "etf", detail_status: "universe_only",
+          normalized: { overview: { name: row.name, aum: row.aum, expenseRatio: row.expenseRatio,
+            inceptionDate: row.inceptionDate, category: row.category, dividendYield: row.dividendYield,
+            beta: row.beta, sharesOut: row.sharesOut, etf_website: row.etf_website },
+            performance: row.performance, classification: row.classification } },
+          { headers: STOCKANALYSIS_CACHE_HEADERS });
+      }
       const response = await buildEtfResponse(resolution, ticker);
       if (
         resolution.kind === "unavailable"

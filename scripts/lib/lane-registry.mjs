@@ -354,13 +354,11 @@ const lanes = [
     // Promoted after natural schedule run 31852235035 emitted the complete
     // attempt shard, passed the publish fence and confirmed origin readback.
     enforcement: "live",
-    privacy_class: "public_mirror",
+    privacy_class: "private",
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: null,
-    // The 5,605 raw per-ticker payloads are this lane's canonical acquisition
-    // output. The public tree is a shard projection built by sync-public-data,
-    // not a mirror of these paths, so the shards are a derived projection rather
-    // than a public_mirror entry here.
+    // Selected raw payloads and the detail projection share one private
+    // active generation. Deploys do not rebuild a public ETF payload tree.
     canonical_outputs: ["data/stockanalysis/etfs"],
     public_mirror: [],
     commit_shards: [

@@ -280,31 +280,7 @@ jobs:
           # Code/configuration supplies the bundle imports. Enrolled data is
           # served from active generations at request time.
           git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
-
-      - name: Hydrate active Global Scouter build indexes
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
-          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
-          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: |
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter-build
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-scouter-derived
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-sec-13f
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-private-family gdelt-news-tone
-
-      - name: Hydrate active Yahoo finance and derive acquisition indexes
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
-          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
-          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: |
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-yahoo-finance
-          if [ -f data/yf/_acquisition-state.json ]; then
-            python3 scripts/yahoo_batch_state.py hydrate-generation --state-root data/admin/yahoo-batch-quote-history
-          fi
-          python3 scripts/rebuild-yf-finance-summary.py
+          echo 'Deploy active-family payload hydration count: 0 (runtime reads)'
 
       - name: Restore current Next build cache
         uses: actions/cache/restore@v4
