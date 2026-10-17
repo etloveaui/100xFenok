@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import https from "node:https";
+import fs from "node:fs";
+import { hydratePublicCloudData } from "./materialize-cloud-data-plane-family.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, defaultAttemptId, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
-  LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
   systemicLkgFailureReason,
@@ -219,14 +220,11 @@ export async function runFredBanking({
     : FRED_BANKING_GROUPS.filter((group) => group.id === type);
   if (selectedGroups.length === 0) throw new Error(`unknown FRED banking type: ${type}`);
   const injectedKey = validateControlledFailureKey(controlledFailureKey.trim(), eventName, selectedGroups);
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fred_banking" });
-  const lkgArtifacts = selectedGroups.map((group) => ({
-    key: group.id,
-    canonicalPath: canonicalPaths[group.id],
-    validateDocument: (document) => validBankingDocument(document, group),
-    sourceAsOf: (document) => bankingSourceAsOf(document, group),
+  const previous = Object.fromEntries(selectedGroups.map((group) => {
+    const document = JSON.parse(fs.readFileSync(canonicalPaths[group.id], "utf8"));
+    if (!validBankingDocument(document, group)) throw new Error(`Active banking baseline is invalid: ${group.id}`);
+    return [group.id, document];
   }));
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
 
   let requestResults;
   if (!apiKey) {
@@ -249,8 +247,7 @@ export async function runFredBanking({
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.seriesId === injectedKey);
     const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedKey && !systemicOutage ? "controlled_failure" : worst.reason);
-    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
-    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
+    const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: true, systemic: systemicOutage });
     const failureDetail = failureReason === "controlled_failure"
       ? null
       : worst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
@@ -259,7 +256,7 @@ export async function runFredBanking({
       reason: failureReason,
       updated: false,
       attempt,
-      retrySet: failure.retrySet,
+      retrySet: selectedGroups.map((group) => group.id),
       ...(failureDetail ? { failure_detail: failureDetail } : {}),
       ...outcome,
     };
@@ -286,59 +283,20 @@ export async function runFredBanking({
     };
   }
 
-  const candidates = selectedGroups.map((group) => {
-    const serialized = `${JSON.stringify(outputs[group.id], null, 2)}\n`;
-    const validateDocument = (document) => validBankingDocument(document, group);
-    const deriveSourceAsOf = (document) => bankingSourceAsOf(document, group);
-    return {
-      key: group.id,
-      currentRelativePath: `data/macro/fred-banking-${group.id}.json`,
-      payloadBytes: Buffer.from(serialized),
-      sourceAsOf: outputs[group.id].source_as_of,
-      validateDocument,
-      deriveSourceAsOf,
-      serialized,
-    };
-  });
-  const recoveryState = lkgStore.stateSnapshot();
-  const hasSelectedRetry = candidates.some((candidate) => recoveryState.items[candidate.key]?.retry === true);
-  const decisions = lkgStore.evaluatePromotionCandidates(candidates, run);
-  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
-  const rejected = decisions.filter((decision) => !decision.eligible);
-  if (promotable.length === 0) {
-    return {
-      ok: false,
-      reason: rejected.find((decision) => decision.reason === "foreign_writer_conflict")?.reason ?? rejected[0].reason,
-      updated: false,
-      attempt,
-      retrySet: lkgStore.stateSnapshot().retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
+  // The whole generation stays on its active baseline if any selected series regresses.
+  for (const group of selectedGroups) {
+    const candidate = outputs[group.id];
+    if (!validBankingDocument(candidate, group)) throw new Error(`Invalid banking candidate: ${group.id}`);
+    if (group.series.some(({ id }) => candidate.series[id].at(-1).date < previous[group.id].series[id].at(-1).date)) {
+      return { ok: false, reason: "source_regression", updated: false, attempt,
+        retrySet: [group.id], degraded: true, corrupt: false, exitCode: 2 };
+    }
   }
-  for (const candidate of promotable) {
-    atomicWrite(canonicalPaths[candidate.key], candidate.serialized);
+  for (const group of selectedGroups) {
+    atomicWrite(canonicalPaths[group.id], `${JSON.stringify(outputs[group.id], null, 2)}\n`);
   }
-  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = promotable.some((candidate) => recoveringKeys.has(candidate.key));
-  if (success.retrySet.length > 0) {
-    return {
-      ok: false,
-      reason: rejected.find((decision) => decision.reason === "foreign_writer_conflict")?.reason
-        ?? rejected[0]?.reason
-        ?? "source_regression",
-      updated: true,
-      attempt,
-      retrySet: success.retrySet,
-      recovered,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
-  return { ok: true, reason: "ok", updated: true, attempt, groups: selectedGroups.map((group) => group.id), recovered };
+  return { ok: true, reason: "ok", updated: true, attempt, groups: selectedGroups.map((group) => group.id), recovered: false };
+
 }
 
 function parseType(argv) {
@@ -352,7 +310,12 @@ function parseType(argv) {
 }
 
 async function main() {
+  const baselines = await Promise.all(FRED_BANKING_GROUPS.map(({ id }) => hydratePublicCloudData({
+    relative: `macro/fred-banking-${id}.json`, family: "fred-banking",
+  })));
+  if (new Set(baselines.map(({ generation }) => generation)).size !== 1) throw new Error("Banking baseline changed during hydration; retry the run");
   const result = await runFredBanking({ type: parseType(process.argv.slice(2)) });
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `updated=${result.ok && result.updated === true}\n`);
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
     const message = `${prefix} FRED banking ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
