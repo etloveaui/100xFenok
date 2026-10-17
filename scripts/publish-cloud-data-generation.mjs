@@ -1909,6 +1909,8 @@ export async function buildFamilyManifest({
   // Exclusions apply only to the directory walk: a family that declares an
   // explicit files list has already chosen its assets deliberately.
   const files = (enrolled ?? applyFamilyExclusions(await walkFiles(absRoot), family.exclude))
+    .filter(relative => familyName !== "yahoo-finance"
+      || !["finance/_index.json", "finance/_summary.json"].includes(relative))
     .sort((left, right) => left.localeCompare(right));
   if (files.length === 0) fail("FAMILY_EMPTY", absRoot);
   const createdAt = now();
@@ -1981,15 +1983,43 @@ export async function buildFamilyManifest({
     }
     // The public route serves enrolled assets, not the private generation
     // manifest. Derive its public finance listing here from this exact asset set.
-    const financeAssets = assets.filter((asset) => asset.path.startsWith("public/data/yf/finance/"));
+    const financeAssets = assets.filter((asset) => asset.path.startsWith("public/data/yf/finance/")
+      && !["_index.json", "_summary.json"].includes(asset.path.split("/").at(-1)));
+    const errors = [];
+    const sourceDates = financeAssets.map(asset => asset.source_as_of);
+    const sourceAsOf = sourceDates.includes(null) ? null : sourceDates.sort().at(0) ?? null;
+    const fetchedAt = [];
+    for (const asset of financeAssets) {
+      const document = JSON.parse(new TextDecoder().decode(payloads.get(asset.path)));
+      if (typeof document.fetched_at === "string") fetchedAt.push(document.fetched_at);
+      const data = document.data;
+      if (!data || typeof data !== "object" || Array.isArray(data)
+        || !Object.values(data).some(value => value !== null)) {
+        errors.push({ ticker: asset.path.split("/").at(-1).slice(0, -5),
+          error: "empty generation payload" });
+      }
+    }
+    const summaryPath = "public/data/yf/finance/_summary.json";
+    const summaryBytes = new TextEncoder().encode(JSON.stringify({
+      schema_version: "yf-finance/v2", generated_at: fetchedAt.sort().at(-1) ?? null,
+      source: "generation-assets", count: financeAssets.length,
+      ok: financeAssets.length - errors.length, failed: errors.length,
+      skipped: 0, errors,
+    }) + "\n");
+    const summarySha = sha256Bytes(summaryBytes);
+    assets.push({ path: summaryPath, object_key: `objects/sha256/${summarySha}`,
+      sha256: summarySha, bytes: summaryBytes.byteLength, content_type: "application/json",
+      source_as_of: sourceAsOf, privacy_class: "public" });
+    payloads.set(summaryPath, summaryBytes);
     const indexPath = "public/data/yf/finance/_index.json";
     const indexBytes = new TextEncoder().encode(JSON.stringify(Object.fromEntries(
-      financeAssets.map((asset) => [asset.path.slice("public/data/yf/finance/".length), asset.bytes]),
+      [...financeAssets.map((asset) => [asset.path.slice("public/data/yf/finance/".length), asset.bytes]),
+        ["_summary.json", summaryBytes.byteLength]],
     )) + "\n");
     const indexSha = sha256Bytes(indexBytes);
     assets.push({ path: indexPath, object_key: `objects/sha256/${indexSha}`,
       sha256: indexSha, bytes: indexBytes.byteLength, content_type: "application/json",
-      source_as_of: financeAssets.map((asset) => asset.source_as_of).filter(Boolean).sort().at(-1) ?? null,
+      source_as_of: sourceAsOf,
       privacy_class: "public" });
     payloads.set(indexPath, indexBytes);
     assets.sort((left, right) => left.path.localeCompare(right.path));
