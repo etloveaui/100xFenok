@@ -749,7 +749,9 @@ function isPlaneCanonicalPath(relative) {
   const publicPath = `/${relative}`;
   return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
     || Object.values(FAMILIES).some((family) =>
-      family.private_assets?.some((asset) => asset.path === relative)
+      family.private_assets?.some((asset) => asset.path === relative || asset.path.startsWith(`${relative}/`))
+      || family.private_roots?.some((root) => relative === root
+        || relative.startsWith(`${root}/`) || root.startsWith(`${relative}/`))
       || (family.privacy_class === "private" && (relative === family.root
         || (family.files
           ? family.files.some((file) => relative === `${family.root}/${file}`)
