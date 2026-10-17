@@ -11,7 +11,7 @@ import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
-const WORKFLOW = ".github/workflows/fetch-defillama.yml";
+const WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
@@ -355,17 +355,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Monthly FDIC recovery state and successful canonical outputs remain
-// optional so degraded evidence can still be committed without false failure.
+// FDIC is an artifact-only lane and has no Git staging stages.
 {
   const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
-  const always = run(fixture.root, "always_if_exists", [], FDIC_WORKFLOW);
-  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-
-  const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
-  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
+  assert.deepEqual(fixture.paths.always, []);
+  assert.deepEqual(fixture.paths.success, []);
 }
 
 // EDGAR's non-admin directory outputs use the default success stage, while
@@ -414,7 +408,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.match(
     always.stdout,
     new RegExp(
-      `declared=${declaredAlways} stage_selected=${materializedAlways} staged_index_total=${materializedAlways}`,
+      `declared=${declaredAlways} stage_selected=${declaredAlways} staged_index_total=${materializedAlways}`,
     ),
   );
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
@@ -443,28 +437,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
-// Required Yahoo directories stage their concrete files while the declared
-// summary exclusion is removed from the index by the manifest helper itself.
+// Yahoo Finance is shadow-only and publishes no files through the Git lane.
 {
   const fixture = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
-  const always = run(fixture.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
-  assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-  assert.equal(
-    cached(fixture.root).includes("data/yf/finance/_summary.json"),
-    false,
-    "the manifest exclusion must keep the generated YF summary unstaged",
-  );
-
-  const tracked = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
-  execFileSync("git", ["add", "-A"], { cwd: tracked.root });
-  execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: tracked.root });
-  for (const file of [...tracked.materialized.always, ...tracked.materialized.exclude]) {
-    fs.appendFileSync(path.join(tracked.root, file), "changed\n");
-  }
-  const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
-  assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
+  assert.deepEqual(fixture.paths.always, []);
+  assert.deepEqual(fixture.paths.success, []);
 }
 
 // Directory policy selects one manifest entry while git stages its concrete files.
