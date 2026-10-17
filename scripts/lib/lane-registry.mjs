@@ -1734,10 +1734,7 @@ workflow_policies[".github/workflows/pins-autosync.yml"] = policy([], {
     commitSpec("scripts/fixtures/lane-registry/registry.expected.json", "file"),
     commitSpec("scripts/fixtures/derived-asset-registry/registry.expected.json", "file"),
     commitSpec("scripts/fixtures/data_supply/policy_registry/registry.expected.json", "file"),
-    commitSpec("data/admin/lane-registry-projection.json", "file"),
     commitSpec("scripts/fixtures/data_supply/detection_floor/cases.expected.json", "file"),
-    commitSpec("data/admin/data-supply-detection-floor.json", "file"),
-    commitSpec("data/admin/fenok-data-health-kpi.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
@@ -1759,6 +1756,9 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
 
 // Family-to-workflow attribution used for publish admission and workflow health.
 export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "platform-projections": Object.freeze({ lane_id: null, workflow: ".github/workflows/update-manifest.yml" }),
+  "pipeline-alarm-state": Object.freeze({ lane_id: null, workflow: ".github/workflows/pipeline-failure-alarm.yml" }),
+  "slickcharts-recovery": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-daily.yml" }),
   "occ-options-availability": Object.freeze({ lane_id: "occ_options_volume", workflow: ".github/workflows/fenok-edge-daily.yml" }),
   "krx-daily": Object.freeze({ lane_id: "krx", workflow: ".github/workflows/fenok-edge-krx-daily.yml" }),
   "yahoo-private-options": Object.freeze({ lane_id: "yahoo_private_options", workflow: ".github/workflows/fetch-fenok-private-options.yml" }),
