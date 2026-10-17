@@ -2,9 +2,8 @@
 
 // Repo-wide inventory gate for actual data Git writers. The inventory is
 // derived from workflow commands, then enriched with the enclosing job's
-// effective permissions and concurrency scope. Known helper-backed writers are
-// included because their push lives outside the workflow YAML:
-// publish-slickcharts-attempt.sh.
+// effective permissions and concurrency scope. SlickCharts attempt validation
+// no longer writes Git; its publisher uses the separate plane family lock.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -19,7 +18,6 @@ const WRITER_PATTERNS = Object.freeze([
   { kind: "direct_git_add", pattern: /\bgit\s+add\b/ },
   { kind: "direct_git_commit", pattern: /\bgit\s+commit\b/ },
   { kind: "direct_git_push", pattern: /\bgit\s+push\b/ },
-  { kind: "publish_slickcharts_attempt", pattern: /publish-slickcharts-attempt\.sh\b/ },
 ]);
 
 function nonCommentCommandLine(line) {
