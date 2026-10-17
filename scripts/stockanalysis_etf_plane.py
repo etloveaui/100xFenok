@@ -86,6 +86,9 @@ def build(source, target, selection):
         if '.locks' in parts or source_path.name.endswith('.lock'):
             continue
         copy(source_path, target / STATE / rel)
+    for ticker in sorted(selected):
+        for source_path in sorted((source / STATE / 'partial_candidates' / ticker).glob('*.json')):
+            copy(source_path, target / source_path.relative_to(source))
     for source_path in sorted((source / STATE).rglob('*.jsonl')):
         # History is non-derivable; retain selected ETF events, not discarded payloads.
         lines = []
@@ -138,13 +141,14 @@ def main():
     parser.add_argument('--select-only', action='store_true')
     args = parser.parse_args()
     source = args.source_root.resolve()
-    # API output stays in memory: the owner variable is never printed or put in
-    # a workflow step's env display. Missing permissions fail this operation.
-    owner = json.loads(subprocess.check_output([
-        'gh', 'api', 'repos/etloveaui/100xFenok/actions/variables/ETF_ALWAYS_INCLUDE']))['value'].split()
     existing = read(source / SELECTION)
-    selection = (existing if not args.select_only and isinstance(existing, dict)
-                 and existing.get('schema_version') == 'etf-detail-selection/v1' else select(source, owner))
+    if not args.select_only and isinstance(existing, dict) and existing.get('schema_version') == 'etf-detail-selection/v1':
+        selection = existing
+    else:
+        # API output stays in memory; owner values never reach workflow logs.
+        owner = json.loads(subprocess.check_output([
+            'gh', 'api', 'repos/etloveaui/100xFenok/actions/variables/ETF_ALWAYS_INCLUDE']))['value'].split()
+        selection = select(source, owner)
     if args.select_only:
         path = source / SELECTION
         path.parent.mkdir(parents=True, exist_ok=True)

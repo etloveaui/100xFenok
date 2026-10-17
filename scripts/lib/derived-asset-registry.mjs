@@ -86,7 +86,6 @@ export const DERIVED_WRITER_RECOVERY_CONTRACTS = Object.freeze({
   "scripts/fetch-fenok-krx-daily-private.mjs": "lane_lkg",
   "scripts/fetch-fenok-news-tone-proxy.mjs": "lane_lkg",
   "scripts/fetch-fenok-occ-options-volume.mjs": "lane_lkg",
-  "scripts/materialize_data_supply_public.py": "generation_store",
   "scripts/run-fenok-private-options.mjs": "lane_lkg",
 });
 
