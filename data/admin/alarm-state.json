@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-17T04:51:52.586Z",
+  "generated_at": "2026-10-17T05:22:40.194Z",
   "status": "open",
   "open_incident_count": 4,
   "open_incidents": [
@@ -17,24 +17,24 @@
       "lost_schedule_slot_count": 0
     },
     {
-      "workflow": "pins-autosync.yml",
-      "label": "Pins Autosync",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
       "workflow": "update-manifest.yml",
       "label": "Update Manifest",
       "streak": 11,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 38933033292,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/38933033292",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 7,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 39004801799,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39004801799",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -426,14 +426,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "39004063953",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39004063953",
-    "observed_at": "2026-10-17T04:51:52.586Z",
+    "run_id": "39005961113",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39005961113",
+    "observed_at": "2026-10-17T05:22:40.194Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
-      "pins-autosync.yml",
       "update-manifest.yml",
+      "validate-workflows.yml",
       "a1-sec-13f"
     ],
     "title": "100xFenok pipeline job failure alarm"
