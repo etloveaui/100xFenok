@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  UPDATE_MANIFEST_MATERIALIZATIONS,
   deriveCentralCommitPaths,
   centralCommitPathKind,
 } from "./materialize-update-manifest-routes.mjs";
@@ -20,6 +21,7 @@ const isDirectoryPath = (pathValue) => centralCommitPathKind(pathValue) === "dir
 // Behavior samples derived from the declared contract (no second list).
 const fileSample = centralPaths.find((pathValue) => !isDirectoryPath(pathValue));
 const directorySample = centralPaths.find(isDirectoryPath);
+const publicTreeDestination = UPDATE_MANIFEST_MATERIALIZATIONS.find((route) => route.mode === "rsync_tree").destination;
 // Public mirrors are no longer Git outputs. Exercise tree staging inside
 // the current canonical directory contract instead.
 const treeDestination = path.posix.join(directorySample, "fixture-tree");
@@ -100,7 +102,7 @@ for (const relative of [fileSample, directorySample]) {
 
 {
   const fixture = makeFixture();
-  write(path.join(fixture.repoRoot, treeDestination, "new.json"), "new\n");
+  write(path.join(fixture.repoRoot, publicTreeDestination, "new.json"), "new\n");
   assert.notEqual(runHelper(fixture, "--stage").status, 0);
   assert.deepEqual(cached(fixture.repoRoot), []);
 }
@@ -149,8 +151,8 @@ for (const relative of [fileSample, directorySample]) {
   assert.equal(runHelper(fixture, "--check").status, 0);
   assert.equal(runHelper(fixture, "--stage").status, 0);
   assert.deepEqual(cached(fixture.repoRoot), [
-    path.posix.join(directorySample, "rebuilt.json"),
     fileSample,
+    path.posix.join(directorySample, "rebuilt.json"),
   ]);
 }
 
