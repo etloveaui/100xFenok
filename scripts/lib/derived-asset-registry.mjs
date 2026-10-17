@@ -13,7 +13,6 @@ import { canonicalJson } from "./json-canonical.mjs";
 import {
   PLANE_ENROLLMENT_EXACT,
   PLANE_ENROLLMENT_PREFIXES,
-  PLANE_ENROLLMENT_PRIVATE_DENY,
 } from "../../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import { COMPUTED_SIGNALS_SOURCE_LANE_IDS, LANE_REGISTRY } from "./lane-registry.mjs";
 
@@ -748,7 +747,9 @@ const PUBLIC_MIRROR_PREFIX = "100xfenok-next/public/";
 function isPlaneCanonicalPath(relative) {
   const publicPath = `/${relative}`;
   return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
-    || PLANE_ENROLLMENT_PRIVATE_DENY.includes(publicPath)
+    // Private-route denial alone does not prove that a family was migrated.
+    || ["data/computed/fenok_news_tone_proxy.json",
+      "data/computed/fenok_news_tone_proxy_history.json"].includes(relative)
     || PLANE_ENROLLMENT_PREFIXES.some(({ prefix }) =>
       publicPath === prefix.replace(/\/$/, "") || publicPath.startsWith(prefix));
 }
