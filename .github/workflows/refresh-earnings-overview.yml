@@ -39,6 +39,7 @@ jobs:
             .github/workflows
             100xfenok-next/scripts
             100xfenok-next/src/lib
+            data/admin/earnings_overview
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -60,7 +61,7 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
           set -euo pipefail
-          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family earnings-overview --manifest-prefix public/data --privacy-class public --output-root "$RUNNER_TEMP/earnings-active")"
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family earnings-overview --manifest-prefix public/data --private-manifest-prefix data --privacy-class public --output-root "$RUNNER_TEMP/earnings-active")"
           mkdir -p data
           cp -R "$RUNNER_TEMP/earnings-active/." data/
           echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
@@ -70,7 +71,7 @@ jobs:
         id: producer
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
-        run: python3 scripts/build-earnings-overview.py --refresh --output-dir data/earnings-overview
+        run: python3 scripts/build-earnings-overview.py --refresh --output-dir data/earnings-overview --report-path data/admin/earnings_overview/refresh-summary.json
 
       - name: Publish earnings overview generation
         id: publish_cloud_generation

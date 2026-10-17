@@ -1759,6 +1759,7 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
 
 // Family-to-workflow attribution used for publish admission and workflow health.
 export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "apewisdom-attention": Object.freeze({ lane_id: "apewisdom_attention", workflow: ".github/workflows/fetch-fenok-apewisdom.yml" }),
   "sec-13f": Object.freeze({ lane_id: "sec_13f", workflow: null, external_timer: "ops/a1-lanes/feno-a1-sec13f.timer" }),
   "scouter-derived": Object.freeze({ lane_id: "global_scouter", workflow: ".github/workflows/build-stocks-analyzer.yml" }),
   "briefing": Object.freeze({ lane_id: "briefing", workflow: ".github/workflows/publish-briefing.yml" }),

@@ -750,7 +750,8 @@ function isPlaneCanonicalPath(relative) {
   return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
     // Private-route denial alone does not prove that a family was migrated.
     || relative === "data/computed/data-supply" || relative.startsWith("data/computed/data-supply/etf-detail")
-    || ["data/computed/fenok_news_tone_proxy.json",
+    || ["data/computed/fenok_social_attention_proxy.json", "data/computed/fenok_social_attention_proxy_history.json",
+      "data/computed/fenok_news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy_history.json"].includes(relative)
     || PLANE_ENROLLMENT_PREFIXES.some(({ prefix }) =>
       publicPath === prefix.replace(/\/$/, "") || publicPath.startsWith(prefix));

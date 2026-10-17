@@ -474,8 +474,42 @@ export const FAMILIES = {
     manifest_prefix: "public/data/damodaran",
     files: ["industries.json","historical_erp.json","credit_ratings.json","erp.json","industry_metrics.json","industry_metrics_regions.json"],
     privacy_class: "public",
-    plan: { class_a: 12, bytes: 9_800_000 },
-    policy: { max_assets: 24, max_total_bytes: 19_500_000 },
+    reuse_active_generation: true,
+    private_assets: [
+      {"path": "data/admin/damodaran/current/damodaran.json", "source_as_of": null},
+      {"path": "data/admin/damodaran/history.json", "source_as_of": null},
+      {"path": "data/admin/damodaran/index.json", "source_as_of": null},
+      {"path": "data/admin/damodaran/lkg/damodaran.json", "source_as_of": null},
+      {"path": "data/admin/damodaran/owner-guard.json", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem00.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem01.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem02.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem03.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem04.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem05.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem06.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem07.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem08.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem09.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem10.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem11.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem12.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem13.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem14.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem15.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem16.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem17.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem18.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem19.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem20.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem21.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem22.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem23.xlsx", "source_as_of": null},
+      {"path": "data/damodaran/archives/ctryprem24.xls", "source_as_of": null},
+      {"path": "data/damodaran/archives/receipt.json", "source_as_of": null},
+    ],
+    plan: { class_a: 128, class_b: 256, bytes: 80_000_000 },
+    policy: { max_assets: 64, max_total_bytes: 40_000_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
@@ -543,9 +577,19 @@ export const FAMILIES = {
     manifest_prefix: "public/data/macro",
     files: ["yahoo-ticker.json"],
     privacy_class: "public",
+    reuse_active_generation: true,
+    private_assets: [
+      {"path": "data/admin/yahoo-hourly-ticker/index.json", "source_as_of": null},
+      {"path": "data/admin/yahoo-hourly-ticker/keys/SOXL.json", "source_as_of": null},
+      {"path": "data/admin/yahoo-hourly-ticker/keys/TQQQ.json", "source_as_of": null},
+      {"path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json", "source_as_of": null},
+      {"path": "data/admin/yahoo-hourly-ticker/lkg/TQQQ.json", "source_as_of": null},
+      {"path": "data/admin/yahoo-hourly-ticker/promotion-contracts/SOXL.json", "source_as_of": null},
+      {"path": "data/admin/yahoo-hourly-ticker/promotion-contracts/TQQQ.json", "source_as_of": null},
+    ],
     source_as_of: { key: "updated" },
-    plan: { class_a: 10, bytes: 1_100_000 },
-    policy: { max_assets: 4, max_total_bytes: 3_000 },
+    plan: { class_a: 20, class_b: 40, bytes: 100_000 },
+    policy: { max_assets: 12, max_total_bytes: 50_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
@@ -702,6 +746,16 @@ export const FAMILIES = {
     plan: { class_a: 70, class_b: 150, bytes: 20_000_000 },
     policy: { max_assets: 32, max_total_bytes: 10_000_000 },
   },
+  "apewisdom-attention": {
+    root: "data",
+    files: ["computed/fenok_social_attention_proxy.json", "computed/fenok_social_attention_proxy_history.json",
+      "admin/apewisdom_attention/index.json", "admin/apewisdom_attention/lkg/social_attention_proxy.json"],
+    reuse_active_generation: true,
+    privacy_class: "private",
+    source_as_of: { file: "computed/fenok_social_attention_proxy.json", key: ["source", "source_as_of"] },
+    plan: { class_a: 16, class_b: 40, bytes: 8_000_000 },
+    policy: { max_assets: 4, max_total_bytes: 4_000_000 },
+  },
   "gdelt-news-tone": {
     root: "data",
     files: ["computed/fenok_news_tone_proxy.json", "computed/fenok_news_tone_proxy_history.json",
@@ -741,13 +795,17 @@ export const FAMILIES = {
     manifest_prefix: EARNINGS_OVERVIEW_MANIFEST_PREFIX,
     files: [...EARNINGS_OVERVIEW_FILES],
     privacy_class: "public",
+    reuse_active_generation: true,
+    private_assets: [
+      {"path": "data/admin/earnings_overview/refresh-summary.json", "source_as_of": null},
+    ],
     source_as_of: EARNINGS_OVERVIEW_SOURCE_AS_OF,
     // The daily refresh observes quarterly provider filings. Its source clock
     // intentionally remains the newest period end in each document; cadence
     // detection must not mistake that honest quarter-end age for a failed
     // daily refresh attempt.
-    plan: { class_a: 20, class_b: 40, bytes: 400_000 },
-    policy: { max_assets: 4, max_total_bytes: 200_000 },
+    plan: { class_a: 20, class_b: 40, bytes: 800_000 },
+    policy: { max_assets: 8, max_total_bytes: 400_000 },
     validate_public_payload: validateEarningsOverviewPublicPayload,
   },
   "yahoo-finance": {
@@ -1795,7 +1853,8 @@ export async function buildFamilyManifest({
       source_as_of: { ...retained.source_as_of, file: path.posix.basename(assetPath) } },
       payloads: new Map([[assetPath, bytes]]), createdIsoDay, relRoot: path.posix.dirname(assetPath) });
     assets.push({ path: assetPath, object_key: `objects/sha256/${sha256}`,
-      sha256, bytes: bytes.byteLength, content_type: "application/json",
+      sha256, bytes: bytes.byteLength,
+      content_type: CONTENT_TYPES[path.extname(assetPath).toLowerCase()] ?? "application/octet-stream",
       source_as_of: retainedDate.value, privacy_class: "private" });
     payloads.set(assetPath, bytes);
   }
