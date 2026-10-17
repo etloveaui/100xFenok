@@ -343,7 +343,10 @@ class PublicDataSupplyMaterializer:
         if not self.require_git_tracking:
             return
         tracked = self._git_tracked_set()
-        missing = sorted(paths - tracked)
+        # These runtime inputs are verified against active generation hashes by
+        # the Yahoo hydrator; Git membership is no longer their storage contract.
+        plane_prefixes = ("data/yf/finance/", "data/admin/yahoo-batch-quote-history/")
+        missing = sorted(p for p in paths - tracked if not p.startswith(plane_prefixes))
         if missing:
             raise MaterializationError(f"required state/ref paths are not Git-tracked: {missing[:5]}")
 
