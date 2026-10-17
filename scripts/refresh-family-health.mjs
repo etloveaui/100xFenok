@@ -98,6 +98,28 @@ export async function readCanonicalReference({ root = ROOT, ref = "origin/main" 
   }
 }
 
+export async function readActiveReference({ plane, root = ROOT }) {
+  const { pointer, manifest } = await readActiveFamilyIdentity({ plane, family: ETF_FAMILY });
+  const relative = "data/computed/data-supply/etf-detail/index.json";
+  const asset = manifest.assets.find(row => row.path === relative);
+  const bytes = await fs.readFile(path.join(root, relative));
+  if (!asset || sha256Bytes(bytes) !== asset.sha256 || bytes.length !== asset.bytes) {
+    throw new Error("HEALTH_PROJECTION_GENERATION_CHANGED");
+  }
+  const servedIndex = JSON.parse(bytes);
+  const cadence = servedIndex.detail_refresh_cadence;
+  const { fresh_ttl_hours, emergency_lkg_ttl_days } = DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail;
+  const sourcePolicy = { fresh_ttl_hours, emergency_lkg_ttl_days };
+  const assets = manifest.assets.filter(row => row.path.startsWith(`${PREFIX}/`));
+  const lifecycle = JSON.parse(execFileSync("python3", [path.join(ROOT, "scripts/stockanalysis_etf_lifecycle.py"),
+    "--root", root], { encoding: "utf8", timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }));
+  return { kind: "active_generation", generation_id: manifest.generation_id,
+    manifest_sha256: pointer.active.manifest_sha256, prefix: PREFIX,
+    total_bytes: assets.reduce((sum, row) => sum + row.bytes, 0), assets, lifecycle,
+    source_members: etfSourceMembers(servedIndex, sourcePolicy, cadence),
+    source_policy: sourcePolicy, source_index_sha256: servedIndex.index_sha256 };
+}
+
 function validateSnapshot(snapshot, { runId, runAttempt, now }) {
   if (snapshot?.schema_version !== SNAPSHOT_SCHEMA || snapshot.family !== ETF_FAMILY
     || snapshot.run_id !== runId || snapshot.run_attempt !== runAttempt
@@ -113,7 +135,10 @@ function validateSnapshot(snapshot, { runId, runAttempt, now }) {
     || manifest.manifest_sha256 !== snapshot.pointer.active.manifest_sha256
     || manifest.generation_id !== snapshot.pointer.active.generation_id
     || snapshot.manifest.source_sha !== snapshot.pointer.source_sha) throw new Error("HEALTH_PREPARATION_MANIFEST_INVALID");
-  if (snapshot.reference?.kind !== "git_commit" || !/^[a-f0-9]{40}$/.test(snapshot.reference.commit)
+  if (snapshot.reference?.kind === "active_generation") {
+    if (snapshot.reference.generation_id !== snapshot.manifest.generation_id
+      || snapshot.reference.manifest_sha256 !== manifest.manifest_sha256) throw new Error("HEALTH_REFERENCE_INVALID");
+  } else if (snapshot.reference?.kind !== "git_commit" || !/^[a-f0-9]{40}$/.test(snapshot.reference.commit)
     || !/^[a-f0-9]{40}$/.test(snapshot.reference.tree)) throw new Error("HEALTH_REFERENCE_INVALID");
   if (snapshot.reference.lifecycle?.detail_count !== snapshot.reference.assets?.length
     || !Array.isArray(snapshot.reference.lifecycle?.orphans)
@@ -169,11 +194,11 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
   const plane = createDefaultMaterializePlane(config);
   const binding = { runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT };
   if (mode === "prepare") {
-    const reference = await readCanonicalReference();
+    const reference = await readActiveReference({ plane });
     const snapshot = await prepareHealth({ plane, reference, ...binding });
     await fs.mkdir(path.dirname(filename), { recursive: true });
     await fs.writeFile(filename, JSON.stringify(snapshot));
-    console.log(JSON.stringify({ result: "prepared", members: reference.assets.length, commit: reference.commit, digest: snapshot.digest }));
+    console.log(JSON.stringify({ result: "prepared", members: reference.assets.length, generation_id: reference.generation_id, digest: snapshot.digest }));
   } else {
     const snapshot = JSON.parse(await fs.readFile(filename, "utf8"));
     console.log(JSON.stringify(await commitHealth({ plane, bucket, snapshot,

@@ -68,6 +68,7 @@ jobs:
           set -euo pipefail
           # Checkout fetched one current main revision and its canonical blobs.
           # Do not hydrate the caller's older revision and then replace it again.
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-stockanalysis
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-yahoo-finance
           if [ -f data/yf/_acquisition-state.json ]; then
             python3 scripts/yahoo_batch_state.py hydrate-generation --state-root data/admin/yahoo-batch-quote-history

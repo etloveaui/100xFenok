@@ -159,7 +159,7 @@ export function compareFamilyMembers(referenceAssets, planeAssets) {
 export function buildFamilyHealth({ snapshot, previous = null, cycle = null, now = new Date().toISOString() }) {
   if (previous) validateFamilyHealth(previous);
   if (cycle !== null && !/^[1-9]\d*$/.test(cycle)) throw new Error("FAMILY_HEALTH_CYCLE_INVALID");
-  const { counts, members } = compareFamilyMembers(snapshot.reference.assets, snapshot.manifest.assets);
+  const { counts, members } = compareFamilyMembers(snapshot.reference.assets, snapshot.manifest.assets.filter(asset => asset.path.startsWith("data/stockanalysis/etfs/")));
   const last = previous?.last_publication_cycle ?? null;
   const newCycle = cycle !== null && (last === null || BigInt(cycle) > BigInt(last));
   const streak = newCycle
