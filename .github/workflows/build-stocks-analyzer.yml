@@ -179,9 +179,6 @@ jobs:
             --workflow .github/workflows/build-stocks-analyzer.yml \
             --stage always_if_exists
           git add \
-            data/global-scouter/core/stocks_analyzer.json \
-            data/global-scouter/core/per_bands_index.json \
-            data/global-scouter/core/slick_index.json \
             data/sec-13f/by_ticker.json \
             data/sec-13f/by_sector.json \
             data/sec-13f/summary.json \
@@ -194,8 +191,6 @@ jobs:
             data/sec-13f/analytics/portfolio_views.json \
             data/sec-13f/analytics/factor_exposures_summary.json \
             data/sec-13f/analytics/guru_holders_index.json \
-            data/computed/sec13f_bridge_index.json \
-            data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
             data/calendar/prev-values.json
           if git diff --staged --quiet; then
@@ -214,16 +209,6 @@ jobs:
               git rebase --abort >/dev/null 2>&1 || true
               sleep 3
               continue
-            fi
-            # The bridge fingerprints every input listed in the trigger. A
-            # successful rebase may advance one of those inputs, so rebuild
-            # after the rebase and amend before attempting push. The full
-            # review contract runs after publication so its count pin cannot
-            # block production output.
-            node scripts/build-sec13f-bridge-index.mjs
-            git add data/computed/sec13f_bridge_index.json
-            if ! git diff --staged --quiet; then
-              git commit --amend --no-edit
             fi
             if git push; then
               echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"

@@ -283,7 +283,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter-build
+        run: |
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter-build
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-scouter-derived
 
       - name: Hydrate active Yahoo finance and derive acquisition indexes
         env:

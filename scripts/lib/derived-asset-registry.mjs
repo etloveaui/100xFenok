@@ -757,7 +757,7 @@ function hasDeclaredCanonicalPublicMirror(assetValue, publicSpec, repoRoot) {
   ));
   if (!canonicalSpec) return false;
   const canonical = path.join(repoRoot, canonicalPath);
-  if (!fs.existsSync(canonical)) return false;
+  if (!fs.existsSync(canonical)) return isPlaneCanonicalPath(canonicalPath);
   const stat = fs.lstatSync(canonical);
   return publicSpec.kind === "file" ? stat.isFile() : stat.isDirectory();
 }
@@ -1016,7 +1016,10 @@ export function validateDerivedAssetRegistry(
     for (const assetValue of registry.assets) {
       for (const spec of assetValue.outputs) {
         const absolute = path.join(repoRoot, spec.path);
-        if (!fs.existsSync(absolute)) fail(`declared output is missing: ${spec.path}`);
+        if (!fs.existsSync(absolute)) {
+          if (isPlaneCanonicalPath(spec.path)) continue;
+          fail(`declared output is missing: ${spec.path}`);
+        }
         const stat = fs.lstatSync(absolute);
         if (stat.isSymbolicLink()) fail(`declared output must not be a symlink: ${spec.path}`);
         if (spec.kind === "file" && !stat.isFile()) fail(`declared output kind mismatch: ${spec.path}`);
@@ -1064,7 +1067,8 @@ export function validateDerivedAssetRegistry(
         }
       }
     }
-    const currentRoots = topLevelComputedRoots(repoRoot);
+    const currentRoots = [...new Set([...topLevelComputedRoots(repoRoot),
+      ...[...outputOwners.keys()].filter(isPlaneCanonicalPath)])].sort();
     const declaredRoots = [...outputOwners.keys()].sort();
     if (JSON.stringify(currentRoots) !== JSON.stringify(declaredRoots)) {
       const currentSet = new Set(currentRoots);

@@ -415,3 +415,6 @@ npm --prefix 100xfenok-next run build:static-route-manifest
 if [[ "$ETF_OVERLAY_MODE" == "true" ]]; then
   verify_etf_overlay_pointer_current
 fi
+
+# Publish the refreshed bridge together with its active Scouter core inputs.
+node scripts/publish-cloud-data-generation.mjs --family=scouter-derived --json

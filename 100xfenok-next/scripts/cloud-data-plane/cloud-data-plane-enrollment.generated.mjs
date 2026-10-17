@@ -1,5 +1,10 @@
 export const PLANE_ENROLLMENT_SCHEMA_VERSION = "cloud-data-plane-enrollment/v1";
 export const PLANE_ENROLLMENT_EXACT = Object.freeze([
+  ["/data/global-scouter/core/stocks_analyzer.json","scouter-derived"],
+  ["/data/global-scouter/core/per_bands_index.json","scouter-derived"],
+  ["/data/global-scouter/core/slick_index.json","scouter-derived"],
+  ["/data/global-scouter/core/revision_movers.json","scouter-derived"],
+  ["/data/computed/sec13f_bridge_index.json","scouter-derived"],
   ["/data/yf/quarter_closes.json","yahoo-finance"],
   ["/data/computed/signals.json","computed-signals"],
   ["/data/damodaran/credit_ratings.json","damodaran"],
