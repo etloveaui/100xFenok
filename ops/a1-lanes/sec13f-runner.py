@@ -296,6 +296,7 @@ def main():
         if LANE_ID == "fdic_tier1":
             basis = json.loads(command(["node", "scripts/materialize-cloud-data-plane-family.mjs",
                                         "--family", family, "--manifest-prefix", "public/data/macro",
+                                        "--privacy-class", "public",
                                         "--output-root", str(runtime / "active")], args.repo,
                                        env=env, timeout=15 * 60))
             target = args.repo / DATA_ROOT
