@@ -55,12 +55,14 @@ export async function handleCloudDataPlaneAsset(request, env) {
   if (request.method !== "GET" && request.method !== "HEAD") return null;
 
   let url;
+  let pathname;
   try {
     url = new URL(request.url);
+    pathname = decodeURIComponent(url.pathname);
   } catch {
     return null;
   }
-  const family = familyForPath(url.pathname);
+  const family = familyForPath(pathname);
   if (family === null) return null;
   if (!env?.DATA_PLANE_BUCKET || !env?.CLOUD_DATA_PLANE_COORDINATOR) return null;
 
@@ -72,7 +74,7 @@ export async function handleCloudDataPlaneAsset(request, env) {
       coordinatorName: family,
     });
     resolved = await resolvePublicAsset({
-      publicPath: manifestPathFor(url.pathname),
+      publicPath: manifestPathFor(pathname),
       pointerStore: plane.pointerStore,
       objectStore: plane.objectStore,
       manifestCacheScope: env.DATA_PLANE_BUCKET,

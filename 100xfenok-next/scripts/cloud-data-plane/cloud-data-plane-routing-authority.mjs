@@ -13,6 +13,8 @@ import {
 
 const EXPLICIT_PRIVATE_PATH_VALUES = Object.freeze([
   "/data/sec-13f/investors/griffin.json",
+  "/data/admin/nasdaq_giw_sox/history/constituents.json",
+  "/data/admin/sentiment/source-observations/crypto.json",
 ]);
 export const PRIVATE_PUBLIC_PATH_VALUES = Object.freeze([
   ...new Set([...PLANE_ENROLLMENT_PRIVATE_DENY, ...EXPLICIT_PRIVATE_PATH_VALUES]),
@@ -34,7 +36,8 @@ export const EXPLICIT_WORKER_FIRST_PATH_VALUES = Object.freeze([
 // cannot be changed by a consumer at runtime.
 export const PRIVATE_PUBLIC_PATHS = Object.freeze({
   has(pathname) {
-    return PRIVATE_PUBLIC_PATH_SET.has(pathname);
+    try { return PRIVATE_PUBLIC_PATH_SET.has(decodeURIComponent(pathname)); }
+    catch { return false; }
   },
 });
 
