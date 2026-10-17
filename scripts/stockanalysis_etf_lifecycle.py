@@ -143,6 +143,11 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
 def detail_refresh_cadence(root):
     """Publish the same whole-catalogue AUM ranking used by the rotation."""
     root = Path(root)
+    selection = _read_json(root / "data/admin/data-supply-state/v1/etf-detail-selection.json")
+    if isinstance(selection, dict) and selection.get("schema_version") == "etf-detail-selection/v1":
+        return {"schema_version": ROTATION_POLICY["schema_version"],
+                "core_tickers": selection["daily"], "tier2_tickers": selection["selected"],
+                "new_fund_tickers": [], "rotation_interval_days": selection["rotation_interval_days"]}
     universe = _read_json(root / CATALOGUES["etf_universe"]) or {}
     core = _read_json(root / "data/admin/fenok-etf-core-daily-basket.json") or {}
     records = universe.get("records")

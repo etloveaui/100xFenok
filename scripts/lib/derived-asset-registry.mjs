@@ -68,6 +68,7 @@ const DEFAULT_REPO_ROOT = path.resolve(__dirname, "..", "..");
 const ID_RE = /^[a-z][a-z0-9_]{0,95}$/;
 
 export const DERIVED_WRITER_RECOVERY_CONTRACTS = Object.freeze({
+  "scripts/stockanalysis_etf_plane.py": "generation_store",
   "scripts/audit-market-data.py": "rebuild_from_inputs",
   "scripts/build-data-entity-graph.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-etf-action-index.mjs": "rebuild_from_inputs",
@@ -627,16 +628,16 @@ const assets = [
     id: "data_supply_etf_detail",
     label: "Materialized ETF detail generation",
     outputs: [output("data/computed/data-supply", "directory")],
-    owner_workflow: ".github/workflows/deploy-worker.yml",
-    writer: "scripts/materialize_data_supply_public.py",
+    owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    writer: "scripts/stockanalysis_etf_plane.py",
     inputs: [
       lane("stockanalysis_etf_universe"),
       lane("yahoo_etf_fallback"),
       repoPath("data/admin/data-supply-state"),
     ],
-    cadence: BUILD_TIME,
-    privacy_class: "public_mirror",
-    public_outputs: [output("100xfenok-next/public/data/computed/data-supply", "directory")],
+    cadence: cadence("daily", 1, true, ".github/workflows/fetch-stockanalysis.yml"),
+    privacy_class: "private",
+    public_outputs: [],
     retention: { kind: "generations", max_items: 3, basis: "immutable_generations" },
     recovery: "generation_store",
   }),
@@ -748,6 +749,7 @@ function isPlaneCanonicalPath(relative) {
   const publicPath = `/${relative}`;
   return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
     // Private-route denial alone does not prove that a family was migrated.
+    || relative === "data/computed/data-supply" || relative.startsWith("data/computed/data-supply/etf-detail")
     || ["data/computed/fenok_news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy_history.json"].includes(relative)
     || PLANE_ENROLLMENT_PREFIXES.some(({ prefix }) =>

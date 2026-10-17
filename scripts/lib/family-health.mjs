@@ -38,7 +38,7 @@ export function detailSourcePolicy(ticker, cadence, emergencyDays) {
     || !Array.isArray(cadence.core_tickers) || !Array.isArray(cadence.tier2_tickers)) return null;
   const core = cadence.core_tickers.includes(ticker);
   const interval = core ? rotation.core_interval_days : cadence.tier2_tickers.includes(ticker)
-    ? rotation.tier2_interval_days : cadence.new_fund_tickers?.includes(ticker)
+    ? (Number.isInteger(cadence.rotation_interval_days) && cadence.rotation_interval_days > 0 ? cadence.rotation_interval_days : rotation.tier2_interval_days) : cadence.new_fund_tickers?.includes(ticker)
       ? rotation.new_fund_interval_days : rotation.tail_interval_days;
   // Both core and general run on weekdays and Sunday. Allow one complete
   // declared inter-run gap (2 days) for a delayed/missed attempt.

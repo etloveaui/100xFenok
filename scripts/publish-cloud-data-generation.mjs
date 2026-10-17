@@ -716,12 +716,9 @@ export const FAMILIES = {
     plan: { class_a: 12, class_b: 30, bytes: 4_000_000 },
     policy: { max_assets: 4, max_total_bytes: 2_000_000 },
   },
-  // Pre-shadow StockAnalysis ETF detail. PRIVATE and deliberately non-servable:
-  // a private family is filtered out of the read-side enrolment derivation, so
-  // it cannot be half-enrolled by a later edit. There is no manifest_prefix and
-  // no files list — this is a tree family over the canonical acquisition root,
-  // and the public 1,025-asset shard projection stays exactly where it is,
-  // built by sync-public-data and served from static as today.
+  // Atomic private ETF detail bundle: selected raw inputs, serving projection,
+  // and the provider/recovery snapshot share one promotion. The explicit runtime
+  // reader serves projection paths; no bulk read-side enrollment is generated.
   "stockanalysis-etf-detail": {
     root: "data/stockanalysis/etfs",
     privacy_class: "private",
@@ -733,18 +730,11 @@ export const FAMILIES = {
     source_as_of: { per_asset_resolver: "stockanalysis_detail_source_timestamp" },
     reuse_active_generation: true,
     incremental_write_budget: true,
-    // Re-measured 2026-10-13 from the admitted recovery generation: 5,909
-    // assets / 1,319,413,299 bytes. Keep roughly 25% byte headroom while
-    // retaining the 7,000-asset ceiling. The separate strict account cost
-    // gate and measured incremental-write cap still run before publication.
-    // class_b is declared because a publication of this family READS heavily and
-    // those reads were previously invisible to the gate: the adapter issues one
-    // presence GET per object key, a readback GET follows every object actually
-    // written, and parity re-reads the manifest plus every asset — 16,819 in the
-    // all-changed case. 34,000 is >= 2x that measurement, the same safety ratio
-    // the class_a and bytes plans already use.
-    plan: { class_a: 12_000, class_b: 34_000, bytes: 2_200_000_000 },
-    policy: { max_assets: 7_000, max_total_bytes: 1_650_000_000 },
+    // The selected bundle includes provider history and recovery aliases as well
+    // as raw detail and projection payloads. Content-addressed object reuse and
+    // the account cost gate bound actual writes independently of these ceilings.
+    plan: { class_a: 40_000, class_b: 80_000, bytes: 6_000_000_000 },
+    policy: { max_assets: 20_000, max_total_bytes: 3_000_000_000 },
   },
   "earnings-overview": {
     root: "data/earnings-overview",
@@ -1770,6 +1760,30 @@ export async function buildFamilyManifest({
   }
   // Explicit private retained inputs share the family's atomic promotion.
   const repoRoot = path.resolve(absRoot, ...family.root.split("/").map(() => ".."));
+  if (familyName === "stockanalysis-etf-detail") {
+    const selectionPath = path.join(repoRoot, "data/admin/data-supply-state/v1/etf-detail-selection.json");
+    // Legacy raw-only generations can still be read during the first cutover.
+    // A bundle marker enrolls the projection and its exact provider/recovery
+    // snapshot in this same atomic promotion, all private at the storage edge.
+    if (await readFile(selectionPath).then(() => true, error => {
+      if (error.code === "ENOENT") return false;
+      throw error;
+    })) {
+      for (const prefix of ["data/admin/data-supply-state/v1", "data/computed/data-supply/etf-detail", "data/yf/etf-details",
+        "data/admin/stockanalysis-recovery/states/etf", "data/admin/stockanalysis-recovery/lkg/etf", "data/admin/yahoo_etf_fallback"]) {
+        for (const relative of await walkFiles(path.join(repoRoot, prefix), "", true)) {
+          if (relative.split("/").some(part => part.startsWith("."))) continue;
+          const assetPath = `${prefix}/${relative}`;
+          const bytes = new Uint8Array(await readFile(path.join(repoRoot, assetPath)));
+          const sha256 = sha256Bytes(bytes);
+          assets.push({ path: assetPath, object_key: `objects/sha256/${sha256}`, sha256,
+            bytes: bytes.byteLength, content_type: relative.endsWith(".jsonl") ? "application/x-ndjson" : "application/json",
+            source_as_of: null, privacy_class: "private" });
+          payloads.set(assetPath, bytes);
+        }
+      }
+    }
+  }
   for (const retained of family.private_assets ?? []) {
     const assetPath = retained.path;
     if (!assetPath.startsWith("data/") || assetPath.includes("\\")
