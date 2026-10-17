@@ -408,7 +408,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.match(
     always.stdout,
     new RegExp(
-      `declared=${declaredAlways} stage_selected=${materializedAlways} staged_index_total=${materializedAlways}`,
+      `declared=${declaredAlways} stage_selected=${declaredAlways} staged_index_total=${materializedAlways}`,
     ),
   );
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
