@@ -60,19 +60,26 @@ function assertValidAttempt(attempt) {
   return attempt;
 }
 
-async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "baseline-run" } = {}) {
+async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE" } = {}) {
   const result = await runNasdaqGiwSox({
     ...paths,
     dates: [asOf],
     request: async () => response(200, weightingPayload(prefix)),
     observedAt: "2026-07-16T01:00:00.000Z",
-    attemptId: `${runId}-attempt`,
-    runId,
     eventName: "schedule",
     publicMirror: false,
+    write: false,
   });
   assert.equal(result.ok, true);
-  return fs.readFileSync(paths.canonicalPath);
+  const serialized = `${JSON.stringify(result.payload, null, 2)}\n`;
+  fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
+  fs.writeFileSync(paths.canonicalPath, serialized);
+  rotateSoxSnapshotHistory({
+    repoRoot: paths.repoRoot,
+    payload: result.payload,
+    generatedAt: result.payload.generated_at,
+  });
+  return Buffer.from(serialized);
 }
 
 {
