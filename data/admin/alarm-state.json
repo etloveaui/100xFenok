@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-17T07:45:18.722Z",
+  "generated_at": "2026-10-17T08:24:26.351Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -17,9 +17,21 @@
       "lost_schedule_slot_count": 0
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 39012679926,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39012679926",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
+    {
       "workflow": "pins-autosync.yml",
       "label": "Pins Autosync",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 39012429469,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39012429469",
@@ -423,12 +435,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "39014723419",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39014723419",
-    "observed_at": "2026-10-17T07:45:18.722Z",
-    "event": "workflow_run",
+    "run_id": "39017151124",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39017151124",
+    "observed_at": "2026-10-17T08:24:26.351Z",
+    "event": "workflow_dispatch",
     "workflows": [
       "fetch-stockanalysis.yml",
+      "global-writer-queue-observer.yml",
       "pins-autosync.yml",
       "update-manifest.yml",
       "validate-workflows.yml"
