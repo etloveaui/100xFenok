@@ -1710,6 +1710,7 @@ export async function buildFamilyManifest({
       griffin.path = "data/sec-13f/investors/griffin.json";
       griffin.privacy_class = "private";
       payloads.set(griffin.path, bytes);
+      assets.sort((left, right) => left.path.localeCompare(right.path));
     }
   }
   if (familyName === "yahoo-finance") {
