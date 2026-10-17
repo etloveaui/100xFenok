@@ -269,6 +269,7 @@ function parseArgs(argv) {
 if (process.argv[1] === __filename) {
   try {
     const result = runYahooPrivateOptions(parseArgs(process.argv.slice(2)));
+    if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `promoted=${result.ok === true}\n`);
     console.log(JSON.stringify(result, null, 2));
     process.exitCode = result.exitCode;
   } catch (error) {
