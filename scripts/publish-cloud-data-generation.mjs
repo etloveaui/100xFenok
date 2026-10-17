@@ -682,16 +682,18 @@ export const FAMILIES = {
     policy: { max_assets: 32, max_total_bytes: 10_000_000 },
   },
   "gdelt-news-tone": {
-    root: "data/computed",
-    files: ["fenok_news_tone_proxy.json"],
+    root: "data",
+    files: ["computed/fenok_news_tone_proxy.json", "computed/fenok_news_tone_proxy_history.json",
+      "admin/gdelt_news_tone/index.json", "admin/gdelt_news_tone/lkg/news_tone_proxy.json"],
+    reuse_active_generation: true,
     privacy_class: "private",
     // The proxy document's top-level source_as_of is the aggregate floor over
     // GDELT article seendates (min rows[].as_of), never generated_at.
     // Non-servable: private family, no ENROLLED_PATHS entry.
-    source_as_of: { key: "source_as_of" },
-    // Gate declaration: >= 2x the measured 1 PutObject / 7,068 bytes.
-    plan: { class_a: 10, bytes: 15_000 },
-    policy: { max_assets: 4, max_total_bytes: 30_000 },
+    source_as_of: { file: "computed/fenok_news_tone_proxy.json", key: "source_as_of" },
+    // Retain source history and the existing daily retry budget with the payload.
+    plan: { class_a: 12, class_b: 30, bytes: 4_000_000 },
+    policy: { max_assets: 4, max_total_bytes: 2_000_000 },
   },
   // Pre-shadow StockAnalysis ETF detail. PRIVATE and deliberately non-servable:
   // a private family is filtered out of the read-side enrolment derivation, so
