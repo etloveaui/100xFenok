@@ -34,7 +34,6 @@ import {
 } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
-import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
 import { derivedBetaLabel } from "@/lib/derived-beta";
 import { Panel, PanelHeader, Row, Bar, EdgeMark, EvidenceRail } from "@/components/ui";
 
@@ -1352,14 +1351,18 @@ export function useMarketFacts(ticker: string, enabled = true) {
     const run = async () => {
       setLoading(true);
       try {
-        const parsed = normalizeMarketFacts(await fetchMarketFactsFromShard(symbol));
+        const response = await fetch(`/data/computed/market_facts/tickers/${encodeURIComponent(symbol)}.json`);
+        if (response.status !== 404 && !response.ok) {
+          throw new Error(`market-facts request failed with status ${response.status}`);
+        }
+        const parsed = normalizeMarketFacts(response.status === 404 ? null : await response.json());
         MARKET_FACTS_CACHE.set(symbol, parsed);
         if (!cancelled) {
           setData(parsed);
           setError(null);
         }
       } catch (err) {
-        // fetchMarketFactsFromShard throws Error("... status NNN") on HTTP !ok.
+        // HTTP failures other than a missing ticker retain their status.
         const statusText = err instanceof Error ? /status (\d{3})/.exec(err.message)?.[1] : undefined;
         const status = statusText !== undefined ? Number(statusText) : null;
         if (!cancelled) {

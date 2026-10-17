@@ -4,12 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  MARKET_FACTS_SHARD_COUNT,
-  marketFactsShardFileName,
-  marketFactsShardFileNameForId,
-  marketFactsTickerKey,
-} from "../src/lib/market-facts-shard.mjs";
-import {
   STOCKANALYSIS_ETF_SHARD_ALGORITHM,
   STOCKANALYSIS_ETF_SHARD_COUNT,
   STOCKANALYSIS_ETF_SHARD_MAX_BYTES,
@@ -113,8 +107,6 @@ function isPublicSafeAggregateFile(relativePath) {
   return PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS.includes(normalizedRelative(relativePath));
 }
 
-const MARKET_FACTS_TICKER_ROOT = "computed/market_facts/tickers";
-const MARKET_FACTS_SHARD_ROOT = "computed/market_facts/shards";
 const MARKET_FACTS_ROOT = "computed/market_facts";
 const STOCKANALYSIS_ETF_ROOT = "stockanalysis/etfs";
 const STOCKANALYSIS_ETF_SHARD_ROOT = "stockanalysis/etfs/shards";
@@ -227,10 +219,6 @@ function isExcludedFile(relativePath) {
   return EXCLUDED_PUBLIC_DATA_FILES.includes(normalizedRelative(relativePath));
 }
 
-function isTransformedRoot(relativePath) {
-  return normalizedRelative(relativePath) === MARKET_FACTS_TICKER_ROOT;
-}
-
 function restrictedDerivedDisposition(relativePath, isDirectory) {
   const normalized = normalizedRelative(relativePath);
   for (const policy of RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS) {
@@ -253,8 +241,6 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
   const excludedSourceFilePaths = [];
   const restrictedSourceRootPaths = [];
   const restrictedSourceFilePaths = [];
-  const transformedSourceRoots = [];
-  let marketFactsRootSeen = false;
   let stockanalysisEtfRootSeen = false;
 
   function visit(directory, relativeDirectory = "", directoryBinding = sourceRootBinding) {
@@ -276,7 +262,8 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
         if (!stat.isDirectory()) {
           throw new Error(`canonical market-facts root must be a directory: ${absolutePath}`);
         }
-        marketFactsRootSeen = true;
+        // Market facts are served per ticker from the active plane generation.
+        continue;
       }
       if (relativePath === STOCKANALYSIS_ETF_ROOT) {
         if (!stat.isDirectory()) {
@@ -286,9 +273,6 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
         // Canonical ETF details are transformed into shards below. Never add
         // their direct files to the generic copy plan.
         continue;
-      }
-      if (relativePath === MARKET_FACTS_SHARD_ROOT) {
-        throw new Error(`canonical source must not contain public-only market-facts shards: ${absolutePath}`);
       }
       if (relativePath === STOCKANALYSIS_ETF_SHARD_ROOT) {
         throw new Error(`canonical source must not contain public-only StockAnalysis ETF shards: ${absolutePath}`);
@@ -318,17 +302,6 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
         // mirror would leak raw rows and exceed the 25 MiB asset limit.
         continue;
       }
-      if (isTransformedRoot(relativePath)) {
-        if (!stat.isDirectory()) {
-          throw new Error(`transformed source root must be a directory: ${absolutePath}`);
-        }
-        transformedSourceRoots.push({
-          relativeRoot: relativePath,
-          absolutePath,
-          sourceBinding: captureSourceBinding(absolutePath, "market-facts ticker root", "directory"),
-        });
-        continue;
-      }
       if (stat.isDirectory()) {
         directories.push(relativePath);
         visit(
@@ -355,96 +328,7 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
     restrictedSourceRootPaths,
     restrictedSourceFiles: restrictedSourceFilePaths.length,
     restrictedSourceFilePaths,
-    transformedSourceRoots,
-    marketFactsRootSeen,
     stockanalysisEtfRootSeen,
-  };
-}
-
-function readBoundMarketFactsFile(filePath) {
-  const binding = captureSourceBinding(filePath, "market-facts source file", "file");
-  if (typeof fs.constants.O_NOFOLLOW !== "number") {
-    throw new Error("market-facts source read requires O_NOFOLLOW support");
-  }
-  let descriptor;
-  try {
-    descriptor = fs.openSync(filePath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-    const openedIdentity = statIdentity(fs.fstatSync(descriptor, { bigint: true }));
-    if (!sameIdentity(binding.identity, openedIdentity)) {
-      throw new Error(`source identity drift while opening market-facts source file: ${filePath}`);
-    }
-    const body = fs.readFileSync(descriptor, "utf8");
-    const readIdentity = statIdentity(fs.fstatSync(descriptor, { bigint: true }));
-    if (!sameIdentity(binding.identity, readIdentity)) {
-      throw new Error(`source identity drift while reading market-facts source file: ${filePath}`);
-    }
-    revalidateSourceBindings([binding], "after market-facts source read");
-    return { binding, body };
-  } finally {
-    if (descriptor !== undefined) fs.closeSync(descriptor);
-  }
-}
-
-function parseMarketFactsPayload(body, filePath, ticker) {
-  let payload;
-  try {
-    payload = JSON.parse(body);
-  } catch (error) {
-    throw new Error(`invalid market-facts JSON ${filePath}: ${error.message}`);
-  }
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    throw new Error(`market-facts payload must be an object: ${filePath}`);
-  }
-  if (marketFactsTickerKey(payload.ticker) !== ticker) {
-    throw new Error(`market-facts ticker mismatch: ${filePath}`);
-  }
-  return payload;
-}
-
-function buildMarketFactsShardProjection(transformedSourceRoots) {
-  if (transformedSourceRoots.length === 0) return null;
-  if (transformedSourceRoots.length !== 1 || transformedSourceRoots[0].relativeRoot !== MARKET_FACTS_TICKER_ROOT) {
-    throw new Error("market-facts public projection requires exactly one canonical ticker root");
-  }
-  const [{ absolutePath, sourceBinding }] = transformedSourceRoots;
-  const shards = Array.from({ length: MARKET_FACTS_SHARD_COUNT }, () => ({}));
-  const sourceBindings = [sourceBinding];
-  let tickerFiles = 0;
-  const entries = readStableDirectoryEntries(sourceBinding)
-    .sort((left, right) => left.name.localeCompare(right.name));
-  for (const entry of entries) {
-    const filePath = path.join(absolutePath, entry.name);
-    const stat = fs.lstatSync(filePath);
-    if (stat.isSymbolicLink()) throw new Error(`market-facts source path is a symlink: ${filePath}`);
-    if (!stat.isFile() || !entry.name.endsWith(".json")) {
-      throw new Error(`market-facts ticker root may contain only JSON files: ${filePath}`);
-    }
-    const ticker = entry.name.slice(0, -5);
-    if (marketFactsTickerKey(ticker) !== ticker) {
-      throw new Error(`market-facts filename must use the canonical ticker: ${filePath}`);
-    }
-    const { binding, body } = readBoundMarketFactsFile(filePath);
-    const payload = parseMarketFactsPayload(body, filePath, ticker);
-    sourceBindings.push(binding);
-    const shardFileName = marketFactsShardFileName(ticker);
-    const shardId = Number.parseInt(shardFileName.slice(0, -5), 10);
-    shards[shardId][ticker] = payload;
-    tickerFiles += 1;
-  }
-  revalidateSourceBindings([sourceBinding], "after market-facts projection");
-  const shardFiles = shards.map((payload, shardId) => {
-    const body = `${JSON.stringify(payload)}\n`;
-    return {
-      relativePath: `${MARKET_FACTS_SHARD_ROOT}/${marketFactsShardFileNameForId(shardId)}`,
-      body,
-      size: Buffer.byteLength(body),
-    };
-  });
-  return {
-    tickerFiles,
-    shardFiles,
-    bytes: shardFiles.reduce((sum, item) => sum + item.size, 0),
-    sourceBindings,
   };
 }
 
@@ -723,17 +607,6 @@ function preflightDestinationPaths(destinationRoot, sourcePlan) {
   }
 }
 
-function assertNoOrphanedDestinationMarketFactsProjection(destinationRoot) {
-  for (const relativeRoot of [MARKET_FACTS_TICKER_ROOT, MARKET_FACTS_SHARD_ROOT]) {
-    const target = path.join(destinationRoot, ...relativeRoot.split("/"));
-    if (lstatIfPresent(target)) {
-      throw new Error(
-        `destination contains ${relativeRoot} without the canonical market-facts ticker source: ${target}`,
-      );
-    }
-  }
-}
-
 function assertNoOrphanedDestinationStockanalysisEtfProjection(destinationRoot) {
   const target = path.join(destinationRoot, ...STOCKANALYSIS_ETF_ROOT.split("/"));
   if (lstatIfPresent(target)) {
@@ -931,7 +804,7 @@ function publishStockanalysisEtfShardProjection(destinationRoot, projection) {
 
 /**
  * Produce only the ETF compatibility projection. This deliberately avoids the
- * full public sync because that operation also transforms market-facts data.
+ * full public sync and its unrelated public mirrors.
  */
 export function syncStockanalysisEtfShardProjection({
   sourceRoot,
@@ -970,18 +843,10 @@ export function planPublicDataSync({ sourceRoot, destinationRoot }) {
   const destinationStat = lstatIfPresent(destination);
   if (destinationStat) assertDirectory(destination, "destination root");
   const sourcePlan = collectSourceFiles(source, sourceRootBinding);
-  if (sourcePlan.marketFactsRootSeen && sourcePlan.transformedSourceRoots.length === 0) {
-    throw new Error("canonical market-facts root exists without its ticker source root");
-  }
-  const marketFactsProjection = buildMarketFactsShardProjection(sourcePlan.transformedSourceRoots);
   const stockanalysisEtfProjection = buildStockanalysisEtfShardProjection(source);
-  if (!marketFactsProjection) {
-    assertNoOrphanedDestinationMarketFactsProjection(destination);
-  }
   preflightDestinationPaths(destination, sourcePlan);
-  const transformedRelativeRoots = marketFactsProjection
-    ? [MARKET_FACTS_TICKER_ROOT, MARKET_FACTS_SHARD_ROOT]
-    : [];
+  // Retire the static market-facts mirror, including legacy hashed shards.
+  const transformedRelativeRoots = [MARKET_FACTS_ROOT];
   if (stockanalysisEtfProjection) transformedRelativeRoots.push(STOCKANALYSIS_ETF_ROOT);
   const removalPlan = collectDestinationRemovalPlan(destination, transformedRelativeRoots);
   return {
@@ -1004,10 +869,8 @@ export function planPublicDataSync({ sourceRoot, destinationRoot }) {
     removalBindings: removalPlan.bindings,
     sourceBindings: [
       sourceRootBinding,
-      ...(marketFactsProjection?.sourceBindings ?? []),
       ...(stockanalysisEtfProjection?.sourceBindings ?? []),
     ],
-    marketFactsProjection,
     stockanalysisEtfProjection,
   };
 }
@@ -1047,9 +910,6 @@ export function syncPublicData({
       ...plan.restrictedRemovals.map((item) => item.relativeRoot),
       ...plan.restrictedExactRemovals.map((item) => item.relativePath),
     ],
-    marketFactsTickerFiles: plan.marketFactsProjection?.tickerFiles ?? 0,
-    marketFactsShardFiles: plan.marketFactsProjection?.shardFiles.length ?? 0,
-    marketFactsShardBytes: plan.marketFactsProjection?.bytes ?? 0,
     stockanalysisEtfTickerFiles: plan.stockanalysisEtfProjection?.tickerFiles ?? 0,
     stockanalysisEtfShardFiles: plan.stockanalysisEtfProjection?.shardFiles.length ?? 0,
     stockanalysisEtfShardBytes: plan.stockanalysisEtfProjection?.bytes ?? 0,
@@ -1093,14 +953,6 @@ export function syncPublicData({
     if (targetStat && !targetStat.isFile()) throw new Error(`destination path is not a regular file: ${target}`);
     fs.copyFileSync(item.absolutePath, target);
   }
-  for (const item of plan.marketFactsProjection?.shardFiles ?? []) {
-    const target = path.join(plan.destinationRoot, ...item.relativePath.split("/"));
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    const targetStat = lstatIfPresent(target);
-    if (targetStat?.isSymbolicLink()) throw new Error(`destination shard path is a symlink: ${target}`);
-    if (targetStat && !targetStat.isFile()) throw new Error(`destination shard path is not a regular file: ${target}`);
-    fs.writeFileSync(target, item.body);
-  }
   publishStockanalysisEtfShardProjection(plan.destinationRoot, plan.stockanalysisEtfProjection);
   // Keep the previous ETF index/snapshot (and legacy fallback files) until
   // publication commits. Clean only the preflighted non-shard destination
@@ -1116,7 +968,7 @@ export function syncPublicData({
       directories: removal.directories.filter((directory) => directory !== etfRoot && !isEtfShardNode(directory)),
     }], removalBindingByPath);
   }
-  logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); sharded ${result.marketFactsTickerFiles} market-facts tickers into ${result.marketFactsShardFiles} files (${result.marketFactsShardBytes} bytes) and ${result.stockanalysisEtfTickerFiles} StockAnalysis ETF tickers into ${result.stockanalysisEtfShardFiles} files plus ${result.stockanalysisEtfManifestFiles} manifest; excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files; restricted ${result.restrictedSourceFiles} derived files and ${result.restrictedSourceRoots} derived roots; removed ${result.removedRestrictedDestinationExactFiles} stale restricted files and ${result.removedRestrictedDestinationRoots} stale restricted roots`);
+  logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); sharded ${result.stockanalysisEtfTickerFiles} StockAnalysis ETF tickers into ${result.stockanalysisEtfShardFiles} files plus ${result.stockanalysisEtfManifestFiles} manifest; excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files; restricted ${result.restrictedSourceFiles} derived files and ${result.restrictedSourceRoots} derived roots; removed ${result.removedRestrictedDestinationExactFiles} stale restricted files and ${result.removedRestrictedDestinationRoots} stale restricted roots`);
   return result;
 }
 
