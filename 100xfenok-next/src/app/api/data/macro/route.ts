@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getMacroManifest } from "@/lib/server/data-loader";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const payload = await getMacroManifest();

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getMarketQualityManifest } from "@/lib/server/data-loader";
 
-export const dynamic = "force-static";
-export const revalidate = false;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

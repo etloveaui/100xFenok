@@ -1,12 +1,15 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  ENROLLED_PATHS,
+  ENROLLED_PREFIXES,
+  familyForPath,
   handleCloudDataPlaneAsset,
   isEnrolledPath,
 } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { PRIVATE_PUBLIC_PATHS } from "../../../scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 import { createCloudflareCloudDataPlane } from "../../../scripts/cloud-data-plane/cloud-data-plane-cloudflare-adapter.mjs";
-import { resolveGenerationAsset } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
+import { resolveGenerationAsset, sha256Bytes, validateActivePointer, validateGenerationManifest } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
 import {
   readDataShardRecord,
   resolveLegacyDataShard,
@@ -179,6 +182,75 @@ export async function readPrivateCloudGenerationAsset(
       sourceAsOf: resolved.source_as_of ?? null,
       publishedAt: resolved.published_at,
     };
+  } catch {
+    return { kind: "unavailable", reason: "DATA_PLANE_INTEGRITY_UNAVAILABLE" };
+  }
+}
+
+export type DataAssetListEntry = {
+  name: string;
+  path: string;
+  sizeBytes: number;
+  updatedAt: string;
+};
+
+/** List enrolled assets from verified active manifests; null leaves config listing unchanged. */
+export async function listDataAssets(
+  publicBasePath: string,
+  injectedEnv: DataAssetReaderEnv = {},
+  recursive = false,
+): Promise<{ kind: "ok"; entries: DataAssetListEntry[] } | { kind: "unavailable"; reason: string } | null> {
+  const base = publicBasePath === "/data" ? publicBasePath : normalizeDataAssetPublicPath(publicBasePath);
+  if (base === null) return { kind: "unavailable", reason: "INVALID_DATA_DIRECTORY" };
+  const prefix = `${base}/`;
+  const families = new Set<string>();
+  for (const [publicPath, family] of ENROLLED_PATHS) {
+    if (publicPath.startsWith(prefix) && (recursive || !publicPath.slice(prefix.length).includes("/"))) {
+      families.add(family);
+    }
+  }
+  for (const enrollment of ENROLLED_PREFIXES) {
+    if (prefix.startsWith(enrollment.prefix) || (recursive && enrollment.prefix.startsWith(prefix))) {
+      families.add(enrollment.family);
+    }
+  }
+  if (families.size === 0) return null;
+  const env = await resolveRuntimeEnv(injectedEnv);
+  if (!env.DATA_PLANE_BUCKET || !env.CLOUD_DATA_PLANE_COORDINATOR) {
+    return { kind: "unavailable", reason: "DATA_PLANE_BINDINGS_UNAVAILABLE" };
+  }
+  try {
+    const entries: DataAssetListEntry[] = [];
+    for (const family of families) {
+      const plane = createCloudflareCloudDataPlane({
+        r2Bucket: env.DATA_PLANE_BUCKET,
+        coordinatorNamespace: env.CLOUD_DATA_PLANE_COORDINATOR,
+        coordinatorName: family,
+      });
+      const pointer = await plane.pointerStore.get();
+      if (!pointer) return { kind: "unavailable", reason: "ACTIVE_POINTER_UNAVAILABLE" };
+      validateActivePointer(pointer);
+      const bytes = await plane.objectStore.get(pointer.active.manifest_key);
+      if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== pointer.active.manifest_sha256) {
+        return { kind: "unavailable", reason: "MANIFEST_INTEGRITY_UNAVAILABLE" };
+      }
+      const manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+      const summary = validateGenerationManifest(manifest);
+      if (summary.generation_id !== pointer.active.generation_id
+        || summary.manifest_sha256 !== pointer.active.manifest_sha256
+        || manifest.source_sha !== pointer.source_sha) {
+        return { kind: "unavailable", reason: "MANIFEST_CROSS_BIND_INVALID" };
+      }
+      for (const asset of manifest.assets) {
+        if (asset.privacy_class !== "public" || !asset.path.startsWith(`public${prefix}`)) continue;
+        const publicPath = asset.path.slice("public".length);
+        const name = publicPath.slice(prefix.length);
+        if (!name || (!recursive && name.includes("/")) || familyForPath(publicPath) !== family
+          || PRIVATE_PUBLIC_PATHS.has(publicPath)) continue;
+        entries.push({ name: name.split("/").at(-1)!, path: publicPath, sizeBytes: asset.bytes, updatedAt: asset.source_as_of ?? "" });
+      }
+    }
+    return { kind: "ok", entries: entries.sort((a, b) => a.path.localeCompare(b.path)) };
   } catch {
     return { kind: "unavailable", reason: "DATA_PLANE_INTEGRITY_UNAVAILABLE" };
   }

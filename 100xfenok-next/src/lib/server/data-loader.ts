@@ -1,9 +1,11 @@
 import type { Dirent } from "node:fs";
-import { ENROLLED_PATHS, isEnrolledPath } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
+import { isEnrolledPath } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
+import { PRIVATE_PUBLIC_PATHS } from "../../../scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
 import {
+  listDataAssets,
   readDataAsset,
   readPackedPublicDataAsset,
   readPrivateCloudGenerationAsset,
@@ -464,14 +466,21 @@ async function getManifestJsonEntries(publicBasePath: string): Promise<DataJsonM
 }
 
 async function getAllManifestJsonEntries() {
-  const manifest = await getDataJsonFilesByPath();
-  return Object.entries(manifest)
-    .flatMap(([directory, entries]) =>
-      entries.map((entry) => ({
-        directory,
-        ...entry,
-      })),
-    );
+  const active = await listDataAssets("/data", {}, true);
+  if (active?.kind === "unavailable") throw new Error(`Data listing unavailable: ${active.reason}`);
+  const bundled = Object.entries(await getDataJsonFilesByPath()).flatMap(([directory, entries]) =>
+    entries.filter((entry) => {
+      const publicPath = `/data/${directory === "." ? "" : `${directory}/`}${entry.name}`;
+      return !isEnrolledPath(publicPath) && !PRIVATE_PUBLIC_PATHS.has(publicPath);
+    }).map((entry) => ({ directory, ...entry })),
+  );
+  return [...bundled, ...(active?.entries ?? []).filter((entry) => entry.name.endsWith(".json"))
+    .map((entry) => ({
+      directory: entry.path.slice("/data/".length, entry.path.lastIndexOf("/")) || ".",
+      name: entry.name,
+      sizeBytes: entry.sizeBytes,
+      updatedAt: entry.updatedAt,
+    }))];
 }
 
 async function listJsonFileNames(
@@ -704,27 +713,28 @@ async function buildJsonSample(
   publicBasePath: string,
   sampleLimit: number,
 ): Promise<{ count: number; sample: JsonFileEntry[] }> {
-  const names = await listJsonFileNames(absDir, publicBasePath);
+  const active = await listDataAssets(publicBasePath);
+  if (active?.kind === "unavailable") throw new Error(`Data listing unavailable: ${active.reason}`);
+  const names = (await listJsonFileNames(absDir, publicBasePath)).filter((name) => {
+    const publicPath = `${publicBasePath}/${name}`;
+    return !isEnrolledPath(publicPath) && !PRIVATE_PUBLIC_PATHS.has(publicPath);
+  });
   const manifestEntries = await getManifestJsonEntries(publicBasePath).catch(() => []);
-  const manifestByName = new Map(
-    manifestEntries.map((entry) => [entry.name, entry]),
-  );
-  const sampleNames = names.slice(0, sampleLimit);
-  const sample = await Promise.all(
-    sampleNames.map(async (name): Promise<JsonFileEntry> => {
-      const absPath = path.join(absDir, name);
-      const info = await stat(absPath).catch(() => null);
-      const manifestEntry = manifestByName.get(name);
-      return {
-        name,
-        path: `${publicBasePath}/${name}`,
-        sizeBytes: info?.size ?? manifestEntry?.sizeBytes ?? 0,
-        updatedAt: info?.mtime.toISOString() ?? manifestEntry?.updatedAt ?? "",
-      };
-    }),
-  );
-
-  return { count: names.length, sample };
+  const manifestByName = new Map(manifestEntries.map((entry) => [entry.name, entry]));
+  const configEntries = await Promise.all(names.map(async (name): Promise<JsonFileEntry> => {
+    const info = await stat(path.join(absDir, name)).catch(() => null);
+    const manifestEntry = manifestByName.get(name);
+    return {
+      name,
+      path: `${publicBasePath}/${name}`,
+      sizeBytes: info?.size ?? manifestEntry?.sizeBytes ?? 0,
+      updatedAt: info?.mtime.toISOString() ?? manifestEntry?.updatedAt ?? "",
+    };
+  }));
+  const entries = [...configEntries, ...(active?.entries ?? []).filter((entry) =>
+    entry.name.endsWith(".json") && entry.name !== "schema.json")]
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return { count: entries.length, sample: entries.slice(0, sampleLimit) };
 }
 
 async function getBaseMeta(folder: DataFolderKey) {
@@ -1117,21 +1127,9 @@ export async function getStockanalysisSurface(surfaceName: string) {
 }
 
 export async function getDamodaranManifest() {
-  const paths = [...ENROLLED_PATHS.keys()]
-    .filter((publicPath: string) => /^\/data\/damodaran\/[^/]+\.json$/.test(publicPath))
-    .sort();
-  const [meta, sample] = await Promise.all([
+  const [meta, files] = await Promise.all([
     getBaseMeta("damodaran"),
-    Promise.all(paths.map(async (publicPath: string): Promise<JsonFileEntry> => {
-      const result = await readDataAsset(publicPath);
-      if (result.kind !== "ok") throw new Error(`Damodaran data unavailable: ${publicPath}`);
-      return {
-        name: publicPath.slice("/data/damodaran/".length),
-        path: publicPath,
-        sizeBytes: new TextEncoder().encode(result.raw).byteLength,
-        updatedAt: "",
-      };
-    })),
+    buildJsonSample(path.join(PUBLIC_DATA_ROOT, "damodaran"), "/data/damodaran", 20),
   ]);
 
   return {
@@ -1144,10 +1142,7 @@ export async function getDamodaranManifest() {
     updateFrequency: meta.updateFrequency,
     declaredFileCount: meta.declaredFileCount,
     description: meta.description,
-    files: {
-      count: sample.length,
-      sample,
-    },
+    files,
   };
 }
 
