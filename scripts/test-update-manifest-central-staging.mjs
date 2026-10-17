@@ -100,8 +100,8 @@ for (const relative of [fileSample, directorySample]) {
 {
   const fixture = makeFixture();
   write(path.join(fixture.repoRoot, treeDestination, "new.json"), "new\n");
-  assert.equal(runHelper(fixture, "--stage").status, 0);
-  assert.deepEqual(cached(fixture.repoRoot), [path.posix.join(treeDestination, "new.json")]);
+  assert.notEqual(runHelper(fixture, "--stage").status, 0);
+  assert.deepEqual(cached(fixture.repoRoot), []);
 }
 
 // Reject unrelated pre-staged work before touching central paths.
