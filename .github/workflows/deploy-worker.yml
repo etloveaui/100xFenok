@@ -277,14 +277,9 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
-          # All canonical data and public fallbacks remain: the live plane can
-          # fall through to ASSETS. Only non-runtime root docs/ops are omitted.
+          # Code/configuration supplies the bundle imports. Enrolled data is
+          # served from active generations at request time.
           git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-small-macro
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family sentiment
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family nasdaq-giw-sox
-          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family us-indices-daily
 
       - name: Hydrate active Global Scouter build indexes
         env:
@@ -322,30 +317,7 @@ jobs:
           restore-keys: |
             next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-
 
-      - name: Build data supply detection floor
-        run: |
-          set -euo pipefail
-
-          repo_root="$(pwd -P)"
-          output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
-          report_path="$output_root/data-supply-detection-floor.json"
-          installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
-          trap 'rm -rf "$output_root"' EXIT
-
-          chmod 0700 "$output_root"
-          now="$(node -e 'process.stdout.write(new Date().toISOString())')"
-
-          node scripts/build-data-supply-detection-floor.mjs \
-            --artifact-root "$repo_root" \
-            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
-            --now "$now" \
-            --output-root "$output_root"
-          node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
-
-          install -m 0644 "$report_path" "$installed_path"
-
-      # cf:build rebuilds derived data from the freshly installed detection
-      # floor, then verifies the KPI artifact before the OpenNext bundler.
+      # Runtime projections are produced and validated by Update Manifest.
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build
