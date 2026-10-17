@@ -1,5 +1,5 @@
 import type { Dirent } from "node:fs";
-import { isEnrolledPath } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
+import { ENROLLED_PATHS, isEnrolledPath } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
@@ -1117,10 +1117,21 @@ export async function getStockanalysisSurface(surfaceName: string) {
 }
 
 export async function getDamodaranManifest() {
-  const baseDir = path.join(PUBLIC_DATA_ROOT, "damodaran");
-  const [meta, files] = await Promise.all([
+  const paths = [...ENROLLED_PATHS.keys()]
+    .filter((publicPath: string) => /^\/data\/damodaran\/[^/]+\.json$/.test(publicPath))
+    .sort();
+  const [meta, sample] = await Promise.all([
     getBaseMeta("damodaran"),
-    buildJsonSample(baseDir, "/data/damodaran", 20),
+    Promise.all(paths.map(async (publicPath: string): Promise<JsonFileEntry> => {
+      const result = await readDataAsset(publicPath);
+      if (result.kind !== "ok") throw new Error(`Damodaran data unavailable: ${publicPath}`);
+      return {
+        name: publicPath.slice("/data/damodaran/".length),
+        path: publicPath,
+        sizeBytes: new TextEncoder().encode(result.raw).byteLength,
+        updatedAt: "",
+      };
+    })),
   ]);
 
   return {
@@ -1134,8 +1145,8 @@ export async function getDamodaranManifest() {
     declaredFileCount: meta.declaredFileCount,
     description: meta.description,
     files: {
-      count: files.count,
-      sample: files.sample,
+      count: sample.length,
+      sample,
     },
   };
 }
