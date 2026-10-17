@@ -776,18 +776,19 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
           set -euo pipefail
-          ACTIVE_ROOT="$RUNNER_TEMP/stockanalysis-etf-active"
+          ACTIVE_BASE_ROOT="$RUNNER_TEMP/stockanalysis-etf-active"
+          ACTIVE_ROOT="$ACTIVE_BASE_ROOT/stockanalysis/etfs"
           CANDIDATE_ROOT="$RUNNER_TEMP/stockanalysis-etf-candidate"
           RECEIPT="$RUNNER_TEMP/stockanalysis-etf-active-receipt.json"
-          if [ -e "$ACTIVE_ROOT" ] || [ -e "$CANDIDATE_ROOT" ] || [ -e "$RECEIPT" ]; then
+          if [ -e "$ACTIVE_BASE_ROOT" ] || [ -e "$CANDIDATE_ROOT" ] || [ -e "$RECEIPT" ]; then
             echo "::error::ETF active/candidate scratch path already exists" >&2
             exit 2
           fi
           node scripts/materialize-cloud-data-plane-family.mjs \
             --family stockanalysis-etf-detail \
-            --manifest-prefix data/stockanalysis/etfs/ \
+            --manifest-prefix data \
             --reuse-root "$GITHUB_WORKSPACE" \
-            --output-root "$ACTIVE_ROOT" | tee "$RECEIPT"
+            --output-root "$ACTIVE_BASE_ROOT" | tee "$RECEIPT"
           # Hard links avoid a second 1GB download or copy. The overlay below
           # replaces candidate links atomically, leaving the verified base intact.
           cp -al "$ACTIVE_ROOT" "$CANDIDATE_ROOT"
@@ -832,7 +833,9 @@ jobs:
           if any(not path.is_file() or path.is_symlink() or not name_pattern.fullmatch(path.name)
                  for path in (git_root.iterdir() if git_root.exists() else [])):
               raise SystemExit("Git ETF LKG is not a flat ticker JSON tree")
-          git_names = {path.name for path in git_root.iterdir()} if git_root.exists() else set()
+          selection = json.loads((active_root.parents[1] / "admin/data-supply-state/v1/etf-detail-selection.json").read_text())
+          selected_tickers = set(selection["selected"])
+          git_names = {path.name for path in git_root.iterdir() if path.stem in selected_tickers} if git_root.exists() else set()
           git_only = sorted(git_names - active_names - overlay_names)
           def checked_payload(body, ticker, label, *, legacy_baseline=False):
               try:
@@ -1161,11 +1164,11 @@ jobs:
           set -euo pipefail
           SOURCE_ROOT="$RUNNER_TEMP/stockanalysis-etf-resolution"
           BUNDLE_ROOT="$RUNNER_TEMP/stockanalysis-etf-bundle"
-          python3 scripts/stockanalysis_artifact.py seed --candidate-root "$SOURCE_ROOT"
+          mkdir "$SOURCE_ROOT"
+          cp -a "$RUNNER_TEMP/stockanalysis-etf-active" "$SOURCE_ROOT/data"
           SOURCE_ROOT="$SOURCE_ROOT" node --input-type=module -e '
-            import { hydratePrivateFamily, hydratePublicCloudData, hydrateStockanalysisCatalogue } from "./scripts/materialize-cloud-data-plane-family.mjs";
+            import { hydratePublicCloudData, hydrateStockanalysisCatalogue } from "./scripts/materialize-cloud-data-plane-family.mjs";
             const repoRoot = process.env.SOURCE_ROOT;
-            await hydratePrivateFamily("stockanalysis-etf-detail", { repoRoot });
             await hydrateStockanalysisCatalogue({ repoRoot });
             await hydratePublicCloudData({ relative: "admin/data-usage-manifest.json", family: "platform-projections", repoRoot });
             await hydratePublicCloudData({ relative: "yf/finance/_index.json", family: "yahoo-finance", repoRoot });
