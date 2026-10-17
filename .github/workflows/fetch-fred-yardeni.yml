@@ -28,14 +28,14 @@ on:
         type: string
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
+  actions: read
 
 env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  group: fred-yardeni-publish
   cancel-in-progress: false
   queue: max
 
@@ -68,6 +68,7 @@ jobs:
     needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: production
     steps:
       - uses: actions/checkout@v7
         with:
@@ -76,9 +77,7 @@ jobs:
           sparse-checkout: |
             scripts
             .github/workflows
-            data/admin/fred_yardeni
             data/benchmarks
-            data/yardney
             data/computed
             100xfenok-next/public/data/computed/data-supply/etf-detail
             100xfenok-next/scripts
@@ -90,6 +89,21 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
+      - name: Hydrate active Yardeni model and recovery state
+        id: baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family fred-yardeni --manifest-prefix public/data --private-manifest-prefix data --privacy-class public --output-root "$RUNNER_TEMP/yardeni-active")"
+          mkdir -p data
+          cp -R "$RUNNER_TEMP/yardeni-active/." data/
+          echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
+          echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
+
       - name: Build Feno Yardeni model from FRED
         id: fetch_yardeni
         env:
@@ -100,52 +114,6 @@ jobs:
         if: ${{ steps.fetch_yardeni.outcome == 'success' }}
         run: node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
 
-      - name: Commit and push Feno Yardeni data
-        if: ${{ always() }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          FETCH_OUTCOME: ${{ steps.fetch_yardeni.outcome }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # The Yardeni LKG recovery state (freshness marker, retained LKG copy,
-          # and recovery index) is committed on every run so retry/recovery
-          # accounting survives across CI runs. These
-          # carry no FRED bond-yield components.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-fred-yardeni.yml \
-            --stage always_if_exists
-          if [[ "$FETCH_OUTCOME" == "success" ]]; then
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fetch-fred-yardeni.yml \
-              --stage success_if_exists
-          fi
-          if git diff --staged --quiet; then
-            echo "No Feno Yardeni changes to publish"
-            exit 0
-          fi
-          git commit -m "chore: update Feno Yardeni data"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
-              # No Update Manifest dispatch: the Feno Yardeni generation is
-              # plane-served via this workflow's own cloud-data-plane publish
-              # step; scheduled update-manifest.yml reconciliation (daily
-              # 02:30/09:30 UTC) remains the fallback.
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
       - name: Publish fred-yardeni generation to the cloud data plane
         id: publish_cloud_generation
         if: ${{ steps.fetch_yardeni.outcome == 'success' }}
@@ -154,4 +122,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/publish-cloud-data-generation.mjs --family=fred-yardeni --tolerate-gate-block --json
+          PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: ${{ steps.baseline.outputs.generation }}
+          PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: ${{ steps.baseline.outputs.manifest }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=fred-yardeni --json

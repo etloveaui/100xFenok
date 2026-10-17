@@ -525,6 +525,8 @@ export const FAMILIES = {
     manifest_prefix: "public/data/yardney",
     files: ["yardney_model.json"],
     privacy_class: "public",
+    reuse_active_generation: true,
+    private_roots: ["data/admin/fred_yardeni"],
     // Latest payload date from max data[].date — the model rows carry the
     // series' real date; never the collection time.
     source_as_of: { file: "yardney_model.json", max_date: { array: "data", key: "date" } },

@@ -220,18 +220,8 @@ const lanes = [
     admin_store: "data/admin/fred_yardeni",
     detection_attempt: null,
     canonical_outputs: ["data/yardney/yardney_model.json"],
-    // Private lane, public-safe aggregate served and plane-enrolled: the
-    // bundled git mirror is the worker's ASSETS fallback. The declaration
-    // keeps it out of the derived sync exclusions (same pattern as the OCC
-    // private lane with a public-safe availability aggregate); the lane
-    // stages canonical only, full sync remains the updater.
-    public_mirror: ["100xfenok-next/public/data/yardney/yardney_model.json"],
-    commit_shards: [
-      "data/admin/fred_yardeni/index.json",
-      "data/admin/fred_yardeni/current/yardney_model.json",
-      "data/admin/fred_yardeni/lkg/yardney_model.json",
-      "data/yardney/yardney_model.json",
-    ],
+    public_mirror: [],
+    commit_shards: [],
     recovery_store: "data/admin/fred_yardeni/index.json",
     kpi_recovery_shape: "general",
   }),
@@ -1325,6 +1315,18 @@ const declared_exceptions = [
     public_sync: "exclude",
   },
   {
+    path: "data/admin/identity-renames.json",
+    kind: "file",
+    reason: "curated canonical identity rename input, maintained in Git and read by scripts/build-identity-index.mjs; not a scheduled lane store",
+    owner: "platform",
+  },
+  {
+    path: "data/admin/identity-index.json",
+    kind: "file",
+    reason: "Git-tracked identity index generated manually by scripts/build-identity-index.mjs; no scheduled writer and not a lane store",
+    owner: "platform",
+  },
+  {
     path: "data/admin/alarm-state.json",
     kind: "file",
     reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); committed by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",
@@ -1465,12 +1467,7 @@ workflow_policies[".github/workflows/fetch-fred-macro.yml"].stages.success_if_ex
       : spec
   ));
 
-workflow_policies[".github/workflows/fetch-fred-yardeni.yml"].stages.success_if_exists =
-  workflow_policies[".github/workflows/fetch-fred-yardeni.yml"].stages.success_if_exists.map((spec) => (
-    spec.path === "data/yardney/yardney_model.json"
-      ? commitSpec(spec.path, spec.kind, true)
-      : spec
-  ));
+workflow_policies[".github/workflows/fetch-fred-yardeni.yml"] = policy(["fred_yardeni"], {});
 
 workflow_policies[".github/workflows/fetch-nasdaq-giw-sox.yml"].stages.success_if_exists =
   workflow_policies[".github/workflows/fetch-nasdaq-giw-sox.yml"].stages.success_if_exists.map((spec) => (

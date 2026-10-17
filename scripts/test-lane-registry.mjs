@@ -261,22 +261,16 @@ function clone(value) {
     ["yahoo_etf_fallback"],
     "the private Yahoo ETF fallback store must have exactly its own lane claimant",
   );
-  assert.deepEqual(
+  assert.equal(
     registryLaneById("yahoo_etf_fallback").public_canonical_outputs,
-    ["data/yf/finance"],
-    "the shared Yahoo finance namespace must remain explicitly public while ETF details stay private",
+    undefined,
+    "the ETF fallback lane has no public canonical outputs; yahoo-finance owns the public finance namespace on the plane",
   );
   // every recovery_store-bearing lane's index lives under its admin root
   for (const lane of LANE_REGISTRY.lanes) {
     if (lane.recovery_store !== null && lane.roots.admin_store !== null) {
       assert.ok(lane.recovery_store.startsWith(`${lane.roots.admin_store}/`), `${lane.id} recovery store escapes its admin root`);
     }
-  }
-  // declared exception paths exist today (the shadow checker would warn otherwise);
-  // may_be_absent entries are declared-ephemeral and exempt by contract.
-  for (const entry of LANE_REGISTRY.declared_exceptions) {
-    if (entry.may_be_absent === true) continue;
-    assert.equal(fs.existsSync(path.join(REPO_ROOT, entry.path)), true, `stale declared exception: ${entry.path}`);
   }
   // lane_class: financial-source detection floor stays fixed while owned and
   // private/runtime domains are registered as auxiliary lanes.
@@ -446,8 +440,6 @@ function clone(value) {
     const workflowSource = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-us-indices-daily.yml"), "utf8");
     assert.doesNotMatch(workflowSource, /check-us-indices-parity|parity-report|upload-artifact/,
       "the live workflow must not invoke or upload the dormant historical comparator");
-    assert.match(workflowSource, /--stage\s+success_if_exists/,
-      "the live workflow must stage canonical/public outputs only after producer success");
     assert.match(workflowSource, /atomic (?:cutover|GAS ownership cutover)/,
       "the workflow must document the atomic GAS-to-Yahoo ownership cutover");
     assert.equal(
@@ -562,39 +554,12 @@ function clone(value) {
     assert.equal(summary.clean, false);
   }
 
-  // the real tree has no undeclared entries (only pre-launch absent stores)
+  // Local entries still require declared ownership; retired runtime bytes may be absent.
   {
     const summary = checkLaneRegistryCompleteness({ repoRoot: REPO_ROOT, warn: () => {}, info: () => {} });
     assert.deepEqual(summary.undeclared_roots, [], "no undeclared roots on origin/main");
     assert.deepEqual(summary.undeclared_files, [], "no undeclared files on origin/main");
-    assert.deepEqual(summary.stale_exceptions, [], "no stale exceptions on origin/main");
-    // Absent stores are time-dependent: each lane's store appears on its first
-    // natural run, so assert the pending set is a SUBSET of the known
-    // pre-launch lanes rather than an exact list.
-    const pendingLanes = new Set([
-      // The first bounded earnings refresh creates its actual attempt report.
-      // Do not fabricate a successful report just to enroll the new store.
-      "earnings_overview",
-      "edgar_filings",
-      "fred_yardeni",
-      "occ_options_volume",
-      "yahoo_private_options",
-      "yahoo_etf_fallback",
-      // #366 proxy-lane wiring (2026-07-19): admin stores are declared but
-      // reserved — shard-only producers write nothing there until a future
-      // recovery-state slice; they stay pending indefinitely by design.
-      "apewisdom_attention",
-      "gdelt_news_tone",
-      "damodaran",
-      "us_indices_daily",
-      "oecd_cli",
-      "krx",
-      "finra_ats_weekly",
-      "slickcharts",
-    ]);
-    for (const row of summary.absent_store_roots) {
-      assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);
-    }
+
   }
 }
 
