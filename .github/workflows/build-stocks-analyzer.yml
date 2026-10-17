@@ -96,7 +96,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter
+        run: |
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-sec-13f
 
       - name: Hydrate active Yahoo finance and derive acquisition indexes
         env:
@@ -119,16 +121,6 @@ jobs:
       - name: Verify SEC 13F source provenance
         if: github.event_name != 'push'
         run: node scripts/test-sec13f-source-route.mjs --candidate-only
-
-      - name: Build 13F downstream analytics (SEC ingestion is external)
-        if: github.event_name != 'push'
-        run: |
-          node scripts/build-13f-enrichment-backfill.mjs
-          node scripts/build-13f-integrity-indexes.mjs
-          node scripts/build-13f-trades.mjs
-          node scripts/build-13f-portfolio-views.mjs
-          node scripts/build-13f-factor-radar-v2.mjs
-          node scripts/build-guru-holders-index.mjs
 
       - name: Build the SEC 13F bridge index from the regenerated tree
         run: node scripts/build-sec13f-bridge-index.mjs
@@ -179,29 +171,17 @@ jobs:
             --workflow .github/workflows/build-stocks-analyzer.yml \
             --stage always_if_exists
           git add \
-            data/sec-13f/by_ticker.json \
-            data/sec-13f/by_sector.json \
-            data/sec-13f/summary.json \
-            data/sec-13f/investors/*.json \
-            data/sec-13f/analytics/consensus.json \
-            data/sec-13f/analytics/conviction_entries.json \
-            data/sec-13f/analytics/ticker_aliases.json \
-            data/sec-13f/analytics/trades_ranking.json \
-            data/sec-13f/analytics/turnover.json \
-            data/sec-13f/analytics/portfolio_views.json \
-            data/sec-13f/analytics/factor_exposures_summary.json \
-            data/sec-13f/analytics/guru_holders_index.json \
             data/damodaran/industry_benchmarks.json \
             data/calendar/prev-values.json
           if git diff --staged --quiet; then
-            echo "No stocks analyzer or 13F analytics changes to publish"
+            echo "No remaining Git projections to publish"
             echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
             git commit -m "chore: refresh SEC 13F bridge index"
           else
-            git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
+            git commit -m "data: refresh industry and calendar projections"
           fi
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then

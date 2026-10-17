@@ -286,6 +286,7 @@ jobs:
         run: |
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter-build
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-scouter-derived
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-sec-13f
 
       - name: Hydrate active Yahoo finance and derive acquisition indexes
         env:

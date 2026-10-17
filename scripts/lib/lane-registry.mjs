@@ -1762,16 +1762,6 @@ workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = lanePolicy("
 workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
   always_if_exists: [
     ...[
-      "data/sec-13f/by_ticker.json",
-      "data/sec-13f/by_sector.json",
-      "data/sec-13f/summary.json",
-      "data/sec-13f/investors/*.json",
-      "data/sec-13f/analytics/consensus.json",
-      "data/sec-13f/analytics/ticker_aliases.json",
-      "data/sec-13f/analytics/trades_ranking.json",
-      "data/sec-13f/analytics/portfolio_views.json",
-      "data/sec-13f/analytics/factor_exposures_summary.json",
-      "data/sec-13f/analytics/guru_holders_index.json",
       "data/damodaran/industry_benchmarks.json",
       "data/calendar/prev-values.json",
     ].map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
