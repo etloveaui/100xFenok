@@ -769,6 +769,20 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "sec-13f": {
+    root: "data/sec-13f",
+    manifest_prefix: "public/data/sec-13f",
+    reader_enrollment: true,
+    privacy_class: "public",
+    source_as_of: { file: "summary.json", key: ["metadata", "source_quarter"], quarter_end: true },
+    reuse_active_generation: true,
+    plan: { class_a: 400, class_b: 1000, bytes: 1_500_000_000 },
+    policy: { max_assets: 150, max_total_bytes: 1_000_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value && typeof value === "object";
+    },
+  },
   "scouter-derived": {
     root: "data",
     manifest_prefix: "public/data",
@@ -1559,7 +1573,10 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     value !== null && typeof value === "object" && Object.hasOwn(value, key)
       ? value[key] : undefined
   ), json);
-  const value = toIsoDay(raw);
+  const quarter = config.quarter_end === true && /^(\d{4})-Q([1-4])$/.exec(String(raw));
+  const value = quarter
+    ? new Date(Date.UTC(Number(quarter[1]), Number(quarter[2]) * 3, 0)).toISOString().slice(0, 10)
+    : toIsoDay(raw);
   if (value === null) {
     fail("FAMILY_ASOF_INVALID", `${config.file ?? "<payload>"}.${keys.join(".")} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
   }
@@ -1625,7 +1642,11 @@ export async function buildFamilyManifest({
         .filter((relative) => relative !== "_summary.json").map((relative) => `estimates-archive/${relative}`),
       "quarter_closes.json", "_acquisition-state.json",
     ] : null;
-  const enrolled = explicitFiles ?? yahooFiles ?? family.files ?? (
+  const sec13fFiles = familyName === "sec-13f" && explicitFiles === null
+    ? (await walkFiles(absRoot)).filter((relative) => relative.endsWith(".json")
+      && (relative.startsWith("investors/") || relative.startsWith("analytics/")
+        || ["summary.json", "by_ticker.json", "by_sector.json", "schema.json"].includes(relative))) : null;
+  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? family.files ?? (
     family.source_lane_id
       ? await filesFromCanonicalRoots({ sourceLaneId: family.source_lane_id, absRoot, familyRoot: family.root })
       : null
@@ -1679,6 +1700,16 @@ export async function buildFamilyManifest({
       asset.source_as_of = value;
     } else {
       asset.source_as_of = sourceAsOf.value;
+    }
+  }
+  if (familyName === "sec-13f") {
+    const griffin = assets.find((asset) => asset.path === "public/data/sec-13f/investors/griffin.json");
+    if (griffin) {
+      const bytes = payloads.get(griffin.path);
+      payloads.delete(griffin.path);
+      griffin.path = "data/sec-13f/investors/griffin.json";
+      griffin.privacy_class = "private";
+      payloads.set(griffin.path, bytes);
     }
   }
   if (familyName === "yahoo-finance") {

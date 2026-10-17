@@ -789,6 +789,28 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
   }
 }
 
+// SEC source/analytics and its private Griffin asset share one generation.
+export async function hydrateSec13f({ repoRoot = REPO_ROOT, env = process.env } = {}) {
+  const family = "sec-13f";
+  const plane = createDefaultMaterializePlane({
+    accountId: env.CLOUDFLARE_ACCOUNT_ID, token: env.CLOUDFLARE_API_TOKEN,
+    endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY, family,
+  });
+  const base = await realpath(env.RUNNER_TEMP || env.TMPDIR || os.tmpdir());
+  const temporary = await mkdtemp(path.join(base, "sec-13f-"));
+  try {
+    const receipt = await materializeCloudDataPlaneFamily({
+      plane, family, manifestPrefix: "public/data/sec-13f", privateManifestPrefix: "data/sec-13f",
+      privacyClass: "public", env, repoRoot, canonicalReuseRoot: repoRoot,
+      outputRoot: path.join(temporary, "active"),
+    });
+    await cp(receipt.output_root, path.join(repoRoot, "data/sec-13f"), { recursive: true });
+    return receipt;
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+}
+
 // The hosted analyzer owns these five derived files independently of the
 // owner-run Scouter export. Consumers import its promoted generation at build.
 export async function hydrateScouterDerived({ repoRoot = REPO_ROOT, env = process.env } = {}) {
@@ -866,7 +888,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-scouter-derived") {
+    if (process.argv.slice(2).join(" ") === "--hydrate-sec-13f") {
+      console.log(JSON.stringify(await hydrateSec13f()));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-scouter-derived") {
       console.log(JSON.stringify(await hydrateScouterDerived()));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-finance") {
       console.log(JSON.stringify(await hydrateYahooFinance()));
