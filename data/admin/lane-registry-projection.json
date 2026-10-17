@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-10-16T15:15:09.865Z",
+  "generated_at": "2026-10-17T03:39:08.476Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 36,
@@ -8,7 +8,7 @@
     {
       "id": "fred_macro",
       "label": "FRED macro",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "daily",
         "provider": "FRED"
@@ -27,10 +27,10 @@
           },
           "latest_expected_slot": "2026-10-16T08:00:00.000Z",
           "next_expected_slot": "2026-10-17T08:00:00.000Z",
-          "status": "on_time"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T08:00:20.640Z",
+          "observed_at": null,
           "outcome": "success",
           "failure_class": null
         },
@@ -42,7 +42,7 @@
         },
         "recovery": {
           "state": "fresh_primary",
-          "retry_count": 0,
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -57,15 +57,17 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
     {
       "id": "fred_banking",
       "label": "FRED banking",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "mixed",
         "provider": "FRED"
@@ -84,11 +86,11 @@
           },
           "latest_expected_slot": "2026-10-16T07:00:00.000Z",
           "next_expected_slot": "2026-10-17T07:00:00.000Z",
-          "status": "on_time"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T07:03:57.704Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -98,8 +100,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -114,8 +116,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -179,7 +183,7 @@
     {
       "id": "fdic_tier1",
       "label": "FDIC Tier-1",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "quarterly",
         "provider": "FDIC"
@@ -198,19 +202,19 @@
           "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-12T06:03:30Z",
-          "outcome": "success",
+          "observed_at": "2026-10-17T01:08:54.554Z",
+          "outcome": "retained",
           "failure_class": null
         },
         "source": {
           "source_date": "2026-06-30",
-          "source_date_reason": "data_health_source_date",
+          "source_date_reason": "external_collector_source_date",
           "evidence_status": "observed",
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "retained_lkg",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -235,7 +239,7 @@
     {
       "id": "treasury_tga",
       "label": "Treasury FiscalData TGA",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "daily",
         "provider": "Treasury FiscalData"
@@ -252,13 +256,13 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-16T12:00:00.000Z",
-          "next_expected_slot": "2026-10-16T18:00:00.000Z",
-          "status": "overdue"
+          "latest_expected_slot": "2026-10-17T00:00:00.000Z",
+          "next_expected_slot": "2026-10-17T06:00:00.000Z",
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T00:05:14.748Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -268,8 +272,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -284,15 +288,17 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
     {
       "id": "defillama_stablecoins",
       "label": "DefiLlama stablecoins",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "daily",
         "provider": "DefiLlama"
@@ -309,13 +315,13 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-16T15:12:00.000Z",
-          "next_expected_slot": "2026-10-16T16:12:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-17T03:12:00.000Z",
+          "next_expected_slot": "2026-10-17T04:12:00.000Z",
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T15:12:28.606Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -325,8 +331,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -341,8 +347,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -366,8 +374,8 @@
           ],
           "calendar_id": "utc",
           "grace": null,
-          "latest_expected_slot": "2026-10-15T21:20:00.000Z",
-          "next_expected_slot": "2026-10-16T21:20:00.000Z",
+          "latest_expected_slot": "2026-10-16T21:20:00.000Z",
+          "next_expected_slot": "2026-10-17T21:20:00.000Z",
           "status": "overdue"
         },
         "latest_attempt": {
@@ -423,8 +431,8 @@
           ],
           "calendar_id": "utc",
           "grace": null,
-          "latest_expected_slot": "2026-10-15T21:20:00.000Z",
-          "next_expected_slot": "2026-10-16T21:20:00.000Z",
+          "latest_expected_slot": "2026-10-16T21:20:00.000Z",
+          "next_expected_slot": "2026-10-17T21:20:00.000Z",
           "status": "unobserved"
         },
         "latest_attempt": {
@@ -483,8 +491,8 @@
           ],
           "calendar_id": "utc",
           "grace": null,
-          "latest_expected_slot": "2026-10-15T21:20:00.000Z",
-          "next_expected_slot": "2026-10-16T21:20:00.000Z",
+          "latest_expected_slot": "2026-10-16T21:20:00.000Z",
+          "next_expected_slot": "2026-10-17T21:20:00.000Z",
           "status": "overdue"
         },
         "latest_attempt": {
@@ -540,8 +548,8 @@
           ],
           "calendar_id": "utc",
           "grace": null,
-          "latest_expected_slot": "2026-10-15T21:20:00.000Z",
-          "next_expected_slot": "2026-10-16T21:20:00.000Z",
+          "latest_expected_slot": "2026-10-16T21:20:00.000Z",
+          "next_expected_slot": "2026-10-17T21:20:00.000Z",
           "status": "unobserved"
         },
         "latest_attempt": {
@@ -602,7 +610,7 @@
           "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-15T23:46:50Z",
+          "observed_at": "2026-10-17T00:34:36Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -656,8 +664,8 @@
           ],
           "calendar_id": "utc",
           "grace": null,
-          "latest_expected_slot": "2026-10-15T21:20:00.000Z",
-          "next_expected_slot": "2026-10-16T21:20:00.000Z",
+          "latest_expected_slot": "2026-10-16T21:20:00.000Z",
+          "next_expected_slot": "2026-10-17T21:20:00.000Z",
           "status": "overdue"
         },
         "latest_attempt": {
@@ -715,17 +723,17 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-10-16T15:05:00.000Z",
-          "next_expected_slot": "2026-10-16T16:05:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-17T03:05:00.000Z",
+          "next_expected_slot": "2026-10-17T04:05:00.000Z",
+          "status": "overdue"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T15:05:24.042Z",
+          "observed_at": "2026-10-17T02:05:21.270Z",
           "outcome": "success",
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-16T15:05:22.000Z",
+          "source_date": "2026-10-16T20:00:01.000Z",
           "source_date_reason": "yahoo_hourly_ticker.current.source_as_of.oldest",
           "evidence_status": "observed",
           "sla": null
@@ -755,7 +763,7 @@
     {
       "id": "sentiment",
       "label": "Sentiment bundle (CNN/VIX/MOVE/CFTC/crypto)",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "daily",
         "provider": "CNN Fear & Greed + Fenok CNN proxy + CFTC + Yahoo Finance + Alternative.me"
@@ -772,24 +780,24 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-15T22:00:00.000Z",
-          "next_expected_slot": "2026-10-16T22:00:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-16T22:00:00.000Z",
+          "next_expected_slot": "2026-10-19T22:00:00.000Z",
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-15T22:03:38.250Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-06",
-          "source_date_reason": "sentiment_index.items.current.source_as_of.oldest",
-          "evidence_status": "observed",
+          "source_date": null,
+          "source_date_reason": "sentiment current source_as_of is unavailable",
+          "evidence_status": "unavailable",
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -804,15 +812,18 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt",
+            "source"
+          ]
         }
       }
     },
     {
       "id": "nasdaq_giw_sox",
       "label": "Nasdaq GIW SOX constituents",
-      "store_kind": "payload",
+      "store_kind": "artifact_only",
       "cadence": {
         "kind": "daily",
         "provider": "Nasdaq Indexes"
@@ -831,8 +842,8 @@
           "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-15T23:56:06.104Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -842,8 +853,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -860,6 +871,7 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
+            "attempt",
             "schedule"
           ]
         }
@@ -885,13 +897,13 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-15T22:00:00.000Z",
-          "next_expected_slot": "2026-10-16T22:00:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-16T22:00:00.000Z",
+          "next_expected_slot": "2026-10-19T22:00:00.000Z",
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-15T22:00:20.293Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -901,8 +913,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -917,8 +929,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -944,11 +958,11 @@
           "grace": null,
           "latest_expected_slot": "2026-10-08T08:00:00.000Z",
           "next_expected_slot": "2026-11-01T08:00:00.000Z",
-          "status": "on_time"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-11T13:12:00.252Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -958,8 +972,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -974,8 +988,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -1194,7 +1210,7 @@
           "lkg_source_date": null
         },
         "incident": {
-          "status": "unknown",
+          "status": "open",
           "workflow": "a1-sec-13f",
           "class": null
         },
@@ -1522,9 +1538,9 @@
           "failure_class": null
         },
         "source": {
-          "source_date": "2026-10-09",
-          "source_date_reason": "global_scouter_metadata.source_date",
-          "evidence_status": "observed",
+          "source_date": null,
+          "source_date_reason": "global_scouter metadata source_date is unavailable",
+          "evidence_status": "unavailable",
           "sla": null
         },
         "recovery": {
@@ -1546,7 +1562,8 @@
         "coverage": {
           "status": "not_covered",
           "missing": [
-            "attempt"
+            "attempt",
+            "source"
           ]
         }
       }
@@ -1573,7 +1590,7 @@
           "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-15T21:13:00.000Z",
+          "observed_at": "2026-10-16T21:17:00.000Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -1682,12 +1699,12 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-16T00:30:00.000Z",
-          "next_expected_slot": "2026-10-17T00:30:00.000Z",
+          "latest_expected_slot": "2026-10-17T00:30:00.000Z",
+          "next_expected_slot": "2026-10-18T00:30:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T00:41:19.385Z",
+          "observed_at": "2026-10-17T00:57:58.437Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -1741,11 +1758,11 @@
           },
           "latest_expected_slot": "2026-10-14T11:17:00.000Z",
           "next_expected_slot": "2026-10-21T11:17:00.000Z",
-          "status": "on_time"
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-14T11:20:31.125Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -1755,8 +1772,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -1771,8 +1788,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -1796,12 +1815,12 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-16T00:30:00.000Z",
-          "next_expected_slot": "2026-10-17T00:30:00.000Z",
+          "latest_expected_slot": "2026-10-17T00:30:00.000Z",
+          "next_expected_slot": "2026-10-18T00:30:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T00:53:10.533Z",
+          "observed_at": "2026-10-17T01:10:10.635Z",
           "outcome": "retained",
           "failure_class": null
         },
@@ -1853,12 +1872,12 @@
             "unit": "business_days",
             "value": 1
           },
-          "latest_expected_slot": "2026-10-16T01:10:00.000Z",
-          "next_expected_slot": "2026-10-17T01:10:00.000Z",
+          "latest_expected_slot": "2026-10-17T01:10:00.000Z",
+          "next_expected_slot": "2026-10-18T01:10:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T01:17:36.187Z",
+          "observed_at": "2026-10-17T01:29:23.262Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -1967,13 +1986,13 @@
             "unit": "hours",
             "value": 24
           },
-          "latest_expected_slot": "2026-10-16T14:43:00.000Z",
-          "next_expected_slot": "2026-10-16T22:43:00.000Z",
-          "status": "on_time"
+          "latest_expected_slot": "2026-10-16T22:43:00.000Z",
+          "next_expected_slot": "2026-10-17T06:43:00.000Z",
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-16T14:45:03.851Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -1983,8 +2002,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -1999,8 +2018,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     },
@@ -2024,13 +2045,13 @@
           ],
           "calendar_id": "utc",
           "grace": null,
-          "latest_expected_slot": "2026-10-16T00:07:00.000Z",
-          "next_expected_slot": "2026-10-16T23:20:00.000Z",
-          "status": "overdue"
+          "latest_expected_slot": "2026-10-16T23:20:00.000Z",
+          "next_expected_slot": "2026-10-18T00:07:00.000Z",
+          "status": "unobserved"
         },
         "latest_attempt": {
-          "observed_at": "2026-10-15T23:51:35Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "source": {
@@ -2040,8 +2061,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "retained_lkg",
-          "retry_count": 44,
+          "state": "unavailable",
+          "retry_count": null,
           "recovered_at": null,
           "lkg_source_date": null
         },
@@ -2056,8 +2077,10 @@
           "depth": null
         },
         "coverage": {
-          "status": "covered",
-          "missing": []
+          "status": "not_covered",
+          "missing": [
+            "attempt"
+          ]
         }
       }
     }
