@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-17T05:24:28.154Z",
+  "generated_at": "2026-10-17T05:43:20.040Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 3,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -31,24 +31,12 @@
     {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 8,
+      "streak": 15,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 39004801799,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39004801799",
       "alarm_reasons": [
         "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0
-    },
-    {
-      "workflow": "a1-sec-13f",
-      "label": "A1 SEC 13F (A1 daily filing check) collector",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "a1_status_stale"
       ],
       "lost_schedule_slot_count": 0
     }
@@ -401,13 +389,6 @@
       "events": [],
       "event": null,
       "failure_streak_threshold": 2
-    },
-    {
-      "file": "a1-sec-13f",
-      "label": "A1 SEC 13F (A1 daily filing check) collector",
-      "events": [],
-      "event": null,
-      "failure_streak_threshold": 2
     }
   ],
   "excluded_workflows": [
@@ -426,15 +407,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "39006057258",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39006057258",
-    "observed_at": "2026-10-17T05:24:28.154Z",
-    "event": "workflow_dispatch",
+    "run_id": "39007219207",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39007219207",
+    "observed_at": "2026-10-17T05:43:20.040Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
       "update-manifest.yml",
-      "validate-workflows.yml",
-      "a1-sec-13f"
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
