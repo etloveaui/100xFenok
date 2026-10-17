@@ -116,7 +116,7 @@ for (const relative of [fileSample, directorySample]) {
   assert.deepEqual(cached(fixture.repoRoot), ["unrelated.txt"]);
 }
 
-// reset restores tracked files but leaves generated untracked central residue. The
+// reset restores tracked files but leaves untracked central residue. The
 // policy-scoped cleanup removes only that residue before the clean assertion.
 {
   const fixture = makeFixture();
@@ -124,7 +124,7 @@ for (const relative of [fileSample, directorySample]) {
   write(tracked, "tracked mutation\n");
   const residue = Array.from({ length: 100 }, (_, index) => path.join(
     fixture.repoRoot,
-    treeDestination,
+    directorySample,
     `pre-reset-${String(index).padStart(3, "0")}.json`,
   ));
   for (const target of residue) write(target, "untracked residue\n");
@@ -144,18 +144,18 @@ for (const relative of [fileSample, directorySample]) {
   assert.equal(fs.existsSync(unrelated), true);
   assert.equal(runHelper(fixture, "--assert-clean-after-reset").status, 0);
   write(tracked, "retry rebuild\n");
-  write(path.join(fixture.repoRoot, treeDestination, "rebuilt.json"), "retry public rebuild\n");
+  write(path.join(fixture.repoRoot, directorySample, "rebuilt.json"), "retry central rebuild\n");
   assert.equal(runHelper(fixture, "--check").status, 0);
   assert.equal(runHelper(fixture, "--stage").status, 0);
   assert.deepEqual(cached(fixture.repoRoot), [
-    path.posix.join(treeDestination, "rebuilt.json"),
+    path.posix.join(directorySample, "rebuilt.json"),
     fileSample,
   ]);
 }
 
 {
   const fixture = makeFixture();
-  const ignored = path.posix.join(treeDestination, "ignored.json");
+  const ignored = path.posix.join(directorySample, "ignored.json");
   const outsideIgnored = "outside-ignored.json";
   write(path.join(fixture.repoRoot, ".gitignore"), `${ignored}\n${outsideIgnored}\n`);
   git(fixture.repoRoot, ["add", ".gitignore"]);
@@ -176,9 +176,9 @@ for (const relative of [fileSample, directorySample]) {
 {
   const fixture = makeFixture();
   const tracked = path.join(fixture.repoRoot, fileSample);
-  const untracked = path.join(fixture.repoRoot, treeDestination, "residue.json");
-  const ignored = path.join(fixture.repoRoot, treeDestination, "ignored-residue.json");
-  write(path.join(fixture.repoRoot, ".gitignore"), `${path.posix.join(treeDestination, "ignored-residue.json")}\n`);
+  const untracked = path.join(fixture.repoRoot, directorySample, "residue.json");
+  const ignored = path.join(fixture.repoRoot, directorySample, "ignored-residue.json");
+  write(path.join(fixture.repoRoot, ".gitignore"), `${path.posix.join(directorySample, "ignored-residue.json")}\n`);
   git(fixture.repoRoot, ["add", ".gitignore"]);
   git(fixture.repoRoot, ["commit", "-qm", "tracked refusal fixture"]);
   write(tracked, "tracked mutation\n");
@@ -195,7 +195,7 @@ for (const relative of [fileSample, directorySample]) {
 // ignored central residue.
 {
   const fixture = makeFixture();
-  const ignored = path.posix.join(treeDestination, "staged-guard-ignored.json");
+  const ignored = path.posix.join(directorySample, "staged-guard-ignored.json");
   write(path.join(fixture.repoRoot, ".gitignore"), `${ignored}\n`);
   git(fixture.repoRoot, ["add", ".gitignore"]);
   git(fixture.repoRoot, ["commit", "-qm", "staged guard fixture"]);
