@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyEndpointResponse, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
-  LaneLkgStore,
   classifyLkgFailure,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
@@ -331,20 +330,8 @@ export async function runNasdaqGiwSox({
     throw new Error("SOX candidate dates must be a non-empty YYYY-MM-DD array");
   }
   const controlled = controlledFailure(controlledFailureKey, eventName);
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  // SOX opts into recovery promotion for authentic first-attempt
-  // workflow_dispatch runs only; every other LaneLkgStore caller keeps the
-  // natural-schedule-only default.
-  const lkgStore = new LaneLkgStore({
-    repoRoot,
-    laneId: LANE_ID,
-  });
-  const lkgArtifacts = [{
-    key: LKG_KEY,
-    canonicalPath,
-    validateDocument: validSoxDocument,
-    sourceAsOf: soxSourceAsOf,
-  }];
+  const currentCanonical = readValidCanonical(canonicalPath);
+  if (write && currentCanonical === null) throw new Error("Active SOX baseline is invalid");
   const requestResults = [];
   let selected = null;
   for (const tradeDate of dates) {
@@ -361,9 +348,6 @@ export async function runNasdaqGiwSox({
   if (selected === null) {
     const failureReason = systemicLkgFailureReason(requestResults.map((row) => row.reason))
       ?? (controlled ? "controlled_failure" : folded.reason);
-    const failure = write
-      ? lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason })
-      : { hasCompleteLkg: false, retrySet: [] };
     const nonTransientHttp = requestResults.some((row) => row.reason === "http_error"
       && !(row.attempt?.http_status >= 500 && row.attempt.http_status <= 599));
     // Single-logical-artifact divergence from FRED/FDIC: an all-lookback
@@ -373,7 +357,7 @@ export async function runNasdaqGiwSox({
     // missing LKG fatal.
     const outcome = classifyLkgFailure({
       reason: failureReason,
-      hasCompleteLkg: failure.hasCompleteLkg,
+      hasCompleteLkg: currentCanonical !== null,
       systemic: nonTransientHttp,
     });
     const failureDetail = failureReason === "controlled_failure"
@@ -384,7 +368,7 @@ export async function runNasdaqGiwSox({
       reason: failureReason,
       updated: false,
       attempt,
-      retrySet: failure.retrySet,
+      retrySet: [LKG_KEY],
       ...(failureDetail ? { failure_detail: failureDetail } : {}),
       ...outcome,
     };
@@ -403,67 +387,21 @@ export async function runNasdaqGiwSox({
   };
   if (!write) return { ok: true, reason: "ok", updated: false, attempt, payload, asOf: payload.as_of, rowCount: payload.row_count };
 
-  const recoveryState = lkgStore.stateSnapshot();
-  const currentCanonical = readValidCanonical(canonicalPath);
-  if (currentCanonical !== null && recoveryState.items[LKG_KEY]?.retry !== true) {
-    const currentSourceAsOf = soxSourceAsOf(currentCanonical.document);
-    const currentEpoch = Date.parse(currentSourceAsOf);
-    const candidateEpoch = Date.parse(candidate.sourceAsOf);
-    if (candidateEpoch < currentEpoch) {
-      const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: "source_regression" });
-      const outcome = classifyLkgFailure({ reason: "source_regression", hasCompleteLkg: failure.hasCompleteLkg });
-      return {
-        ok: false,
-        reason: "source_regression",
-        updated: false,
-        attempt,
-        retrySet: failure.retrySet,
-        ...outcome,
-      };
-    }
-    if (candidateEpoch === currentEpoch) {
-      if (!recoveryState.items[LKG_KEY]) {
-        lkgStore.recordSuccess({
-          artifacts: [{
-            ...candidate,
-            payloadBytes: currentCanonical.bytes,
-            sourceAsOf: currentSourceAsOf,
-          }],
-          run,
-        });
-      }
-      return {
-        ok: true,
-        reason: "unchanged_source",
-        updated: false,
-        attempt,
-        asOf: currentSourceAsOf,
-        rowCount: currentCanonical.document.row_count,
-        symbols: currentCanonical.document.symbols,
-        accessScope: currentCanonical.document.access_scope,
-        recovered: false,
-      };
-    }
-  }
-  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
-  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
-  if (promotable.length === 0) {
-    const reason = decisions[0].reason;
-    return {
-      ok: false,
-      reason,
-      updated: false,
-      attempt,
-      retrySet: lkgStore.stateSnapshot().retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
+  const currentSourceAsOf = soxSourceAsOf(currentCanonical.document);
+  const candidateEpoch = Date.parse(candidate.sourceAsOf);
+  const currentEpoch = Date.parse(currentSourceAsOf);
+  if (candidateEpoch < currentEpoch) return {
+    ok: false, reason: "source_regression", updated: false, attempt, retrySet: [LKG_KEY],
+    ...classifyLkgFailure({ reason: "source_regression", hasCompleteLkg: true }),
+  };
+  if (candidateEpoch === currentEpoch) return {
+    ok: true, reason: "unchanged_source", updated: false, attempt,
+    asOf: currentSourceAsOf, rowCount: currentCanonical.document.row_count,
+    symbols: currentCanonical.document.symbols, accessScope: currentCanonical.document.access_scope,
+    recovered: false,
+  };
   atomicWrite(canonicalPath, serialized);
-  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = recoveringKeys.has(LKG_KEY);
+  const recovered = false;
   const history = rotateSoxSnapshotHistory({ repoRoot, payload, generatedAt: observedAt });
   return {
     ok: true,

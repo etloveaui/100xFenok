@@ -553,9 +553,12 @@ export const FAMILIES = {
     manifest_prefix: "public/data/indices",
     files: ["nasdaq-giw-sox-constituents.json"],
     privacy_class: "public",
+    reuse_active_generation: true,
+    private_assets: [{ path: "data/admin/nasdaq_giw_sox/history/constituents.json",
+      source_as_of: { max_date: { array: "entries", key: "as_of" } } }],
     source_as_of: { key: "as_of" },
-    plan: { class_a: 10, bytes: 1_100_000 },
-    policy: { max_assets: 4, max_total_bytes: 16_000 },
+    plan: { class_a: 10, bytes: 4_000_000 },
+    policy: { max_assets: 4, max_total_bytes: 2_000_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
@@ -1739,6 +1742,24 @@ export async function buildFamilyManifest({
     payloads.set(indexPath, indexBytes);
     assets.sort((left, right) => left.path.localeCompare(right.path));
   }
+  // Explicit private retained inputs share the family's atomic promotion.
+  const repoRoot = path.resolve(absRoot, ...family.root.split("/").map(() => ".."));
+  for (const retained of family.private_assets ?? []) {
+    const assetPath = retained.path;
+    if (!assetPath.startsWith("data/") || assetPath.includes("\\")
+      || assetPath.split("/").some((part) => !part || part === "." || part === "..")
+      || payloads.has(assetPath)) fail("PRIVATE_ASSET_PATH_INVALID", assetPath);
+    const bytes = new Uint8Array(await readFile(path.join(repoRoot, assetPath)));
+    const sha256 = sha256Bytes(bytes);
+    const retainedDate = resolveSourceAsOf({ family: { root: path.posix.dirname(assetPath),
+      source_as_of: { ...retained.source_as_of, file: path.posix.basename(assetPath) } },
+      payloads: new Map([[assetPath, bytes]]), createdIsoDay, relRoot: path.posix.dirname(assetPath) });
+    assets.push({ path: assetPath, object_key: `objects/sha256/${sha256}`,
+      sha256, bytes: bytes.byteLength, content_type: "application/json",
+      source_as_of: retainedDate.value, privacy_class: "private" });
+    payloads.set(assetPath, bytes);
+  }
+  assets.sort((left, right) => left.path.localeCompare(right.path));
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
   const fingerprint = generationSemanticFingerprint({
     sourceSha,
@@ -3421,10 +3442,9 @@ export async function runPublisherCli({
     });
     const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
-    if (["stockanalysis-etf-detail", "yahoo-finance", "sec-13f"].includes(args.family)
-      && (env.PUBLISH_BINDING_ARTIFACT_DIGEST
-        || env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID
-        || env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256)) {
+    if (env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID || env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256
+      || (["stockanalysis-etf-detail", "yahoo-finance", "sec-13f"].includes(args.family)
+        && env.PUBLISH_BINDING_ARTIFACT_DIGEST)) {
       // Hosted and explicitly bound manual ETF publications use a verified active snapshot.
       // Never publish that snapshot over a different live generation, even if
       // the pointer moved before this process acquired its CAS sequence.
