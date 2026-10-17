@@ -109,6 +109,7 @@ jobs:
           if [ -f data/yf/_acquisition-state.json ]; then
             python3 scripts/yahoo_batch_state.py hydrate-generation --state-root data/admin/yahoo-batch-quote-history
           fi
+          python3 scripts/rebuild-yf-finance-summary.py
 
       - name: Build stocks_analyzer.json
         if: github.event_name != 'push'

@@ -10,6 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { canonicalJson } from "./json-canonical.mjs";
+import { PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES } from "../../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import { COMPUTED_SIGNALS_SOURCE_LANE_IDS, LANE_REGISTRY } from "./lane-registry.mjs";
 
 export const DERIVED_ASSET_REGISTRY_SCHEMA = "derived-asset-registry/v1";
@@ -739,6 +740,14 @@ function validRepoPath(value) {
 
 const PUBLIC_MIRROR_PREFIX = "100xfenok-next/public/";
 
+// A declared runtime input may live in the serving plane instead of checkout.
+function isPlaneCanonicalPath(relative) {
+  const publicPath = `/${relative}`;
+  return PLANE_ENROLLMENT_EXACT.some(([enrolled]) => enrolled === publicPath)
+    || PLANE_ENROLLMENT_PREFIXES.some(({ prefix }) =>
+      publicPath === prefix.replace(/\/$/, "") || publicPath.startsWith(prefix));
+}
+
 function hasDeclaredCanonicalPublicMirror(assetValue, publicSpec, repoRoot) {
   if (!publicSpec.path.startsWith(PUBLIC_MIRROR_PREFIX)) return false;
   const canonicalPath = publicSpec.path.slice(PUBLIC_MIRROR_PREFIX.length);
@@ -1023,7 +1032,9 @@ export function validateDerivedAssetRegistry(
           if (!fs.existsSync(path.join(repoRoot, sourcePath))) fail(`asset ${assetValue.id} source is missing: ${sourcePath}`);
         }
         for (const ref of assetValue.inputs.filter((entry) => entry.kind === "path")) {
-          if (!fs.existsSync(path.join(repoRoot, ref.ref))) fail(`asset ${assetValue.id} input path is missing: ${ref.ref}`);
+          if (!fs.existsSync(path.join(repoRoot, ref.ref)) && !isPlaneCanonicalPath(ref.ref)) {
+            fail(`asset ${assetValue.id} input path is missing: ${ref.ref}`);
+          }
         }
         const writerSource = fs.readFileSync(path.join(repoRoot, assetValue.writer), "utf8");
         if (assetValue.recovery === "lane_lkg" && !writerSource.includes("LaneLkgStore")) {

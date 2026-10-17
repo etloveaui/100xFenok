@@ -456,7 +456,6 @@ export const CENTRAL_COMMIT_PATHS = [
   "data/computed/market_structure_index.json",
   "data/computed/rim-index/inputs.json",
   "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
-  "data/yf/finance/_summary.json",
   "data/stockanalysis/backfill/history_gap_report_latest.json",
   "data/slickcharts/discovery-summary.json",
   "data/slickcharts/membership-changes.json",
