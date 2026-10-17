@@ -820,6 +820,28 @@ export const FAMILIES = {
   // Atomic private ETF detail bundle: selected raw inputs, serving projection,
   // and the provider/recovery snapshot share one promotion. The explicit runtime
   // reader serves projection paths; no bulk read-side enrollment is generated.
+  "stockanalysis-catalogue": {
+    root: "data/stockanalysis",
+    manifest_prefix: "public/data/stockanalysis",
+    privacy_class: "public",
+    exclude: ["etfs/", "README.md"],
+    source_as_of: { per_asset_resolver: "stockanalysis_catalogue_source_date" },
+    reuse_active_generation: true,
+    incremental_write_budget: true,
+    private_roots: [
+      "data/admin/stockanalysis-recovery/states/stock", "data/admin/stockanalysis-recovery/states/financial",
+      "data/admin/stockanalysis-recovery/states/surface", "data/admin/stockanalysis-recovery/states/universe",
+      "data/admin/stockanalysis-recovery/lkg/stock", "data/admin/stockanalysis-recovery/lkg/financial",
+      "data/admin/stockanalysis-recovery/lkg/surface", "data/admin/stockanalysis-recovery/lkg/universe",
+      "data/admin/data-supply-state/v1/providers/stockanalysis/stock_detail",
+      "data/admin/data-supply-state/v1/providers/yahoo_finance/stock_detail",
+      "data/admin/data-supply-state/v1/domains/stock_detail",
+      "data/admin/data-supply-state/v1/history",
+    ],
+    private_assets: [{ path: "data/admin/stockanalysis-recovery/index.json", source_as_of: null }],
+    plan: { class_a: 8_000, class_b: 16_000, bytes: 600_000_000 },
+    policy: { max_assets: 4_000, max_total_bytes: 300_000_000 },
+  },
   "stockanalysis-etf-detail": {
     root: "data/stockanalysis/etfs",
     privacy_class: "private",
@@ -1443,7 +1465,18 @@ function scouterDerivedSourceDate(payload, relative) {
   return day === null ? null : { day, origin: "source" };
 }
 
+function stockAnalysisCatalogueSourceDate(payload) {
+  // Catalogue/financial/surface snapshots can explicitly lack a source clock.
+  // Preserve that absence; fetched_at remains an acquisition clock in the body.
+  if (payload?.source_as_of === null || payload?.source_as_of === undefined) {
+    return { day: null, origin: "unknown" };
+  }
+  const day = toIsoDay(payload.source_as_of);
+  return day === null ? null : { day, origin: "source" };
+}
+
 const PER_ASSET_SOURCE_RESOLVERS = new Map([
+  ["stockanalysis_catalogue_source_date", stockAnalysisCatalogueSourceDate],
   ["scouter_derived_source_date", scouterDerivedSourceDate],
   [STOCKANALYSIS_DETAIL_SOURCE_RESOLVER, stockAnalysisDetailSourceObservation],
   [YAHOO_FINANCE_SOURCE_RESOLVER, yahooFinanceSourceObservation],
@@ -1902,6 +1935,7 @@ export async function buildFamilyManifest({
   const retainedAssets = [...(family.private_assets ?? [])];
   for (const root of family.private_roots ?? []) {
     for (const relative of await walkFiles(path.join(repoRoot, root))) {
+      if (relative.split("/").some(part => part.startsWith("."))) continue;
       retainedAssets.push({ path: `${root}/${relative}`, source_as_of: null });
     }
   }
@@ -1910,7 +1944,13 @@ export async function buildFamilyManifest({
     if (!assetPath.startsWith("data/") || assetPath.includes("\\")
       || assetPath.split("/").some((part) => !part || part === "." || part === "..")
       || payloads.has(assetPath)) fail("PRIVATE_ASSET_PATH_INVALID", assetPath);
-    const bytes = new Uint8Array(await readFile(path.join(repoRoot, assetPath)));
+    let bytes = new Uint8Array(await readFile(path.join(repoRoot, assetPath)));
+    if (familyName === "stockanalysis-catalogue" && assetPath.startsWith("data/admin/data-supply-state/v1/history/")) {
+      const retained = new TextDecoder().decode(bytes).split("\n").filter(line =>
+        line.trim() && JSON.parse(line).domain !== "etf_detail");
+      if (!retained.length) continue;
+      bytes = new TextEncoder().encode(retained.join("\n") + "\n");
+    }
     const sha256 = sha256Bytes(bytes);
     const retainedDate = retained.source_as_of === null ? { value: null } : resolveSourceAsOf({ family: { root: path.posix.dirname(assetPath),
       source_as_of: { ...retained.source_as_of, file: path.posix.basename(assetPath) } },

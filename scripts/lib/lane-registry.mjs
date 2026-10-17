@@ -1787,6 +1787,7 @@ export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
   "slickcharts-monthly": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-monthly.yml" }),
   "slickcharts-symbols": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-symbols.yml" }),
   "slickcharts-weekly": Object.freeze({ lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-weekly.yml" }),
+  "stockanalysis-catalogue": Object.freeze({ lane_id: "stockanalysis_etf_universe", workflow: ".github/workflows/fetch-stockanalysis.yml" }),
   "stockanalysis-etf-detail": Object.freeze({ lane_id: "stockanalysis_etf_detail", workflow: ".github/workflows/fetch-stockanalysis.yml" }),
   "treasury-tga": Object.freeze({ lane_id: "treasury_tga", workflow: ".github/workflows/fetch-treasury-tga.yml" }),
   "us-indices-daily": Object.freeze({ lane_id: "us_indices_daily", workflow: ".github/workflows/fetch-us-indices-daily.yml" }),
