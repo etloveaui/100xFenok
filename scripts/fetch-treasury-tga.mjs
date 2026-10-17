@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { hydratePublicCloudData } from "./materialize-cloud-data-plane-family.mjs";
 
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
@@ -8,7 +9,6 @@ import { fileURLToPath } from "node:url";
 
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 import {
-  LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
   systemicLkgFailureReason,
@@ -435,14 +435,8 @@ export async function runTreasuryTga({
   if (!validObservedAt(observedAt)) throw new Error("observedAt must be RFC3339 UTC");
   if (!/^[a-z][a-z0-9_-]{0,95}$/.test(attemptId)) throw new Error("attemptId is invalid");
   const injectedKey = controlledFailureKey(controlledFailureValue, eventName);
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: LANE_ID });
-  const lkgArtifacts = [{
-    key: LKG_KEY,
-    canonicalPath,
-    validateDocument: validTgaDocument,
-    sourceAsOf: tgaSourceAsOf,
-  }];
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  const currentCanonical = readValidCanonical(canonicalPath);
+  if (!currentCanonical) throw new Error("Active Treasury baseline is invalid");
 
   const requestResults = await Promise.all(BUCKETS.map((bucket) => evaluateRequest(request, bucket, injectedKey)));
   const naturalFailures = requestResults.filter((requestResult) => (
@@ -483,10 +477,9 @@ export async function runTreasuryTga({
     const naturalWorst = naturalFailures.length > 0 ? worstRequestResult(naturalFailures) : null;
     const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((requestResult) => requestResult.reason)])
       ?? (injectedKey && naturalFailures.length === 0 ? "controlled_failure" : naturalWorst?.reason ?? worst.reason);
-    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
     const outcome = classifyLkgFailure({
       reason: failureReason,
-      hasCompleteLkg: failure.hasCompleteLkg,
+      hasCompleteLkg: true,
       systemic: systemicOutage || nonTransientHttp,
     });
     const failureDetail = naturalWorst?.failure_detail ?? worst.failure_detail ?? null;
@@ -496,7 +489,7 @@ export async function runTreasuryTga({
       failure_detail: failureDetail,
       updated: false,
       attempt: row,
-      retrySet: failure.retrySet,
+      retrySet: [LKG_KEY],
       ...outcome,
     };
   }
@@ -510,21 +503,18 @@ export async function runTreasuryTga({
     validateDocument: validTgaDocument,
     deriveSourceAsOf: tgaSourceAsOf,
   };
-  const recoveryState = lkgStore.stateSnapshot();
-  const currentCanonical = readValidCanonical(canonicalPath);
-  if (currentCanonical !== null && recoveryState.items[LKG_KEY]?.retry !== true) {
+  if (currentCanonical !== null) {
     const currentSourceAsOf = tgaSourceAsOf(currentCanonical.document);
     const currentEpoch = Date.parse(currentSourceAsOf);
     const candidateEpoch = Date.parse(candidate.sourceAsOf);
     if (candidateEpoch < currentEpoch) {
-      const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: "source_regression" });
-      const outcome = classifyLkgFailure({ reason: "source_regression", hasCompleteLkg: failure.hasCompleteLkg });
+      const outcome = classifyLkgFailure({ reason: "source_regression", hasCompleteLkg: true });
       return {
         ok: false,
         reason: "source_regression",
         updated: false,
         attempt: row,
-        retrySet: failure.retrySet,
+        retrySet: [LKG_KEY],
         ...outcome,
       };
     }
@@ -533,12 +523,6 @@ export async function runTreasuryTga({
       "persistence_policy",
     ) && Object.prototype.hasOwnProperty.call(currentCanonical.document, "persistence_state");
     if (candidateEpoch === currentEpoch && currentHasPersistenceEnvelope) {
-      if (!recoveryState.items[LKG_KEY]) {
-        lkgStore.recordSuccess({
-          artifacts: [{ ...candidate, payloadBytes: currentCanonical.bytes, sourceAsOf: currentSourceAsOf }],
-          run,
-        });
-      }
       return {
         ok: true,
         reason: "unchanged_source",
@@ -549,29 +533,12 @@ export async function runTreasuryTga({
       };
     }
   }
-  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
-  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
-  if (promotable.length === 0) {
-    const reason = decisions[0].reason;
-    return {
-      ok: false,
-      reason,
-      updated: false,
-      attempt: row,
-      retrySet: lkgStore.stateSnapshot().retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
-  }
   atomicWrite(canonicalPath, serialized);
-  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = recoveringKeys.has(LKG_KEY);
-  return { ok: true, reason: "ok", updated: true, attempt: row, points: output.series.length, recovered };
+  return { ok: true, reason: "ok", updated: true, attempt: row, points: output.series.length, recovered: false };
 }
 
 async function main() {
+  await hydratePublicCloudData({ relative: "macro/tga.json", family: "treasury-tga" });
   const resultValue = await runTreasuryTga();
   if (!resultValue.ok) {
     const prefix = resultValue.degraded ? "[degraded]" : "[corrupt]";

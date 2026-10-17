@@ -276,6 +276,7 @@ jobs:
           # fall through to ASSETS. Only non-runtime root docs/ops are omitted.
           git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-small-macro
 
       - name: Hydrate active Global Scouter build indexes
         env:

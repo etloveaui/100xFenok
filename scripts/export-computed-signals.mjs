@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { hydrateCanonicalCloudData } from "./materialize-cloud-data-plane-family.mjs";
+import { hydrateCanonicalCloudData, hydrateSmallMacroData } from "./materialize-cloud-data-plane-family.mjs";
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -386,6 +386,7 @@ export function buildComputedSignalsPayload(signalsValue, generatedAt, sourceDat
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   await hydrateCanonicalCloudData();
+  await hydrateSmallMacroData();
   const { signals, source_dates: sourceDates } = buildSignals();
   const payload = buildComputedSignalsPayload(signals, new Date().toISOString(), sourceDates);
 

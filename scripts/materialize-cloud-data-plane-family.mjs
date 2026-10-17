@@ -860,20 +860,19 @@ export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.
 
 // Git-retired public inputs are materialized from the existing serving plane.
 // A bundled fallback is not an active generation and cannot seed a producer.
-export async function hydrateCanonicalCloudData({ repoRoot = REPO_ROOT, fetchImpl = fetch } = {}) {
-  const relative = "macro/fred-macro.json";
+export async function hydratePublicCloudData({ relative, family, repoRoot = REPO_ROOT, fetchImpl = fetch } = {}) {
+  if (!relative || relative.split("/").some(part => !part || part === "." || part === "..") || !family) fail("CANONICAL_PATH_INVALID", String(relative));
   const response = await fetchImpl(`https://100xfenok.etloveaui.workers.dev/data/${relative}`, {
     headers: { "user-agent": "feno-data/2", "cache-control": "no-cache" },
     signal: AbortSignal.timeout(30_000),
   });
   const generation = response.headers.get("x-data-plane-generation");
-  if (!response.ok || !generation?.startsWith("fred-macro-")) {
+  if (!response.ok || !generation?.startsWith(`${family}-`)) {
     fail("CANONICAL_GENERATION_UNAVAILABLE", `${relative}:${response.status}`);
   }
   const body = await response.text();
   const document = JSON.parse(body);
-  if (!document || typeof document !== "object" || !document.series
-    || !Number.isFinite(Date.parse(document.updated))) fail("CANONICAL_PAYLOAD_INVALID", relative);
+  if (!document || typeof document !== "object" || (family === "fred-macro" && (!document.series || !Number.isFinite(Date.parse(document.updated))))) fail("CANONICAL_PAYLOAD_INVALID", relative);
   const target = path.join(repoRoot, "data", relative);
   await mkdir(path.dirname(target), { recursive: true });
   const temporary = `${target}.generation-${process.pid}`;
@@ -886,11 +885,23 @@ export async function hydrateCanonicalCloudData({ repoRoot = REPO_ROOT, fetchImp
   return { document, generation };
 }
 
+export async function hydrateCanonicalCloudData(options = {}) {
+  return hydratePublicCloudData({ ...options, relative: "macro/fred-macro.json", family: "fred-macro" });
+}
+
+export async function hydrateSmallMacroData(options = {}) {
+  const inputs = [["macro/stablecoins.json", "defillama-stablecoins"],
+    ["macro/tga.json", "treasury-tga"]];
+  return Promise.all(inputs.map(([relative, family]) => hydratePublicCloudData({ ...options, relative, family })));
+}
+
 const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-analytics") {
+    if (process.argv.slice(2).join(" ") === "--hydrate-small-macro") {
+      console.log(JSON.stringify((await hydrateSmallMacroData()).map(({ generation }) => ({ generation }))));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-analytics") {
       console.log(JSON.stringify(await hydrateYahooFinance({ analyticsOnly: true })));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-sec-13f") {
       console.log(JSON.stringify(await hydrateSec13f()));

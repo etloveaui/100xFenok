@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import https from "node:https";
+import fs from "node:fs";
+import { hydratePublicCloudData } from "./materialize-cloud-data-plane-family.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { atomicWrite } from "./lib/atomic-file.mjs";
 import { attemptResult, classifyHttpResponse, evaluateEndpointAssertions, returnedTuple, threwTuple, transportError, worstRequestResult } from "./lib/provider-fetch-result.mjs";
 import {
-  LaneLkgStore,
   allNaturalRequestsFailed,
   classifyLkgFailure,
   systemicLkgFailureReason,
@@ -216,17 +217,8 @@ export async function runDefillama({
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
   const injectedEndpoint = validateControlledFailureEndpoint(controlledFailureEndpoint.trim(), eventName);
-  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const lkgStore = new LaneLkgStore({
-    repoRoot,
-    laneId: DEFILLAMA_LANE_ID,
-  });
-  const lkgArtifacts = [{
-    key: "stablecoins",
-    canonicalPath,
-    validateDocument: validStablecoinsDocument,
-    sourceAsOf: stablecoinsSourceAsOf,
-  }];
+  const previous = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
+  if (!validStablecoinsDocument(previous)) throw new Error("Active DefiLlama baseline is invalid");
 
   const requestResults = [];
   for (const endpoint of DEFILLAMA_ENDPOINTS) {
@@ -247,7 +239,6 @@ export async function runDefillama({
     );
     const reason = systemicLkgFailureReason([result.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedEndpoint && !systemic ? "controlled_failure" : result.reason);
-    const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason });
     const failureDetail = reason === "controlled_failure"
       ? null
       : result.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
@@ -256,9 +247,9 @@ export async function runDefillama({
       reason,
       updated: false,
       attempt,
-      retrySet: failure.retrySet,
+      retrySet: ["stablecoins"],
       ...(failureDetail ? { failure_detail: failureDetail } : {}),
-      ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg, systemic }),
+      ...classifyLkgFailure({ reason, hasCompleteLkg: true, systemic }),
     };
   }
 
@@ -279,41 +270,18 @@ export async function runDefillama({
     throw new Error("DefiLlama normalized payload is invalid after ready endpoint classification");
   }
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
-  const candidate = {
-    key: "stablecoins",
-    currentRelativePath: "data/macro/stablecoins.json",
-    payloadBytes: Buffer.from(serialized),
-    sourceAsOf: stablecoinsSourceAsOf(output),
-    validateDocument: validStablecoinsDocument,
-    deriveSourceAsOf: stablecoinsSourceAsOf,
-  };
-  const state = lkgStore.stateSnapshot();
-  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
-  const promotable = decisions.filter((decision) => decision.eligible).map((decision) => decision.artifact);
-  if (promotable.length === 0) {
-    const reason = decisions[0].reason;
-    return {
-      ok: false,
-      reason,
-      updated: false,
-      attempt,
-      retrySet: lkgStore.stateSnapshot().retry_set,
-      degraded: true,
-      corrupt: false,
-      exitCode: 0,
-    };
+  const sourceAsOf = Date.parse(stablecoinsSourceAsOf(output));
+  if (!Number.isFinite(sourceAsOf) || sourceAsOf > Date.parse(observedAt) + 120_000) throw new Error("DefiLlama candidate has an invalid source clock");
+  if (sourceAsOf < Date.parse(stablecoinsSourceAsOf(previous))) {
+    return { ok: false, reason: "source_regression", updated: false, attempt,
+      retrySet: ["stablecoins"], degraded: true, corrupt: false, exitCode: 2 };
   }
-
   atomicWrite(canonicalPath, serialized);
-  // Producer writes canonical/admin only. The 100xfenok-next/public mirror is
-  // fallback materialization owned by sync-public-data / the Update Manifest.
-  const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-  const success = lkgStore.recordSuccess({ artifacts: promotable, run });
-  const recovered = recoveringKeys.has("stablecoins");
-  return { ok: true, reason: "ok", updated: true, attempt, recovered, exitCode: 0 };
+  return { ok: true, reason: "ok", updated: true, attempt, recovered: false, exitCode: 0 };
 }
 
 async function main() {
+  await hydratePublicCloudData({ relative: "macro/stablecoins.json", family: "defillama-stablecoins" });
   const result = await runDefillama();
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";

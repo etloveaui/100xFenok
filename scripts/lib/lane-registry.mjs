@@ -275,22 +275,17 @@ const lanes = [
     owner_workflow: ".github/workflows/fetch-treasury-tga.yml",
     provider_members: null,
     provider_refs: [{ provider_id: "treasury_fiscal_data", role: "source", members: null }],
-    store_kind: "payload",
+    store_kind: "artifact_only",
     lane_class: "detection_floor",
     cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
-    admin_store: "data/admin/treasury_tga",
+    admin_store: null,
     detection_attempt: null,
     canonical_outputs: ["data/macro/tga.json"],
     public_mirror: [],
-    commit_shards: [
-      "data/admin/treasury_tga/index.json",
-      "data/admin/treasury_tga/lkg/tga.json",
-      "data/macro/tga.json",
-    ],
-    recovery_store: "data/admin/treasury_tga/index.json",
-    kpi_recovery_shape: "general",
+    commit_shards: [],
+    recovery_store: null,
   }),
   record({
     id: "defillama_stablecoins",
@@ -298,22 +293,17 @@ const lanes = [
     owner_workflow: ".github/workflows/fetch-defillama.yml",
     provider_members: null,
     provider_refs: [{ provider_id: "defillama", role: "source", members: null }],
-    store_kind: "payload",
+    store_kind: "artifact_only",
     lane_class: "detection_floor",
     cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
-    admin_store: "data/admin/defillama_stablecoins",
+    admin_store: null,
     detection_attempt: null,
     canonical_outputs: ["data/macro/stablecoins.json"],
     public_mirror: [],
-    commit_shards: [
-      "data/admin/defillama_stablecoins/index.json",
-      "data/admin/defillama_stablecoins/lkg/stablecoins.json",
-      "data/macro/stablecoins.json",
-    ],
-    recovery_store: "data/admin/defillama_stablecoins/index.json",
-    kpi_recovery_shape: "general",
+    commit_shards: [],
+    recovery_store: null,
   }),
   record({
     id: "yahoo_etf_fallback",
@@ -1608,15 +1598,7 @@ Object.assign(workflow_policies, {
 
 // Rich producer policies whose current YAML uses directory/glob/dynamic
 // pathspecs or explicit restore exclusions.
-workflow_policies[".github/workflows/fetch-defillama.yml"] = lanePolicy(".github/workflows/fetch-defillama.yml", {
-  always_if_exists: [
-    commitSpec("data/admin/defillama_stablecoins/index.json", "file"),
-    commitSpec("data/admin/defillama_stablecoins/lkg/stablecoins.json", "file"),
-  ],
-  success_if_exists: [
-    commitSpec("data/macro/stablecoins.json", "file", true),
-  ],
-});
+workflow_policies[".github/workflows/fetch-defillama.yml"] = lanePolicy(".github/workflows/fetch-defillama.yml", {});
 workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = lanePolicy(".github/workflows/fetch-fenok-apewisdom.yml", {
   always_if_exists: [
     commitSpec("data/admin/apewisdom_attention/index.json", "file"),
