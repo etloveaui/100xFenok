@@ -134,6 +134,44 @@ jobs:
           cp -R "$RUNNER_TEMP/finra-short-volume-active/." data/
           echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
           echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
+          node --input-type=module <<'JS'
+          import { cp, mkdir } from 'node:fs/promises';
+          import path from 'node:path';
+          import { createDefaultMaterializePlane, materializeCloudDataPlaneFamily } from './scripts/materialize-cloud-data-plane-family.mjs';
+          const env = process.env, repoRoot = process.cwd(), family = 'platform-projections';
+          const wanted = new Set(['data/computed/fenok_signals.json']);
+          const plane = createDefaultMaterializePlane({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
+            token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
+            writeKey: env.DATA_PLANE_WRITE_KEY, family });
+          const receipt = await materializeCloudDataPlaneFamily({ plane, family, repoRoot, env,
+            manifestPrefix: 'public/data', privateManifestPrefix: 'data', privacyClass: 'public',
+            outputRoot: path.join(env.RUNNER_TEMP, 'edge-signal-universe'), canonicalReuseRoot: repoRoot,
+            includeAsset: asset => wanted.has(asset.path) });
+          for (const assetPath of wanted) {
+            const relative = assetPath.replace(/^(public\/)?data\//, '');
+            const target = path.join(repoRoot, 'data', relative);
+            await mkdir(path.dirname(target), { recursive: true });
+            await cp(path.join(receipt.output_root, relative), target);
+          }
+          const { readFile } = await import('node:fs/promises');
+          const signals = JSON.parse(await readFile(path.join(repoRoot, 'data/computed/fenok_signals.json'), 'utf8'));
+          const tickers = new Set(signals.rows.filter(row => row.market_scope === 'us').map(row => String(row.ticker).toUpperCase()));
+          for (const [inputFamily, includeAsset] of [
+            ['gdelt-news-tone', asset => asset.path === 'data/computed/fenok_news_tone_proxy.json'],
+            ['yahoo-finance', asset => asset.privacy_class === 'public' && asset.path.startsWith('public/data/yf/finance/')
+              && tickers.has(path.basename(asset.path, '.json'))],
+          ]) {
+            const inputPlane = createDefaultMaterializePlane({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
+              token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
+              writeKey: env.DATA_PLANE_WRITE_KEY, family: inputFamily });
+            const input = await materializeCloudDataPlaneFamily({ plane: inputPlane, family: inputFamily, repoRoot, env,
+              manifestPrefix: inputFamily === 'gdelt-news-tone' ? 'data' : 'public/data',
+              privateManifestPrefix: inputFamily === 'gdelt-news-tone' ? null : 'data',
+              privacyClass: inputFamily === 'gdelt-news-tone' ? 'private' : 'public',
+              outputRoot: path.join(env.RUNNER_TEMP, `edge-input-${inputFamily}`), canonicalReuseRoot: repoRoot, includeAsset });
+            await cp(input.output_root, path.join(repoRoot, 'data'), { recursive: true });
+          }
+          JS
 
       - name: Resolve bounded window
         id: window

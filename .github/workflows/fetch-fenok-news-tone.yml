@@ -103,6 +103,28 @@ jobs:
           cp -R "$RUNNER_TEMP/gdelt-active/." data/
           echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
           echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
+          node --input-type=module <<'JS'
+          import { cp, mkdir } from 'node:fs/promises';
+          import path from 'node:path';
+          import { createDefaultMaterializePlane, materializeCloudDataPlaneFamily } from './scripts/materialize-cloud-data-plane-family.mjs';
+          const env = process.env, repoRoot = process.cwd(), family = 'platform-projections';
+          const wanted = new Set(['data/computed/fenok_signals.json']);
+          const plane = createDefaultMaterializePlane({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
+            token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
+            writeKey: env.DATA_PLANE_WRITE_KEY, family });
+          const receipt = await materializeCloudDataPlaneFamily({ plane, family, repoRoot, env,
+            manifestPrefix: 'public/data', privateManifestPrefix: 'data', privacyClass: 'public',
+            outputRoot: path.join(env.RUNNER_TEMP, 'gdelt-signal-universe'), canonicalReuseRoot: repoRoot,
+            includeAsset: asset => wanted.has(asset.path) });
+          for (const assetPath of wanted) {
+            const relative = assetPath.replace(/^(public\/)?data\//, '');
+            const target = path.join(repoRoot, 'data', relative);
+            await mkdir(path.dirname(target), { recursive: true });
+            await cp(path.join(receipt.output_root, relative), target);
+          }
+
+          JS
+
       - name: Fetch GDELT news tone proxy
         id: fetch_news_tone
         env:

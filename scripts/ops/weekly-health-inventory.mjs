@@ -5,10 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
-import { summarizeDataSetFreshness, DETECTION_CALENDARS } from "../lib/fenok-data-health-freshness.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const dataRoot = path.join(root, "data");
 const now = new Date().toISOString();
 const title = "100x weekly inventory";
 const findings = {};
@@ -18,13 +16,11 @@ function read(relative) {
   catch { note(`unread:${relative}`, "inventory", `${relative}: 읽을 수 없음`); return null; }
 }
 const kpi = read("data/admin/fenok-data-health-kpi.json");
-const floor = read("data/admin/data-supply-detection-floor.json");
 const projection = read("data/admin/lane-registry-projection.json");
 const coverage = read("data/admin/product-surface-coverage.json");
 const usage = read("data/admin/data-usage-manifest.json");
 const alarm = read("data/admin/alarm-state.json");
 const sets = new Map((kpi?.sets ?? []).map(row => [row.set, row]));
-const floors = new Map((floor?.lanes ?? []).map(row => [row.id, row]));
 const board = new Map((projection?.lanes ?? []).map(row => [row.id, row]));
 const ownerSources = new Set(LANE_REGISTRY.providers.filter(row => row.class === "owner_managed_data"
   && row.id !== "fenok_briefing").map(row => row.id)); // Briefing is scheduled on M4.
@@ -44,14 +40,20 @@ for (const lane of LANE_REGISTRY.lanes) {
   // Owner-supplied exports remain an agreed input boundary, not new work.
   const served = sets.get(lane.id);
   if (served && !ownerSupplied) {
-    const actual = summarizeDataSetFreshness(lane, floors.get(lane.id), now, DETECTION_CALENDARS, dataRoot);
-    if (served.status === "fresh" && actual.status !== "fresh") {
-      note(`label:${lane.id}`, "families", `${lane.label}: 원장은 fresh, 원천 기준일을 현재 시각으로 계산하면 ${actual.status}`);
-    }
-    const oldRatio = served.total_members ? served.fresh_members / served.total_members : null;
-    const currentRatio = actual.total_members ? actual.fresh_members / actual.total_members : null;
-    if (oldRatio !== null && currentRatio !== null && oldRatio >= .95 && currentRatio < .95) {
-      note(`members:${lane.id}`, "families", `${lane.label}: 현재 ${actual.fresh_members}/${actual.total_members}개 기준 이내`);
+    // The alarm consumes these same promoted source-health observations.
+    // Weekly inventory must not reconstruct them from retired raw snapshots.
+    const actual = served.source_health;
+    if (!actual) {
+      note(`unread:source-health:${lane.id}`, "inventory", `${lane.label}: 게시된 원천 상태 없음`);
+    } else {
+      if (served.status === "fresh" && actual.status !== "fresh") {
+        note(`label:${lane.id}`, "families", `${lane.label}: 원장은 fresh, 게시된 원천 상태는 ${actual.status}`);
+      }
+      const oldRatio = served.total_members ? served.fresh_members / served.total_members : null;
+      const currentRatio = actual.total_members ? actual.fresh_members / actual.total_members : null;
+      if (oldRatio !== null && currentRatio !== null && oldRatio >= .95 && currentRatio < .95) {
+        note(`members:${lane.id}`, "families", `${lane.label}: 게시된 원천 상태는 ${actual.fresh_members}/${actual.total_members}개 기준 이내`);
+      }
     }
   }
   if (lane.external_status) {

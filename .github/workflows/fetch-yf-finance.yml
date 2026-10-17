@@ -248,6 +248,32 @@ jobs:
             python3 scripts/yahoo_batch_state.py export-generation --state-root data/admin/yahoo-batch-quote-history
           fi
           python3 scripts/yahoo_batch_state.py hydrate-generation --state-root "$YAHOO_BATCH_STATE_ROOT"
+          node --input-type=module <<'JS'
+          import { cp, mkdir } from 'node:fs/promises';
+          import path from 'node:path';
+          import { createDefaultMaterializePlane, materializeCloudDataPlaneFamily } from './scripts/materialize-cloud-data-plane-family.mjs';
+          const env = process.env, repoRoot = process.cwd(), family = 'platform-projections';
+          const wanted = new Set(['data/admin/fenok-etf-core-daily-basket.json', 'data/admin/fenok-s1-stock-public-promotion-dry-run.json', 'public/data/computed/market_facts/index.json']);
+          const plane = createDefaultMaterializePlane({ accountId: env.CLOUDFLARE_ACCOUNT_ID,
+            token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT,
+            writeKey: env.DATA_PLANE_WRITE_KEY, family });
+          const receipt = await materializeCloudDataPlaneFamily({ plane, family, repoRoot, env,
+            manifestPrefix: 'public/data', privateManifestPrefix: 'data', privacyClass: 'public',
+            outputRoot: path.join(env.RUNNER_TEMP, 'yahoo-universe-inputs'), canonicalReuseRoot: repoRoot,
+            includeAsset: asset => wanted.has(asset.path) });
+          for (const assetPath of wanted) {
+            const relative = assetPath.replace(/^(public\/)?data\//, '');
+            const target = path.join(repoRoot, 'data', relative);
+            await mkdir(path.dirname(target), { recursive: true });
+            await cp(path.join(receipt.output_root, relative), target);
+          }
+          const { hydratePublicCloudData } = await import('./scripts/materialize-cloud-data-plane-family.mjs');
+          for (const [inputFamily, relative] of [
+            ['stockanalysis-catalogue', 'stockanalysis/etf_universe.json'],
+            ['stockanalysis-catalogue', 'stockanalysis/surfaces/etf_screener.json'],
+            ['nasdaq-giw-sox', 'indices/nasdaq-giw-sox-constituents.json'],
+          ]) await hydratePublicCloudData({ family: inputFamily, relative });
+          JS
 
       - name: Run batch fetch
         id: fetch_batch

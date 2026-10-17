@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
 // Read-only observability for the SEC 13F public projection. The canonical
-// comparison target is read from a caller-selected Git ref so a stale working
-// tree cannot make a live projection look current. This probe is intentionally
+// comparison target is materialized from the active SEC generation, with
+// bytes verified by the existing materializer. This probe is intentionally
 // not a freshness, graph, deploy, or publication gate.
 
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,7 +13,6 @@ import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
-const DEFAULT_CANONICAL_REF = "origin/main";
 const ROUTES = Object.freeze({
   summary: "/data/sec-13f/summary.json",
   consensus: "/data/sec-13f/analytics/consensus.json",
@@ -35,10 +33,7 @@ function parseArgs(argv) {
   assert.ok(/^https?:$/u.test(baseUrl.protocol), "--base-url must use HTTP(S)");
   return {
     baseUrl: baseUrl.toString().replace(/\/$/u, ""),
-    canonicalRef: readOption(
-      "--canonical-ref",
-      process.env.SEC13F_PARITY_CANONICAL_REF ?? DEFAULT_CANONICAL_REF,
-    ),
+    canonicalGeneration: process.env.SEC13F_PARITY_CANONICAL_GENERATION,
     reportPath: readOption(
       "--report-path",
       process.env.SEC13F_PARITY_REPORT_PATH ?? "",
@@ -56,13 +51,8 @@ function sortedStrings(value, label) {
   return [...value].map(String).sort();
 }
 
-function readCanonicalJson(canonicalRef, relativePath) {
-  const raw = execFileSync(
-    "git",
-    ["show", `${canonicalRef}:${relativePath}`],
-    { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-  );
-  return JSON.parse(raw);
+function readCanonicalJson(relativePath) {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8"));
 }
 
 export function buildExpected(canonical) {
@@ -168,7 +158,7 @@ export function formatReport(result, context) {
   const lines = [
     `SEC 13F live semantic parity: ${status}`,
     `base_url=${context.baseUrl}`,
-    `canonical_ref=${context.canonicalRef}`,
+    `canonical_generation=${context.canonicalGeneration}`,
     "evidence_class=observability_only; freshness_credit=false; graph_expansion=false; deploy_gate=false",
   ];
   for (const row of result.rows) {
@@ -177,17 +167,18 @@ export function formatReport(result, context) {
   return lines.join("\n");
 }
 
-function readCanonical(canonicalRef) {
+function readCanonical() {
   return {
-    summary: readCanonicalJson(canonicalRef, "data/sec-13f/summary.json"),
-    consensus: readCanonicalJson(canonicalRef, "data/sec-13f/analytics/consensus.json"),
-    byTicker: readCanonicalJson(canonicalRef, "data/sec-13f/by_ticker.json"),
+    summary: readCanonicalJson("data/sec-13f/summary.json"),
+    consensus: readCanonicalJson("data/sec-13f/analytics/consensus.json"),
+    byTicker: readCanonicalJson("data/sec-13f/by_ticker.json"),
   };
 }
 
 async function run(argv) {
   const options = parseArgs(argv);
-  const canonical = readCanonical(options.canonicalRef);
+  assert.ok(options.canonicalGeneration, "active SEC comparison generation is required");
+  const canonical = readCanonical();
   const cacheBust = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const fetched = await Promise.all(
     Object.entries(ROUTES).map(async ([key, route]) => [key, await fetchJson(options.baseUrl, route, options.timeoutMs, cacheBust)]),
