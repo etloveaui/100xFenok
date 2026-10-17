@@ -504,8 +504,12 @@ export function inspectCloudflareAssetBudget({
   const files = collectRegularFiles(root);
   const generatedDataManifest = validateGeneratedDataManifest(root);
   const count = files.length;
-  const dataSupplyProjection = validateProjectionCounts(root, projectionCounts(files), files, expectedRoot);
-  const stockanalysisEtfShards = validateStockanalysisEtfShardAssets(root, files, expectedRoot);
+  const dataSupplyProjection = projectionCounts(files);
+  if (dataSupplyProjection.total_files !== 0
+    || files.some(item => item.relativePath.startsWith("data/stockanalysis/etfs/"))) {
+    throw new Error("Private active-generation ETF data must not be emitted as static assets");
+  }
+  const stockanalysisEtfShards = null;
   const payload = {
     schema_version: "cloudflare-asset-budget/v1",
     counted_root: root,
