@@ -361,7 +361,11 @@ def pack_artifact(
             continue
         if any(spec_matches(rel, excluded) for excluded in excludes):
             source = repo / rel
-            if not source.is_file() or sha256_file(source) != sha256_file(path):
+            # Plane-backed acquisition preserves excluded bytes from its verified
+            # baseline; those snapshots no longer have a Git working copy.
+            expected_digest = (baseline.get(rel) if baseline_manifest is not None else
+                               sha256_file(source) if source.is_file() else None)
+            if expected_digest != sha256_file(path):
                 fail(f"excluded path is forbidden in StockAnalysis artifact: {rel}")
             continue
         validate_allowed_path(rel, specs, excludes)
