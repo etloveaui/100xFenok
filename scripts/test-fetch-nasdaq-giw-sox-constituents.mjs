@@ -389,9 +389,9 @@ await assert.rejects(() => runNasdaqGiwSox({
   }
   const history = readJson(historyFile);
   assert.equal(history.entries.length, 100, "sidecar is bounded at the cap");
-  assert.equal(history.entries[0].as_of, "2026-07-16", "the seed date is the newest of the 106 distinct dates");
-  assert.equal(history.entries.some((entry) => entry.as_of === dateAt(5)), false, "oldest dates evicted first (106 -> 100)");
-  assert.equal(history.entries.some((entry) => entry.as_of === dateAt(6)), true);
+  assert.equal(history.entries[0].as_of, "2026-07-16", "the seed date is the newest of the 107 distinct dates");
+  assert.equal(history.entries.some((entry) => entry.as_of === dateAt(6)), false, "oldest dates evicted first (107 -> 100)");
+  assert.equal(history.entries.some((entry) => entry.as_of === dateAt(7)), true);
   assert.equal(history.persistence_policy.max_distinct_source_dates, 100);
 
   // sparse history is never pruned; duplicate dates collapse (idempotent).
