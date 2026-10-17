@@ -538,6 +538,8 @@ export const FAMILIES = {
     // throw on every publish this family has ever attempted since 2026-06-21.
     exclude: ["ops/", "README.md"],
     privacy_class: "public",
+    reuse_active_generation: true,
+    private_roots: ["data/edgar", "data/admin/edgar_filings", "data/edgar-korean-summaries/ops"],
     source_as_of: { file: "index.json", key: "updated" },
     plan: { class_a: 3690, bytes: 29_900_000 },
     policy: { max_assets: 7380, max_total_bytes: 59_800_000 },
@@ -753,8 +755,8 @@ export const FAMILIES = {
     reuse_active_generation: true,
     privacy_class: "private",
     source_as_of: { file: "computed/fenok_social_attention_proxy.json", key: ["source", "source_as_of"] },
-    plan: { class_a: 16, class_b: 40, bytes: 8_000_000 },
-    policy: { max_assets: 4, max_total_bytes: 4_000_000 },
+    plan: { class_a: 16, class_b: 40, bytes: 24_000_000 },
+    policy: { max_assets: 4, max_total_bytes: 12_000_000 },
   },
   "gdelt-news-tone": {
     root: "data",
@@ -1842,7 +1844,13 @@ export async function buildFamilyManifest({
       }
     }
   }
-  for (const retained of family.private_assets ?? []) {
+  const retainedAssets = [...(family.private_assets ?? [])];
+  for (const root of family.private_roots ?? []) {
+    for (const relative of await walkFiles(path.join(repoRoot, root))) {
+      retainedAssets.push({ path: `${root}/${relative}`, source_as_of: null });
+    }
+  }
+  for (const retained of retainedAssets) {
     const assetPath = retained.path;
     if (!assetPath.startsWith("data/") || assetPath.includes("\\")
       || assetPath.split("/").some((part) => !part || part === "." || part === "..")
