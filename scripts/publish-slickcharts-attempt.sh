@@ -192,9 +192,6 @@ for attempt in $(seq 1 5); do
   fi
 
   if git push origin HEAD:main; then
-    if command -v gh >/dev/null 2>&1 && [[ -n "${GH_TOKEN:-}" ]]; then
-      gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
-    fi
     exit "$recovery_exit"
   fi
   echo "git push race on attempt ${attempt}; retrying with saved ${member} state"
