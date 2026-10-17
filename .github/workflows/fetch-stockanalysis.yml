@@ -108,10 +108,11 @@ on:
         description: 'Maximum base ETF detail targets before incremental retries (0 = all selected targets)'
         required: false
         default: '100'
-      max_universe_pages:
-        description: 'Maximum ETF universe list pages to scan'
+      natural_etf_weekday:
+        description: 'Run the regular weekday ETF refresh now (daily selection plus 400-member rotation)'
         required: false
-        default: '100'
+        type: boolean
+        default: false
       sleep:
         description: 'Seconds between requests'
         required: false
@@ -273,12 +274,29 @@ jobs:
           INPUT_CONTROLLED_FAILURE_SURFACES: ${{ github.event.inputs.controlled_failure_surfaces }}
           INPUT_OFFSET: ${{ github.event.inputs.offset }}
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
-          INPUT_MAX_UNIVERSE_PAGES: ${{ github.event.inputs.max_universe_pages }}
+          INPUT_MAX_UNIVERSE_PAGES: '100'
+          INPUT_NATURAL_ETF_WEEKDAY: ${{ inputs.natural_etf_weekday && 'true' || 'false' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
           EVENT_NAME: ${{ needs.clock-admission.outputs.event_name }}
           EVENT_SCHEDULE: ${{ needs.clock-admission.outputs.schedule }}
           CLOCK_MODE: ${{ needs.clock-admission.outputs.mode }}
         run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_NATURAL_ETF_WEEKDAY" = "true" ]; then
+            # Select only the collector path. Clock admission, the GitHub event
+            # and the artifact event stay manual, so no scheduled slot is covered.
+            EVENT_NAME="schedule"
+            CLOCK_MODE="etf_weekday"
+            INPUT_ETFS=""
+            INPUT_STOCKS=""
+            INPUT_STOCKS_ONLY="false"
+            INPUT_RECONCILE_MISSING_ETF_DETAILS="false"
+            INPUT_HISTORY_GAP_PLAN="false"
+            INPUT_SURFACES=""
+            INPUT_CONTROLLED_FAILURE_TICKERS=""
+            INPUT_CONTROLLED_FAILURE_SURFACES=""
+            INPUT_OFFSET="0"
+            INPUT_LIMIT_ETFS="100"
+          fi
           NATURAL_RECOVERY_KINDS="all"
           INPUT_STOCK_LIMIT="0"
           INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="false"
@@ -506,7 +524,7 @@ jobs:
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
       - name: Refresh history-gap plan after live backfill
-        if: ${{ github.event.inputs.history_gaps_only == 'true' }}
+        if: ${{ github.event.inputs.history_gaps_only == 'true' && !inputs.natural_etf_weekday }}
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
@@ -632,9 +650,10 @@ jobs:
         ((needs.clock-admission.outputs.event_name == 'schedule' &&
           (needs.clock-admission.outputs.mode == 'etf_weekday' || needs.clock-admission.outputs.mode == 'etf_general')) ||
          (needs.clock-admission.outputs.event_name == 'workflow_dispatch' &&
-          (inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
-          inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
-          inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''))))
+          (inputs.natural_etf_weekday ||
+           ((inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
+            inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
+            inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''))))))
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -1242,6 +1261,7 @@ jobs:
       (
         needs.publish-stockanalysis-etf-plane.result == 'success' ||
         (
+          !inputs.natural_etf_weekday &&
           (needs.clock-admission.outputs.event_name != 'schedule' ||
             (needs.clock-admission.outputs.mode != 'etf_weekday' && needs.clock-admission.outputs.mode != 'etf_general')) &&
           needs.publish-stockanalysis-etf-plane.result == 'skipped'
