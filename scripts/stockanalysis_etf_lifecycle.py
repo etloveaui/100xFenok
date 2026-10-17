@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import math
+import re
 from pathlib import Path
 import subprocess
 
@@ -40,6 +42,102 @@ def new_fund_tickers(records, now=None):
             except ValueError:
                 continue
     return selected
+
+
+
+def select_detail_universe(records, *, prior_selected=(), always_include=(), stock_records=(), now=None):
+    """Owner-approved ETF detail membership; catalogue visibility is unchanged.
+
+    prior_selected must come from the preceding promoted selection, never from
+    the legacy all-ETF enrollment. Owner variable values are not logged here.
+    """
+    rows = {str(row.get("ticker") or row.get("s") or "").upper(): row
+            for row in records if isinstance(row, dict)}
+    rows.pop("", None)
+    def aum(ticker):
+        value = rows[ticker].get("aum")
+        return value if isinstance(value, (int, float)) and math.isfinite(value) else 0
+    prior = set(prior_selected)
+    owner = set(always_include) & rows.keys()
+    leveraged = {ticker for ticker, row in rows.items()
+                 if any((row.get("classification") or {}).get(flag) is True
+                        for flag in ("is_leveraged", "is_inverse"))}
+    groups = {
+        "top_aum": set(sorted(rows, key=lambda ticker: (-aum(ticker), ticker))[:500]),
+        "leveraged_aum": {ticker for ticker in leveraged
+                          if aum(ticker) >= (5_000_000 if ticker in prior else 10_000_000)},
+        "single_stock": {ticker for ticker in leveraged
+                         if (rows[ticker].get("classification") or {}).get("is_single_stock") is True},
+        "new_fund": new_fund_tickers(records, now),
+        "owner": owner,
+    }
+    selected = set().union(*groups.values())
+    def normalized(value):
+        value = re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
+        return re.sub(r"\s+(?:incorporated|corporation|company|limited|inc|corp|ltd|plc)$", "", value).strip()
+    stocks = {}; aliases = {}
+    for row in stock_records:
+        if not isinstance(row, dict):
+            continue
+        ticker = str(row.get("ticker") or row.get("symbol") or row.get("Ticker") or "").upper()
+        if not ticker:
+            continue
+        stocks[ticker] = row
+        for key in ("name", "company", "company_name", "companyName", "Name", "shortName", "longName"):
+            alias = normalized(row.get(key))
+            if alias:
+                aliases.setdefault(alias, set()).add(ticker)
+    pairs = {}; unresolved = []
+    index_pairs = ROTATION_POLICY.get("underlying_etfs", {})
+    for ticker in sorted(selected & leveraged):
+        row = rows[ticker]; classification = row.get("classification") or {}
+        underlying = str(classification.get("underlying") or "").strip()
+        direct = underlying.upper()
+        target = direct if direct in rows or direct in stocks else None
+        if target is None:
+            matches = aliases.get(normalized(underlying), set())
+            if len(matches) == 1:
+                target = next(iter(matches))
+        if target is None:
+            # Provider classification is often empty. Only unambiguous exact
+            # stock names or explicit uppercase symbols in the fund name count.
+            name = str(row.get("name") or "")
+            symbols = set(re.findall(r"\b[A-Z][A-Z0-9.-]{0,9}\b", name))
+            matches = (symbols & (stocks.keys() | rows.keys())) - {ticker, "ETF", "ETFS", "USD"}
+            if len(matches) == 1:
+                target = next(iter(matches))
+            if target is None:
+                normalized_name = " " + normalized(name) + " "
+                found = [(len(alias), values) for alias, values in aliases.items()
+                         if len(alias) >= 4 and " " + alias + " " in normalized_name and len(values) == 1]
+                if found:
+                    longest = max(length for length, _ in found)
+                    matches = set().union(*(values for length, values in found if length == longest))
+                    if len(matches) == 1:
+                        target = next(iter(matches))
+        if target is None and not classification.get("is_single_stock"):
+            # This small canonical map represents index exposures, not owners.
+            text = " " + normalized(underlying + " " + str(row.get("name") or "")) + " "
+            matches = {value for key, value in index_pairs.items()
+                       if " " + normalized(key) + " " in text and value in rows}
+            if len(matches) == 1:
+                target = next(iter(matches))
+        if target and target != ticker:
+            pairs[ticker] = {"ticker": target, "kind": "etf" if target in rows else "stock"}
+        else:
+            unresolved.append(ticker)
+    selected.update(pair["ticker"] for pair in pairs.values() if pair["kind"] == "etf")
+    daily = owner | {ticker for ticker in leveraged & selected if aum(ticker) >= 500_000_000}
+    rotating = selected - daily
+    # Capacity growth lengthens rotation; it never rejects a larger universe.
+    remaining_per_run = max(1, ROTATION_POLICY["general_limit"] - len(daily))
+    interval = max(1, math.ceil(len(rotating) * 7 / (remaining_per_run * len(ROTATION_POLICY["general_weekdays_utc"]))))
+    return {"schema_version": "etf-detail-selection/v1", "selected": sorted(selected),
+            "daily": sorted(daily), "paired_stocks": sorted({pair["ticker"] for pair in pairs.values() if pair["kind"] == "stock"}),
+            "pairs": pairs, "rotation_interval_days": interval,
+            "counts": {**{key: len(value) for key, value in groups.items()},
+                       "selected": len(selected), "daily": len(daily),
+                       "pairs_resolved": len(pairs), "pairs_unresolved": len(unresolved)}}
 
 
 def detail_refresh_cadence(root):
