@@ -11,7 +11,7 @@ import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const HELPER = path.join(REPO_ROOT, "scripts", "stage-lane-manifest.sh");
-const WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
+const WORKFLOW = ".github/workflows/fetch-fred-yardeni.yml";
 const YAHOO_WORKFLOW = ".github/workflows/fetch-yahoo-ticker.yml";
 const SENTIMENT_WORKFLOW = ".github/workflows/fetch-sentiment.yml";
 const EDGE_WORKFLOW = ".github/workflows/fenok-edge-daily.yml";
