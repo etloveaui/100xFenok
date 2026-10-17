@@ -725,28 +725,28 @@ export const FAMILIES = {
     },
   },
   "finra-short-volume": {
-    root: "data/computed",
+    root: "data",
+    files: ["admin/finra_short_volume/current/regsho_daily.json", "admin/finra_short_volume/history/regsho_daily.json", "admin/finra_short_volume/index.json", "admin/finra_short_volume/lkg/regsho_daily.json", "computed/fenok_flow_proxies.json", "computed/fenok_flow_proxies_history.json", "computed/fenok_occ_options_availability.json", "computed/fenok_occ_options_volume.json", "computed/fenok_occ_options_volume_history.json", "computed/fenok_signal_lens_proxies.json", "computed/fenok_signal_lens_proxies_history.json", "computed/fenok_signal_lens_proxies_summary.json"],
+    privacy_class: "private",
+    reuse_active_generation: true,
+    source_as_of: { file: "admin/finra_short_volume/current/regsho_daily.json", key: "source_as_of" },
+    private_roots: ["data/admin/occ_options_volume"],
+    plan: { class_a: 64, class_b: 128, bytes: 400_000_000 },
+    policy: { max_assets: 32, max_total_bytes: 200_000_000 },
+  },
+  "occ-options-availability": {
+    root: "100xfenok-next/public/data/computed",
     manifest_prefix: "public/data/computed",
     files: ["fenok_occ_options_availability.json"],
     privacy_class: "public",
     reuse_active_generation: true,
     source_as_of: { key: "source_date" },
-    private_roots: ["data/admin/finra_short_volume", "data/admin/occ_options_volume"],
-    private_assets: [
-      {"path": "data/computed/fenok_flow_proxies.json", "source_as_of": null},
-      {"path": "data/computed/fenok_flow_proxies_history.json", "source_as_of": null},
-      {"path": "data/computed/fenok_occ_options_volume.json", "source_as_of": null},
-      {"path": "data/computed/fenok_occ_options_volume_history.json", "source_as_of": null},
-      {"path": "data/computed/fenok_signal_lens_proxies.json", "source_as_of": null},
-      {"path": "data/computed/fenok_signal_lens_proxies_history.json", "source_as_of": null},
-      {"path": "data/computed/fenok_signal_lens_proxies_summary.json", "source_as_of": null},
-    ],
-    plan: { class_a: 64, class_b: 128, bytes: 400_000_000 },
-    policy: { max_assets: 32, max_total_bytes: 200_000_000 },
+    plan: { class_a: 10, class_b: 20, bytes: 4_000_000 },
+    policy: { max_assets: 4, max_total_bytes: 2_000_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
-      return Array.isArray(value.rows) && typeof value.source_date === "string"
-        && !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+      return typeof value.source_date === "string"
+        && !Object.hasOwn(value, "rows") && !Object.hasOwn(value, "side_attempts");
     },
   },
   "finra-ats-weekly": {
@@ -916,12 +916,14 @@ export const FAMILIES = {
       "global-scouter/core/slick_index.json",
       "global-scouter/core/revision_movers.json",
       "computed/sec13f_bridge_index.json",
+      "damodaran/industry_benchmarks.json",
+      "calendar/prev-values.json",
     ],
     privacy_class: "public",
     reader_enrollment: true,
     source_as_of: { per_asset_resolver: "scouter_derived_source_date" },
     plan: { class_a: 20, class_b: 40, bytes: 10_000_000 },
-    policy: { max_assets: 5, max_total_bytes: 5_000_000 },
+    policy: { max_assets: 8, max_total_bytes: 5_000_000 },
     validate_public_payload({ bytes }) {
       const value = JSON.parse(new TextDecoder().decode(bytes));
       return value && typeof value === "object" && !Array.isArray(value);
@@ -1422,6 +1424,10 @@ function yahooFinanceSourceObservation(payload, relative = "") {
 // Preserve an explicitly unknown derived source clock. Generation time is
 // never substituted for the undated SlickCharts rows or SEC quarter label.
 function scouterDerivedSourceDate(payload, relative) {
+  // These documents carry a month label or no source clock, not an ISO day.
+  if (["damodaran/industry_benchmarks.json", "calendar/prev-values.json"].includes(relative)) {
+    return { day: null, origin: "unknown" };
+  }
   if (relative === "global-scouter/core/slick_index.json" && payload.source_date === null
       && payload.source_date_reason) return { day: null, origin: "unknown" };
   if (relative === "computed/sec13f_bridge_index.json") {

@@ -37,11 +37,11 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   actions: write
 
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  group: scouter-derived-publish
   cancel-in-progress: false
   queue: max
 
@@ -74,6 +74,7 @@ jobs:
     needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    environment: production
 
     steps:
       - name: Checkout repository
@@ -99,6 +100,8 @@ jobs:
         run: |
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-global-scouter
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-sec-13f
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-scouter-derived
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family damodaran
 
       - name: Hydrate active Yahoo finance and derive acquisition indexes
         env:
@@ -141,8 +144,7 @@ jobs:
         if: github.event_name != 'push'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-        # non-fatal: calendar context is an enhancement, not a build gate
-        run: node scripts/build-calendar-prev.mjs || echo "calendar prev-values skipped"
+        run: node scripts/build-calendar-prev.mjs
 
       - name: Verify output
         if: github.event_name != 'push'
@@ -153,6 +155,7 @@ jobs:
           echo "Total stocks: $(node -e "console.log(JSON.parse(require('fs').readFileSync('data/global-scouter/core/stocks_analyzer.json','utf8')).count)")"
 
       - name: Publish derived Scouter generation
+        id: publish
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
@@ -160,49 +163,6 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=scouter-derived --json
 
-      - name: Commit and push
-        id: publish
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/build-stocks-analyzer.yml \
-            --stage always_if_exists
-          git add \
-            data/damodaran/industry_benchmarks.json \
-            data/calendar/prev-values.json
-          if git diff --staged --quiet; then
-            echo "No remaining Git projections to publish"
-            echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            git commit -m "chore: refresh SEC 13F bridge index"
-          else
-            git commit -m "data: refresh industry and calendar projections"
-          fi
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
-              echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
-              if [[ "$GITHUB_EVENT_NAME" != "push" ]]; then
-                gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
-              fi
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
-
       - name: Verify the SEC 13F bridge index against the regenerated tree
-        if: ${{ always() && steps.publish.outputs.bridge_review_ready == 'true' }}
+        if: ${{ steps.publish.outcome == 'success' }}
         run: node scripts/test-sec13f-bridge-index.mjs

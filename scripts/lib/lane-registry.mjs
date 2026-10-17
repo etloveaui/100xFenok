@@ -1759,6 +1759,7 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
 
 // Family-to-workflow attribution used for publish admission and workflow health.
 export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
+  "occ-options-availability": Object.freeze({ lane_id: "occ_options_volume", workflow: ".github/workflows/fenok-edge-daily.yml" }),
   "krx-daily": Object.freeze({ lane_id: "krx", workflow: ".github/workflows/fenok-edge-krx-daily.yml" }),
   "yahoo-private-options": Object.freeze({ lane_id: "yahoo_private_options", workflow: ".github/workflows/fetch-fenok-private-options.yml" }),
   "apewisdom-attention": Object.freeze({ lane_id: "apewisdom_attention", workflow: ".github/workflows/fetch-fenok-apewisdom.yml" }),
