@@ -514,12 +514,12 @@ const lanes = [
       { provider_id: "yahoo_finance", role: "source", members: ["vix", "move"] },
       { provider_id: "alternative_me", role: "source", members: ["crypto"] },
     ],
-    store_kind: "payload",
+    store_kind: "artifact_only",
     lane_class: "detection_floor",
     cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
-    admin_store: "data/admin/sentiment",
+    admin_store: null,
     detection_attempt: null,
     canonical_outputs: [
       "data/sentiment/README.md",
@@ -538,15 +538,9 @@ const lanes = [
       "data/sentiment/vix.json",
     ],
     public_mirror: ["100xfenok-next/public/data/sentiment"],
-    commit_shards: [
-      "data/admin/sentiment/index.json",
-      "data/admin/sentiment/current",
-      "data/admin/sentiment/lkg",
-      "data/admin/sentiment/source-observations/crypto.json",
-      "data/sentiment",
-    ],
-    recovery_store: "data/admin/sentiment/index.json",
-    kpi_recovery_shape: "general",
+    commit_shards: [],
+    recovery_store: null,
+
   }),
   record({
     id: "nasdaq_giw_sox",

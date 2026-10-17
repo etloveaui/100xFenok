@@ -28,9 +28,9 @@
  *   aaii.json (still spreadsheet/import based; no robust free JSON source)
  *
  * Resilience: each source is independent. Transport/HTTP failures retain a
- * sha256-bound LKG and join the retry set with exit 0. Missing LKG, systemic
- * outage, or auth/decode/schema corruption exits non-zero. Recovery promotion
- * requires an attempt-1 natural schedule run whose source date advances.
+ * active generation history and join the reported retry set. Missing baselines,
+ * systemic outage or auth/decode/schema corruption remain failures. Per-source
+ * dates must not regress; successful sources keep their existing independence.
  *
  * Usage:
  *   node scripts/fetch-sentiment.mjs
@@ -45,7 +45,6 @@ import { atomicWrite, writeJsonAtomic } from "./lib/atomic-file.mjs";
 import { classifyHttpResponse, evaluateEndpointAssertions, foldWorstTuples, returnedTuple, threwTuple, transportError, tupleStatus } from "./lib/provider-fetch-result.mjs";
 import { buildAttemptRow } from "./lib/provider-fetch-result.mjs";
 import {
-  LaneLkgStore,
   classifyLkgFailure,
 } from './lib/data-supply-lkg-store.mjs';
 
@@ -777,7 +776,12 @@ export async function runSentiment({
   sentimentAttemptTuples = [];
   const injectedSource = validateControlledFailureSource(controlledFailureSource.trim(), eventName, sources);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: 'sentiment' });
+  // These histories were hydrated from the active generation before collection.
+  for (const source of sources) {
+    if (source.fileNames.some((file) => !validSeriesArray(readExisting(file, outputDir)))) {
+      throw new Error(`Active sentiment baseline is invalid: ${source.key}`);
+    }
+  }
   const trackedSources = sources.filter((source) => source.lkg === true);
   if (!quiet) {
     console.log('='.repeat(60));
@@ -820,54 +824,28 @@ export async function runSentiment({
       }
       measuredSourceGroups.push(measuredGroup);
 
-      if (source.lkg === true) {
-        const bundle = buildSourceBundle(source.key, source.fileNames, results);
-        const serialized = serializeBundle(bundle);
-        const providerBundle = buildProviderBundle(source.key, source.fileNames, results);
-        const providerSerialized = serializeBundle(providerBundle);
-        const candidate = bundleCandidate(source, bundle, serialized, providerBundle, providerSerialized, run);
-        const before = lkgStore.stateSnapshot().items[source.key];
-        const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
-        if (!decisions[0].eligible) {
-          const reason = decisions[0].reason;
-          failedTracked.push({ source, reason, requestFailed: false });
-          classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
-          sourceOutcomes.push({ key: source.key, status: 'degraded', reason });
-          failCount++;
-          continue;
-        }
-        const recoveringKeys = new Set(lkgStore.stateSnapshot().retry_set);
-        const success = withFileRollback(
-          sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
-          () => {
-            if (source.key === 'crypto') {
-              writeCryptoSourceObservation(repoRoot, {
-                sourceAsOf: results[0]?.sample?.date ?? null,
-                sourceAsOfReason: null,
-                run,
-              });
-            }
-            publishSourceResults(results, outputDir);
-            atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
-            return recordSuccessFn({ store: lkgStore, artifacts: [candidate], run });
-          },
-        );
-        if (recoveringKeys.has(source.key)) recoveredSources.push(source.key);
-      } else {
-        withFileRollback(
-          sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
-          () => {
-            if (source.key === 'crypto') {
-              writeCryptoSourceObservation(repoRoot, {
-                sourceAsOf: results[0]?.sample?.date ?? null,
-                sourceAsOfReason: null,
-                run,
-              });
-            }
-            publishSourceResults(results, outputDir);
-          },
-        );
+      const bundle = buildSourceBundle(source.key, source.fileNames, results);
+      if (!validSourceBundle(source.key, source.fileNames, bundle)) throw new Error('schema_drift');
+      const providerBundle = buildProviderBundle(source.key, source.fileNames, results);
+      if (!sourceBundleContainsObservation(bundle, providerBundle)) throw new Error('schema_drift');
+      const regressed = source.fileNames.some((file) =>
+        sourceAsOfFromFiles({ [file]: providerBundle.files[file] })
+          < sourceAsOfFromFiles({ [file]: readExisting(file, outputDir) }));
+      if (regressed) {
+        failedTracked.push({ source, reason: 'source_regression', requestFailed: false });
+        classifications.push({ degraded: true, corrupt: false, exitCode: 0 });
+        sourceOutcomes.push({ key: source.key, status: 'degraded', reason: 'source_regression' });
+        failCount++;
+        continue;
       }
+      const publicationPaths = results.map((result) => path.join(outputDir, result.file));
+      if (source.key === 'crypto') publicationPaths.push(cryptoSourceObservationPath(repoRoot));
+      withFileRollback(publicationPaths, () => {
+        if (source.key === 'crypto') writeCryptoSourceObservation(repoRoot, {
+          sourceAsOf: results[0]?.sample?.date ?? null, sourceAsOfReason: null, run,
+        });
+        publishSourceResults(results, outputDir);
+      });
       okCount++;
       sourceOutcomes.push({ key: source.key, status: 'ready', reason: 'ok' });
       for (const r of results) {
@@ -904,9 +882,7 @@ export async function runSentiment({
         } : {}),
       });
       if (source.lkg === true) {
-        bootstrapCurrentBundle(repoRoot, source, outputDir);
-        const failure = lkgStore.recordFailure({ artifacts: [bundleArtifact(repoRoot, source)], run, reason });
-        const classification = classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg });
+        const classification = classifyLkgFailure({ reason, hasCompleteLkg: true });
         failedTracked.push({ source, reason, requestFailed: source.key !== injectedSource });
         classifications.push(classification);
       }
@@ -932,7 +908,7 @@ export async function runSentiment({
   const systemicOutage = naturalTracked.length > 0 && naturalTracked.every((source) => naturalFailures.includes(source.key));
   const corrupt = systemicOutage || classifications.some((classification) => classification.corrupt);
   const trackedOk = failedTracked.length === 0;
-  const retrySet = lkgStore.stateSnapshot().retry_set;
+  const retrySet = failedTracked.map(({ source }) => source.key);
   const reason = failedTracked[0]?.reason ?? 'ok';
 
   if (!quiet) {

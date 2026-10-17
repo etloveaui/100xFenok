@@ -29,12 +29,10 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  # Correctness over collector parallelism: serialize this acquisition commit
-  # with the other computed-signals sources, coordinator outcome, and UM.
-  group: fenok-data-writer-refs/heads/main
+  group: sentiment-publish
   cancel-in-progress: false
   queue: max
 
@@ -67,6 +65,7 @@ jobs:
     needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: production
 
     steps:
       - name: Checkout repository
@@ -87,6 +86,19 @@ jobs:
           package-manager-cache: false
           node-version: '22'
 
+      - name: Hydrate active sentiment histories
+        id: baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --family sentiment --manifest-prefix public/data --private-manifest-prefix data --privacy-class public --output-root "$RUNNER_TEMP/sentiment-active")"
+          cp -R "$RUNNER_TEMP/sentiment-active/." data/
+          echo "generation=$(jq -r .generation_id <<< "$basis")" >> "$GITHUB_OUTPUT"
+          echo "manifest=$(jq -r .manifest_sha256 <<< "$basis")" >> "$GITHUB_OUTPUT"
       - name: Fetch sentiment series
         id: fetch_sentiment
         env:
@@ -102,48 +114,6 @@ jobs:
             node -e "const d=require('./data/sentiment/$f.json');console.log('len',d.length,'last',JSON.stringify(d[d.length-1]))"
           done
 
-      - name: Commit sentiment data
-        if: ${{ always() }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          FETCH_OUTCOME: ${{ steps.fetch_sentiment.outcome }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # The generated manifest owns recovery/admin and successful output staging.
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-sentiment.yml \
-            --stage always_if_exists
-          if [[ "$FETCH_OUTCOME" == "success" ]]; then
-            scripts/stage-lane-manifest.sh \
-              --workflow .github/workflows/fetch-sentiment.yml \
-              --stage success_if_exists
-          fi
-          if git diff --staged --quiet; then
-            echo "No sentiment changes to publish"
-            exit 0
-          fi
-          git commit -m "chore: update sentiment data"
-          for attempt in $(seq 1 5); do
-            if ! git pull --rebase --autostash origin main; then
-              echo "git rebase failed on attempt ${attempt}; aborting and retrying"
-              git rebase --abort >/dev/null 2>&1 || true
-              sleep 3
-              continue
-            fi
-            if git push; then
-              # Decoupled: a successful completion of this workflow runs the
-              # coordinate-computed-signals workflow_run (serialized rebuild +
-              # plane publish); the scheduled update-manifest.yml remains the
-              # reconciliation fallback for shared projections.
-              exit 0
-            fi
-            echo "git push race on attempt ${attempt}; retrying after rebase"
-            sleep 3
-          done
-          echo "git push failed after retrying concurrent main updates"
-          exit 1
       - name: Publish sentiment generation to the cloud data plane
         id: publish_cloud_generation
         if: ${{ steps.fetch_sentiment.outcome == 'success' }}
@@ -152,4 +122,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/publish-cloud-data-generation.mjs --family=sentiment --tolerate-gate-block --json
+          PUBLISH_EXPECTED_ACTIVE_GENERATION_ID: ${{ steps.baseline.outputs.generation }}
+          PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256: ${{ steps.baseline.outputs.manifest }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=sentiment --json

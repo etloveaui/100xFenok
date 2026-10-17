@@ -486,6 +486,9 @@ export const FAMILIES = {
     manifest_prefix: "public/data/sentiment",
     files: ["aaii.json","cftc-sp500.json","cnn-breadth.json","cnn-components.json","cnn-fear-greed.json","cnn-junk-bond.json","cnn-momentum.json","cnn-put-call.json","cnn-safe-haven.json","cnn-strength.json","crypto-fear-greed.json","move.json","schema.json","vix.json"],
     privacy_class: "public",
+    reuse_active_generation: true,
+    private_assets: [{ path: "data/admin/sentiment/source-observations/crypto.json",
+      source_as_of: { key: "observed_at" } }],
     plan: { class_a: 28, bytes: 3_500_000 },
     policy: { max_assets: 56, max_total_bytes: 7_000_000 },
     validate_public_payload({ bytes }) {
