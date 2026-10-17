@@ -78,6 +78,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-ready-"));
   const paths = makePaths(root);
+  await seedBaseline(paths);
   const result = await runNasdaqGiwSox({
     ...paths,
     dates: DATES,
