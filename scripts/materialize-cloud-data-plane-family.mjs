@@ -889,6 +889,19 @@ export async function hydrateCanonicalCloudData(options = {}) {
   return hydratePublicCloudData({ ...options, relative: "macro/fred-macro.json", family: "fred-macro" });
 }
 
+// Public consumer inputs use the publisher's exact file inventory.
+export async function hydratePublicFamily(family, options = {}) {
+  const { FAMILIES } = await import("./publish-cloud-data-generation.mjs");
+  const descriptor = FAMILIES[family];
+  if (descriptor?.privacy_class !== "public" || !Array.isArray(descriptor.files)
+    || !descriptor.manifest_prefix?.startsWith("public/data/")) fail("PUBLIC_FAMILY_INVENTORY_INVALID", family);
+  const prefix = descriptor.manifest_prefix.slice("public/data/".length);
+  const results = await Promise.all(descriptor.files.map((file) =>
+    hydratePublicCloudData({ ...options, family, relative: `${prefix}/${file}` })));
+  if (new Set(results.map(({ generation }) => generation)).size !== 1) fail("PUBLIC_GENERATION_MISMATCH", family);
+  return { family, generation: results[0].generation, files: results.length };
+}
+
 export async function hydrateSmallMacroData(options = {}) {
   const inputs = [["macro/stablecoins.json", "defillama-stablecoins"],
     ["macro/tga.json", "treasury-tga"], ["macro/fdic-tier1.json", "fdic-tier1"],
@@ -900,7 +913,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv.slice(2).join(" ") === "--hydrate-small-macro") {
+    if (process.argv[2] === "--hydrate-public-family" && process.argv.length === 4) {
+      console.log(JSON.stringify(await hydratePublicFamily(process.argv[3])));
+    } else if (process.argv.slice(2).join(" ") === "--hydrate-small-macro") {
       console.log(JSON.stringify((await hydrateSmallMacroData()).map(({ generation }) => ({ generation }))));
     } else if (process.argv.slice(2).join(" ") === "--hydrate-yahoo-analytics") {
       console.log(JSON.stringify(await hydrateYahooFinance({ analyticsOnly: true })));

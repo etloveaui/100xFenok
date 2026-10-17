@@ -277,6 +277,8 @@ jobs:
           git sparse-checkout set --no-cone '/*' '!/docs/' '!/ops/'
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
           node scripts/materialize-cloud-data-plane-family.mjs --hydrate-small-macro
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family sentiment
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family nasdaq-giw-sox
 
       - name: Hydrate active Global Scouter build indexes
         env:

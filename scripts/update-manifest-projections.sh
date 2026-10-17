@@ -57,6 +57,9 @@ if [[ ! "${BEFORE_SHA-}" =~ ^(AUTO|[0-9a-fA-F]{40})$ ]]; then
 fi
 
 node scripts/materialize-cloud-data-plane-family.mjs --hydrate-canonical
+node scripts/materialize-cloud-data-plane-family.mjs --hydrate-small-macro
+node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family sentiment
+node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family nasdaq-giw-sox
 # The hosted retry loop resets tracked inputs. Restore the already verified
 # active Yahoo tree after that reset; derive runtime indexes without a new read.
 if [[ -n "${YAHOO_ACTIVE_PROJECTION_ROOT:-}" ]]; then
