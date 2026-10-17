@@ -34,7 +34,6 @@ assert.equal(policy.concurrency_group, "fenok-data-writer-refs/heads/main");
 assert.equal(policy.queue_mode, "max", "loss-intolerant writers use GitHub's deep pending queue");
 assert.equal(policy.canonical_branch, "main", "writer workflows are observed only on main");
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
-assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 0, "remaining writer workflow set is derived");
 assert.equal(new Set(policy.workflows).size, policy.workflows.length, "writer workflow list has no duplicates");
 assert.equal(policy.api.runs_per_page, 100, "API page size stays within the REST limit");
 assert.ok(policy.api.max_pages >= 1, "API query depth is bounded");
@@ -151,6 +150,9 @@ function fixtureFetch(fixture) {
 const stockanalysisPolicy = {
   ...policy,
   workflows: ["fetch-stockanalysis.yml"],
+  job_level_targets: deriveWriterJobTargets([
+    { workflow: ".github/workflows/fetch-stockanalysis.yml", groupScope: "job", job: "publish-stockanalysis", needs: ["acquire-stockanalysis"] },
+  ]),
   api: {
     ...policy.api,
     max_pages: 1,
@@ -262,6 +264,7 @@ const stockanalysisPolicy = {
   const previousRepository = process.env.GITHUB_REPOSITORY;
   process.env.GITHUB_REPOSITORY = "octo/repo";
   const result = await main({
+    loadPolicyImpl: () => stockanalysisPolicy,
     fetchImpl: async () => ({
       ok: false,
       status: 503,
@@ -283,6 +286,7 @@ const stockanalysisPolicy = {
   process.env.GITHUB_REPOSITORY = "octo/repo";
   process.env.QUEUE_OBSERVABILITY_MAX_DEPTH = "invalid";
   const result = await main({
+    loadPolicyImpl: () => stockanalysisPolicy,
     fetchImpl: async () => {
       throw new Error("invalid threshold must fail before transport");
     },

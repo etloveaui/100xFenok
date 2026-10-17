@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const GLOBAL_WRITER_GROUP = "fenok-data-writer-refs/heads/main";
+export const GLOBAL_WRITER_GROUP = "fenok-data-writer-refs/heads/main";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const JOB_START_RE = /^  ([A-Za-z0-9_-]+):\s*$/;

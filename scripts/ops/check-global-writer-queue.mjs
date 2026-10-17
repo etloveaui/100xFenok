@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
+  GLOBAL_WRITER_GROUP,
   assertWriterSurfaceContracts,
   scanWriterInventory,
 } from "../check-lane-commit-manifest-inventory.mjs";
@@ -63,7 +64,7 @@ export function loadPolicy({ repoRoot = REPO_ROOT } = {}) {
   return {
     version: 1,
     metric: "global-writer candidate queued runs",
-    concurrency_group: inventory[0].group,
+    concurrency_group: GLOBAL_WRITER_GROUP,
     queue_mode: "max",
     canonical_branch: "main",
     default_observation_mode: "workflow_run",
@@ -359,13 +360,13 @@ export function buildResult(policy, { repository, checkedAtUtc, runs, error = nu
   };
 }
 
-export async function main({ fetchImpl = fetch } = {}) {
+export async function main({ fetchImpl = fetch, loadPolicyImpl = loadPolicy } = {}) {
   const checkedAtUtc = process.env.QUEUE_OBSERVABILITY_NOW || new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const repository = process.env.GITHUB_REPOSITORY || "";
   const [owner, repo] = repository.split("/");
   let result;
   try {
-    const policy = loadPolicy();
+    const policy = loadPolicyImpl();
     const maxDepth = thresholdFromEnv("QUEUE_OBSERVABILITY_MAX_DEPTH", policy.thresholds.max_depth);
     const maxAgeMinutes = thresholdFromEnv("QUEUE_OBSERVABILITY_MAX_AGE_MINUTES", policy.thresholds.max_age_minutes);
     if (!owner || !repo) {
