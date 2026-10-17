@@ -82,6 +82,10 @@ jobs:
       - name: Fetch TGA JSON
         id: fetch_tga
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-treasury-tga.mjs
 

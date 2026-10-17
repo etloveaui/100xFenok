@@ -12,8 +12,8 @@
 // Read-only guarantee: the ONLY plane surface used is pointerStore.get and
 // objectStore.get. No pointer write, no compare-and-swap, no ledger call, no
 // object list, no delete, and no R2 mutation of any kind. This file carries no
-// write/auth logic of its own. Public payloads may use the enrolled Worker GET;
-// private payloads retain the REST bridge and existing coordinator adapter.
+// write/auth logic of its own. All bulk payloads use the R2 REST bridge;
+// only the family pointer uses the existing coordinator adapter.
 //
 // Reader-side safety contract (all fail closed before any payload byte is
 // staged):
@@ -544,7 +544,6 @@ export async function materializeCloudDataPlaneFamily({
   privacyClass = "private",
   privateManifestPrefix = null,
   includeAsset = null,
-  publicAssetOrigin = null,
   canonicalReuseRoot = null,
 }) {
   validatePlaneAndFamily(plane, family);
@@ -605,22 +604,9 @@ export async function materializeCloudDataPlaneFamily({
         });
       }
       if (payload === null) {
-        if (asset.privacy_class === "public" && publicAssetOrigin !== null) {
-          const response = await fetch(new URL(asset.path.replace(/^public/, ""), publicAssetOrigin), {
-            headers: { "user-agent": "feno-data/2", "cache-control": "no-cache" },
-            signal: AbortSignal.timeout(30_000),
-          });
-          if (!response.ok || response.headers.get("x-data-plane-generation") !== summary.generation_id) {
-            await response.body?.cancel();
-            // Serving routes may lag this authenticated active manifest during deployment.
-            // Read its exact immutable object; the size/hash check below remains authoritative.
-            payload = await plane.objectStore.get(asset.object_key);
-          } else {
-            payload = new Uint8Array(await response.arrayBuffer());
-          }
-        } else {
-          payload = await plane.objectStore.get(asset.object_key);
-        }
+        // Build/CI hydration must never spend one Worker request per asset.
+        // The authenticated manifest already names the immutable R2 object.
+        payload = await plane.objectStore.get(asset.object_key);
         if (!(payload instanceof Uint8Array)) fail("PAYLOAD_MISSING", asset.path);
         if (payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
           fail("PAYLOAD_INTEGRITY_INVALID", asset.path);
@@ -778,7 +764,6 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
       plane, family, manifestPrefix: "public/data/global-scouter",
       outputRoot: path.join(temporary, "export"), privacyClass: "public", env, repoRoot,
       canonicalReuseRoot: repoRoot,
-      publicAssetOrigin: "https://100xfenok.etloveaui.workers.dev",
       includeAsset: buildOnly || universeOnly ? (asset) => [
         "public/data/global-scouter/core/metadata.json",
         "public/data/global-scouter/core/stocks_index.json",
@@ -850,7 +835,6 @@ export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.
     plane, family, manifestPrefix: "public/data/yf", privateManifestPrefix: "data/yf",
     outputRoot: path.join(temporary, "active"), privacyClass: "public", env, repoRoot,
     canonicalReuseRoot: repoRoot,
-    publicAssetOrigin: "https://100xfenok.etloveaui.workers.dev",
     includeAsset: financeOnly || analyticsOnly ? (asset) =>
       asset.path.startsWith("public/data/yf/finance/")
       || (analyticsOnly && asset.path === "public/data/yf/quarter_closes.json") : null,
@@ -863,17 +847,22 @@ export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.
 
 // Git-retired public inputs are materialized from the existing serving plane.
 // A bundled fallback is not an active generation and cannot seed a producer.
-export async function hydratePublicCloudData({ relative, family, repoRoot = REPO_ROOT, fetchImpl = fetch } = {}) {
+export async function hydratePublicCloudData({ relative, family, repoRoot = REPO_ROOT, env = process.env, plane = null } = {}) {
   if (!relative || relative.split("/").some(part => !part || part === "." || part === "..") || !family) fail("CANONICAL_PATH_INVALID", String(relative));
-  const response = await fetchImpl(`https://100xfenok.etloveaui.workers.dev/data/${relative}`, {
-    headers: { "user-agent": "feno-data/2", "cache-control": "no-cache" },
-    signal: AbortSignal.timeout(30_000),
+  plane ??= createDefaultMaterializePlane({
+    accountId: env.CLOUDFLARE_ACCOUNT_ID, token: env.CLOUDFLARE_API_TOKEN,
+    endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY, family,
   });
-  const generation = response.headers.get("x-data-plane-generation");
-  if (!response.ok || !generation?.startsWith(`${family}-`)) {
-    fail("CANONICAL_GENERATION_UNAVAILABLE", `${relative}:${response.status}`);
+  const { manifest, summary } = await readActiveFamilyIdentity({ plane, family });
+  const assetPath = `public/data/${relative}`;
+  const asset = manifest.assets.find(entry => entry.path === assetPath && entry.privacy_class === "public");
+  if (!asset) fail("CANONICAL_GENERATION_UNAVAILABLE", assetPath);
+  const payload = await plane.objectStore.get(asset.object_key);
+  if (!(payload instanceof Uint8Array) || payload.byteLength !== asset.bytes || sha256Bytes(payload) !== asset.sha256) {
+    fail("PAYLOAD_INTEGRITY_INVALID", assetPath);
   }
-  const body = await response.text();
+  const generation = summary.generation_id;
+  const body = new TextDecoder("utf-8", { fatal: true }).decode(payload);
   const document = JSON.parse(body);
   if (!document || typeof document !== "object" || (family === "fred-macro" && (!document.series || !Number.isFinite(Date.parse(document.updated))))) fail("CANONICAL_PAYLOAD_INVALID", relative);
   const target = path.join(repoRoot, "data", relative);
