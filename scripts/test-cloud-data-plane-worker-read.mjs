@@ -116,20 +116,20 @@ try {
   const get = (url = ENROLLED_URL, init) => new Request(url, init);
 
   // --- nothing published yet: every enrolled request declines ---------------
-  assert.equal(await handleCloudDataPlaneAsset(get(), env), null, "no pointer declines");
+  assert.equal((await handleCloudDataPlaneAsset(get(), env)).status, 503, "missing active pointer fails closed");
 
   // --- refusals that do not depend on plane state ---------------------------
   assert.equal(
-    await handleCloudDataPlaneAsset(get(ENROLLED_URL, { method: "POST", body: "x" }), env),
-    null,
-    "non-GET declines",
+    (await handleCloudDataPlaneAsset(get(ENROLLED_URL, { method: "POST", body: "x" }), env)).status,
+    405,
+    "unsupported enrolled method fails closed",
   );
   assert.equal(
     await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/macro/other.json"), env),
     null,
     "unenrolled path declines",
   );
-  assert.equal(await handleCloudDataPlaneAsset(get(), {}), null, "missing bindings decline");
+  assert.equal((await handleCloudDataPlaneAsset(get(), {})).status, 503, "missing bindings fail closed");
 
   // --- enrolment boundary: exact single files and bounded tree prefixes -----
   assert.equal(isEnrolledPath("/data/macro/fred-macro.json"), true, "exact single file enrolled");
@@ -452,12 +452,12 @@ try {
   assert.equal(await edgarHead.text(), "", "HEAD on a tree child carries no body");
 
   assert.equal(
-    await handleCloudDataPlaneAsset(
+    (await handleCloudDataPlaneAsset(
       get("https://100xfenok.test/data/edgar-korean-summaries/not-published.json"),
       env,
-    ),
-    null,
-    "enrolled tree path with no manifest binding declines",
+    )).status,
+    503,
+    "enrolled tree path with no manifest binding fails closed",
   );
 
   // --- corruption must decline, never serve --------------------------------
@@ -465,7 +465,7 @@ try {
   // partial write or a bad actor would produce.
   await DATA_PLANE_BUCKET.put(`objects/sha256/${sha256}`, encoder.encode("{\"series\":{}}\n"));
   const corrupted = await handleCloudDataPlaneAsset(get(), env);
-  assert.equal(corrupted, null, "payload whose hash disagrees declines rather than serving");
+  assert.equal(corrupted.status, 503, "payload whose hash disagrees fails closed");
 
   console.log("test-cloud-data-plane-worker-read: ok"
     + " (FAMILIES-derived enrolment: exact single files, per-family pointer isolation,"

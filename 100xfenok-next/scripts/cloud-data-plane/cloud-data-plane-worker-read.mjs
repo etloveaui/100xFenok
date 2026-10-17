@@ -1,18 +1,6 @@
-// Serve an enrolled public asset from the cloud data plane, or decline.
-//
-// The safety property this module exists to hold: **only a fully resolved,
-// integrity-checked payload is ever served from here.** Every other outcome —
-// no pointer, a manifest that does not bind, a payload whose hash disagrees, a
-// path that is not enrolled, a binding that is missing, an exception of any
-// kind — returns null, and the caller falls through to `env.ASSETS.fetch`,
-// which serves the copy published through git. That copy is the last known
-// good, so a broken data plane degrades to the previous behaviour instead of
-// to an error.
-//
-// Serving a typed "unavailable" body with HTTP 200 would be the dangerous
-// failure: downstream consumers parse these files, and a 200 carrying a shape
-// they do not expect silently zeroes derived signals rather than failing loudly.
-// That is why `unavailable` is a fall-through here, never a response.
+// Enrolled public paths serve only the verified active generation.
+// A missing binding, pointer, manifest or payload returns HTTP 503; only
+// non-enrolled paths decline to the existing asset/configuration reader.
 
 import { resolvePublicAsset } from "./cloud-data-plane-generation.mjs";
 import { createCloudflareCloudDataPlane } from "./cloud-data-plane-cloudflare-adapter.mjs";
@@ -52,8 +40,6 @@ export function familyForPath(pathname) {
 }
 
 export async function handleCloudDataPlaneAsset(request, env) {
-  if (request.method !== "GET" && request.method !== "HEAD") return null;
-
   let url;
   let pathname;
   try {
@@ -64,7 +50,13 @@ export async function handleCloudDataPlaneAsset(request, env) {
   }
   const family = familyForPath(pathname);
   if (family === null) return null;
-  if (!env?.DATA_PLANE_BUCKET || !env?.CLOUD_DATA_PLANE_COORDINATOR) return null;
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response(null, { status: 405, headers: { allow: "GET, HEAD", "cache-control": "no-store" } });
+  }
+  const unavailable = () => new Response(request.method === "HEAD" ? null : '{"error":"DATA_PLANE_UNAVAILABLE"}', {
+    status: 503, headers: { "content-type": "application/json", "cache-control": "no-store" },
+  });
+  if (!env?.DATA_PLANE_BUCKET || !env?.CLOUD_DATA_PLANE_COORDINATOR) return unavailable();
 
   let resolved;
   try {
@@ -80,9 +72,9 @@ export async function handleCloudDataPlaneAsset(request, env) {
       manifestCacheScope: env.DATA_PLANE_BUCKET,
     });
   } catch {
-    return null;
+    return unavailable();
   }
-  if (resolved?.kind !== "ok") return null;
+  if (resolved?.kind !== "ok") return unavailable();
 
   const etag = `"${resolved.generation_id}"`;
   const headers = {

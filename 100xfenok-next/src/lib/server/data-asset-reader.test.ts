@@ -14,8 +14,8 @@ import {
 // Minimal reader-contract invariant (packets fh-20260817-194/-208/-223):
 // normalize once and REJECT (never collapse) duplicate empty segments, encoded
 // separators, '?'/'#', dot segments, trailing slash, null and backslash;
-// source order is fs -> plane -> ASSETS -> unavailable, plane precedes ASSETS;
-// filesystem-first with ASSETS not called; typed unavailable without throw.
+// enrolled paths use only the plane; non-enrolled config retains local/ASSETS;
+// unavailable generations never expose stale copies.
 
 test("normalize rejects traversal, null, encoded separators, ?/#, and private/canonical paths", () => {
   const rejected = [
@@ -96,32 +96,26 @@ test("parity: normalize accepts exactly what familyForPath enrolls for a clean p
   assert.equal(familyForPath("/data/slickcharts/sp500.json?v=1"), null);
 });
 
-test("readDataAsset: filesystem-first and ASSETS is NOT called when fs hits", async () => {
-  let assetsCalled = 0;
-  const env = {
-    ASSETS: {
-      fetch: async () => {
-        assetsCalled += 1;
-        return new Response('{"assets":true}', { status: 200 });
-      },
-    },
-  };
-  const result = await readDataAsset("/data/stockanalysis/etf_universe.json", env);
-  assert.equal(result.kind, "ok");
-  if (result.kind === "ok") {
-    assert.equal(result.source, "filesystem");
-    assert.ok(JSON.parse(result.raw));
-  }
-  assert.equal(assetsCalled, 0, "ASSETS must not be called on a filesystem hit");
+test("enrolled data never reads stale filesystem or ASSETS when its plane is unavailable", async () => {
+  let localCalled = 0, assetsCalled = 0;
+  const result = await readDataAssetWithDeps("/data/macro/fred-macro.json", {}, {
+    readLocalFile: async () => { localCalled++; return '{"stale":true}'; },
+    resolveEnv: async env => env,
+    readPlane: async () => null,
+    readAssets: async () => { assetsCalled++; return {kind:"ok",raw:'{"stale":true}',source:"assets"}; },
+  });
+  assert.equal(result.kind, "unavailable");
+  assert.equal(localCalled, 0);
+  assert.equal(assetsCalled, 0);
 });
 
-test("readDataAsset: ASSETS fallback is used after fs miss with injected ASSETS", async () => {
+test("non-enrolled config retains ASSETS lookup after a filesystem miss", async () => {
   const env = {
     ASSETS: {
       fetch: async () => new Response('{"assets":true}', { status: 200 }),
     },
   };
-  const result = await readDataAsset("/data/stockanalysis/surfaces/definitely_missing.json", env);
+  const result = await readDataAsset("/data/config/definitely_missing.json", env);
   assert.equal(result.kind, "ok");
   if (result.kind === "ok") {
     assert.equal(result.source, "assets");
@@ -159,7 +153,7 @@ test("orchestration: plane success precedes ASSETS (fs miss, plane ok, ASSETS no
 });
 
 test("readDataAsset: typed unavailable (no throw) when fs misses and no bindings", async () => {
-  const result = await readDataAsset("/data/stockanalysis/surfaces/definitely_missing.json");
+  const result = await readDataAsset("/data/macro/fred-macro.json");
   assert.equal(result.kind, "unavailable");
   if (result.kind === "unavailable") {
     assert.ok(result.reason.length > 0);

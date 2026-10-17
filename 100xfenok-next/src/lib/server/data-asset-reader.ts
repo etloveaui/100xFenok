@@ -2,7 +2,9 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   handleCloudDataPlaneAsset,
+  isEnrolledPath,
 } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
+import { PRIVATE_PUBLIC_PATHS } from "../../../scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 import { createCloudflareCloudDataPlane } from "../../../scripts/cloud-data-plane/cloud-data-plane-cloudflare-adapter.mjs";
 import { resolveGenerationAsset } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
 import {
@@ -10,23 +12,7 @@ import {
   resolveLegacyDataShard,
 } from "../public-data-binary-shard.mjs";
 
-/**
- * Unified data-asset reader — first slice (no production cutover).
- *
- * Reads one normalized public data path with a fixed source order:
- *   1. local filesystem (public/data) first;
- *   2. cloud data plane, delegating to handleCloudDataPlaneAsset with a GET
- *      Request so manifest-path/family/integrity has ONE implementation —
- *      only an `ok` Response is accepted (the handler itself falls through
- *      for non-enrolled paths, missing bindings, or integrity failure);
- *   3. ASSETS last-known-good fetch fallback (existing lazy
- *      getCloudflareContext behavior preserved);
- *   4. typed `unavailable` — never a fabricated 200.
- *
- * `env` may be injected for tests; when absent, the ASSETS/plane bindings are
- * resolved lazily via @opennextjs/cloudflare exactly as the legacy
- * readPublicDataFile fallback did, so production behavior is unchanged.
- */
+/** Enrolled data reads the active generation; other config retains local/ASSETS lookup. */
 
 const PUBLIC_DATA_ROOT = path.join(process.cwd(), "public", "data");
 
@@ -151,7 +137,7 @@ export async function readPrivateCloudGenerationAsset(
     manifestPath === null
     || typeof input.family !== "string"
     || input.family !== "stockanalysis-etf-detail"
-    || !/^data\/stockanalysis\/etfs\/[A-Z0-9][A-Z0-9.-]{0,19}\.json$/.test(manifestPath)
+    || !(/^(?:data\/stockanalysis\/etfs\/[A-Z0-9][A-Z0-9.-]{0,19}|data\/computed\/data-supply\/etf-detail\/(?:enrollment|index|index-shards\/[0-9]{2}|payloads\/[A-Z0-9][A-Z0-9.-]{0,19}))\.json$/.test(manifestPath))
   ) return { kind: "unavailable", reason: "INVALID_GENERATION_ASSET_REQUEST" };
 
   const env = await resolveRuntimeEnv(injectedEnv);
@@ -202,19 +188,14 @@ async function readFromCloudDataPlane(
   publicPath: string,
   env: DataAssetReaderEnv,
 ): Promise<DataAssetReadResult | null> {
-  if (env.DATA_PLANE_BUCKET === undefined || env.CLOUD_DATA_PLANE_COORDINATOR === undefined) {
-    return null;
-  }
+  if (!isEnrolledPath(publicPath)) return null;
   try {
     const request = new Request(new URL(publicPath, "https://assets.local"), { method: "GET" });
-    // One implementation for enrolment/family/integrity: the handler returns
-    // null for non-enrolled or unhealthy outcomes and only ever serves an
-    // integrity-verified ok Response.
     const response = await handleCloudDataPlaneAsset(request, env as unknown as Record<string, unknown>);
-    if (!response || !response.ok) return null;
+    if (!response || !response.ok) return { kind: "unavailable", reason: "DATA_PLANE_UNAVAILABLE" };
     return { kind: "ok", raw: await response.text(), source: "data-plane" };
   } catch {
-    return null;
+    return { kind: "unavailable", reason: "DATA_PLANE_UNAVAILABLE" };
   }
 }
 
@@ -321,6 +302,19 @@ export async function readDataAssetWithDeps(
   const normalized = normalizeDataAssetPublicPath(publicPath);
   if (normalized === null) {
     return { kind: "unavailable", reason: "INVALID_PUBLIC_PATH" };
+  }
+
+  if (PRIVATE_PUBLIC_PATHS.has(normalized)) {
+    return { kind: "unavailable", reason: "PRIVATE_GENERATION_ASSET" };
+  }
+  if (isEnrolledPath(normalized)) {
+    try {
+      const env = await seam.resolveEnv(injectedEnv);
+      return await seam.readPlane(normalized, env)
+        ?? { kind: "unavailable", reason: "DATA_PLANE_UNAVAILABLE" };
+    } catch {
+      return { kind: "unavailable", reason: "DATA_PLANE_UNAVAILABLE" };
+    }
   }
 
   // 1) Local filesystem first — same file the previous reader served.
