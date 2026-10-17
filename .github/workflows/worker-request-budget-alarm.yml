@@ -115,7 +115,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_ACCOUNT_NAME: ${{ vars.CLOUDFLARE_ACCOUNT_NAME }}
-          DAILY_REQUEST_THRESHOLD: '50000'
+          MONTHLY_REQUEST_THRESHOLD: '7000000'
+          DAILY_REQUEST_THRESHOLD: '225000'
           HOURLY_REQUEST_THRESHOLD: '20000'
           WORKER_REQUEST_BUDGET_RESULT: worker-request-budget-result.json
         run: node scripts/ops/check-worker-request-budget.mjs
