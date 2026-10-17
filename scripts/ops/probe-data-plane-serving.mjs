@@ -5,13 +5,8 @@
 // A missing header IS the incident this probe exists to catch — fallback is a
 // designed degradation, but an unobserved one is silent staleness.
 //
-// Some enrolled families are intentionally unpublished on the data plane for
-// now (see FALLBACK_ALLOWED_FAMILIES). For exactly those families, a 200 with
-// ALL THREE plane headers absent (generation, source-as-of, published-at) is
-// their designed static-fallback state and passes as FALLBACK-ALLOWED —
-// observable, not silent. Every other shape for those families, and every
-// shape for published families, is validated strictly, so a real serving
-// defect can never hide behind the allowlist.
+// All enrolled families have migrated. Their responses require plane headers;
+// a bundled response is a serving failure.
 //
 // The enrolled-path list is imported from the Worker read module so the probe
 // can never drift from what production actually serves.
@@ -97,10 +92,7 @@ const SOURCE_AGE_UNBOUNDED_FAMILY_SET = new Set(SOURCE_AGE_UNBOUNDED_FAMILIES);
 // schedule automatically widens either axis without a second table edit.
 const SOURCE_AGE_MIGRATION_FLOORS = Object.freeze({
   "fred-yardeni": 14,
-  "slickcharts-monthly": 40,
-  "slickcharts-history": 40,
-  "slickcharts-weekly": 10,
-  "slickcharts-symbols": 10,
+  slickcharts: 40,
   damodaran: 10,
   sentiment: 10,
   "nasdaq-giw-sox": 10,
@@ -111,11 +103,7 @@ const SOURCE_AGE_MIGRATION_FLOORS = Object.freeze({
 // Family override, then default. No exact-path overrides exist on this axis.
 const PUBLISHED_AGE_MIGRATION_FLOORS = Object.freeze({
   "fred-yardeni": 10,
-  "slickcharts-weekly": 10,
-  "slickcharts-monthly": 40,
-  // Both are monthly producers whose source axis was already relaxed while this
-  // axis was left at the 7-day default, which no monthly cadence can satisfy.
-  "slickcharts-history": 40,
+  slickcharts: 40,
 });
 
 // Bound each schedule by its largest interval plus declared grace across the
@@ -257,14 +245,8 @@ export function parseProbeConcurrency(value) {
     : DEFAULT_PROBE_CONCURRENCY;
 }
 
-// Families that are enrolled but intentionally not yet published to the data
-// plane. Static fallback (200 with no plane headers) is their designed serving
-// mode until they are published; the probe observes it instead of alarming on
-// it. Any family not listed here is strict, and stays fail-closed.
-export const FALLBACK_ALLOWED_FAMILIES = Object.freeze([
-  "slickcharts-symbols",
-  "edgar-korean-summaries",
-]);
+// Every enrolled family now requires its promoted generation.
+export const FALLBACK_ALLOWED_FAMILIES = Object.freeze([]);
 const FALLBACK_ALLOWED_FAMILY_SET = new Set(FALLBACK_ALLOWED_FAMILIES);
 
 // Self-check: the allowlist may only name families production actually

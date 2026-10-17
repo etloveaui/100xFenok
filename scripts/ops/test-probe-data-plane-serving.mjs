@@ -52,8 +52,8 @@ const sourceDateForPolicy = ({ path, family }) => {
 
 // The exported allowlist is immutable; callers cannot broaden fallback policy.
 {
-  assert.throws(() => FALLBACK_ALLOWED_FAMILIES.push("slickcharts-daily"), TypeError);
-  assert.equal(FALLBACK_ALLOWED_FAMILIES.includes("slickcharts-daily"), false);
+  assert.throws(() => FALLBACK_ALLOWED_FAMILIES.push("slickcharts"), TypeError);
+  assert.equal(FALLBACK_ALLOWED_FAMILIES.includes("slickcharts"), false);
 }
 
 // Healthy dynamic response: plane headers with the family prefix, a fresh
@@ -452,18 +452,17 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.match(report.body, /  - boom/);
 }
 
-// Fallback mode: an intentionally unpublished family serving its static copy
-// (200 with BOTH plane headers absent) passes, labelled FALLBACK-ALLOWED.
+// Migrated SlickCharts must reject a bundled response with no plane headers.
 {
   const r = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/symbols.json",
-    family: "slickcharts-symbols",
+    family: "slickcharts",
     generationHeader: null,
     sourceAsOfHeader: null,
   });
-  assert.equal(r.ok, true);
-  assert.equal(r.mode, "fallback-allowed");
+  assert.equal(r.ok, false);
+  assert.equal(r.mode, "strict");
 }
 
 // A fully published response for an allowlisted family validates strictly and
@@ -472,8 +471,8 @@ const sourceDateForPolicy = ({ path, family }) => {
   const r = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/symbols.json",
-    family: "slickcharts-symbols",
-    generationHeader: "slickcharts-symbols-abc123",
+    family: "slickcharts",
+    generationHeader: "slickcharts-abc123",
     sourceAsOfHeader: "2026-08-03",
     publishedAtHeader: hoursAgo(1),
   });
@@ -487,8 +486,8 @@ const sourceDateForPolicy = ({ path, family }) => {
   const r = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/symbols.json",
-    family: "slickcharts-symbols",
-    generationHeader: "slickcharts-symbols-abc123",
+    family: "slickcharts",
+    generationHeader: "slickcharts-abc123",
     sourceAsOfHeader: null,
   });
   assert.equal(r.ok, false);
@@ -501,7 +500,7 @@ const sourceDateForPolicy = ({ path, family }) => {
 {
   const bothEmpty = evaluateProbeResponse({
     ...base,
-    family: "slickcharts-history",
+    family: "slickcharts",
     generationHeader: "",
     sourceAsOfHeader: "",
   });
@@ -512,7 +511,7 @@ const sourceDateForPolicy = ({ path, family }) => {
 
   const generationEmpty = evaluateProbeResponse({
     ...base,
-    family: "slickcharts-symbols",
+    family: "slickcharts",
     generationHeader: "",
     sourceAsOfHeader: null,
   });
@@ -521,7 +520,7 @@ const sourceDateForPolicy = ({ path, family }) => {
 
   const sourceEmpty = evaluateProbeResponse({
     ...base,
-    family: "slickcharts-symbols",
+    family: "slickcharts",
     generationHeader: null,
     sourceAsOfHeader: "",
   });
@@ -535,7 +534,7 @@ const sourceDateForPolicy = ({ path, family }) => {
     ...base,
     path: "/data/edgar-korean-summaries/2026-08-03.json",
     family: "edgar-korean-summaries",
-    generationHeader: "slickcharts-daily-abc123",
+    generationHeader: "slickcharts-abc123",
     sourceAsOfHeader: "2026-08-03",
   });
   assert.equal(r.ok, false);
@@ -549,8 +548,8 @@ const sourceDateForPolicy = ({ path, family }) => {
   const r = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/stocks/TSLA.json",
-    family: "slickcharts-history",
-    generationHeader: "slickcharts-history-abc123",
+    family: "slickcharts",
+    generationHeader: "slickcharts-abc123",
     sourceAsOfHeader: daysAgo(41, true),
     publishedAtHeader: hoursAgo(1),
   });
@@ -572,7 +571,7 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.equal(resolveSourceAgeDays({ path: "/data/yardney/yardney_model.json", family: "fred-yardeni" }), 14);
   assert.deepEqual(SOURCE_AGE_UNBOUNDED_FAMILIES, ["computed-signals"]);
   assert.equal(resolveSourceAgeDays({ path: "/data/computed/signals.json", family: "computed-signals" }), null);
-  assert.equal(resolveSourceAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts-monthly" }), 40);
+  assert.equal(resolveSourceAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts" }), 40);
   // Exact path beats family when both have overrides.
   assert.equal(resolveSourceAgeDays({ path: "/data/macro/fdic-tier1.json", family: "fred-yardeni" }), 180);
   // No override on either axis falls back to the default.
@@ -648,8 +647,8 @@ const sourceDateForPolicy = ({ path, family }) => {
     DEFAULT_MAX_PUBLISHED_AGE_DAYS,
   );
   assert.equal(resolvePublishedAgeDays({ path: "/data/yardney/yardney_model.json", family: "fred-yardeni" }), 10);
-  assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500.json", family: "slickcharts-weekly" }), 10);
-  assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts-monthly" }), 40);
+  assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500.json", family: "slickcharts" }), 40);
+  assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts" }), 40);
   assert.equal(resolvePublishedAgeDays({ path: "/data/macro/fred-macro.json", family: "fred-macro" }), DEFAULT_MAX_PUBLISHED_AGE_DAYS);
   assert.equal(resolvePublishedAgeDays({ path: "/nonexistent.json", family: "nobody" }), DEFAULT_MAX_PUBLISHED_AGE_DAYS);
 }
@@ -739,8 +738,8 @@ const sourceDateForPolicy = ({ path, family }) => {
   const cannotLoosenHeartbeat = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/sp500-returns.json",
-    family: "slickcharts-monthly",
-    generationHeader: "slickcharts-monthly-abc123",
+    family: "slickcharts",
+    generationHeader: "slickcharts-abc123",
     sourceAsOfHeader: daysAgo(1, true),
     publishedAtHeader: daysAgo(41),
     maxPublishedAgeDays: 999,
@@ -789,7 +788,7 @@ const sourceDateForPolicy = ({ path, family }) => {
 
   const invalidFallbackNow = evaluateProbeResponse({
     path: "/data/slickcharts/symbols.json",
-    family: "slickcharts-symbols",
+    family: "slickcharts",
     status: 200,
     nowIso: "not-a-time",
     generationHeader: null,
@@ -826,7 +825,7 @@ const sourceDateForPolicy = ({ path, family }) => {
 // behavior, including strict future-date rejection.
 {
   const probeStart = "2026-08-11T22:23:14.274Z"; // run-start capture of the failing run
-  const promotionInstant = "2026-08-11T22:25:47.138Z"; // slickcharts-history promoted mid-sweep
+  const promotionInstant = "2026-08-11T22:25:47.138Z"; // slickcharts promoted mid-sweep
   const evaluationInstant = "2026-08-11T22:26:00.000Z"; // when the later responses were evaluated
   const sourceDateForInstant = (days) =>
     new Date(Date.parse(probeStart) - days * MS_PER_DAY).toISOString().slice(0, 10);
@@ -889,24 +888,23 @@ const sourceDateForPolicy = ({ path, family }) => {
   }
 }
 
-// All three plane headers absent on a known fallback family passes as
-// FALLBACK-ALLOWED; any single present header escapes fallback.
+// Migrated SlickCharts rejects both absent and partial plane headers.
 {
   const allAbsent = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/symbols.json",
-    family: "slickcharts-symbols",
+    family: "slickcharts",
     generationHeader: null,
     sourceAsOfHeader: null,
     publishedAtHeader: null,
   });
-  assert.equal(allAbsent.ok, true);
-  assert.equal(allAbsent.mode, "fallback-allowed");
+  assert.equal(allAbsent.ok, false);
+  assert.equal(allAbsent.mode, "strict");
 
   const publishedAtOnly = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/symbols.json",
-    family: "slickcharts-symbols",
+    family: "slickcharts",
     generationHeader: null,
     sourceAsOfHeader: null,
     publishedAtHeader: hoursAgo(1),
@@ -1120,12 +1118,12 @@ const sourceDateForPolicy = ({ path, family }) => {
 }
 
 // A published family is NOT allowlisted: the 2026-08-03 incident shape (200,
-// no headers) still fails for slickcharts-daily.
+// no headers) still fails for slickcharts.
 {
   const r = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/gainers.json",
-    family: "slickcharts-daily",
+    family: "slickcharts",
     generationHeader: null,
     sourceAsOfHeader: null,
   });
@@ -1140,7 +1138,7 @@ const sourceDateForPolicy = ({ path, family }) => {
   const r = evaluateProbeResponse({
     ...base,
     path: "/data/slickcharts/stocks/A.json",
-    family: "slickcharts-history",
+    family: "slickcharts",
     status: 503,
     generationHeader: null,
     sourceAsOfHeader: null,
@@ -1152,12 +1150,12 @@ const sourceDateForPolicy = ({ path, family }) => {
 // Report labels fallback success FALLBACK-ALLOWED, never OK.
 {
   const report = buildReport([
-    { path: "/data/slickcharts/symbols.json", family: "slickcharts-symbols", ok: true, mode: "fallback-allowed", failures: [] },
+    { path: "/data/slickcharts/symbols.json", family: "slickcharts", ok: true, mode: "fallback-allowed", failures: [] },
     { path: "/data/macro/fred-macro.json", family: "fred-macro", ok: true, mode: "strict", failures: [] },
   ]);
   assert.equal(report.ok, true);
   assert.equal(report.failingCount, 0);
-  assert.match(report.body, /- FALLBACK-ALLOWED \/data\/slickcharts\/symbols\.json \(slickcharts-symbols\)/);
+  assert.match(report.body, /- FALLBACK-ALLOWED \/data\/slickcharts\/symbols\.json \(slickcharts\)/);
   assert.match(report.body, /- OK \/data\/macro\/fred-macro\.json \(fred-macro\)/);
   assert.doesNotMatch(report.body, /FALLBACK-ALLOWED .*\(fred-macro\)/);
 }
