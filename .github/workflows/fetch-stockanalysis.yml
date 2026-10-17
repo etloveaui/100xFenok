@@ -606,6 +606,7 @@ jobs:
           const basis = manifest.plane_basis?.["stockanalysis-catalogue"];
           if (!basis) throw new Error("CATALOGUE_ACQUISITION_BASIS_MISSING");
           const root = path.join(process.env.RUNNER_TEMP, "stockanalysis-catalogue");
+          await mkdir(root, { recursive: true });
           const receipt = await hydrateStockanalysisCatalogue({ repoRoot: root });
           if (basis.generation_id !== receipt.generation_id || basis.manifest_sha256 !== receipt.manifest_sha256) {
             throw new Error("CATALOGUE_ACQUISITION_BASIS_CHANGED");
