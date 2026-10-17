@@ -1,9 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-10-17T06:50:40.061Z",
+  "generated_at": "2026-10-17T06:53:00.494Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 39011150733,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39011150733",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0
+    },
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
@@ -407,11 +419,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "39011316485",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39011316485",
-    "observed_at": "2026-10-17T06:50:40.061Z",
+    "run_id": "39011475554",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/39011475554",
+    "observed_at": "2026-10-17T06:53:00.494Z",
     "event": "workflow_run",
     "workflows": [
+      "deploy-worker.yml",
       "fetch-stockanalysis.yml",
       "update-manifest.yml",
       "validate-workflows.yml"
