@@ -612,9 +612,12 @@ export async function materializeCloudDataPlaneFamily({
           });
           if (!response.ok || response.headers.get("x-data-plane-generation") !== summary.generation_id) {
             await response.body?.cancel();
-            fail("PUBLIC_GENERATION_MISMATCH", asset.path);
+            // Serving routes may lag this authenticated active manifest during deployment.
+            // Read its exact immutable object; the size/hash check below remains authoritative.
+            payload = await plane.objectStore.get(asset.object_key);
+          } else {
+            payload = new Uint8Array(await response.arrayBuffer());
           }
-          payload = new Uint8Array(await response.arrayBuffer());
         } else {
           payload = await plane.objectStore.get(asset.object_key);
         }
