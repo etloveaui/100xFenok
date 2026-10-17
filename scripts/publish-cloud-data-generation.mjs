@@ -671,15 +671,15 @@ export const FAMILIES = {
   },
   "finra-ats-weekly": {
     root: "data/admin/finra-ats",
-    files: ["current/weekly-summary.json"],
+    reuse_active_generation: true,
     privacy_class: "private",
     // The weekly marker's top-level source_as_of is the reported week start
     // from the FINRA ATS source payloads themselves. Non-servable: private
     // family, no ENROLLED_PATHS entry.
-    source_as_of: { key: "source_as_of" },
-    // Gate declaration: >= 2x the measured 1 PutObject / 1,146 bytes.
-    plan: { class_a: 10, bytes: 3_000 },
-    policy: { max_assets: 4, max_total_bytes: 6_000 },
+    source_as_of: { file: "current/weekly-summary.json", key: "source_as_of" },
+    // Retain the existing bounded 26-week raw history and recovery state privately.
+    plan: { class_a: 70, class_b: 150, bytes: 20_000_000 },
+    policy: { max_assets: 32, max_total_bytes: 10_000_000 },
   },
   "gdelt-news-tone": {
     root: "data/computed",
