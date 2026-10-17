@@ -361,6 +361,54 @@ function validateEarningsOverviewPublicPayload({ asset, bytes }) {
 
 // P5+ adds more families here.
 export const FAMILIES = {
+  "platform-projections": {
+    root: "data",
+    manifest_prefix: "public/data",
+    files: ["computed/stock_action_index.json", "computed/stock_action_summary.json", "computed/fenok_signals_summary.json", "computed/fenok_etf_signals_summary.json", "computed/fenok_etf_core_daily_basket_summary.json", "computed/market_source_parity.json", "computed/market_data_audit.json", "computed/entity_graph.json", "computed/entity_graph_stock_index.json", "computed/entity_graph_stock_services.json", "computed/market_structure_index.json", "computed/rim-index/inputs.json", "slickcharts/discovery-summary.json", "slickcharts/membership-changes.json", "slickcharts/universe.json", "admin/fenok-edge-coverage-index.json", "admin/data-usage-manifest.json", "admin/product-surface-coverage.json", "admin/fenok-data-health-kpi.json", "admin/lane-registry-projection.json", "manifest.json"],
+    public_roots: ["metadata", "computed/market_facts"],
+    privacy_class: "public",
+    reuse_active_generation: true,
+    incremental_write_budget: true,
+    private_assets: [
+      {"path": "data/computed/fenok_signals.json", "source_as_of": null},
+      {"path": "data/computed/fenok_etf_signals.json", "source_as_of": null},
+      {"path": "data/computed/etf_action_index.json", "source_as_of": null},
+      {"path": "data/admin/fenok-s1-stock-public-promotion-dry-run.json", "source_as_of": null},
+      {"path": "data/admin/fenok-s0-finra-occ-mapping-ledger.json", "source_as_of": null},
+      {"path": "data/admin/fenok-edge-etf-daily1y-readiness.json", "source_as_of": null},
+      {"path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json", "source_as_of": null},
+      {"path": "data/admin/fenok-etf-core-daily-basket.json", "source_as_of": null},
+      {"path": "data/admin/data-supply-detection-floor.json", "source_as_of": null},
+    ],
+    plan: { class_a: 24_000, class_b: 50_000 },
+    policy: { max_assets: 12_000, max_total_bytes: 500_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value !== null && typeof value === "object";
+    },
+  },
+  "pipeline-alarm-state": {
+    root: "data/admin",
+    manifest_prefix: "public/data/admin",
+    files: ["alarm-state.json"],
+    privacy_class: "public",
+    reuse_active_generation: true,
+    source_as_of: { key: "generated_at" },
+    plan: { class_a: 10, class_b: 20, bytes: 500_000 },
+    policy: { max_assets: 2, max_total_bytes: 250_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value.schema_version === "alarm-state/v1" && ["open", "clear", "unknown"].includes(value.status);
+    },
+  },
+  "slickcharts-recovery": {
+    root: "data/admin/slickcharts-composite-recovery",
+    privacy_class: "private",
+    reuse_active_generation: true,
+    private_roots: ["data/admin/slickcharts-daily-delivery"],
+    plan: { class_a: 128, class_b: 256 },
+    policy: { max_assets: 64, max_total_bytes: 20_000_000 },
+  },
   "oecd-cli": {
     root: "data/admin/oecd_cli",
     privacy_class: "private",
@@ -1813,7 +1861,11 @@ export async function buildFamilyManifest({
     ? (await walkFiles(absRoot)).filter((relative) => relative.endsWith(".json")
       && (relative.startsWith("investors/") || relative.startsWith("analytics/")
         || ["summary.json", "by_ticker.json", "by_sector.json", "schema.json"].includes(relative))) : null;
-  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? family.files ?? (
+  const publicRootFiles = explicitFiles === null && family.public_roots
+    ? [...(family.files ?? []), ...(await Promise.all(family.public_roots.map(async (root) =>
+      (await walkFiles(path.join(absRoot, root))).map((relative) => `${root}/${relative}`)))).flat()]
+    : null;
+  const enrolled = explicitFiles ?? yahooFiles ?? sec13fFiles ?? publicRootFiles ?? family.files ?? (
     family.source_lane_id
       ? await filesFromCanonicalRoots({ sourceLaneId: family.source_lane_id, absRoot, familyRoot: family.root })
       : null
