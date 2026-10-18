@@ -181,3 +181,9 @@ jobs:
       - name: Verify the SEC 13F bridge index against the regenerated tree
         if: ${{ steps.publish.outcome == 'success' }}
         run: node scripts/test-sec13f-bridge-index.mjs
+
+      - name: Dispatch shared projection rebuild after Scouter promotion
+        if: ${{ success() && steps.publish.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-manifest.yml --repo "$GITHUB_REPOSITORY" --ref main
