@@ -13,6 +13,10 @@ import {
   normalizeSeries
 } from '../tools/macro-monitor/shared/signals-core.mjs';
 import { DATA_SUPPLY_DETECTION_CONFIG } from './lib/data-supply-detection-config.mjs';
+import {
+  FRED_BANKING_FILE_POLICY,
+  freshnessVerdict
+} from '../100xfenok-next/src/lib/freshness-policy.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..');
@@ -286,13 +290,34 @@ function buildSignals() {
 
 const COMPONENT_NAMES = ['liquidity_flow', 'liquidity_stress', 'banking_health', 'sentiment_signal'];
 
+// Only lower-frequency observations receive cadence treatment. Daily inputs
+// always retain their actual date, so a newer component cannot hide a stall.
+const WEEKLY_POLICY = { cadence: 'weekly', calendar: 'calendar' };
+const SOURCE_CADENCE = new Map([
+  // H.6 reports the preceding month late in the following month:
+  // https://fred.stlouisfed.org/series/M2SL (Aug 2026 released Sep 22).
+  ['data/macro/fred-macro.json#M2SL', { cadence: 'monthly', calendar: 'calendar', sourceAnchor: 'month_end', releaseLagDays: 31 }],
+  ['data/macro/fred-macro.json#WALCL', WEEKLY_POLICY],
+  ['data/macro/fred-macro.json#WRESBAL', WEEKLY_POLICY],
+  ['data/macro/fred-macro.json#GDP', { cadence: 'quarterly', calendar: 'calendar', sourceAnchor: 'quarter_end' }],
+  ['data/macro/fred-banking-quarterly.json#DRALACBN', { cadence: 'quarterly', calendar: 'calendar', sourceAnchor: 'quarter_end' }],
+  ['data/macro/fred-banking-quarterly.json#BOGZ1FL010000016Q', FRED_BANKING_FILE_POLICY.fred_banking_quarterly],
+  ['data/macro/fred-banking-weekly.json#TOTLL', FRED_BANKING_FILE_POLICY.fred_banking_weekly],
+  ['data/macro/fred-banking-weekly.json#DPSACBW027SBOG', FRED_BANKING_FILE_POLICY.fred_banking_weekly],
+  ['data/sentiment/cftc-sp500.json', { ...WEEKLY_POLICY, releaseLagDays: 3 }]
+]);
+// These two producers already declare exact calendar-day windows.
+const SOURCE_WINDOW_DAYS = new Map([
+  ['data/macro/fdic-tier1.json#data', DATA_SUPPLY_DETECTION_CONFIG.lanes.find(({ id }) => id === 'fdic_tier1').freshness.due_policy.days],
+  ['data/sentiment/aaii.json', DATA_SUPPLY_DETECTION_CONFIG.lanes.find(({ id }) => id === 'sentiment_aaii').freshness.max_staleness]
+]);
+
 function componentAsOfEntries(signalsValue) {
   return COMPONENT_NAMES.map((name) => ({ name, as_of: signalsValue?.[name]?.as_of }));
 }
 
-// Truthful conservative source clock: the minimum of every declared raw input
-// date actually consumed by the four signal components. Every date must be an
-// exact, real YYYY-MM-DD; generated_at is never substituted.
+// Validate every declared contributor before computing its conservative minimum.
+// Every date must be an exact, real YYYY-MM-DD; generated_at is never substituted.
 export function computeSourceAsOf(sourceDates, expectedNames = null, identity = 'raw input') {
   if (!Array.isArray(sourceDates) || sourceDates.length === 0) {
     throw new Error('export-computed-signals: cannot compute source_as_of; no component source dates available');
@@ -348,11 +373,23 @@ export function computeSourceAsOf(sourceDates, expectedNames = null, identity = 
 export function buildComputedSignalsPayload(signalsValue, generatedAt, sourceDates) {
   const componentAsOfs = componentAsOfEntries(signalsValue);
   computeSourceAsOf(componentAsOfs, COMPONENT_NAMES, 'component');
-  const sourceAsOf = computeSourceAsOf(sourceDates, RAW_SOURCE_NAMES);
+  computeSourceAsOf(sourceDates, RAW_SOURCE_NAMES);
+  const asOf = latestDate(...componentAsOfs.map(({ as_of }) => [{ date: as_of, val: 1 }]));
+  const sourceAsOf = sourceDates.map(({ name, as_of }) => {
+    const policy = SOURCE_CADENCE.get(name);
+    const windowDays = SOURCE_WINDOW_DAYS.get(name);
+    const ageDays = (Date.parse(asOf) - Date.parse(as_of)) / 86_400_000;
+    const inCadence = windowDays === undefined
+      ? policy && freshnessVerdict(as_of, policy, asOf).state === 'fresh'
+      : ageDays >= 0 && ageDays <= windowDays;
+    // A slow source can support the signal date only within its own window.
+    // Once overdue, its actual observation date constrains the set again.
+    return inCadence ? asOf : as_of;
+  }).sort()[0];
   return {
     schema_version: '1.0.0',
     generated_at: generatedAt,
-    as_of: latestDate(...componentAsOfs.map(({ as_of }) => [{ date: as_of, val: 1 }])),
+    as_of: asOf,
     source_as_of: sourceAsOf,
     engine: {
       name: 'macro-monitor-computed-signals',

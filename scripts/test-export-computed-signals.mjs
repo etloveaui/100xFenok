@@ -12,8 +12,7 @@ import {
 const GENERATED_AT = "2026-08-11T00:00:00.000Z";
 
 // Fixture mirrors the live signals.json shape: liquidity_flow/liquidity_stress/
-// sentiment_signal share the newest date while banking_health lags, so the
-// legacy headline as_of (max) is newer than the truthful source minimum.
+// sentiment_signal share the newest date while banking_health lags.
 function fixtureSignals(overrides = {}) {
   return {
     liquidity_flow: { as_of: "2026-08-10" },
@@ -43,7 +42,7 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
     fixtureSourceDates({ "data/macro/fred-macro.json#M2SL": "2026-07-29" }),
   );
   assert.equal(payload.as_of, "2026-08-10", "headline as_of stays the max of component dates");
-  assert.equal(payload.source_as_of, "2026-07-29", "source_as_of is the minimum even when headline as_of is newer");
+  assert.equal(payload.source_as_of, "2026-08-10", "monthly M2 within its publication cadence supports the signal date");
   assert.equal(payload.generated_at, GENERATED_AT, "generated_at passes through unchanged");
   assert.deepEqual(payload.signals, fixtureSignals(), "component fields are unchanged");
   assert.notEqual(payload.source_as_of, payload.generated_at, "source clock must never alias generated_at");
@@ -163,8 +162,8 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
 }
 
 {
-  // Masked-source regression: the component headline is newer because it is
-  // the maximum of mixed banking inputs, but FDIC is the conservative floor.
+  // Quarterly BOGZ remains within its existing publication policy, but the
+  // FDIC observation has exceeded its existing 120-day window.
   const payload = buildComputedSignalsPayload(
     fixtureSignals({ banking_health: { as_of: "2026-08-10" } }),
     GENERATED_AT,
@@ -172,12 +171,39 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
   );
   assert.equal(payload.as_of, "2026-08-10");
   assert.equal(payload.signals.banking_health.as_of, "2026-08-10");
-  assert.equal(payload.source_as_of, "2025-10-01", "oldest BOGZ raw date must not be masked by banking_health.as_of");
+  assert.equal(payload.source_as_of, "2026-03-31", "overdue FDIC still constrains the source clock");
   assert.equal(
     payload.source_freshness_warnings.some((row) => row.contributor === BOGZ),
     false,
     "BOGZ is covered by the existing fred_banking source-family gate",
   );
+}
+
+{
+  const current = fixtureSourceDates({
+    [BOGZ]: "2026-01-01",
+    [FDIC_TIER1]: "2026-06-30",
+    "data/macro/fred-macro.json#M2SL": "2026-08-01",
+    "data/macro/fred-macro.json#GDP": "2026-04-01",
+    "data/macro/fred-banking-quarterly.json#DRALACBN": "2026-04-01",
+    "data/macro/fred-banking-weekly.json#TOTLL": "2026-10-07",
+    "data/macro/fred-banking-weekly.json#DPSACBW027SBOG": "2026-10-07",
+    [AAII]: "2026-10-08",
+    "data/sentiment/cftc-sp500.json": "2026-10-06",
+  }, "2026-10-16");
+  const signals = Object.fromEntries(Object.keys(fixtureSignals()).map((name) => [name, { as_of: "2026-10-16" }]));
+  const build = (dates) => buildComputedSignalsPayload(signals, "2026-10-18T04:00:00Z", dates);
+  assert.equal(build(current).source_as_of, "2026-10-16", "mixed-cadence current observations support the real signal date");
+  for (const name of ["data/macro/fred-macro.json#SOFR", "data/sentiment/vix.json"]) {
+    assert.equal(build(current.map((row) => row.name === name ? { ...row, as_of: "2026-10-01" } : row)).source_as_of,
+      "2026-10-01", "a stalled daily contributor is never hidden by cadence treatment");
+  }
+  for (const [name, as_of] of [[BOGZ, "2025-04-01"], [AAII, "2026-10-01"],
+    ["data/macro/fred-macro.json#M2SL", "2026-05-01"],
+    ["data/macro/fred-banking-quarterly.json#DRALACBN", "2026-01-01"]]) {
+    assert.equal(build(current.map((row) => row.name === name ? { ...row, as_of } : row)).source_as_of,
+      as_of, "an overdue slower contributor still constrains the signal set");
+  }
 }
 
 {
