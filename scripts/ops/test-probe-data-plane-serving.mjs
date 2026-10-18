@@ -1180,4 +1180,57 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.equal(ENROLLED_PREFIXES.some(({ family }) => family === "edgar-korean-summaries"), true);
 }
 
+// Migrated serving contracts keep honest undated metadata, quarterly 13F,
+// and the existing owner-weekly Scouter policy without weakening heartbeats.
+{
+  const nowIso = "2026-10-18T03:00:00Z";
+  const response = (path, family, sourceAsOfHeader) => ({ path, family, sourceAsOfHeader,
+    status: 200, generationHeader: `${family}-fixture`, publishedAtHeader: nowIso, nowIso });
+  const undated = response("/data/stockanalysis/schema.json", "stockanalysis-catalogue", "unknown");
+  assert.equal(evaluateProbeResponse(undated).ok, true);
+  for (const sourceAsOfHeader of [null, "", "bad-date"]) {
+    assert.equal(evaluateProbeResponse({ ...undated, sourceAsOfHeader }).ok, false);
+  }
+  assert.equal(evaluateProbeResponse({ ...undated, publishedAtHeader: "2026-10-01T00:00:00Z" }).ok, false);
+  assert.equal(evaluateProbeResponse(response("/data/global-scouter/core/stocks_analyzer.json",
+    "scouter-derived", "2026-10-09")).ok, true);
+  assert.equal(evaluateProbeResponse(response("/data/global-scouter/core/stocks_analyzer.json",
+    "scouter-derived", "2026-10-01")).ok, false, "a missed weekly edition still alarms");
+  assert.equal(evaluateProbeResponse(response("/data/computed/sec13f_bridge_index.json",
+    "scouter-derived", "2026-06-30")).ok, true);
+  assert.equal(evaluateProbeResponse(response("/data/computed/sec13f_bridge_index.json",
+    "scouter-derived", "2026-03-31")).ok, false, "an old reporting quarter still alarms");
+  const history = response("/data/slickcharts/stocks/AVB.json", "slickcharts", "2026-08-11");
+  assert.equal(evaluateProbeResponse(history).ok, false, "unknown membership stays strict");
+  assert.equal(evaluateProbeResponse({ ...history, activeSlickchartsSymbols: new Set(["AVB"]) }).ok, false);
+  const retired = { ...history, activeSlickchartsSymbols: new Set(["AAPL"]) };
+  assert.equal(evaluateProbeResponse(retired).ok, true);
+  assert.equal(evaluateProbeResponse({ ...retired, sourceAsOfHeader: "unknown" }).ok, false);
+  assert.equal(evaluateProbeResponse({ ...retired, sourceAsOfHeader: "2026-10-19" }).ok, false);
+  assert.equal(evaluateProbeResponse({ ...retired, publishedAtHeader: "2026-08-01T00:00:00Z" }).ok, false);
+}
+
+// Only a healthy, well-formed already-enrolled universe identifies archival
+// stock history. Read failures and stale/malformed membership fail closed.
+for (const universeCase of ["valid", "stale", "malformed"]) {
+  const results = await probeAll({
+    baseUrl: "https://example.test", nowIso: NOW,
+    fetchFn: async (url) => {
+      const path = new URL(url).pathname, family = ENROLLED_PATHS.get(path);
+      const universe = path === "/data/slickcharts/universe.json";
+      return new Response(JSON.stringify(universe
+        ? { uniqueCount: universeCase === "malformed" ? 2 : 1, stocks: [{ symbol: "AAPL" }] } : {}), {
+        status: 200, headers: {
+          "x-data-plane-generation": `${family}-fixture`,
+          "x-data-plane-source-as-of": path.endsWith("/stocks/AVB.json") ? "2026-01-09"
+            : universe && universeCase === "stale" ? "2026-01-09" : sourceDateForPolicy({ path, family }),
+          "x-data-plane-published-at": hoursAgo(1),
+        },
+      });
+    },
+  });
+  assert.equal(results.find((row) => row.path === "/data/slickcharts/stocks/AVB.json").ok,
+    universeCase === "valid", universeCase);
+}
+
 console.log("probe-data-plane-serving tests passed");

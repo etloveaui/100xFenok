@@ -29,7 +29,7 @@ import { performance } from "node:perf_hooks";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
-import { freshnessVerdict, policyToday, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
+import { FRESHNESS_CLASSES, freshnessVerdict, policyToday, resolveSourcePolicy } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
 
 const DETECTION_CALENDARS = JSON.parse(fs.readFileSync(
   fileURLToPath(new URL("../lib/data-supply-detection-calendars.json", import.meta.url)), "utf8",
@@ -38,7 +38,19 @@ const SHARED_SOURCE_PATHS = new Map([
   ...["AAPL", "AMZN", "META", "MSFT"].map((symbol) => [`/data/earnings-overview/${symbol}.json`, { laneId: "earnings_overview" }]),
   ...["daily", "weekly", "monthly", "quarterly"].map((cadence) => [`/data/macro/fred-banking-${cadence}.json`, { artifactId: `fred_banking_${cadence}` }]),
   ["/data/macro/tga.json", { laneId: "treasury_tga" }],
+  ...["stocks_analyzer", "per_bands_index", "revision_movers"].map((name) =>
+    [`/data/global-scouter/core/${name}.json`, { laneId: "global_scouter" }]),
 ]);
+// These published configuration/index documents explicitly have no aggregate
+// source day. An explicit "unknown" is honest; missing or malformed headers
+// and stale publication heartbeats still fail.
+const UNDATED_SOURCE_PATHS = new Set([
+  "/data/stockanalysis/index.json", "/data/stockanalysis/etf_universe.json",
+  "/data/stockanalysis/schema.json", "/data/stockanalysis/surface_consumers.json",
+  "/data/damodaran/industry_benchmarks.json", "/data/calendar/prev-values.json",
+  "/data/global-scouter/core/slick_index.json",
+]);
+const SLICKCHARTS_UNIVERSE_PATH = "/data/slickcharts/universe.json";
 
 export const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 // Milliseconds a single enrolled URL may take to answer before it is cut off
@@ -79,6 +91,13 @@ export const PATH_SOURCE_AGE_DAYS = Object.freeze({
   "/data/macro/fred-banking-weekly.json": 14,
   "/data/macro/fred-banking-monthly.json": 100,
   "/data/macro/fred-banking-quarterly.json": 180,
+  // The bridge's minimum input date includes the SEC reporting quarter end.
+  // Use the existing quarterly class and SEC filing lag, not a daily limit.
+  "/data/computed/sec13f_bridge_index.json": FRESHNESS_CLASSES.quarterly.cycleDays
+    + DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "sec_13f").freshness.due_policy.days
+    + FRESHNESS_CLASSES.quarterly.graceDays,
+  // Fixed 1929-1933 observations do not acquire a new source date each month.
+  "/data/slickcharts/1929crash.json": null,
 });
 // The computed-signals source_as_of is the minimum of heterogeneous raw
 // contributor dates. Its source-age authority remains in the producer-family
@@ -191,9 +210,15 @@ export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze(Object.fromEntries(Object
 // FDIC is the sole publication override: advancement-only quarterly output,
 // 91-day cycle + 19-day release slack; its collector has separate cadence checks.
 
-export function resolveSourceAgeDays({ path, family }) {
+export function resolveSourceAgeDays({ path, family, activeSlickchartsSymbols }) {
   if (SOURCE_AGE_UNBOUNDED_FAMILY_SET.has(family)) return null;
-  return PATH_SOURCE_AGE_DAYS[path] ?? FAMILY_SOURCE_AGE_DAYS[family] ?? DEFAULT_MAX_SOURCE_AGE_DAYS;
+  const stock = family === "slickcharts" && /^\/data\/slickcharts\/stocks\/([^/]+)\.json$/.exec(path);
+  // Preserve retired members' permanent history. Only a validated current
+  // universe can establish retirement; active or unclassified members retain
+  // the normal age bound.
+  if (stock && activeSlickchartsSymbols instanceof Set && !activeSlickchartsSymbols.has(stock[1])) return null;
+  return Object.hasOwn(PATH_SOURCE_AGE_DAYS, path) ? PATH_SOURCE_AGE_DAYS[path]
+    : FAMILY_SOURCE_AGE_DAYS[family] ?? DEFAULT_MAX_SOURCE_AGE_DAYS;
 }
 
 export function resolvePublishedAgeDays({ path, family }) {
@@ -287,7 +312,7 @@ const FALLBACK_ALLOWED_FAMILY_SET = new Set(FALLBACK_ALLOWED_FAMILIES);
   }
 }
 
-export function evaluateProbeResponse({ path, family, status, generationHeader, sourceAsOfHeader, publishedAtHeader, nowIso, maxAgeDays, maxPublishedAgeDays }) {
+export function evaluateProbeResponse({ path, family, status, generationHeader, sourceAsOfHeader, publishedAtHeader, nowIso, maxAgeDays, maxPublishedAgeDays, activeSlickchartsSymbols }) {
   const failures = [];
   if (status !== 200) {
     failures.push(`HTTP ${status} (expected 200)`);
@@ -312,17 +337,18 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
       `x-data-plane-generation is ${generationHeader == null ? "absent — the URL is silently serving the deploy-time bundled copy" : `"${generationHeader}" (expected prefix "${family}-")`}`,
     );
   }
-  const effectiveSourceAgeDays = tightenPolicyLimit(resolveSourceAgeDays({ path, family }), maxAgeDays);
+  const effectiveSourceAgeDays = tightenPolicyLimit(resolveSourceAgeDays({ path, family, activeSlickchartsSymbols }), maxAgeDays);
   const effectivePublishedAgeDays = tightenPolicyLimit(resolvePublishedAgeDays({ path, family }), maxPublishedAgeDays);
   const sharedSource = SHARED_SOURCE_PATHS.get(path);
   const sourceMs = parseRealIsoDay(sourceAsOfHeader);
-  if (sourceMs === null) {
+  if (sourceMs === null && !(sourceAsOfHeader === "unknown" && UNDATED_SOURCE_PATHS.has(path)
+    && ENROLLED_PATHS.get(path) === family)) {
     failures.push(
       `x-data-plane-source-as-of is ${sourceAsOfHeader == null
         ? "absent"
         : `invalid ("${sourceAsOfHeader}"; expected a real YYYY-MM-DD calendar day)`}`,
     );
-  } else if (nowIsValid) {
+  } else if (sourceMs !== null && nowIsValid) {
     if (sourceMs > nowMs) {
       failures.push(`source date ${sourceAsOfHeader} is in the future relative to now ${nowIso}`);
     } else if (sharedSource) {
@@ -445,6 +471,8 @@ export async function probeAll({
   const results = new Array(enrolledEntries.length);
   let nextIndex = 0;
   let totalDeadlineReached = false;
+  let activeSlickchartsSymbols = null;
+  const stockHistoryChecks = new Map();
   // This enumerates exact ENROLLED_PATHS only. Prefix-enrolled EDGAR policy is
   // defined above but has no live probe coverage here; adding representative
   // prefix paths requires a separate contract and is intentionally out of scope.
@@ -459,9 +487,19 @@ export async function probeAll({
       const remainingBeforeRequestMs = remainingTotalMs();
       if (remainingBeforeRequestMs <= 0) return;
       let response;
+      let universePayload;
       try {
         response = await fetchWithTimeout(
-          fetchFn,
+          async (...args) => {
+            const fetched = await fetchFn(...args);
+            // Read the already-probed universe within the same request bound.
+            if (path === SLICKCHARTS_UNIVERSE_PATH && fetched.status === 200 && typeof fetched.json === "function") {
+              // Without usable membership, preserve every stock's strict age
+              // check; an unreadable body cannot establish retirement.
+              universePayload = await fetched.json().catch(() => null);
+            }
+            return fetched;
+          },
           `${baseUrl}${path}`,
           Math.min(effectiveTimeoutMs, remainingBeforeRequestMs),
           remainingTotalMs,
@@ -484,7 +522,7 @@ export async function probeAll({
       // a future publication against the run-start time. An explicit nowIso
       // still pins every evaluation for deterministic callers.
       const evaluationNowIso = nowIso === undefined ? wallClockNowFn() : nowIso;
-      results[index] = evaluateProbeResponse({
+      const observation = {
         path,
         family,
         status: response.status,
@@ -493,11 +531,25 @@ export async function probeAll({
         publishedAtHeader: response.headers.get("x-data-plane-published-at"),
         nowIso: evaluationNowIso,
         maxAgeDays,
-      });
+      };
+      results[index] = evaluateProbeResponse(observation);
+      if (family === "slickcharts" && path.startsWith("/data/slickcharts/stocks/")) stockHistoryChecks.set(index, observation);
+      if (path === SLICKCHARTS_UNIVERSE_PATH && results[index].ok
+        && Array.isArray(universePayload?.stocks) && universePayload.stocks.length > 0
+        && universePayload.uniqueCount === universePayload.stocks.length
+        && universePayload.stocks.every((row) => typeof row.symbol === "string" && row.symbol.length > 0)) {
+        const symbols = new Set(universePayload.stocks.map((row) => row.symbol));
+        if (symbols.size === universePayload.uniqueCount) activeSlickchartsSymbols = symbols;
+      }
     }
   }
   const workerCount = Math.min(effectiveConcurrency, enrolledEntries.length);
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  if (activeSlickchartsSymbols !== null) {
+    for (const [index, observation] of stockHistoryChecks) {
+      results[index] = evaluateProbeResponse({ ...observation, activeSlickchartsSymbols });
+    }
+  }
 
   const deadlineFailure = totalDeadlineFailure(effectiveTotalDeadlineMs);
   for (let index = 0; index < enrolledEntries.length; index += 1) {
