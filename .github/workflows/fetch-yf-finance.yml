@@ -65,7 +65,7 @@ on:
         required: false
         default: 'false'
       profile:
-        description: 'Fetch profile: daily, core, full, or etf'
+        description: 'Fetch profile: daily, core, full, etf, or history-backfill (private lifetime prices only)'
         required: false
         default: 'full'
       max_age_hours:
@@ -167,7 +167,7 @@ jobs:
         run: node scripts/check-external-clock-slot.mjs fetch-yf-finance.yml
 
   acquire-yf-finance:
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && github.event.inputs.profile != 'history-backfill' }}
     needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 240
@@ -785,3 +785,68 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run update-manifest.yml --ref main
+
+  price-history:
+    # Reuse the existing post-close stock slot; no separate acquisition schedule.
+    # Initial backfill bypasses the rolling-window producer and its UM dispatch.
+    needs: [clock-admission, acquire-yf-finance, publish-yf-finance]
+    if: ${{ always() && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event.inputs.profile == 'history-backfill' || (needs.clock-admission.outputs.automatic == 'true' && needs.clock-admission.outputs.mode == 'stocks' && needs.publish-yf-finance.result == 'success')) }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+      DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+      DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+      ETF_ALWAYS_INCLUDE: ${{ secrets.ETF_ALWAYS_INCLUDE }}
+      PRICE_HISTORY_MODE: ${{ github.event.inputs.profile == 'history-backfill' && 'backfill' || 'daily' }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Install yfinance
+        run: pip install yfinance
+      - name: Read private runtime pairing and active price years
+        run: |
+          node --input-type=module <<'JS'
+          import {mkdir,writeFile,appendFile} from 'node:fs/promises';
+          import path from 'node:path';
+          import {createDefaultMaterializePlane,readActiveFamilyIdentity,hydratePrivateFamily} from './scripts/materialize-cloud-data-plane-family.mjs';
+          import {readGenerationAssetBytes} from './scripts/lib/cloud-data-plane-generation.mjs';
+          const e=process.env;
+          const plane=family=>createDefaultMaterializePlane({accountId:e.CLOUDFLARE_ACCOUNT_ID,token:e.CLOUDFLARE_API_TOKEN,
+            endpoint:e.DATA_PLANE_ENDPOINT,writeKey:e.DATA_PLANE_WRITE_KEY,family});
+          const selectionPlane=plane('stockanalysis-etf-detail');
+          const {manifest}=await readActiveFamilyIdentity({plane:selectionPlane,family:'stockanalysis-etf-detail'});
+          const selected='data/admin/data-supply-state/v1/etf-detail-selection.json';
+          const asset=manifest.assets.find(a=>a.path===selected);
+          if (!asset) throw new Error('Active private ETF selection is unavailable');
+          await mkdir(path.dirname(selected),{recursive:true});
+          await writeFile(selected,await readGenerationAssetBytes({asset,objectStore:selectionPlane.objectStore}));
+          const family='yahoo-price-history', historyPlane=plane(family);
+          let active=null;
+          try { active=await readActiveFamilyIdentity({plane:historyPlane,family}); }
+          catch(error) { if (e.PRICE_HISTORY_MODE!=='backfill'||error.code!=='ACTIVE_POINTER_UNAVAILABLE') throw error; }
+          if (active) {
+            const receipt=await hydratePrivateFamily(family);
+            if (receipt.generation_id!==active.manifest.generation_id) throw new Error('Price-history base changed while hydrating');
+            await appendFile(e.GITHUB_ENV,'PUBLISH_EXPECTED_ACTIVE_GENERATION_ID='+receipt.generation_id+'\n'
+              +'PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256='+receipt.manifest_sha256+'\n');
+          }
+          JS
+      - name: Fetch observed prices and build yearly packs
+        run: python3 scripts/fetch-yf-finance.py --price-history-mode "$PRICE_HISTORY_MODE" --sleep 0.35 --retries 1 --ticker-timeout 90
+      - name: Publish private price-history generation
+        run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-price-history --json

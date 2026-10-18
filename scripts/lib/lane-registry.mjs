@@ -1199,7 +1199,7 @@ const lanes = [
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-batch-quote-history",
     detection_attempt: null,
-    canonical_outputs: ["data/yf/finance", "data/yf/quarter_closes.json"],
+    canonical_outputs: ["data/yf/finance", "data/yf/quarter_closes.json", "data/yf/price-history"],
     public_mirror: [],
     commit_shards: [],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
@@ -1213,6 +1213,13 @@ const lanes = [
 // Declared exceptions for data/admin entries that are NOT lane stores
 // (DEC-266 discipline: statically declared, never runtime-inferred).
 const declared_exceptions = [
+  {
+    path: "data/yf/price-history",
+    kind: "root",
+    reason: "Private lifetime observed prices; runtime membership includes the owner-held ETF set and never enters the public mirror.",
+    owner: "yahoo_batch_quote_history",
+    public_sync: "exclude",
+  },
   {
     path: "data/admin/stockanalysis-recovery",
     kind: "root",
@@ -1785,6 +1792,7 @@ export const PLANE_PUBLISH_FAMILY_BINDINGS = Object.freeze({
   "treasury-tga": Object.freeze({ lane_id: "treasury_tga", workflow: ".github/workflows/fetch-treasury-tga.yml" }),
   "us-indices-daily": Object.freeze({ lane_id: "us_indices_daily", workflow: ".github/workflows/fetch-us-indices-daily.yml" }),
   "yahoo-finance": Object.freeze({ lane_id: "yahoo_batch_quote_history", workflow: ".github/workflows/fetch-yf-finance.yml" }),
+  "yahoo-price-history": Object.freeze({ lane_id: "yahoo_batch_quote_history", workflow: ".github/workflows/fetch-yf-finance.yml" }),
   "yahoo-ticker-macro": Object.freeze({ lane_id: "yahoo_ticker_macro", workflow: ".github/workflows/fetch-yahoo-ticker.yml" }),
 });
 

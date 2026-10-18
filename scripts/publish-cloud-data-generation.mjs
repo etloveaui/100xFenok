@@ -381,6 +381,15 @@ export const FAMILIES = {
         && !Object.keys(value).some(key => /token|secret|password|cookie/i.test(key));
     },
   },
+  "yahoo-price-history": {
+    root: "data/yf/price-history",
+    privacy_class: "private",
+    reuse_active_generation: true,
+    incremental_write_budget: true,
+    source_as_of: { file: "index.json", key: "source_as_of" },
+    plan: { class_a: 512, class_b: 1024, bytes: 250_000_000 },
+    policy: { max_assets: 200, max_total_bytes: 125_000_000 },
+  },
   "platform-projections": {
     root: "data",
     manifest_prefix: "public/data",

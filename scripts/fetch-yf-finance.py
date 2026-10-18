@@ -2238,6 +2238,198 @@ def existing_yahoo_source_dates(active_universe):
     return source_by_ticker
 
 
+PRICE_HISTORY_ROOT = ROOT / "data/yf/price-history"
+PRICE_HISTORY_SELECTION = ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json"
+PRICE_HISTORY_COLUMNS = ["date", "open", "high", "low", "close", "adjusted_close", "volume"]
+PRICE_HISTORY_SYMBOL = re.compile(r"^\^?[A-Z0-9][A-Z0-9.\-]{0,19}$")
+
+
+def price_history_universe(selection, owner_text):
+    # Membership is private runtime data. Do not emit any member names.
+    owner = {v for v in re.split(r"[,\s]+", owner_text.strip().upper()) if v}
+    if not owner or owner != set(selection.get("owner_tickers", [])):
+        raise ValueError("price-history owner selection differs from the active ETF selection")
+    base = MAJOR_ETFS | LEVERAGED_AND_FOCUS_ETFS | RIM_TRACKER_ETFS | owner
+    base -= retired_yahoo_symbols(datetime.now(timezone.utc).date().isoformat())
+    pairs = selection.get("pairs", {})
+    targets = {pairs[t]["ticker"] for t in base if pairs.get(t, {}).get("ticker")}
+    symbols = base | targets | {"^GSPC", "^IXIC", "^DJI", "^RUT", "^SOX"}
+    if not all(PRICE_HISTORY_SYMBOL.fullmatch(t) for t in symbols) or len(symbols) > 200:
+        raise ValueError("price-history runtime universe is invalid or exceeds 200 members")
+    return sorted(symbols)
+
+
+def price_history_rows(frame):
+    rows = []
+    for stamp, item in frame.iterrows():
+        values = [item.get(k) for k in ("Open", "High", "Low", "Close", "Adj Close", "Volume")]
+        # Early index histories may have observed closes but no OHLC. Preserve
+        # that absence; Yahoo zero placeholders are not invented opening prices.
+        values = [float(v) if isinstance(v, Number) and math.isfinite(float(v)) else None for v in values]
+        o, h, l, c, a, v = values
+        if c is None or a is None or min(c, a) <= 0 or (v is not None and v < 0):
+            raise ValueError("price-history contains an invalid OHLC observation")
+        o, h, l = [v if v is not None and v > 0 else None for v in (o, h, l)]
+        if all(v is not None for v in (o, h, l)) and (h < max(o, l, c) or l > min(o, h, c)):
+            raise ValueError("price-history contains an invalid OHLC observation")
+        rows.append([stamp.date().isoformat(), o, h, l, c, a, int(v) if v is not None else None])
+    if not rows or len({r[0] for r in rows}) != len(rows):
+        raise ValueError("price-history is empty or has duplicate dates")
+    return sorted(rows)
+
+
+def write_price_history_packs(root, fetched, year, acquisition):
+    """Content-addressed closed years are append-only, including new members."""
+    root = Path(root)
+    index_path = root / "index.json"
+    prior = json.loads(index_path.read_text()) if index_path.exists() else {"tickers": {}}
+    tickers = json.loads(json.dumps(prior["tickers"]))
+    cache = {}
+
+    def read_pack(rel):
+        if rel not in cache:
+            cache[rel] = json.loads((root / rel).read_text())
+        return cache[rel]
+
+    additions = {}
+    current_rel = f"current/{year}.json"
+    current = read_pack(current_rel) if (root / current_rel).exists() else {
+        "schema_version": "yahoo-price-year/v1", "year": year,
+        "columns": PRICE_HISTORY_COLUMNS, "tickers": {}}
+    for ticker, rows in sorted(fetched.items()):
+        entry = tickers.setdefault(ticker, {"years": {}})
+        for y in sorted({int(r[0][:4]) for r in rows}):
+            selected = [r for r in rows if int(r[0][:4]) == y]
+            previous = [r for r in rows if int(r[0][:4]) < y]
+            anchor = previous[-1] if previous else None
+            old_rel = entry["years"].get(str(y))
+            if y < year and old_rel and old_rel.startswith("years/"):
+                continue  # Never replace a closed-year observation or object.
+            if y > year:
+                raise ValueError("price-history contains a future year")
+            old = read_pack(old_rel)["tickers"].get(ticker, {}) if old_rel else {}
+            merged = {r[0]: r for r in old.get("rows", [])}
+            merged.update({r[0]: r for r in selected})
+            value = {"rows": sorted(merged.values()),
+                     "previous_year_anchor": anchor or old.get("previous_year_anchor")}
+            if y == year:
+                current["tickers"][ticker] = value
+                entry["years"][str(y)] = current_rel
+            else:
+                additions.setdefault(y, {})[ticker] = value
+    # A preceding mutable year is closed exactly once at the first new-year run.
+    for ticker, entry in tickers.items():
+        for y, rel in list(entry["years"].items()):
+            if int(y) < year and rel.startswith("current/") and ticker not in additions.get(int(y), {}):
+                additions.setdefault(int(y), {})[ticker] = read_pack(rel)["tickers"][ticker]
+
+    def encoded(value):
+        return (json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode()
+
+    for y, members in sorted(additions.items()):
+        value = {"schema_version": "yahoo-price-year/v1", "year": y,
+                 "columns": PRICE_HISTORY_COLUMNS, "tickers": members}
+        blob = encoded(value)
+        rel = f"years/{y}/{hashlib.sha256(blob).hexdigest()}.json"
+        target = root / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() and target.read_bytes() != blob:
+            raise ValueError("immutable price-history pack differs")
+        if not target.exists():
+            target.write_bytes(blob)
+        cache[rel] = value
+        for ticker in members:
+            tickers[ticker]["years"][str(y)] = rel
+    if current["tickers"]:
+        target = root / current_rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(encoded(current))
+        cache[current_rel] = current
+    for ticker, entry in tickers.items():
+        rows = [r for y, rel in sorted(entry["years"].items())
+                for r in read_pack(rel)["tickers"][ticker]["rows"]]
+        entry.update(first_date=rows[0][0], last_date=rows[-1][0], row_count=len(rows))
+    index = {"schema_version": "yahoo-price-history/v1", "source": "Yahoo Finance",
+             "columns": PRICE_HISTORY_COLUMNS, "current_year": year,
+             "source_as_of": min(tickers[t]["last_date"] for t in fetched),
+             "tickers": tickers, "acquisition": acquisition}
+    root.mkdir(parents=True, exist_ok=True)
+    index_path.write_bytes(encoded(index))
+    # Retired mutable paths are superseded by their immutable year packs.
+    for file in (root / "current").glob("*.json"):
+        if file.name != f"{year}.json":
+            file.unlink()
+    return index
+
+
+def run_price_history(args):
+    import logging
+    from contextlib import redirect_stderr, redirect_stdout
+    import yfinance as yf
+    from curl_cffi.requests import Session
+
+    selection = json.loads(PRICE_HISTORY_SELECTION.read_text())
+    symbols = price_history_universe(selection, os.environ.get("ETF_ALWAYS_INCLUDE", ""))
+    year = datetime.now(ZoneInfo("America/New_York")).year
+    existing = PRICE_HISTORY_ROOT / "index.json"
+    prior = json.loads(existing.read_text()) if existing.exists() else {"tickers": {}}
+    missing = set(symbols) - set(prior["tickers"])
+    if args.price_history_mode == "daily" and not existing.exists():
+        raise ValueError("price-history requires its initial bounded backfill")
+    metrics = {"mode": args.price_history_mode, "ticker_count": len(symbols),
+               "history_calls": 0, "yahoo_http_calls": 0, "yahoo_response_bytes": 0}
+    started = time.monotonic()
+    original = Session.request
+
+    def measured_request(session, method, url, *a, **kw):
+        counted = ".yahoo.com/" in str(url)
+        if counted:
+            metrics["yahoo_http_calls"] += 1
+        response = original(session, method, url, *a, **kw)
+        if counted:
+            metrics["yahoo_response_bytes"] += len(response.content)
+        return response
+
+    Session.request = measured_request
+    logging.getLogger("yfinance").setLevel(logging.CRITICAL)
+    fetched = {}
+    try:
+        with open(os.devnull, "w") as quiet:
+            for ordinal, ticker in enumerate(symbols, 1):
+                # At rollover, finish the preceding mutable year at one price
+                # vintage before freezing it. Ordinary runs fetch only YTD plus
+                # one observed year-boundary anchor (and the holiday buffer).
+                start_year = year - 2 if prior.get("current_year", year) < year else year - 1
+                query = {"period": "max"} if ticker in missing else {"start": f"{start_year}-12-20"}
+                success = False
+                for attempt in range(args.retries + 1):
+                    metrics["history_calls"] += 1
+                    try:
+                        with redirect_stderr(quiet), redirect_stdout(quiet), ticker_timeout(args.ticker_timeout, ticker):
+                            frame = yf.Ticker(ticker).history(interval="1d", auto_adjust=False, actions=False,
+                                                             raise_errors=True, timeout=30, **query)
+                            fetched[ticker] = price_history_rows(frame)
+                        success = True
+                        break
+                    except Exception:
+                        if attempt < args.retries:
+                            time.sleep(2)
+                if not success:
+                    raise ValueError(f"price-history member {ordinal}/{len(symbols)} failed; no generation published")
+                print(f"price-history {ordinal}/{len(symbols)} OK rows={len(fetched[ticker])}", flush=True)
+                time.sleep(args.sleep)
+    finally:
+        Session.request = original
+    metrics["seconds"] = round(time.monotonic() - started, 3)
+    index = write_price_history_packs(PRICE_HISTORY_ROOT, fetched, year, metrics)
+    files = list(PRICE_HISTORY_ROOT.rglob("*.json"))
+    print(json.dumps({"price_history": metrics, "rows": sum(v["row_count"] for v in index["tickers"].values()),
+                      "first_date": min(v["first_date"] for v in index["tickers"].values()),
+                      "last_date": max(v["last_date"] for v in index["tickers"].values()),
+                      "assets": len(files), "bytes": sum(p.stat().st_size for p in files)}), flush=True)
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
@@ -2274,7 +2466,12 @@ def main():
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
     parser.add_argument("--tracker-unadjusted", action="store_true", help="RIM tracker lane only: full-history UNADJUSTED closes for SPY/QQQ/ONEQ/IWM/EWY/SOXX into sibling files; additive, canonical files untouched")
+    parser.add_argument("--price-history-mode", choices=("backfill", "daily"),
+                        help="private lifetime OHLC/adjusted-close yearly packs; no rolling-window overwrite")
     args = parser.parse_args()
+
+    if args.price_history_mode:
+        return run_price_history(args)
 
     if args.include_options:
         parser.error("--include-options is disabled; use fetch-fenok-private-options.py with the scheduled allowlist")

@@ -48,6 +48,44 @@ def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+class LifetimePriceHistoryTest(unittest.TestCase):
+    def test_closed_year_reuse_and_new_member_append(self):
+        fetcher = load_fetch_module()
+        row = lambda day, price: [day, price, price, price, price, price, 10]
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            first = fetcher.write_price_history_packs(root, {"AAA": [
+                row("2024-12-31", 100), row("2025-12-31", 110), row("2026-01-02", 120)]}, 2026, {})
+            closed = {p: (root / p).read_bytes() for p in first["tickers"]["AAA"]["years"].values()
+                      if p.startswith("years/")}
+            second = fetcher.write_price_history_packs(root, {
+                "AAA": [row("2025-12-31", 55), row("2026-01-02", 60), row("2026-01-05", 65)],
+                "BBB": [row("2025-12-31", 50), row("2026-01-05", 60)]}, 2026, {})
+            for p, data in closed.items():
+                self.assertEqual((root / p).read_bytes(), data)
+            self.assertEqual(second["tickers"]["AAA"]["years"], first["tickers"]["AAA"]["years"])
+            self.assertEqual(second["tickers"]["AAA"]["row_count"], 4)
+            self.assertNotEqual(second["tickers"]["AAA"]["years"]["2025"], second["tickers"]["BBB"]["years"]["2025"])
+            current = json.loads((root / second["tickers"]["AAA"]["years"]["2026"]).read_text())
+            self.assertEqual(current["tickers"]["AAA"]["previous_year_anchor"][4], 55)
+
+    def test_rollover_finalizes_mutable_year_once(self):
+        fetcher = load_fetch_module()
+        row = lambda day, price: [day, price, price, price, price, price, 10]
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            fetcher.write_price_history_packs(root, {"AAA": [row("2026-12-30", 100)]}, 2026, {})
+            closed = fetcher.write_price_history_packs(root, {"AAA": [
+                row("2026-12-30", 100), row("2026-12-31", 101), row("2027-01-04", 102)]}, 2027, {})
+            path = closed["tickers"]["AAA"]["years"]["2026"]
+            blob = (root / path).read_bytes()
+            self.assertTrue(path.startswith("years/2026/"))
+            self.assertFalse((root / "current/2026.json").exists())
+            fetcher.write_price_history_packs(root, {"AAA": [
+                row("2026-12-31", 50.5), row("2027-01-04", 51), row("2027-01-05", 52)]}, 2027, {})
+            self.assertEqual((root / path).read_bytes(), blob)
+
+
 class FetchYfFinanceSelectionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.fetcher = load_fetch_module()
