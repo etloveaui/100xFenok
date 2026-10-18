@@ -25,7 +25,7 @@ for (const [family, privacyClass, files] of [
   ['finra-ats-weekly', 'private', ['data/admin/finra-ats/current/weekly-summary.json', 'data/admin/finra-ats/index.json']],
   ['fred-yardeni', 'public', ['public/data/yardney/yardney_model.json', 'data/admin/fred_yardeni/index.json']],
   ['oecd-cli', 'private', ['data/admin/oecd_cli/shadow/oecd-cli.json', 'data/admin/oecd_cli/index.json']],
-  ['sentiment', 'public', ['data/admin/sentiment/index.json']],
+  ['sentiment', 'public', ['data/admin/sentiment/source-observations/crypto.json']],
 ]) {
   const wanted = new Set(files);
   const plane = createDefaultMaterializePlane({ family, accountId: env.CLOUDFLARE_ACCOUNT_ID,

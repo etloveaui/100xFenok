@@ -190,23 +190,25 @@ try {
       ],
     },
   });
-  writeJson(dataRoot, "admin/sentiment/index.json", {
-    items: {
-      // Nine days old: outside the daily window, inside the weekly CFTC release.
-      cftc: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-19T21:00:00Z" } },
-      // Friday's close is three calendar days old on Monday but one US trading day.
-      cnn: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25T21:00:00Z" } },
-      vix: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25T21:00:00Z" } },
-      move: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25T21:00:00Z" } },
-      crypto: { resolution_state: "fresh_primary", current: { source_as_of: "2026-09-27T21:00:00Z" } },
-    },
+  // These are the active family's inputs; no producer recovery index is enrolled.
+  for (const [file, date] of [
+    ["cftc-sp500.json", "2026-09-19"],
+    ["cnn-fear-greed.json", "2026-09-25"],
+    ["vix.json", "2026-09-25"],
+    ["move.json", "2026-09-25"],
+  ]) writeJson(dataRoot, `sentiment/${file}`, [{ date, value: 1 }]);
+  writeJson(dataRoot, "admin/sentiment/source-observations/crypto.json", {
+    source_as_of: "2026-09-27", observed_at: "2026-09-27T21:00:00Z",
   });
   writeJson(dataRoot, "edgar-korean-summaries/index.json", {
     schemaVersion: "1",
     updated: "2026-09-28",
     generatedAt: "2026-09-28T05:58:57.876Z",
-    tickers: [],
-    byTicker: {},
+    tickers: ["FIXTR"],
+    byTicker: { FIXTR: "by-ticker/fixtr.json" },
+  });
+  writeJson(dataRoot, "edgar-korean-summaries/by-ticker/fixtr.json", {
+    updated: "2026-09-28",
   });
   writeJson(dataRoot, "admin/slickcharts-composite-recovery/index.json", {
     members: Object.fromEntries(["daily", "weekly", "monthly", "history", "symbols"].map((id) => [id, {
@@ -270,7 +272,7 @@ try {
   assert.equal(row.served_path, "data/macro/fred-macro.json");
   assert.equal(row.newest_source_date, "2026-09-26");
   assert.match(row.max_age, /^\d+d$/);
-  assert.equal(row.serving_lkg, true);
+  assert.equal(row.serving_lkg, undefined, "the migrated public FRED lane has no Git recovery-store flag");
   assert.equal(row.status, "fresh", "status follows source age even when the floor reports an unavailable attempt");
   assert.equal(row.date_basis, undefined, "provider dates do not receive a collection-time label");
   const tga = rootDoc.sets.find((set) => set.set === "treasury_tga");

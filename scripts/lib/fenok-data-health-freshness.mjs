@@ -430,18 +430,21 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
     return { members, totalMembers: members.length };
   }
   if (lane.id === "sentiment") {
-    const document = readOptionalJson(dataRoot, "admin/sentiment/index.json");
-    const items = document?.items && typeof document.items === "object" && !Array.isArray(document.items)
-      ? document.items
-      : {};
-    const ids = Array.isArray(lane.provider_members) ? lane.provider_members : Object.keys(items).sort();
-    const members = ids.map((id) => {
-      const item = items[id];
-      const served = item?.resolution_state === "lkg_primary" ? item?.lkg : item?.current;
-      return datedOrCollected({
-        source_as_of: item?.provider_observation?.source_as_of ?? served?.source_as_of,
-        fetched_at: served?.fetched_at ?? item?.provider_observation?.observed_at ?? item?.updated_at,
-      }, ["source_as_of"], ["fetched_at"], id);
+    // The active family carries canonical series and the crypto observation,
+    // not the retired producer recovery index.
+    const paths = {
+      cnn: "data/sentiment/cnn-fear-greed.json",
+      cftc: "data/sentiment/cftc-sp500.json",
+      vix: "data/sentiment/vix.json",
+      move: "data/sentiment/move.json",
+      crypto: "data/admin/sentiment/source-observations/crypto.json",
+    };
+    const members = lane.provider_members.map((id) => {
+      const sourcePath = paths[id];
+      const document = readOptionalJson(dataRoot, sourcePath);
+      return id === "crypto"
+        ? datedOrCollected(document, ["source_as_of"], [], id, sourcePath)
+        : dateFromDocument(document, id, sourcePath);
     });
     return { members, totalMembers: members.length };
   }
