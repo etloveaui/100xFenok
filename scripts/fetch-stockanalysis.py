@@ -2345,7 +2345,7 @@ def classify_etf(row: dict | None = None, overview: dict | None = None, holdings
         or "ultrapro" in lower
         or (factor is None and daily_geared)
     )
-    is_inverse = bool(re.search(r"\b(?:inverse|short|bear)\b", directional))
+    is_inverse = bool(re.search(r"\b(?:inverse|short|bear(?:ish)?)\b", directional))
     underlying = extract_single_stock_underlying(text) if is_leveraged else None
     index_like = bool(
         re.search(r"\bbased on the\b.*\bindex\b", lower)
