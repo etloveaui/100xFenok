@@ -1746,13 +1746,14 @@ workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy(
   always_if_exists: [],
 });
 
-// Strict-gate families must fail when a publish is blocked or unsuccessful.
+// Owner budget policy admits cost WARN for every current family. Cost FAIL and
+// measurement-unverified verdicts remain terminal in the shared publisher.
 export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
-  "earnings-overview": Object.freeze({ strict_gate: true }),
+  "earnings-overview": Object.freeze({ strict_gate: false }),
   // Admit the existing cost WARN; the KRW 8,000 FAIL remains below the owner's
   // KRW 10,000 allowance and still stops publication.
   "stockanalysis-etf-detail": Object.freeze({ strict_gate: false }),
-  "global-scouter": Object.freeze({ strict_gate: true }),
+  "global-scouter": Object.freeze({ strict_gate: false }),
 });
 
 // Family-to-workflow attribution used for publish admission and workflow health.

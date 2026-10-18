@@ -254,7 +254,8 @@ function clone(value) {
     });
     const policy = LANE_REGISTRY.workflow_policies[globalWorkflow];
     for (const stage of Object.values(policy.stages)) assert.deepEqual(stage, []);
-    assert.equal(PLANE_PUBLISHER_EXCEPTIONS["global-scouter"].strict_gate, true);
+    assert.equal(PLANE_PUBLISHER_EXCEPTIONS["global-scouter"].strict_gate, false);
+    assert.equal(PLANE_PUBLISHER_EXCEPTIONS["earnings-overview"].strict_gate, false);
   }
   assert.deepEqual(
     [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],

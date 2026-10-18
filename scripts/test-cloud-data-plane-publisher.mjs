@@ -3586,14 +3586,13 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   console.log("private non-serving ok (representative ETF payloads resolve to no family and no enrolled path)");
 }
 
-// Strict gate: for a declared strict family EVERY nonzero verdict is terminal,
-// including the script's exit 1 at its own 70% WARN threshold — tighter than
-// the owner's 80% stop, which is the conservative reading this first
-// publication wants. Tolerant families keep publishing through exit 1.
+// Current families admit the owner's budgeted cost WARN. The strict primitive
+// still rejects every nonzero verdict; FAIL/unverified block either mode.
 {
   assert.equal(familyDeclaresStrictGate("stockanalysis-etf-detail"), false,
     "ETF publication admits the existing cost WARN; FAIL remains terminal");
-  assert.equal(familyDeclaresStrictGate("global-scouter"), true);
+  assert.equal(familyDeclaresStrictGate("global-scouter"), false);
+  assert.equal(familyDeclaresStrictGate("earnings-overview"), false);
   assert.equal(familyDeclaresStrictGate("oecd-cli"), false);
   assert.equal(familyDeclaresStrictGate("damodaran"), false);
 
