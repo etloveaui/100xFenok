@@ -13,6 +13,7 @@ Reference: docs/planning/slickcharts-data-pipeline.md
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -34,14 +35,13 @@ def extract_crash_json(html: str) -> list:
     """
     Extract crash data JSON array from HTML.
 
-    The data is embedded as: [{"time":"1929-01-02","value":307.01},...]
+    Svelte embeds dowDaily: [{time:"1929-01-02",value:307.01},...].
     """
     # Find the data array
-    start_marker = '[{"time"'
-    idx = html.find(start_marker)
-
-    if idx == -1:
+    match = re.search(r'\bdowDaily\s*:\s*(\[)', html)
+    if match is None:
         raise ValueError("Could not find crash data in page")
+    idx = match.start(1)
 
     # Extract from [ to matching ]
     depth = 0
@@ -56,6 +56,8 @@ def extract_crash_json(html: str) -> list:
                 break
 
     json_str = html[idx:end]
+    # Normalize only the provider's two chart keys; never evaluate page JS.
+    json_str = re.sub(r'(?<=[{,])\s*(time|value)\s*:', r'"\1":', json_str)
 
     try:
         return json.loads(json_str)
@@ -118,7 +120,9 @@ def main() -> None:
 
     try:
         session = create_session()
-        html = fetch_html(session, SOURCE_URL)
+        html = fetch_html(session, SOURCE_URL, content_assertion=(
+            "crash_prices", "script", lambda text: bool(extract_crash_json(text)),
+        ))
         raw_data = extract_crash_json(html)
         parsed = parse_crash_data(raw_data)
 
