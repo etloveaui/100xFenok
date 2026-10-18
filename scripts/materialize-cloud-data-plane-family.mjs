@@ -87,6 +87,7 @@ const MATERIALIZE_RECEIPT_KEYS = Object.freeze([
 ]);
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 const cacheCounts = { hits: 0, misses: 0, fetched_bytes: 0 };
+const pendingCacheReads = new Map();
 let cacheLogInstalled = false;
 
 // Immutable payload bytes only. Pointers and manifests are always read live;
@@ -100,7 +101,6 @@ export function withMaterializeCache(plane, { root, family }) {
   const ready = Promise.all([mkdir(objects, { recursive: true }),
     mkdir(path.join(root, "families"), { recursive: true })])
     .then(() => writeFile(path.join(root, "families", family), ""));
-  const pending = new Map();
   if (!cacheLogInstalled) {
     cacheLogInstalled = true;
     process.once("beforeExit", () => console.error(`materialize cache: ${JSON.stringify(cacheCounts)}`));
@@ -109,10 +109,10 @@ export function withMaterializeCache(plane, { root, family }) {
     async get(key) {
       const digest = /^objects\/sha256\/([a-f0-9]{64})$/.exec(key)?.[1];
       if (!digest) return plane.objectStore.get(key);
-      if (pending.has(key)) return pending.get(key);
+      const target = path.join(objects, digest);
+      if (pendingCacheReads.has(target)) return pendingCacheReads.get(target);
       const operation = (async () => {
         await ready;
-        const target = path.join(objects, digest);
         try {
           const bytes = await readFile(target);
           if (sha256Bytes(bytes) === digest) { cacheCounts.hits++; return bytes; }
@@ -131,8 +131,8 @@ export function withMaterializeCache(plane, { root, family }) {
         cacheCounts.fetched_bytes += bytes.byteLength;
         return bytes;
       })();
-      pending.set(key, operation);
-      try { return await operation; } finally { pending.delete(key); }
+      pendingCacheReads.set(target, operation);
+      try { return await operation; } finally { pendingCacheReads.delete(target); }
     },
   } };
 }

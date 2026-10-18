@@ -586,7 +586,9 @@ await withTempDir("materialize-cache-", async (base) => {
   const world = buildWorld({ assetEntries: [{ asset, bytes }] });
   const { plane, called } = createPlane(world);
   const cached = withMaterializeCache(plane, { root, family: FAMILY });
-  assert.deepEqual(new Uint8Array(await cached.objectStore.get(asset.object_key)), bytes);
+  const shared = withMaterializeCache(plane, { root, family: FAMILY });
+  const simultaneous = await Promise.all([cached.objectStore.get(asset.object_key), shared.objectStore.get(asset.object_key)]);
+  for (const payload of simultaneous) assert.deepEqual(new Uint8Array(payload), bytes);
   assert.deepEqual(new Uint8Array(await cached.objectStore.get(asset.object_key)), bytes);
   assert.equal(called.get.filter(key => key === asset.object_key).length, 1);
   await writeFile(path.join(root, "objects", asset.sha256), "corrupt local cache");
