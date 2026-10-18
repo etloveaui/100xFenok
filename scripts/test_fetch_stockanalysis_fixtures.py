@@ -6691,7 +6691,7 @@ module.main()
         self.assertEqual(single_stock["underlying"], "NVIDIA Corporation")
         self.assertFalse(inverse_1x["is_leveraged"])
         self.assertTrue(inverse_1x["is_inverse"])
-        self.assertFalse(inverse_1x["is_single_stock"])
+        self.assertTrue(inverse_1x["is_single_stock"])
 
     def test_etf_classification_ignores_short_maturity_terms(self) -> None:
         short_term_bond = self.fetcher.classify_etf(

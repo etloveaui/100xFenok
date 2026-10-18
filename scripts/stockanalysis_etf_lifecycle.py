@@ -75,6 +75,8 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
     def normalized(value):
         value = re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
         return re.sub(r"\s+(?:incorporated|corporation|company|limited|inc|corp|ltd|plc)$", "", value).strip()
+    def etf_name(value):
+        return re.sub(r"\s+", " ", re.sub(r"\bindex\b", "", normalized(value))).strip()
     stocks = {}; aliases = {}
     for row in stock_records:
         if not isinstance(row, dict):
@@ -98,34 +100,10 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
             matches = aliases.get(normalized(underlying), set())
             if len(matches) == 1:
                 target = next(iter(matches))
-        if target is None:
-            # Provider classification is often empty. Only unambiguous exact
-            # stock names or explicit uppercase symbols in the fund name count.
-            name = str(row.get("name") or "")
-            symbols = set(re.findall(r"\b[A-Z][A-Z0-9.-]{0,9}\b", name))
-            matches = (symbols & (stocks.keys() | rows.keys())) - {ticker, "ETF", "ETFS", "USD"}
-            if len(matches) == 1:
-                target = next(iter(matches))
-            if target is None:
-                normalized_name = " " + normalized(name) + " "
-                found = [(len(alias), values) for alias, values in aliases.items()
-                         if len(alias) >= 4 and " " + alias + " " in normalized_name and len(values) == 1]
-                if found:
-                    longest = max(length for length, _ in found)
-                    matches = set().union(*(values for length, values in found if length == longest))
-                    if len(matches) == 1:
-                        target = next(iter(matches))
-        if target is None and not classification.get("is_single_stock"):
-            # This small canonical map represents index exposures, not owners.
-            text = " " + normalized(underlying + " " + str(row.get("name") or "")) + " "
-            matches = {value for key, value in index_pairs.items()
-                       if " " + normalized(key) + " " in text and value in rows}
-            if len(matches) == 1:
-                target = next(iter(matches))
-        detail = (detail_reader(ticker) or {}) if target is None and detail_reader else {}
+        detail = (detail_reader(ticker) or {}) if detail_reader else {}
         overview = (detail.get("raw") or {}).get("overview") or {}
         description = str(overview.get("description") or "")
-        if target is None and description:
+        if description:
             # An explicit provider symbol is evidence even when the price
             # collector has not enrolled that underlying stock yet. Exclude
             # the fund's own introductory symbol and non-security acronyms.
@@ -136,7 +114,8 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
                 symbol = symbol.upper()
                 prefix = description[max(0, match.start() - 60):match.start()]
                 stock_name = symbol in re.findall(r"\b[A-Z][A-Z0-9.-]{0,5}\b", str(row.get("name") or "")) and re.search(r"shares of|\bstock\b", description, re.I)
-                if symbol != ticker and (exchange or stock_name or re.search(r"(?:\bETF|\bstock)\s*$", prefix, re.I)):
+                fund_symbol = symbol in rows and re.search(r"\b(?:ETF|Fund|Trust)\s*$", prefix, re.I)
+                if symbol != ticker and (exchange or stock_name or fund_symbol or re.search(r"\bstock\s*$", prefix, re.I)):
                     matches.add(symbol)
             if len(matches) == 1:
                 target = next(iter(matches))
@@ -145,9 +124,10 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
             matches = {symbol for group in symbols for symbol in group if symbol in rows and symbol != ticker}
             if len(matches) == 1:
                 target = next(iter(matches))
-        if target is None and description and (classification.get("is_single_stock") or re.search(r"\bstock\b", description)):
+        stock_reference = classification.get("is_single_stock") or re.search(r"\bstock\b|shares of|share price", description, re.I)
+        if target is None and description and stock_reference:
             name = str(row.get("name") or "")
-            candidates = re.findall(r"\b(?:Long|Short)\s+([A-Z][A-Z0-9.-]{0,5})\s+Daily\b|\bDaily\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Bull|Bear)\b|\b([A-Z][A-Z0-9.-]{0,5})\s+(?:[1-9](?:\.\d+)?[xX]|WeeklyPay|YieldBOOST)\b", name)
+            candidates = re.findall(r"\b(?:Long|Short)\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Dail{1,2}y|ETF)\b|\bDail{1,2}y\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Bull|Bear)\b|\b([A-Z][A-Z0-9.-]{0,5})\s+(?:[1-9](?:\.\d+)?[xX]|WeeklyPay|YieldBOOST)\b", name)
             matches = {symbol for group in candidates for symbol in group if symbol and symbol != ticker}
             if len(matches) == 1:
                 target = next(iter(matches))
@@ -164,8 +144,14 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
             if portfolio and not single:
                 pairs[ticker] = {"ticker": None, "kind": "none", "reason": "no_single_underlying"}
                 continue
-        if target is None and description and not classification.get("is_single_stock"):
-            text = " " + normalized(description) + " "
+        if target is None and description:
+            text = " " + etf_name(description) + " "
+            matches = {candidate for candidate, value in rows.items() if candidate != ticker and
+                       etf_name(value.get("name")) and " " + etf_name(value.get("name")) + " " in text}
+            if len(matches) == 1:
+                target = next(iter(matches))
+        if target is None and not classification.get("is_single_stock"):
+            text = " " + normalized(underlying + " " + str(row.get("name") or "") + " " + description) + " "
             found = [(len(normalized(key)), value) for key, value in index_pairs.items()
                      if " " + normalized(key) + " " in text and value in rows and value != ticker]
             if found:
@@ -177,11 +163,26 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
             # Fund names in swap holdings identify an ETF exposure without
             # treating Treasury/cash collateral as the underlying.
             holdings = (detail.get("normalized") or {}).get("holdings") or []
+            if stock_reference:
+                positions = {}
+                for holding in holdings:
+                    if not isinstance(holding, dict):
+                        continue
+                    symbol = str(holding.get("symbol") or holding.get("s") or "").lstrip("$#").upper()
+                    if symbol not in stocks:
+                        continue
+                    try:
+                        weight = abs(float(str(holding.get("weight_pct", holding.get("as", 0))).replace("%", "").replace(",", "")))
+                    except (ValueError, TypeError):
+                        continue
+                    positions[symbol] = positions.get(symbol, 0) + weight
+                if len(positions) == 1 and next(iter(positions.values())) >= 50:
+                    target = next(iter(positions))
             symbols = [symbol for h in holdings if isinstance(h, dict)
                        for group in re.findall(r"^([A-Z][A-Z0-9.-]{0,6})\s+SWAP\b|\(([A-Z][A-Z0-9.-]{0,6})\)\s+SWAP\b", str(h.get("name") or ""))
                        for symbol in group if symbol and symbol != ticker and symbol not in {"USD", "ETF", "ETFS"}]
             matches = set(symbols) & rows.keys()
-            if len(matches) == 1:
+            if target is None and len(matches) == 1:
                 target = next(iter(matches))
             swap_names = [normalized(re.split(r"\b(?:swap|cfd|trs)\b", str(h.get("name") or ""), flags=re.I)[0])
                           for h in holdings if isinstance(h, dict) and re.search(r"\b(?:swap|cfd|trs)\b", str(h.get("name") or ""), re.I)]

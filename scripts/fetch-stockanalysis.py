@@ -2280,6 +2280,7 @@ def directional_classification_text(text: str) -> str:
     text = re.sub(r"\blong\s+[^,.]{1,80},\s*short\s+[^,.]{1,60}\s+currency\b", " ", text, flags=re.I)
     text = re.sub(r"\bshort\s+(?:usd|u\.?s\.? dollar|global basket|g10 basket)\s+currency\b", " ", text, flags=re.I)
     text = re.sub(r"\blong[-\s]term\b|\b(?:bull|bear)\s+markets?\b", " ", text, flags=re.I)
+    text = re.sub(r"\binverse\s+(?:natural\s+)?logarithm\b", " ", text, flags=re.I)
     return re.sub(r"\binverse\s+(?:(?:of\s+)?(?:their|historical)\s+)?volatility\b", " ", text, flags=re.I)
 
 
@@ -2294,13 +2295,19 @@ def extract_leverage_factor(text: str) -> float | None:
     if "ultrapro" in lower:
         return 3.0
     directional = directional_classification_text(text).lower()
-    if re.search(r"\bultra(?:short)?\b", directional):
+    if re.search(r"\bultra(?:short)?\b", directional) and re.search(r"\bproshares\b", text, re.I):
         return 2.0
     return None
 
 
 def extract_single_stock_underlying(text: str) -> str | None:
+    # Provider prose often names a newly listed stock that is not in the
+    # collector's symbol catalogue. A fund's own listing is not its target.
+    match = re.search(r"\b(?:share price|price movement|price movements|price return|price performance|daily performance|weekly performance|weekly price return|shares of)\b.{0,220}?\((?:NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|CBOE|AMEX|TICKER):\s*([A-Z][A-Z0-9.-]{0,6})\)", text, re.I)
+    if match and not re.search(r"\bETF\b", match.group(0), re.I):
+        return match.group(1).upper()
     patterns = (
+        r"(?:daily|weekly) (?:share )?price movements? of ([A-Za-z0-9 .,&'-]+?) stock",
         r"daily price movement for shares of ([A-Za-z0-9 .,&'-]+?) stock",
         r"daily performance of ([A-Za-z0-9 .,&'-]+?) stock",
         r"daily investment results of ([A-Za-z0-9 .,&'-]+?) stock",
@@ -2346,13 +2353,14 @@ def classify_etf(row: dict | None = None, overview: dict | None = None, holdings
         or (factor is None and daily_geared)
     )
     is_inverse = bool(re.search(r"\b(?:inverse|short|bear(?:ish)?)\b", directional))
-    underlying = extract_single_stock_underlying(text) if is_leveraged else None
+    underlying = extract_single_stock_underlying(text) if is_leveraged or is_inverse else None
     index_like = bool(
         re.search(r"\bbased on the\b.*\bindex\b", lower)
         or re.search(r"\bindex tracking\b", lower)
         or re.search(r"\bindex of\b", lower)
     )
-    single_stock = bool(underlying and not index_like)
+    explicit_stock = underlying and re.search(r"\((?:NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|CBOE|AMEX|TICKER):\s*" + re.escape(underlying) + r"\)", text, re.I)
+    single_stock = bool(underlying and (not index_like or explicit_stock))
     source = "stockanalysis.overview.description" if isinstance(overview, dict) and overview.get("description") else "stockanalysis.etf_list.name"
     confidence = "high" if source == "stockanalysis.overview.description" else "medium" if is_leveraged else "low"
     return {
