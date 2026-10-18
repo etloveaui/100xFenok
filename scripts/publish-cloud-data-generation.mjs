@@ -3839,7 +3839,7 @@ export async function runPublisherCli({
         // The shared proof still binds the live active manifest, key and
         // remote length. Only inventory breadth changes: HEAD candidate keys,
         // rather than listing every unrelated object in the bucket.
-        objectStore: publishPlane.listReuseObjects ? {
+        objectStore: args.family === "platform-projections" && publishPlane.listReuseObjects ? {
           ...plane.objectStore,
           list: () => publishPlane.listReuseObjects(resolved.manifest),
         } : plane.objectStore,
