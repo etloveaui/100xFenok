@@ -3452,7 +3452,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 // not set-equal, in BOTH directions. Shipped state must be authorized.
 {
   const shipped = assertPublicationAuthorization();
-  assert.equal(shipped.authorized, 38, "shipped families and registry bindings remain equal");
+  assert.equal(shipped.authorized, Object.keys(FAMILIES).length, "shipped families and registry bindings remain equal");
 
   const bindings = { alpha: { lane_id: "alpha", workflow: ".github/workflows/a.yml" } };
   // A publisher family nobody owns: publishable but its outcome would never land.
@@ -3591,7 +3591,9 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 // the owner's 80% stop, which is the conservative reading this first
 // publication wants. Tolerant families keep publishing through exit 1.
 {
-  assert.equal(familyDeclaresStrictGate("stockanalysis-etf-detail"), true);
+  assert.equal(familyDeclaresStrictGate("stockanalysis-etf-detail"), false,
+    "ETF publication admits the existing cost WARN; FAIL remains terminal");
+  assert.equal(familyDeclaresStrictGate("global-scouter"), true);
   assert.equal(familyDeclaresStrictGate("oecd-cli"), false);
   assert.equal(familyDeclaresStrictGate("damodaran"), false);
 
@@ -3638,7 +3640,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     createPublishPlaneImpl: () => ({ plane: countingPlane, objectsWritten: () => writes }),
     runCostGateImpl: async (options) => {
       calls.push(options);
-      return { code: rejectSecond && calls.length === 2 ? 1 : 0, stdout: "", stderr: "" };
+      return { code: rejectSecond && calls.length === 2 ? 2 : 1, stdout: "", stderr: "" };
     },
     stdout: (line) => output.push(line), stderr: () => {},
   });
@@ -3646,7 +3648,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(calls.length, 2);
   assert.equal(calls[0].planBytes, 0);
   assert.equal(calls[1].planBytes, 2 * planGenerationObjectWrites(built.manifest).bytes);
-  assert.equal(writes, 0, "second strict gate rejection must precede every PUT");
+  assert.equal(writes, 0, "second gate FAIL must precede every PUT even after WARN admission");
   calls.length = 0;
   assert.equal(await invoke(false), 0);
   assert.equal(calls.length, 2);

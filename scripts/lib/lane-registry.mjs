@@ -1749,7 +1749,9 @@ workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy(
 // Strict-gate families must fail when a publish is blocked or unsuccessful.
 export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
   "earnings-overview": Object.freeze({ strict_gate: true }),
-  "stockanalysis-etf-detail": Object.freeze({ strict_gate: true }),
+  // Admit the existing cost WARN; the KRW 8,000 FAIL remains below the owner's
+  // KRW 10,000 allowance and still stops publication.
+  "stockanalysis-etf-detail": Object.freeze({ strict_gate: false }),
   "global-scouter": Object.freeze({ strict_gate: true }),
 });
 
