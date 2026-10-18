@@ -2238,8 +2238,8 @@ def existing_yahoo_source_dates(active_universe):
     return source_by_ticker
 
 
-PRICE_HISTORY_ROOT = ROOT / "data/yf/price-history"
-PRICE_HISTORY_SELECTION = ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json"
+PRICE_HISTORY_ROOT = Path(os.environ.get("YF_PRICE_HISTORY_ROOT", ROOT / "data/yf/price-history"))
+PRICE_HISTORY_SELECTION = Path(os.environ.get("YF_PRICE_HISTORY_SELECTION", ROOT / "data/admin/data-supply-state/v1/etf-detail-selection.json"))
 PRICE_HISTORY_COLUMNS = ["date", "open", "high", "low", "close", "adjusted_close", "volume"]
 PRICE_HISTORY_SYMBOL = re.compile(r"^\^?[A-Z0-9][A-Z0-9.\-]{0,19}$")
 
@@ -2420,6 +2420,10 @@ def run_price_history(args):
                 time.sleep(args.sleep)
     finally:
         Session.request = original
+        metrics["seconds"] = round(time.monotonic() - started, 3)
+        if len(fetched) != len(symbols):
+            print(json.dumps({"price_history": metrics, "completed_count": len(fetched),
+                              "published": False}), flush=True)
     metrics["seconds"] = round(time.monotonic() - started, 3)
     index = write_price_history_packs(PRICE_HISTORY_ROOT, fetched, year, metrics)
     files = list(PRICE_HISTORY_ROOT.rglob("*.json"))
