@@ -74,6 +74,8 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
     selected = set().union(*groups.values())
     def normalized(value):
         value = re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
+        value = re.sub(r"^(?:the\s+)?(?:adr\s+)?", "", value)
+        value = re.sub(r"\s+american depositary shares$", "", value)
         return re.sub(r"\s+(?:incorporated|corporation|company|limited|inc|corp|ltd|plc)$", "", value).strip()
     def etf_name(value):
         return re.sub(r"\s+", " ", re.sub(r"\bindex\b", "", normalized(value))).strip()
@@ -125,7 +127,7 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
             if len(matches) == 1:
                 target = next(iter(matches))
         stock_reference = classification.get("is_single_stock") or re.search(r"\bstock\b|shares of|share price", description, re.I)
-        if target is None and description and stock_reference:
+        if target is None and description:
             name = str(row.get("name") or "")
             candidates = re.findall(r"\b(?:Long|Short)\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Dail{1,2}y|ETF)\b|\bDail{1,2}y\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Bull|Bear)\b|\b([A-Z][A-Z0-9.-]{0,5})\s+(?:[1-9](?:\.\d+)?[xX]|WeeklyPay|YieldBOOST)\b", name)
             matches = {symbol for group in candidates for symbol in group if symbol and symbol != ticker}
