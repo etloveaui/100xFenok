@@ -129,7 +129,7 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
         stock_reference = classification.get("is_single_stock") or re.search(r"\bstock\b|shares of|share price", description, re.I)
         if target is None and description:
             name = str(row.get("name") or "")
-            candidates = re.findall(r"\b(?:Long|Short)\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Dail{1,2}y|ETF)\b|\bDail{1,2}y\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Bull|Bear)\b|\b([A-Z][A-Z0-9.-]{0,5})\s+(?:[1-9](?:\.\d+)?[xX]|WeeklyPay|YieldBOOST)\b", name)
+            candidates = re.findall(r"\b(?:Long|Short)\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Dail{1,2}y|ETF)\b|\bDail{1,2}y\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Bull|Bear)\b|\b([A-Z][A-Z0-9.-]{0,5})\s+(?:[1-9](?:\.\d+)?[xX]\s+Daily|WeeklyPay|YieldBOOST)\b", name)
             matches = {symbol for group in candidates for symbol in group if symbol and symbol != ticker}
             if len(matches) == 1:
                 target = next(iter(matches))
