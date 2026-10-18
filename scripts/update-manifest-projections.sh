@@ -155,7 +155,7 @@ node scripts/generate-product-surface-coverage.mjs
   set -euo pipefail
 
   repo_root="$(pwd -P)"
-  output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
+  output_root="$(mktemp -d "${RUNNER_TEMP:-/tmp}/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
   report_path="$output_root/data-supply-detection-floor.json"
   installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
   trap 'rm -rf "$output_root"' EXIT

@@ -29,6 +29,8 @@ import {
   materializeCloudDataPlaneFamily,
   runMaterializerCli,
   verifyCloudDataPlaneFamilyReceipt,
+  withMaterializeCache,
+  pruneMaterializeCache,
 } from "./materialize-cloud-data-plane-family.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -573,6 +575,42 @@ await withTempDir("materialize-cli-", async (base) => {
     await rmdir(existing);
   }
   console.log("CLI ok (usage/env exit 2, one secret-free receipt line on success, failure exit 1)");
+});
+
+// A warm digest cache makes no second payload read, repairs local corruption,
+// rejects corrupt source bytes, and retains only active/previous objects.
+await withTempDir("materialize-cache-", async (base) => {
+  const root = path.join(base, "cache");
+  const bytes = encoder.encode('{"cache":"active"}');
+  const asset = makeAsset(`${PREFIX}/SPY.json`, bytes);
+  const world = buildWorld({ assetEntries: [{ asset, bytes }] });
+  const { plane, called } = createPlane(world);
+  const cached = withMaterializeCache(plane, { root, family: FAMILY });
+  assert.deepEqual(new Uint8Array(await cached.objectStore.get(asset.object_key)), bytes);
+  assert.deepEqual(new Uint8Array(await cached.objectStore.get(asset.object_key)), bytes);
+  assert.equal(called.get.filter(key => key === asset.object_key).length, 1);
+  await writeFile(path.join(root, "objects", asset.sha256), "corrupt local cache");
+  assert.deepEqual(new Uint8Array(await cached.objectStore.get(asset.object_key)), bytes);
+  await rm(path.join(root, "objects", asset.sha256));
+  world.objects.set(asset.object_key, encoder.encode("corrupt remote object"));
+  await assertRejectsCode(cached.objectStore.get(asset.object_key), "PAYLOAD_INTEGRITY_INVALID");
+  world.objects.set(asset.object_key, bytes);
+  await cached.objectStore.get(asset.object_key);
+  const previousBytes = encoder.encode('{"cache":"previous"}');
+  const previousAsset = makeAsset(`${PREFIX}/SPY.json`, previousBytes);
+  const previous = makeManifest({ assets: [previousAsset], overrides: { generation_id: "g20260816t120000z0000" } });
+  world.pointer.previous = { generation_id: previous.generation_id,
+    manifest_key: `manifests/${previous.generation_id}.json`, manifest_sha256: sha256Canonical(previous) };
+  world.objects.set(world.pointer.previous.manifest_key, encoder.encode(canonicalJson(previous)));
+  await writeFile(path.join(root, "objects", previousAsset.sha256), previousBytes);
+  const unreferenced = "f".repeat(64);
+  await writeFile(path.join(root, "objects", unreferenced), "unpromoted candidate");
+  const result = await pruneMaterializeCache({ env: { CLOUD_DATA_CACHE_ROOT: root }, createPlane: () => plane });
+  assert.equal(result.objects, 2);
+  assert.equal(result.bytes, bytes.length + previousBytes.length);
+  assert.equal(await pathExists(path.join(root, "objects", unreferenced)), false);
+  assert.equal(await pathExists(path.join(root, "objects", previousAsset.sha256)), true);
+  console.log("digest cache ok (warm reuse, corruption, active/previous retention)");
 });
 
 // Worktree scope: the run leaves the repository delta identical. This remains

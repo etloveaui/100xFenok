@@ -56,6 +56,7 @@ import {
   realpath,
   rename,
   rm,
+  stat,
   writeFile,
 } from "node:fs/promises";
 import os from "node:os";
@@ -85,6 +86,93 @@ const MATERIALIZE_RECEIPT_KEYS = Object.freeze([
   "output_root",
 ]);
 const SHA256_HEX = /^[0-9a-f]{64}$/;
+const cacheCounts = { hits: 0, misses: 0, fetched_bytes: 0 };
+let cacheLogInstalled = false;
+
+// Immutable payload bytes only. Pointers and manifests are always read live;
+// cached bytes still pass the materializer's unchanged length/digest checks.
+export function withMaterializeCache(plane, { root, family }) {
+  if (!root) return plane;
+  if (!path.isAbsolute(root) || !/^[a-z0-9][a-z0-9-]*$/.test(family)) {
+    throw new Error("Invalid materializer cache root/family");
+  }
+  const objects = path.join(root, "objects");
+  const ready = Promise.all([mkdir(objects, { recursive: true }),
+    mkdir(path.join(root, "families"), { recursive: true })])
+    .then(() => writeFile(path.join(root, "families", family), ""));
+  const pending = new Map();
+  if (!cacheLogInstalled) {
+    cacheLogInstalled = true;
+    process.once("beforeExit", () => console.error(`materialize cache: ${JSON.stringify(cacheCounts)}`));
+  }
+  return { ...plane, objectStore: { ...plane.objectStore,
+    async get(key) {
+      const digest = /^objects\/sha256\/([a-f0-9]{64})$/.exec(key)?.[1];
+      if (!digest) return plane.objectStore.get(key);
+      if (pending.has(key)) return pending.get(key);
+      const operation = (async () => {
+        await ready;
+        const target = path.join(objects, digest);
+        try {
+          const bytes = await readFile(target);
+          if (sha256Bytes(bytes) === digest) { cacheCounts.hits++; return bytes; }
+          await rm(target);
+        } catch (error) { if (error.code !== "ENOENT") throw error; }
+        const bytes = await plane.objectStore.get(key);
+        if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== digest) {
+          fail("PAYLOAD_INTEGRITY_INVALID", key);
+        }
+        const temporary = `${target}.${process.pid}.tmp`;
+        try {
+          await writeFile(temporary, bytes, { flag: "wx" });
+          await rename(temporary, target);
+        } finally { await rm(temporary, { force: true }); }
+        cacheCounts.misses++;
+        cacheCounts.fetched_bytes += bytes.byteLength;
+        return bytes;
+      })();
+      pending.set(key, operation);
+      try { return await operation; } finally { pending.delete(key); }
+    },
+  } };
+}
+
+// Keep the union of physical objects named by each family's LIVE active and
+// previous manifests. A failed pointer/manifest read leaves the cache intact.
+export async function pruneMaterializeCache({ env = process.env, createPlane = createDefaultMaterializePlane } = {}) {
+  const root = env.CLOUD_DATA_CACHE_ROOT;
+  if (!root) throw new Error("CLOUD_DATA_CACHE_ROOT is required");
+  const families = await readdir(path.join(root, "families"));
+  const keep = new Set();
+  for (const family of families) {
+    const plane = createPlane({ family, accountId: env.CLOUDFLARE_ACCOUNT_ID,
+      token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY });
+    const { pointer, manifest } = await readActiveFamilyIdentity({ plane, family });
+    const manifests = [manifest];
+    if (pointer.previous) {
+      const bytes = await plane.objectStore.get(pointer.previous.manifest_key);
+      if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== pointer.previous.manifest_sha256) {
+        fail("MANIFEST_INTEGRITY_INVALID", pointer.previous.manifest_key);
+      }
+      const previous = JSON.parse(new TextDecoder().decode(bytes));
+      const summary = validateGenerationManifest(previous);
+      if (summary.generation_id !== pointer.previous.generation_id) fail("MANIFEST_CROSS_BIND_INVALID", family);
+      manifests.push(previous);
+    }
+    for (const current of manifests) for (const asset of current.assets) keep.add(asset.sha256);
+  }
+  let bytes = 0, objects = 0, removed = 0;
+  const directory = path.join(root, "objects");
+  await runBoundedAsyncPool(await readdir(directory), async name => {
+    const target = path.join(directory, name);
+    if (SHA256_HEX.test(name) && keep.has(name)) {
+      const size = (await stat(target)).size;
+      bytes += size;
+      objects++;
+    } else { await rm(target); removed++; }
+  });
+  return { families: families.length, objects, bytes, removed, retained: "active+previous" };
+}
 
 function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
@@ -679,11 +767,11 @@ export function createDefaultMaterializePlane({ accountId, token, endpoint, writ
     },
   };
   const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family });
-  return createCloudflareCloudDataPlane({
+  return withMaterializeCache(createCloudflareCloudDataPlane({
     r2Bucket,
     coordinatorNamespace,
     coordinatorName: family,
-  });
+  }), { root: process.env.CLOUD_DATA_CACHE_ROOT, family });
 }
 
 function parseArgs(argv) {
@@ -984,7 +1072,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv[2] === "--hydrate-private-family" && process.argv.length === 4) {
+    if (process.argv[2] === "--prune-cache" && process.argv.length === 3) {
+      console.log(JSON.stringify(await pruneMaterializeCache()));
+    } else if (process.argv[2] === "--hydrate-private-family" && process.argv.length === 4) {
       console.log(JSON.stringify(await hydratePrivateFamily(process.argv[3])));
     } else if (process.argv[2] === "--hydrate-public-family" && process.argv.length === 4) {
       console.log(JSON.stringify(await hydratePublicFamily(process.argv[3])));
