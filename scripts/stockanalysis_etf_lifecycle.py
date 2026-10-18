@@ -45,7 +45,7 @@ def new_fund_tickers(records, now=None):
 
 
 
-def select_detail_universe(records, *, prior_selected=(), always_include=(), stock_records=(), now=None):
+def select_detail_universe(records, *, prior_selected=(), always_include=(), stock_records=(), detail_reader=None, now=None):
     """Owner-approved ETF detail membership; catalogue visibility is unchanged.
 
     prior_selected must come from the preceding promoted selection, never from
@@ -122,6 +122,74 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
                        if " " + normalized(key) + " " in text and value in rows}
             if len(matches) == 1:
                 target = next(iter(matches))
+        detail = (detail_reader(ticker) or {}) if target is None and detail_reader else {}
+        overview = (detail.get("raw") or {}).get("overview") or {}
+        description = str(overview.get("description") or "")
+        if target is None and description:
+            # An explicit provider symbol is evidence even when the price
+            # collector has not enrolled that underlying stock yet. Exclude
+            # the fund's own introductory symbol and non-security acronyms.
+            quoted = re.finditer(r"\((?:(NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|CBOE|AMEX|TICKER)\s*:\s*)?([A-Z][A-Z0-9.-]{0,9})\)", description, re.I)
+            matches = set()
+            for match in quoted:
+                exchange, symbol = match.groups()
+                symbol = symbol.upper()
+                prefix = description[max(0, match.start() - 60):match.start()]
+                stock_name = symbol in re.findall(r"\b[A-Z][A-Z0-9.-]{0,5}\b", str(row.get("name") or "")) and re.search(r"shares of|\bstock\b", description, re.I)
+                if symbol != ticker and (exchange or stock_name or re.search(r"(?:\bETF|\bstock)\s*$", prefix, re.I)):
+                    matches.add(symbol)
+            if len(matches) == 1:
+                target = next(iter(matches))
+        if target is None and description:
+            symbols = re.findall(r"\b(?:returns?|performance|movements?|exposure)\s+(?:of|to|on)\s+(?:the\s+)?([A-Z][A-Z0-9.-]{0,9})\b|\b([A-Z][A-Z0-9.-]{0,9})\s+(?:ETF|put|call|options)\b", description)
+            matches = {symbol for group in symbols for symbol in group if symbol in rows and symbol != ticker}
+            if len(matches) == 1:
+                target = next(iter(matches))
+        if target is None and description and (classification.get("is_single_stock") or re.search(r"\bstock\b", description)):
+            name = str(row.get("name") or "")
+            candidates = re.findall(r"\b(?:Long|Short)\s+([A-Z][A-Z0-9.-]{0,5})\s+Daily\b|\bDaily\s+([A-Z][A-Z0-9.-]{0,5})\s+(?:Bull|Bear)\b|\b([A-Z][A-Z0-9.-]{0,5})\s+(?:[1-9](?:\.\d+)?[xX]|WeeklyPay|YieldBOOST)\b", name)
+            matches = {symbol for group in candidates for symbol in group if symbol and symbol != ticker}
+            if len(matches) == 1:
+                target = next(iter(matches))
+                # Provider product names often omit the share-class separator.
+                canonical = {key for key in stocks if re.sub(r"[^A-Z0-9]", "", key) == target}
+                if len(canonical) == 1:
+                    target = next(iter(canonical))
+        if target is None and description:
+            # These portfolios have several simultaneous or changing legs.
+            # Single-stock/ETF products must still resolve their explicit leg.
+            body = description.replace(f"({ticker})", "")
+            single = classification.get("is_single_stock") or re.search(r"single[ -](?:stock|security)|shares of|\bETF\s*\([A-Z]", body, re.I)
+            portfolio = re.search(r"long[ /-]+short|long and short|long.{0,180}\band short\b|market[ -]neutral|dollar[ -]neutral|merger arbitrage|managed futures|multi[ -]?(?:asset|strategy)|global macro|risk parity|hedge replication|fund.of.funds.*(?:allocat|toggl)|actively[ -]managed.*(?:portfolio|selection of|diversified|companies|securities|bonds|us equities)|autocallable portfolio|combination of.*equity.*fixed income", str(row.get("name") or "") + " " + body, re.I)
+            if portfolio and not single:
+                pairs[ticker] = {"ticker": None, "kind": "none", "reason": "no_single_underlying"}
+                continue
+        if target is None and description and not classification.get("is_single_stock"):
+            text = " " + normalized(description) + " "
+            found = [(len(normalized(key)), value) for key, value in index_pairs.items()
+                     if " " + normalized(key) + " " in text and value in rows and value != ticker]
+            if found:
+                longest = max(length for length, _ in found)
+                matches = {value for length, value in found if length == longest}
+                if len(matches) == 1:
+                    target = next(iter(matches))
+        if target is None and description:
+            # Fund names in swap holdings identify an ETF exposure without
+            # treating Treasury/cash collateral as the underlying.
+            holdings = (detail.get("normalized") or {}).get("holdings") or []
+            symbols = [symbol for h in holdings if isinstance(h, dict)
+                       for group in re.findall(r"^([A-Z][A-Z0-9.-]{0,6})\s+SWAP\b|\(([A-Z][A-Z0-9.-]{0,6})\)\s+SWAP\b", str(h.get("name") or ""))
+                       for symbol in group if symbol and symbol != ticker and symbol not in {"USD", "ETF", "ETFS"}]
+            matches = set(symbols) & rows.keys()
+            if len(matches) == 1:
+                target = next(iter(matches))
+            swap_names = [normalized(re.split(r"\b(?:swap|cfd|trs)\b", str(h.get("name") or ""), flags=re.I)[0])
+                          for h in holdings if isinstance(h, dict) and re.search(r"\b(?:swap|cfd|trs)\b", str(h.get("name") or ""), re.I)]
+            matches = {candidate for candidate, value in rows.items() if candidate != ticker and
+                       any(normalized(value.get("name")) in name for name in swap_names)
+                       and normalized(value.get("name"))}
+            if target is None and len(matches) == 1:
+                target = next(iter(matches))
         if target and target != ticker:
             pairs[ticker] = {"ticker": target, "kind": "etf" if target in rows else "stock"}
         else:
@@ -137,7 +205,9 @@ def select_detail_universe(records, *, prior_selected=(), always_include=(), sto
             "pairs": pairs, "rotation_interval_days": interval,
             "counts": {**{key: len(value) for key, value in groups.items()},
                        "selected": len(selected), "daily": len(daily),
-                       "pairs_resolved": len(pairs), "pairs_unresolved": len(unresolved)}}
+                       "pairs_resolved": sum(pair["kind"] != "none" for pair in pairs.values()),
+                       "pairs_no_underlying": sum(pair["kind"] == "none" for pair in pairs.values()),
+                       "pairs_unresolved": len(unresolved)}}
 
 
 def detail_refresh_cadence(root):

@@ -2275,7 +2275,12 @@ def classification_text(row: dict | None, overview: dict | None, _holdings: list
 
 
 def directional_classification_text(text: str) -> str:
-    return NON_DIRECTIONAL_SHORT_RE.sub(" ", text)
+    text = NON_DIRECTIONAL_SHORT_RE.sub(" ", text)
+    # Asset-class numeraire and portfolio weighting are not inverse returns.
+    text = re.sub(r"\blong\s+[^,.]{1,80},\s*short\s+[^,.]{1,60}\s+currency\b", " ", text, flags=re.I)
+    text = re.sub(r"\bshort\s+(?:usd|u\.?s\.? dollar|global basket|g10 basket)\s+currency\b", " ", text, flags=re.I)
+    text = re.sub(r"\blong[-\s]term\b|\b(?:bull|bear)\s+markets?\b", " ", text, flags=re.I)
+    return re.sub(r"\binverse\s+(?:(?:of\s+)?(?:their|historical)\s+)?volatility\b", " ", text, flags=re.I)
 
 
 def extract_leverage_factor(text: str) -> float | None:
@@ -2336,7 +2341,7 @@ def classify_etf(row: dict | None = None, overview: dict | None = None, holdings
     )
     is_leveraged = bool(
         (factor is not None and factor > 1)
-        or "leveraged" in lower
+        or "leveraged" in re.sub(r"\bleveraged loans?\b", " ", lower)
         or "ultrapro" in lower
         or (factor is None and daily_geared)
     )
@@ -2391,6 +2396,10 @@ def choose_etf_classification(detail_classification: dict | None, row_classifica
     detail = compact_etf_classification(detail_classification)
     row = compact_etf_classification(row_classification) or row_classification
     if detail is None:
+        return row
+    if row.get("source") == "stockanalysis.overview.description" and detail.get("source") == row.get("source"):
+        # Re-evaluate retained provider prose after a classification rule fix;
+        # an older high-confidence snapshot must not freeze the old rule.
         return row
     if etf_classification_has_signal(detail) or detail.get("confidence") == "high":
         return detail
@@ -8860,6 +8869,16 @@ def _main() -> None:
             recovery_store,
         )
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
+        # Publish pairing against the just-enriched provider descriptions and
+        # classification, not the selection made before this acquisition.
+        if not args.stocks_only:
+            from stockanalysis_etf_plane import select as select_plane_universe, SELECTION
+            previous = read_json(STORAGE_ROOT / SELECTION)
+            if previous:
+                selection = select_plane_universe(STORAGE_ROOT, previous.get("owner_tickers", []),
+                                                  prior_selected=previous.get("prior_selected", previous["selected"]))
+                (STORAGE_ROOT / SELECTION).write_text(json.dumps(selection, sort_keys=True) + "\n")
+                print(json.dumps({"etf_selection": selection["counts"], "rotation_days": selection["rotation_interval_days"]}), flush=True)
     if stop_reason:
         raise SystemExit(2)
     if reconcile_exit_assessment is not None and reconcile_exit_assessment["exit_code"] != 0:

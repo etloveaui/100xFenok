@@ -29,7 +29,8 @@ def select(root, owner, prior_selected=None):
                read(root / 'data/yf/finance/_index.json', {})]
     prior_selected = prior.get('selected', []) if prior_selected is None else prior_selected
     result = select_detail_universe(universe.get('records', []), prior_selected=prior_selected,
-                                    always_include=owner, stock_records=stocks)
+                                    always_include=owner, stock_records=stocks,
+                                    detail_reader=lambda ticker: read(root / f'data/stockanalysis/etfs/{ticker}.json', {}))
     result['owner_tickers'] = sorted(set(owner) & set(result['selected']))
     result['prior_selected'] = sorted(prior_selected)
     return result
