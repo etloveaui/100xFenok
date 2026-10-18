@@ -512,6 +512,34 @@ console.log(`missed schedule window: ok (${missedWindowFiles.length} declared wo
   assert.equal(dueDispatches(new Date(slot)).filter((row) => row.file === workflow.file).length, 1);
 }
 
+// An offline A1 may leave the whole run queued, or publication queued after
+// hosted clock admission. Neither case fulfills Update Manifest's slots.
+{
+  const workflow = deriveWorkflowWatchPolicy().watched.find((row) => row.file === "update-manifest.yml");
+  const marked = (id, slot, status = "completed") => ({ ...run(id, slot, { event: "workflow_dispatch" }),
+    created_at: slot, status, conclusion: status === "completed" ? "success" : null,
+    display_title: `${EXTERNAL_CLOCK_MARKER} ${workflow.file} ${slot}` });
+  const prior = marked(800, "2026-10-17T09:30:00.000Z");
+  const now = Date.parse("2026-10-18T10:31:00Z");
+  for (const event of ["schedule", "workflow_dispatch"]) {
+    for (const status of ["queued", "in_progress"]) {
+      const pending = [
+        { ...marked(802, "2026-10-18T09:30:00.000Z", status), event },
+        { ...marked(801, "2026-10-18T02:30:00.000Z", status), event },
+      ];
+      const result = evaluateWorkflow(workflow, [...pending, prior], { now });
+      assert.equal(result.missed_schedule_slot_count, 2, `${event}/${status} cannot cover an offline publisher`);
+      assert.ok(result.alarm_reasons.includes("missed_schedule_window"));
+      assert.equal(evaluateWorkflow(workflow, [...pending, prior],
+        { now: Date.parse("2026-10-18T03:31:00Z") }).alarming, false,
+      "one unfinished slot retains the existing tolerance");
+    }
+  }
+  assert.equal(evaluateWorkflow(workflow,
+    [marked(803, "2026-10-18T09:30:00.000Z"), prior], { now }).alarming, false,
+  "a completed automatic run restores slot liveness");
+}
+
 // New detectors need no hand-maintained scope list, and all declared crons count.
 {
   const workflow = { ...detector("new-observer.yml", "7 * * * *"), crons: ["7 * * * *", "17 2,14 * * *"] };

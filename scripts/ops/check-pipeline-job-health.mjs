@@ -930,8 +930,12 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     let sinceMs = latestStartedAt ? Date.parse(latestStartedAt) : null;
     if (isScheduledProducer) {
       // Trigger liveness admits declared external slots, while unmarked manual
-      // recovery cannot cover absent slots. Queued producers prove creation only.
-      const evidence = runs.map((run) => run?.event === "schedule"
+      // recovery cannot cover absent slots. Update Manifest must finish: its
+      // hosted admission job can start while publication waits on an offline A1.
+      // Other producers retain creation-based trigger liveness.
+      const evidence = runs.filter((run) => workflow.file !== "update-manifest.yml"
+        || !run?.status || run.status === "completed")
+        .map((run) => run?.event === "schedule"
         ? Date.parse(run?.created_at || run?.run_started_at) : externalClockSlot(workflow, run))
         .filter((stamp) => Number.isFinite(stamp) && stamp <= now);
       const activatedAt = Date.parse(workflow.schedule_activated_at || EXTERNAL_CLOCK_ADMITTED_AT[workflow.file]);
