@@ -608,6 +608,11 @@ await withTempDir("materialize-cache-", async (base) => {
   await writeFile(path.join(root, "objects", previousAsset.sha256), previousBytes);
   const unreferenced = "f".repeat(64);
   await writeFile(path.join(root, "objects", unreferenced), "unpromoted candidate");
+  const previousManifestBytes = world.objects.get(world.pointer.previous.manifest_key);
+  world.objects.set(world.pointer.previous.manifest_key, encoder.encode("corrupt retained manifest"));
+  await assert.rejects(pruneMaterializeCache({ env: { CLOUD_DATA_CACHE_ROOT: root }, createPlane: () => plane }));
+  assert.equal(await pathExists(path.join(root, "objects", unreferenced)), true, "unverified retention must delete nothing");
+  world.objects.set(world.pointer.previous.manifest_key, previousManifestBytes);
   const result = await pruneMaterializeCache({ env: { CLOUD_DATA_CACHE_ROOT: root }, createPlane: () => plane });
   assert.equal(result.objects, 2);
   assert.equal(result.bytes, bytes.length + previousBytes.length);

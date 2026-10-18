@@ -144,7 +144,7 @@ export async function pruneMaterializeCache({ env = process.env, createPlane = c
   if (!root) throw new Error("CLOUD_DATA_CACHE_ROOT is required");
   const families = await readdir(path.join(root, "families"));
   const keep = new Set();
-  for (const family of families) {
+  await runBoundedAsyncPool(families, async family => {
     const plane = createPlane({ family, accountId: env.CLOUDFLARE_ACCOUNT_ID,
       token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY });
     const { pointer, manifest } = await readActiveFamilyIdentity({ plane, family });
@@ -160,7 +160,7 @@ export async function pruneMaterializeCache({ env = process.env, createPlane = c
       manifests.push(previous);
     }
     for (const current of manifests) for (const asset of current.assets) keep.add(asset.sha256);
-  }
+  });
   let bytes = 0, objects = 0, removed = 0;
   const directory = path.join(root, "objects");
   await runBoundedAsyncPool(await readdir(directory), async name => {
