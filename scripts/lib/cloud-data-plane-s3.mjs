@@ -379,6 +379,18 @@ export function createR2S3Client({
       };
     },
 
+    async headObject(key, { deadline } = {}) {
+      const { response } = await request({ method: "HEAD", key, deadline });
+      if (response.status === 404) return null;
+      if (!response.ok) fail("S3_HTTP", `head http ${response.status}`);
+      const value = response.headers?.get?.("content-length");
+      const size = Number(value);
+      if (value === null || !/^\d+$/.test(value) || !Number.isSafeInteger(size)) {
+        fail("S3_METADATA_INVALID", "head response has no valid object length");
+      }
+      return { size };
+    },
+
     async getObjectRange(key, { offset, length, deadline } = {}) {
       if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(length) || length <= 0
         || !Number.isSafeInteger(offset + length)) fail("S3_RANGE_INVALID", "invalid range");

@@ -51,13 +51,8 @@ node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family sen
 node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family nasdaq-giw-sox
 node scripts/materialize-cloud-data-plane-family.mjs --hydrate-public-family us-indices-daily
 node scripts/materialize-cloud-data-plane-family.mjs --hydrate-private-family gdelt-news-tone
-# Reuse the already verified active Yahoo tree; derive indexes without another read.
-if [[ -n "${YAHOO_ACTIVE_PROJECTION_ROOT:-}" ]]; then
-  cp -R "$YAHOO_ACTIVE_PROJECTION_ROOT/." data/yf/
-  if [[ -f data/yf/_acquisition-state.json ]]; then
-    python3 scripts/yahoo_batch_state.py hydrate-generation --state-root data/admin/yahoo-batch-quote-history
-  fi
-fi
+# The workflow already installed active Yahoo inputs and acquisition state.
+# The intervening families own neither data/yf nor its acquisition history.
 
 # --- S0: Metadata comes from the active platform-projections generation ----
 

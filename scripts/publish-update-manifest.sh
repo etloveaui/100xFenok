@@ -10,7 +10,7 @@ for family in platform-projections slickcharts damodaran yahoo-ticker-macro earn
     --privacy-class public --manifest-prefix public/data --private-manifest-prefix data \
     --output-root "$output" > "$RUNNER_TEMP/update-manifest-$family.json"
   mkdir -p data
-  cp -R "$output/." data/
+  node scripts/materialize-cloud-data-plane-family.mjs --install-tree "$output" data
 done
 for family in apewisdom-attention finra-short-volume; do
   node scripts/materialize-cloud-data-plane-family.mjs --hydrate-private-family "$family"

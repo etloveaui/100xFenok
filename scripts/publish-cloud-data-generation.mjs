@@ -3513,6 +3513,19 @@ function createDefaultPublishPlane({ accountId, token, endpoint, writeKey, famil
       coordinatorName: family,
     }),
     objectsWritten: () => objectsWritten,
+    async listReuseObjects(manifest) {
+      readClient ??= createR2S3ClientFromExistingToken({
+        env: { CLOUDFLARE_ACCOUNT_ID: accountId, CLOUDFLARE_API_TOKEN: token },
+      });
+      const client = await readClient;
+      const keys = [...new Set(manifest.assets.map(asset => asset.object_key))];
+      const entries = [];
+      await runBoundedAsyncPool(keys, async key => {
+        const object = await client.headObject(key);
+        if (object !== null) entries.push({ key, bytes: object.size });
+      });
+      return entries;
+    },
   };
 }
 
@@ -3823,7 +3836,13 @@ export async function runPublisherCli({
       const reusableObjects = await planActiveGenerationReuse({
         pointer: livePointer,
         manifest: resolved.manifest,
-        objectStore: plane.objectStore,
+        // The shared proof still binds the live active manifest, key and
+        // remote length. Only inventory breadth changes: HEAD candidate keys,
+        // rather than listing every unrelated object in the bucket.
+        objectStore: publishPlane.listReuseObjects ? {
+          ...plane.objectStore,
+          list: () => publishPlane.listReuseObjects(resolved.manifest),
+        } : plane.objectStore,
       });
       objectWritePlan = planGenerationObjectWrites(resolved.manifest, reusableObjects);
       const plannedBytes = 2 * objectWritePlan.bytes;

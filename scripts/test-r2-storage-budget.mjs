@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { fetchInventory, verdictFor, summarise, storageCostUsd, STORAGE_WARN_GB, STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
-import { createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
+import { createR2S3Client, createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
 const summary = (gb, a = 0, b = 0) => ({ storage: { peak_bytes: gb * 1e9 },
   class_a: { projected_month: a }, class_b: { projected_month: b } });
 const plan = { bytes: 0, class_a: 0, class_b: 0 };
@@ -70,5 +70,15 @@ assert.equal(result.storage.free_gb_month, 10, "the paid storage decision does n
   await assert.rejects(fetchInventory({ request, createClient: async () => ({
     listAllObjects: async () => [{ size: undefined }],
   }) }), /size is unavailable/);
+}
+for (const [status, length] of [[200, "42"], [404, null], [200, null], [200, "bad"], [403, null]]) {
+  const client = createR2S3Client({ endpoint: "https://example.invalid", accessKeyId: "fixture",
+    secretAccessKey: "fixture", bucket: "fixture", fetchImpl: async (url, options) => {
+      assert.equal(options.method, "HEAD");
+      return new Response(null, { status, headers: length === null ? {} : { "content-length": length } });
+    } });
+  if (status === 404) assert.equal(await client.headObject("objects/sha256/fixture"), null);
+  else if (status === 200 && length === "42") assert.deepEqual(await client.headObject("objects/sha256/fixture"), { size: 42 });
+  else await assert.rejects(client.headObject("objects/sha256/fixture"));
 }
 console.log("R2 storage budget: PASS (40/70 GB, planned increments, paid operation cost thresholds, blind measurement, billing rounding)");

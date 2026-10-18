@@ -31,6 +31,7 @@ import {
   verifyCloudDataPlaneFamilyReceipt,
   withMaterializeCache,
   pruneMaterializeCache,
+  installMaterializedTree,
 } from "./materialize-cloud-data-plane-family.mjs";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -613,6 +614,29 @@ await withTempDir("materialize-cache-", async (base) => {
   assert.equal(await pathExists(path.join(root, "objects", unreferenced)), false);
   assert.equal(await pathExists(path.join(root, "objects", previousAsset.sha256)), true);
   console.log("digest cache ok (warm reuse, corruption, active/previous retention)");
+});
+
+await withTempDir("materialize-install-", async base => {
+  const source = path.join(base, "stage"), target = path.join(base, "canonical");
+  const history = "admin/data-supply-state/v1/history/2026-10-18.jsonl";
+  await mkdir(path.join(source, path.dirname(history)), { recursive: true });
+  await mkdir(path.join(target, path.dirname(history)), { recursive: true });
+  await writeFile(path.join(source, history), '{"etf":1}\n');
+  await writeFile(path.join(target, history), '{"stock":1}\n');
+  await writeFile(path.join(source, "payload.json"), '{"verified":true}');
+  const inode = (await lstat(path.join(source, "payload.json"))).ino;
+  await writeFile(path.join(target, "README.md"), "Keep checkout documentation");
+  await installMaterializedTree(source, target, { env: { CLOUD_DATA_CACHE_ROOT: base }, mergeHistory: true });
+  assert.equal((await lstat(path.join(target, "payload.json"))).ino, inode, "adoption moves the verified inode, without a second payload write");
+  assert.equal(await pathExists(path.join(source, "payload.json")), false);
+  assert.equal(await readFile(path.join(target, "payload.json"), "utf8"), '{"verified":true}');
+  assert.equal(await readFile(path.join(target, history), "utf8"), '{"stock":1}\n{"etf":1}\n');
+  assert.equal(await readFile(path.join(target, "README.md"), "utf8"), "Keep checkout documentation");
+  const copied = path.join(base, "copied");
+  await installMaterializedTree(target, copied, { env: {} });
+  assert.equal(await readFile(path.join(copied, "payload.json"), "utf8"), '{"verified":true}');
+  assert.equal(await pathExists(path.join(target, "payload.json")), true, "hosted producer keeps its baseline");
+  console.log("verified input adoption ok (move, disjoint history merge, unchanged copy default)");
 });
 
 // Worktree scope: the run leaves the repository delta identical. This remains

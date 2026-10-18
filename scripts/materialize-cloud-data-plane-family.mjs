@@ -174,6 +174,37 @@ export async function pruneMaterializeCache({ env = process.env, createPlane = c
   return { families: families.length, objects, bytes, removed, retained: "active+previous" };
 }
 
+// A1's verified stage and disposable checkout share /data. Move its files
+// into place instead of writing a second copy of every input. Other jobs
+// keep their existing copy behavior and retained producer baselines.
+export async function installMaterializedTree(source, target, { env = process.env, mergeHistory = false } = {}) {
+  if (!env.CLOUD_DATA_CACHE_ROOT && !mergeHistory) return cp(source, target, { recursive: true });
+  const files = [];
+  const walk = async (directory, relative = "") => {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const rel = relative ? `${relative}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) await walk(path.join(directory, entry.name), rel);
+      else files.push(rel);
+    }
+  };
+  await walk(source);
+  const install = async relative => {
+    const from = path.join(source, relative), to = path.join(target, relative);
+    await mkdir(path.dirname(to), { recursive: true });
+    if (mergeHistory && relative.startsWith("admin/data-supply-state/v1/history/") && relative.endsWith(".jsonl")) {
+      const prior = await readFile(to, "utf8").catch(error => {
+        if (error.code === "ENOENT") return "";
+        throw error;
+      });
+      const lines = [...new Set((prior + "\n" + await readFile(from, "utf8")).split("\n").filter(Boolean))];
+      await writeFile(to, lines.join("\n") + "\n");
+    } else if (env.CLOUD_DATA_CACHE_ROOT) await rename(from, to);
+    else await cp(from, to);
+  };
+  if (env.CLOUD_DATA_CACHE_ROOT) await runBoundedAsyncPool(files, install);
+  else for (const relative of files) await install(relative);
+}
+
 function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
   error.code = code;
@@ -888,7 +919,7 @@ export async function hydrateGlobalScouter({ repoRoot = REPO_ROOT, env = process
         ...(universeOnly ? ["public/data/global-scouter/etfs/index.json"] : []),
       ].includes(asset.path) : null,
     });
-    await cp(receipt.output_root, path.join(repoRoot, "data/global-scouter"), { recursive: true });
+    await installMaterializedTree(receipt.output_root, path.join(repoRoot, "data/global-scouter"), { env });
     return receipt;
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -906,24 +937,8 @@ export async function hydrateStockanalysisCatalogue({ repoRoot = REPO_ROOT, env 
     const receipt = await materializeCloudDataPlaneFamily({ plane, family,
       manifestPrefix: "public/data", privateManifestPrefix: "data", privacyClass: "public",
       env, repoRoot, canonicalReuseRoot: repoRoot, outputRoot: path.join(temporary, "active") });
-    const copyTree = async (directory, relative = "") => {
-      for (const entry of await readdir(directory, { withFileTypes: true })) {
-        const rel = relative ? `${relative}/${entry.name}` : entry.name;
-        const source = path.join(directory, entry.name), target = path.join(repoRoot, "data", rel);
-        if (entry.isDirectory()) { await copyTree(source, rel); continue; }
-        await mkdir(path.dirname(target), { recursive: true });
-        if (rel.startsWith("admin/data-supply-state/v1/history/") && rel.endsWith(".jsonl")) {
-          // ETF and stock generations retain disjoint events under shared date files.
-          const prior = await readFile(target, "utf8").catch(error => {
-            if (error.code === "ENOENT") return "";
-            throw error;
-          });
-          const lines = [...new Set((prior + "\n" + await readFile(source, "utf8")).split("\n").filter(Boolean))];
-          await writeFile(target, lines.join("\n") + "\n");
-        } else await cp(source, target);
-      }
-    };
-    await copyTree(receipt.output_root);
+    // ETF and stock generations retain disjoint events under shared date files.
+    await installMaterializedTree(receipt.output_root, path.join(repoRoot, "data"), { env, mergeHistory: true });
     return receipt;
   } finally { await rm(temporary, { recursive: true, force: true }); }
 }
@@ -943,7 +958,7 @@ export async function hydrateSec13f({ repoRoot = REPO_ROOT, env = process.env } 
       privacyClass: "public", env, repoRoot, canonicalReuseRoot: repoRoot,
       outputRoot: path.join(temporary, "active"),
     });
-    await cp(receipt.output_root, path.join(repoRoot, "data/sec-13f"), { recursive: true });
+    await installMaterializedTree(receipt.output_root, path.join(repoRoot, "data/sec-13f"), { env });
     return receipt;
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -965,7 +980,7 @@ export async function hydrateScouterDerived({ repoRoot = REPO_ROOT, env = proces
       plane, family, manifestPrefix: "public/data", privacyClass: "public", env, repoRoot,
       outputRoot: path.join(temporary, "derived"), canonicalReuseRoot: repoRoot,
     });
-    await cp(receipt.output_root, path.join(repoRoot, "data"), { recursive: true });
+    await installMaterializedTree(receipt.output_root, path.join(repoRoot, "data"), { env });
     return receipt;
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -992,7 +1007,7 @@ export async function hydrateYahooFinance({ repoRoot = REPO_ROOT, env = process.
   });
   const source = financeOnly ? path.join(receipt.output_root, "finance") : receipt.output_root;
   const target = path.join(repoRoot, financeOnly ? "data/yf/finance" : "data/yf");
-  await cp(source, target, { recursive: true });
+  await installMaterializedTree(source, target, { env });
   return receipt;
 }
 
@@ -1043,7 +1058,7 @@ export async function hydratePrivateFamily(family, { repoRoot = REPO_ROOT, env =
       plane, family, manifestPrefix: "data", privacyClass: "private", env, repoRoot,
       outputRoot: path.join(temporary, "active"), canonicalReuseRoot: repoRoot,
     });
-    await cp(receipt.output_root, path.join(repoRoot, "data"), { recursive: true });
+    await installMaterializedTree(receipt.output_root, path.join(repoRoot, "data"), { env });
     return receipt;
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -1072,7 +1087,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    if (process.argv[2] === "--prune-cache" && process.argv.length === 3) {
+    if (process.argv[2] === "--install-tree" && process.argv.length === 5) {
+      await installMaterializedTree(process.argv[3], process.argv[4]);
+    } else if (process.argv[2] === "--prune-cache" && process.argv.length === 3) {
       console.log(JSON.stringify(await pruneMaterializeCache()));
     } else if (process.argv[2] === "--hydrate-private-family" && process.argv.length === 4) {
       console.log(JSON.stringify(await hydratePrivateFamily(process.argv[3])));

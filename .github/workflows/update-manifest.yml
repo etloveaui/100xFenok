@@ -199,8 +199,7 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: |
-          basis="$(node scripts/materialize-cloud-data-plane-family.mjs --hydrate-yahoo-finance)"
-          echo "YAHOO_ACTIVE_PROJECTION_ROOT=$(jq -r .output_root <<< "$basis")" >> "$GITHUB_ENV"
+          node scripts/materialize-cloud-data-plane-family.mjs --hydrate-yahoo-finance
           if [ -f data/yf/_acquisition-state.json ]; then
             python3 scripts/yahoo_batch_state.py hydrate-generation --state-root data/admin/yahoo-batch-quote-history
           fi
