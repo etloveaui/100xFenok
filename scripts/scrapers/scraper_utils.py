@@ -178,7 +178,7 @@ def _html_attempt_tuple(
     # assertion-id set per page shape, never a global set. The shape is
     # derived from the assertion path taken here, so it can never disagree
     # with the emitted assertion id.
-    page_shape = "yield" if content_assertion is not None else "table"
+    page_shape = ("chart" if content_assertion[0] == "crash_prices" else "yield") if content_assertion is not None else "table"
     if not html.strip():
         row = _returned_attempt_tuple(
             status,

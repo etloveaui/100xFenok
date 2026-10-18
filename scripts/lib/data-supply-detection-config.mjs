@@ -970,10 +970,11 @@ const config = {
       endpointContract: {
         // Per-shape page-assertion acceptance: table pages carry exactly
         // {table_rows}, the three SvelteKit-hydrated yield pages exactly
-        // {yield_value}. Evidence validation checks each event against the
+        // {yield_value}, and the fixed 1929 chart {crash_prices}.
+        // Evidence validation checks each event against the
         // set for its own page_shape, never a global exact set.
         ...endpoint("slickcharts_html", "table_rows", "/rows", "array", "http"),
-        assertion_sets: { table: ["table_rows"], yield: ["yield_value"] },
+        assertion_sets: { table: ["table_rows"], yield: ["yield_value"], chart: ["crash_prices"] },
       },
       freshnessPolicy: freshness({ fold: "member_worst", unit: "calendar_days", calendar: "utc", maxStaleness: 40 }),
       affectedSurfaceIds: ["slickcharts_discovery", "stock_signals"],

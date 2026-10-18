@@ -77,6 +77,9 @@ function finalize(member, {
   providerDate = "2026-08-01T00:00:00.000Z",
   passed = true,
   fullRun = true,
+  archiveOnly = false,
+  mutateArchiveAfterSnapshot = false,
+  mutateMonthlyAfterSnapshot = false,
   mutateAfterSnapshot = false,
   invalidReceipt = false,
   removeRequiredAfterSnapshot = false,
@@ -88,6 +91,8 @@ function finalize(member, {
   const receiptPath = path.join(root, "events", `${member}-${runCounter}.jsonl`);
   const statusPath = path.join(root, "status", `${member}-${runCounter}.json`);
   prepareSlickchartsCompositeSnapshot({ repoRoot: root, member, snapshotRoot });
+  if (mutateArchiveAfterSnapshot) write("data/slickcharts/1929crash.json", { archive_update: runCounter });
+  if (mutateMonthlyAfterSnapshot) write("data/slickcharts/sp500-returns.json", { unexpected_update: runCounter });
   if (mutateAfterSnapshot) {
     const firstFile = inspectSlickchartsMemberBundle(root, member).files[0].path;
     write(firstFile, { member, candidate_after_snapshot: runCounter });
@@ -116,6 +121,7 @@ function finalize(member, {
       head_sha: String(runCounter).padStart(40, "0"),
     },
     fullRun,
+    archiveOnly,
   });
 }
 
@@ -419,6 +425,27 @@ for (const member of SLICKCHARTS_COMPOSITE_MEMBERS) {
   assert.deepEqual(integrity.mismatches.map((row) => row.member), [member]);
   fs.writeFileSync(path.join(root, firstFile), original);
 }
+
+// A one-time archive update changes only its bound bytes, without borrowing
+// monthly freshness credit. Other changes or a failed fetch remain held.
+const monthlyBeforeArchive = structuredClone(result.index.members.monthly);
+result = finalize("monthly", { fullRun: false, archiveOnly: true, mutateArchiveAfterSnapshot: true });
+assert.equal(result.status.publish_data, true);
+assert.equal(result.status.decision, "archive_asset_updated");
+for (const field of ["source_as_of", "resolution_state", "retry", "last_failure"]) {
+  assert.deepEqual(result.index.members.monthly[field], monthlyBeforeArchive[field], field);
+}
+assert.notEqual(result.index.members.monthly.bundle.tree_sha256, monthlyBeforeArchive.bundle.tree_sha256);
+assert.equal(inspectSlickchartsCompositeLiveIntegrity(root, result.index).valid, true);
+const archiveBeforeFailure = inspectSlickchartsMemberBundle(root, "monthly");
+result = finalize("monthly", { fullRun: false, archiveOnly: true,
+  mutateArchiveAfterSnapshot: true, mutateMonthlyAfterSnapshot: true });
+assert.equal(result.status.publish_data, false);
+assert.equal(result.status.exit_code, 2);
+assert.deepEqual(inspectSlickchartsMemberBundle(root, "monthly"), archiveBeforeFailure);
+result = finalize("monthly", { fullRun: false, archiveOnly: true, mutateArchiveAfterSnapshot: true, passed: false });
+assert.equal(result.status.publish_data, false);
+assert.deepEqual(inspectSlickchartsMemberBundle(root, "monthly"), archiveBeforeFailure);
 
 fs.rmSync(root, { recursive: true, force: true });
 console.log("test-slickcharts-composite-recovery: ok");

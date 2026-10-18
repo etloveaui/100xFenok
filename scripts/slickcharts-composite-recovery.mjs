@@ -55,6 +55,9 @@ export function main(argv = process.argv.slice(2)) {
       statusPath: arg(argv, "--status"),
       run: githubRun(),
       fullRun: arg(argv, "--full-run", "false") === "true",
+      archiveOnly: member === "monthly" && process.env.GITHUB_EVENT_NAME === "workflow_dispatch"
+        && Boolean(process.env.GITHUB_EVENT_PATH)
+        && JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")).inputs?.scraper === "1929crash",
     });
     process.stdout.write(`${JSON.stringify(result.status)}\n`);
     process.exitCode = result.status.exit_code;

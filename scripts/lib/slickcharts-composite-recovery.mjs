@@ -485,6 +485,7 @@ export function finalizeSlickchartsCompositeRecovery({
   statusPath,
   run,
   fullRun,
+  archiveOnly = false,
 }) {
   assertMember(member);
   const index = readIndex(indexPath, repoRoot, run, member, snapshotRoot);
@@ -497,9 +498,31 @@ export function finalizeSlickchartsCompositeRecovery({
   const existingRetryMember = retryMembers(index.members)[0] ?? null;
 
   if (!fullRun) {
-    restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
-    index.members[member] = prior;
-    decision = "partial_run_deferred";
+    if (archiveOnly && member === "monthly" && attemptReady(row)) {
+      try {
+        const archivePath = "data/slickcharts/1929crash.json";
+        const baseline = readSnapshotBaseline({ member, snapshotRoot }).bundle;
+        const candidate = inspectSlickchartsMemberBundle(repoRoot, member);
+        const withoutArchive = (bundle) => canonicalJson(bundle.files.filter((file) => file.path !== archivePath));
+        if (!candidate.files.some((file) => file.path === archivePath)
+          || withoutArchive(candidate) !== withoutArchive(baseline)) fail("archive-only run changed monthly inputs");
+        readProviderReceiptSet(receiptTargets);
+        // Bind the optional archive bytes without crediting a monthly refresh
+        // or clearing an existing LKG/retry state for the real monthly member.
+        index.members[member] = { ...prior, bundle: candidate };
+        publishData = true;
+        decision = "archive_asset_updated";
+      } catch {
+        restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
+        index.members[member] = prior;
+        decision = "archive_scope_invalid";
+        exitCode = 2;
+      }
+    } else {
+      restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
+      index.members[member] = prior;
+      decision = "partial_run_deferred";
+    }
   } else if (existingRetryMember !== null && existingRetryMember !== member && !attemptReady(row)) {
     restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
     index.members[member] = prior;
