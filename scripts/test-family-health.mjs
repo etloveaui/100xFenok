@@ -147,7 +147,7 @@ try {
   const errors = [];
   const code = await runPublisherCli({ argv: [`--family=${ETF_FAMILY}`, "--json"], env: {},
     buildFamilyManifestImpl: async () => built,
-    runCostGateImpl: async () => ({ code: 1, stdout: "storage_gb=40.1 verdict=WARN", stderr: "" }),
+    runCostGateImpl: async () => ({ code: 2, stdout: "storage_gb=40.1 verdict=FAIL", stderr: "" }),
     stdout: () => {}, stderr: line => errors.push(line) });
   assert.equal(code, 3);
   assert.ok(errors.some(line => line.includes("storage_gb=40.1")), "JSON-mode block retains its exact cost axis");
