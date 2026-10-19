@@ -10,7 +10,7 @@ import {
 } from "../../100xfenok-next/src/lib/freshness-policy.mjs";
 import { yahooBusinessDayAge } from "./market-calendar.mjs";
 import { YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS } from "./kpi-contract-constants.mjs";
-import { summarizeSourceHealth, buildDetailRefreshCadence, etfSourceMembers } from "./family-health.mjs";
+import { summarizeSourceHealth, etfSourceMembers } from "./family-health.mjs";
 import { DATA_SUPPLY_POLICY_REGISTRY } from "../data-supply-policy-registry.mjs";
 
 export const DETECTION_CALENDARS_PATH = path.resolve(
@@ -67,12 +67,9 @@ export const HEALTH_SET_EXCLUSIONS = new Set();
 // members. The abandoned one-ticker fallback recovery index is not this set.
 export function readEtfSourceHealth(dataRoot, nowIso, fallbackOnly = false) {
   const index = readOptionalJson(dataRoot, "computed/data-supply/etf-detail/index.json");
-  // The basket can be rebuilt before the canonical index in one sync cycle.
-  // Use the same current inputs as the index materializer for freshness bounds.
-  const cadence = buildDetailRefreshCadence(
-    readOptionalJson(dataRoot, "stockanalysis/etf_universe.json"),
-    readOptionalJson(dataRoot, "admin/fenok-etf-core-daily-basket.json"))
-    ?? index?.detail_refresh_cadence;
+  // Judge the served members on the rotation policy published with their index.
+  // A separately rebuilt basket must not replace that generation's policy.
+  const cadence = index?.detail_refresh_cadence;
   const policy = DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail;
   const members = etfSourceMembers(index, policy, cadence, fallbackOnly);
   return members ? summarizeSourceHealth(members, nowIso, policy) : null;
