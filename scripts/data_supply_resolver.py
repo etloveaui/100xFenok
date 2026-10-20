@@ -143,13 +143,9 @@ class DataSupplyResolver:
             if truth_root is not None and (prior is not None or (truth_root / row["provider_path"]).exists()):
                 if row["provider_path"] != f"data/yf/etf-details/{row['entity']}.json":
                     return False
-                canonical = (truth_root / row["provider_path"]).read_bytes()
-                provider = json.loads((truth_root / f"data/yf/finance/{row['entity']}.json").read_bytes())
-                if not (raw == canonical and provider["data"] == data
-                        and provider["schema_version"] == "yf-finance/v2" and provider["ticker"] == row["entity"]
-                        and provider["source"] == "yahoo_finance" and provider["profile"] == "etf"
-                        and source == _timestamp(provider["source_as_of"])
-                        and observed == _timestamp(provider["fetched_at"])):
+                # The ETF detail embeds its Yahoo observation. data/yf/finance
+                # belongs to the Yahoo lane and is not part of this bundle.
+                if raw != (truth_root / row["provider_path"]).read_bytes():
                     return False
             if prior is not None and not self._preserves_etf_detail(row, prior):
                 return False
