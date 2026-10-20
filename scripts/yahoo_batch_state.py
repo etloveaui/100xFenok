@@ -1575,7 +1575,7 @@ def export_generation_state(root: Path, yf_root: Path) -> dict:
             # retained payloads include other runs and cannot reconstruct it.
             universes[name] = {key: index[key] for key in (
                 "catalogue_symbols", "active_universe_scope", "scheduled_universe",
-                "selection", "weekly_shard_visits", "generated_at",
+                "selection", "weekly_shard_visits", "generated_at", "current_results",
             ) if key in index}
             if _iso_ms(index.get("generated_at")) is not None:
                 clocks.append(index["generated_at"])
@@ -1651,13 +1651,21 @@ def hydrate_generation_state(root: Path, yf_root: Path) -> dict:
         if name not in {DEFAULT_INDEX_FILENAME, CORE_ETF_INDEX_FILENAME}:
             raise ValueError(f"invalid Yahoo generation universe: {name}")
         _write_json(root / name, event)
-        store._results = {ticker: row["last_result"] for ticker, row in retained.items()
-                          if (row.get("last_result") or {}).get("observed_at") == event.get("generated_at")}
-        store.rebuild_index(set(event.get("catalogue_symbols") or []), {
+        # The acquisition run's own summary travels with its event. Per-ticker
+        # result clocks differ inside one run, so matching them to the event
+        # clock recovered only the last ticker; that match remains only for
+        # generations exported before the summary was carried.
+        exported = event.get("current_results")
+        store._results = {} if isinstance(exported, dict) else {
+            ticker: row["last_result"] for ticker, row in retained.items()
+            if (row.get("last_result") or {}).get("observed_at") == event.get("generated_at")}
+        index = store.rebuild_index(set(event.get("catalogue_symbols") or []), {
             "observed_at": event.get("generated_at") or observed,
             "active_universe_scope": event.get("active_universe_scope"),
             "scheduled_universe": event.get("scheduled_universe"), "selection": event.get("selection"),
         })
+        if isinstance(exported, dict):
+            _write_json(root / name, {**index, "current_results": exported})
     return metadata
 
 

@@ -69,6 +69,7 @@ from stockanalysis_recovery_state import (
     _etf_component_clocks,
     _etf_history_dates,
     _etf_history_date_set,
+    _yahoo_priceless_row,
     OPTIONAL_ETF_HISTORY_PERIODS,
     _valid_payload,
     validate_etf_history_archive,
@@ -7121,7 +7122,7 @@ def preserve_yahoo_etf_history_coverage(
             continue
         if not isinstance(rows, list):
             raise ValueError(f"Yahoo ETF {label} history is invalid")
-        for row in rows:
+        for index, row in enumerate(rows):
             if (not isinstance(row, dict) or not isinstance(row.get("date"), str)
                     or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", row["date"])):
                 raise ValueError(f"Yahoo ETF {label} history row is invalid")
@@ -7129,15 +7130,9 @@ def preserve_yahoo_etf_history_coverage(
                 datetime.strptime(row["date"], "%Y-%m-%d")
             except ValueError as exc:
                 raise ValueError(f"Yahoo ETF {label} history date is invalid") from exc
-            # Retained raw history can include a distribution without a price.
-            # Preserve that action; fresh price rows still require a finite close.
-            if (label == "canonical"
-                    and set(row) == {"date", "Volume", "Dividends", "Stock Splits"}
-                    and all(isinstance(row[key], (int, float)) and not isinstance(row[key], bool)
-                            and math.isfinite(row[key]) and row[key] >= 0
-                            for key in ("Volume", "Dividends", "Stock Splits"))
-                    and row["Volume"] == 0
-                    and (row["Dividends"] > 0 or row["Stock Splits"] > 0)):
+            # Retained and fresh history alike may hold Yahoo's intentional
+            # price-less rows; every other row needs a finite close.
+            if _yahoo_priceless_row(rows, index):
                 continue
             close = row.get("close", row.get("Close"))
             if (not isinstance(close, (int, float)) or isinstance(close, bool)

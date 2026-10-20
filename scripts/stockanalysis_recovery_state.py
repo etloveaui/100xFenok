@@ -231,25 +231,44 @@ def _etf_provider_source(payload: dict) -> datetime | None:
     return max(dates) if dates else None
 
 
+def _yahoo_priceless_row(rows: list, index: int) -> bool:
+    """Yahoo history keeps two price-less rows on purpose (fetch-yf-finance
+    compact_history): a distribution-only day anywhere, and the still-open
+    session as the last row. Neither is a priced day; every other row needs a close."""
+    row = rows[index]
+    if not isinstance(row, dict) or set(row) != {"date", "Volume", "Dividends", "Stock Splits"}:
+        return False
+    values = [row[key] for key in ("Volume", "Dividends", "Stock Splits")]
+    if not all(isinstance(value, (int, float)) and not isinstance(value, bool)
+               and math.isfinite(value) and value >= 0 for value in values):
+        return False
+    volume, dividends, splits = values
+    return ((volume == 0 and (dividends > 0 or splits > 0))
+            or (index == len(rows) - 1 and volume > 0 and dividends == 0 and splits == 0))
+
+
 def _etf_history_dates(rows: Any) -> tuple[datetime, datetime] | None:
     if not isinstance(rows, list) or not rows:
         return None
     dates = []
-    for row in rows:
+    for index, row in enumerate(rows):
         if not isinstance(row, dict):
             return None
+        if _yahoo_priceless_row(rows, index):
+            continue
         stamp = _iso_timestamp(row.get("date") or row.get("t") or row.get("time"))
         close = row.get("close", row.get("Close", row.get("c")))
         if stamp is None or not isinstance(close, (int, float)) or isinstance(close, bool) or not math.isfinite(close):
             return None
         dates.append(stamp)
-    return min(dates), max(dates)
+    return (min(dates), max(dates)) if dates else None
 
 
 def _etf_history_date_set(rows: Any) -> set[str] | None:
     if _etf_history_dates(rows) is None:
         return None
-    dates = [str(row.get("date") or row.get("t") or row.get("time"))[:10] for row in rows]
+    dates = [str(row.get("date") or row.get("t") or row.get("time"))[:10]
+             for index, row in enumerate(rows) if not _yahoo_priceless_row(rows, index)]
     return set(dates) if len(set(dates)) == len(dates) else None
 
 
