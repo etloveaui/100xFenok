@@ -232,7 +232,10 @@ def yahoo_run_verdict(*, current_results, errors, retry_symbols, assessments,
         reasons.append("a refused member has neither verified retained data nor named deferral")
     if not refused.issubset(set(retry_symbols)):
         reasons.append("a refused member is absent from the retry set")
-    if failed > budget:
+    # The budget guards members Yahoo has served before. A named deferral without
+    # prior data (a new listing Yahoo does not serve yet) stays refused, counted
+    # and in the retry set, but does not spend that budget.
+    if len(refused - deferred) > budget:
         reasons.append("refusals exceed the run budget")
     return {"verdict": "failed" if reasons else "degraded" if failed else "complete",
             "exit_code": 1 if reasons else 0, "attempted": attempted, "refused": failed,

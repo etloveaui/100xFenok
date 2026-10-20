@@ -503,7 +503,9 @@ export const FAMILIES = {
     manifest_prefix: "public/data/macro",
     files: ["tga.json"],
     privacy_class: "public",
-    source_as_of: { key: "updated" },
+    // The latest Treasury record day, not the fetch time: the lane registry and
+    // the serving probe judge TGA freshness by series date on business days.
+    source_as_of: { file: "tga.json", max_date: { array: "series", key: "date" } },
     plan: { class_a: 10, bytes: 1_600_000 },
     policy: { max_assets: 4, max_total_bytes: 3_200_000 },
     validate_public_payload({ bytes }) {

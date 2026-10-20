@@ -2244,11 +2244,14 @@ PRICE_HISTORY_COLUMNS = ["date", "open", "high", "low", "close", "adjusted_close
 PRICE_HISTORY_SYMBOL = re.compile(r"^\^?[A-Z0-9][A-Z0-9.\-]{0,19}$")
 
 
-def price_history_universe(selection, owner_text):
+def price_history_universe(selection):
     # Membership is private runtime data. Do not emit any member names.
-    owner = {v for v in re.split(r"[,\s]+", owner_text.strip().upper()) if v}
-    if not owner or owner != set(selection.get("owner_tickers", [])):
-        raise ValueError("price-history owner selection differs from the active ETF selection")
+    # The active ETF selection carries the owner list it was built from. Reading
+    # the raw owner secret here failed every run between an AA holdings sync
+    # and the next selection publication.
+    owner = {str(v).upper() for v in selection.get("owner_tickers", []) if v}
+    if not owner:
+        raise ValueError("the active ETF selection has no owner tickers")
     base = MAJOR_ETFS | LEVERAGED_AND_FOCUS_ETFS | RIM_TRACKER_ETFS | owner
     base -= retired_yahoo_symbols(datetime.now(timezone.utc).date().isoformat())
     pairs = selection.get("pairs", {})
@@ -2369,7 +2372,7 @@ def run_price_history(args):
     from curl_cffi.requests import Session
 
     selection = json.loads(PRICE_HISTORY_SELECTION.read_text())
-    symbols = price_history_universe(selection, os.environ.get("ETF_ALWAYS_INCLUDE", ""))
+    symbols = price_history_universe(selection)
     year = datetime.now(ZoneInfo("America/New_York")).year
     existing = PRICE_HISTORY_ROOT / "index.json"
     prior = json.loads(existing.read_text()) if existing.exists() else {"tickers": {}}
