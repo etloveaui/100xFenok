@@ -237,6 +237,10 @@ def yahoo_run_verdict(*, current_results, errors, retry_symbols, assessments,
     # and in the retry set, but does not spend that budget.
     if len(refused - deferred) > budget:
         reasons.append("refusals exceed the run budget")
+    # Deferrals get a budget of their own, so a batch of wrongly listed
+    # symbols still fails the run instead of passing as new listings.
+    if len(refused & deferred) > budget:
+        reasons.append("deferred new listings exceed the run budget")
     return {"verdict": "failed" if reasons else "degraded" if failed else "complete",
             "exit_code": 1 if reasons else 0, "attempted": attempted, "refused": failed,
             "refusal_budget": budget, "reasons": reasons}
