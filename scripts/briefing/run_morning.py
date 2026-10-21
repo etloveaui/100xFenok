@@ -22,7 +22,7 @@ import time
 from pathlib import Path
 
 from . import alert, edge, market_pack, notify, publish, stats, validate, writer
-from .common import CFG, KST, et_to_kst, expand, now_kst, read_json, state_path, write_json
+from .common import CFG, FRED_FALLBACK, KST, et_to_kst, expand, now_kst, read_json, state_path, write_json
 
 log = logging.getLogger("briefing")
 A = CFG["aa"]
@@ -101,6 +101,7 @@ def generate(edition: str, session: str, index: dict | None, fg_history: Path, r
     fg, fg_src = edge.fear_greed(aa_prompt(ymd), fg_history, session)
     e = edge.compute(session, fg, fg_src, {k: v["chg_pct"] for k, v in pack["sectors"].items()}, (pack.get("rates") or {}).get("us10y"))
     pack["edge"], pack["edge_week"] = edge.with_history(e, index)
+    pack["sources"] += [f"FRED 점검으로 100x 저장본 사용: {sid} (마지막 관측 {last})" for sid, last in FRED_FALLBACK.items()]
     log.info("시장 체력 %s %s (F&G %s from %s)", pack["edge"]["score"], pack["edge"]["label"], fg, fg_src)
     write_json(run_dir / "pack.json", pack)
 

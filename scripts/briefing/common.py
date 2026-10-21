@@ -74,7 +74,11 @@ def http_get(url: str, headers: dict | None = None, timeout: int = 30) -> str:
             time.sleep(delay)
 
 
-def fetch_fred(sid: str, start: str) -> list[tuple[str, float]]:
+FRED_FALLBACK: dict[str, str] = {}  # series id -> last observation date, for series served from the stored 100x copy in this run
+_fred_down = False  # set by the first failed live read: later series in the same run go straight to the stored copy
+
+
+def _fetch_fred_live(sid: str, start: str) -> list[tuple[str, float]]:
     """Daily observations (date, value) from `start`; FRED API with key, CSV download otherwise."""
     src = CFG["sources"]
     key = os.environ.get(src["fred_api_key_env"], "").strip()
@@ -89,11 +93,60 @@ def fetch_fred(sid: str, start: str) -> list[tuple[str, float]]:
             return out
         except Exception:  # noqa: BLE001 - fall back to the public CSV
             out = []
-    rows = list(csv.reader(io.StringIO(http_get(src["fred_csv"].format(sid=sid, start=start)))))
+    text = http_get(src["fred_csv"].format(sid=sid, start=start))
+    if text.lstrip().startswith("<"):
+        raise RuntimeError("FRED returned a web page instead of data (site maintenance)")
+    rows = list(csv.reader(io.StringIO(text)))
     for row in rows[1:]:
         if len(row) == 2 and row[1] not in ("", "."):
             out.append((row[0], float(row[1])))
     return out
+
+
+def _treasury_10y_after(last: str) -> list[tuple[str, float]]:
+    """10 Yr par yield after `last`: the same numbers as FRED DGS10, posted by the Treasury the same evening."""
+    out: list[tuple[str, float]] = []
+    for year in range(int(last[:4]), now_kst().year + 1):
+        rows = list(csv.reader(io.StringIO(http_get(CFG["sources"]["treasury_csv"].format(year=year), timeout=60))))
+        i = rows[0].index("10 Yr")
+        for r in rows[1:]:
+            if len(r) > i and r[i] not in ("", "N/A"):
+                d = dt.datetime.strptime(r[0], "%m/%d/%Y").date().isoformat()
+                if d > last:
+                    out.append((d, float(r[i])))
+    return sorted(out)
+
+
+def _fetch_fred_stored(sid: str, start: str) -> list[tuple[str, float]]:
+    """Stored copy of the series on the 100x site (macro/fred-banking-daily.json), topped up with Treasury days for DGS10."""
+    data = json.loads(http_get(CFG["site"]["base_url"] + CFG["sources"]["fred_stored_path"], timeout=90))
+    obs = (data.get("series") or {}).get(sid)
+    out = [(o["date"], float(o["value"])) for o in obs or [] if o.get("date", "") >= start and o.get("value") not in (None, "", ".")]
+    if not out:
+        raise KeyError(f"{sid} is not in the stored 100x copy")
+    if sid == CFG["edge"]["rate_series"]:
+        out += _treasury_10y_after(out[-1][0])
+    FRED_FALLBACK[sid] = out[-1][0]
+    return out
+
+
+def fetch_fred(sid: str, start: str) -> list[tuple[str, float]]:
+    """Daily observations (date, value) from `start`; the stored 100x copy when FRED itself is down."""
+    global _fred_down
+    log = logging.getLogger("briefing.http")
+    if not _fred_down:
+        try:
+            return _fetch_fred_live(sid, start)
+        except Exception as e:  # noqa: BLE001
+            _fred_down = True
+            log.warning("FRED %s unavailable (%s: %s); using the stored 100x copy", sid, type(e).__name__, e)
+            err = e
+    else:
+        err = RuntimeError("FRED already failed in this run")
+    try:
+        return _fetch_fred_stored(sid, start)
+    except Exception as e2:  # noqa: BLE001
+        raise RuntimeError(f"FRED {sid} unavailable ({type(err).__name__}: {err}) and the stored 100x copy failed ({type(e2).__name__}: {e2})") from e2
 
 
 def state_path(*parts: str) -> Path:

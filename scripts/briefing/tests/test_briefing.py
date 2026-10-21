@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import unittest
 import urllib.error
 from unittest import mock
@@ -183,6 +184,37 @@ class HttpRetryTests(unittest.TestCase):
             with self.assertRaises(urllib.error.HTTPError):
                 common.http_get("https://x.test/a")
         self.assertEqual(u.call_count, 1)
+
+
+class FredFallbackTests(unittest.TestCase):
+    def setUp(self):
+        common._fred_down = False
+
+    def test_maintenance_page_uses_the_stored_copy_and_fills_dgs10_days(self):
+        stored = json.dumps({"series": {"DGS10": [{"date": "2026-10-16", "value": 5.09}, {"date": "2026-10-19", "value": 5.15}]}})
+        treasury = 'Date,"2 Yr","10 Yr"\n10/21/2026,4.81,5.13\n10/20/2026,4.79,5.12\n10/19/2026,4.77,5.15\n'
+        pages = {"graph/fredgraph.csv": "<!doctype html><title>Site Maintenance</title>", "fred-banking-daily.json": stored,
+                 "daily-treasury-rates.csv": treasury}
+
+        def fake(url, headers=None, timeout=30):
+            return next(v for k, v in pages.items() if k in url)
+
+        common.FRED_FALLBACK.clear()
+        with mock.patch.object(common, "http_get", side_effect=fake) as fake_calls, mock.patch.dict("os.environ", {"FRED_API_KEY": ""}):
+            rows = common.fetch_fred("DGS10", "2026-10-01")
+        self.assertEqual(rows[-3:], [("2026-10-19", 5.15), ("2026-10-20", 5.12), ("2026-10-21", 5.13)])
+        self.assertEqual(common.FRED_FALLBACK, {"DGS10": "2026-10-21"})
+        live_calls = sum("graph/fredgraph.csv" in c.args[0] for c in fake_calls.call_args_list)
+        with mock.patch.object(common, "http_get", side_effect=fake) as again:
+            common.fetch_fred("DGS10", "2026-10-01")
+        self.assertFalse(any("graph/fredgraph.csv" in c.args[0] for c in again.call_args_list))
+        self.assertEqual(live_calls, 1)
+
+    def test_both_sources_down_raises(self):
+        common._fred_down = False
+        with mock.patch.object(common, "http_get", side_effect=TimeoutError("t")), mock.patch.dict("os.environ", {"FRED_API_KEY": ""}):
+            with self.assertRaises(RuntimeError):
+                common.fetch_fred("BAMLH0A0HYM2", "2026-10-01")
 
 
 if __name__ == "__main__":
