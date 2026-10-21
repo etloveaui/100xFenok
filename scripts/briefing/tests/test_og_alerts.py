@@ -135,6 +135,15 @@ class WatchdogTests(unittest.TestCase):
         self.assertEqual(watchdog.check(dt.date(2026, 10, 11), s, self.tmp, self.tmp / "a.json"), "no-session")
         self.assertEqual(s.calls, [])
 
+    def test_failed_edition_is_run_once_more(self):
+        s, runs = Sender(), []
+        d = dt.date(2026, 10, 9)
+        (self.tmp / "2026-10-09.json").write_text(json.dumps({"status": "failed", "step": "market_pack"}))
+        self.assertEqual(watchdog.check(d, s, self.tmp, self.tmp / "a.json", runs.append), "retried")
+        self.assertEqual(watchdog.check(d, s, self.tmp, self.tmp / "a.json", runs.append), "started")
+        self.assertEqual(runs, [d])
+        self.assertEqual(s.calls, [])
+
 
 class PublishImageTests(unittest.TestCase):
     def test_outputs_include_the_png(self):

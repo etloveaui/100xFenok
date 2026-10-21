@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- M4 launchd agent: missed-run check for the 100x Morning Brief (briefing.watchdog). Install: copy to
      ~/Library/LaunchAgents/ and launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.fenok.100x-briefing-watchdog.plist
-     Runs 06:30 local time (M4 is on KST) Tuesday to Saturday, from the job worktree the 06:05 run has synced. -->
+     Runs 06:30 and 07:00 local time (M4 is on KST) Tuesday to Saturday, from the job worktree the 06:05 run has synced. -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
@@ -27,6 +27,11 @@
         <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
         <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
         <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
     </array>
     <key>StandardOutPath</key>
     <string>/Users/fenomenokim/.local/state/100x-briefing/watchdog.log</string>

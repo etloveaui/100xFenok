@@ -4,9 +4,13 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import io
+import http.client
 import json
+import logging
 import os
 import tempfile
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -46,10 +50,28 @@ def kst_minus_et_hours(day: str) -> int:
     return int((t.astimezone(KST).utcoffset() - t.utcoffset()).total_seconds() // 3600)
 
 
+HTTP_RETRY_DELAYS = (2, 6)  # seconds to wait before the 2nd and 3rd attempt; a hiccup at one source must not cost the edition
+_RETRY_STATUS = (429, 500, 502, 503, 504)
+
+
+def _transient(e: Exception) -> bool:
+    if isinstance(e, urllib.error.HTTPError):
+        return e.code in _RETRY_STATUS
+    return isinstance(e, (TimeoutError, urllib.error.URLError, ConnectionError, http.client.HTTPException))
+
+
 def http_get(url: str, headers: dict | None = None, timeout: int = 30) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": CFG["sources"]["user_agent"], **(headers or {})})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8", "replace")
+    for delay in (*HTTP_RETRY_DELAYS, None):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode("utf-8", "replace")
+        except Exception as e:  # noqa: BLE001 - only network hiccups and 429/5xx are retried
+            if delay is None or not _transient(e):
+                raise
+            logging.getLogger("briefing.http").warning("GET %s failed (%s: %s); retrying in %ds",
+                                                      url.split("?")[0], type(e).__name__, e, delay)
+            time.sleep(delay)
 
 
 def fetch_fred(sid: str, start: str) -> list[tuple[str, float]]:

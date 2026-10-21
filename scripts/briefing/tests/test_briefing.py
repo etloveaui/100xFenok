@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import datetime as dt
 import unittest
+import urllib.error
+from unittest import mock
 
 from briefing import edge, notify, publish, validate
+from briefing import common
 from briefing.common import et_to_kst, kst_minus_et_hours
 from briefing.market_pack import is_us_trading_day, next_trading_day, session_for_edition
 
@@ -156,6 +159,30 @@ class NotifyTests(unittest.TestCase):
         self.assertIn("<b>h2026-10-08</b>", msg)
         self.assertIn("https://100xfenok.etloveaui.workers.dev/brief/morning/2026-10-08/", msg)
         self.assertEqual(msg.count("• "), 2)
+
+
+class HttpRetryTests(unittest.TestCase):
+    def _ok(self, body: bytes):
+        r = mock.MagicMock()
+        r.__enter__.return_value.read.return_value = body
+        return r
+
+    def test_timeout_then_success(self):
+        calls = [TimeoutError("The read operation timed out"), self._ok(b"ok")]
+        with mock.patch("urllib.request.urlopen", side_effect=calls), mock.patch("time.sleep") as nap:
+            self.assertEqual(common.http_get("https://x.test/a"), "ok")
+        self.assertEqual([c.args[0] for c in nap.call_args_list], [2])
+
+    def test_gives_up_after_three_and_skips_client_errors(self):
+        with mock.patch("urllib.request.urlopen", side_effect=TimeoutError("t")) as u, mock.patch("time.sleep"):
+            with self.assertRaises(TimeoutError):
+                common.http_get("https://x.test/a")
+        self.assertEqual(u.call_count, 3)
+        e404 = urllib.error.HTTPError("https://x.test/a", 404, "nf", {}, None)
+        with mock.patch("urllib.request.urlopen", side_effect=e404) as u, mock.patch("time.sleep"):
+            with self.assertRaises(urllib.error.HTTPError):
+                common.http_get("https://x.test/a")
+        self.assertEqual(u.call_count, 1)
 
 
 if __name__ == "__main__":

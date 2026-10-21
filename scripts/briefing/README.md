@@ -47,8 +47,11 @@ Design and owner decisions: `claude-code-hub/docs/planning/PLAN_100x-morning-bri
      which AA routes to `main_ops` (Cortex News general topic), never the product topic.
    - One alert per edition and step: `alerts.json` in the state folder and the Gateway run id
      `morning_article_alert:<date>:<step>`. Dry runs and successful runs send none.
-   - `com.fenok.100x-briefing-watchdog` runs `python -m briefing.watchdog` at 06:30 KST Tue-Sat. When an edition
-     that needs an article has no `editions/<date>.json` yet, the job did not start, and it sends `missed_run`.
+   - `com.fenok.100x-briefing-watchdog` runs `python -m briefing.watchdog` at 06:30 and 07:00 KST Tue-Sat. When an
+     edition that needs an article has no `editions/<date>.json` yet, the job did not start, and it sends `missed_run`.
+     When the state says `failed`, the watchdog runs `run_m4.sh --edition <date>` once more and stamps `retried` in the
+     state file; a second failure of the same step sends no second alert.
+   - `common.http_get` tries a source three times (waits of 2 s and 6 s) on timeouts, connection errors and 429/5xx.
 
 ## Commands (M4)
 
