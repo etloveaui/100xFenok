@@ -151,6 +151,8 @@ export default function BriefDigestClient({ date }: { date: string }) {
         ref={frame}
         title="100x 데일리 다이제스트"
         srcDoc={page}
+        // Scripts only, in an opaque origin: the pack needs no storage, cookies or access to the site page.
+        sandbox="allow-scripts"
         style={{ display: "block", width: "100%", height: "calc(100vh - 140px)", border: 0, background: "#fff" }}
       />
     </div>
