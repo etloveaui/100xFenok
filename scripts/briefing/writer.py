@@ -77,7 +77,7 @@ Writing (Korean):
 Facts:
 - Every number must come from TODAY'S BRIEF, YESTERDAY'S BRIEF, the FACT CARDS or the MARKET PACK. Interpretation is welcome; invented numbers, times, quotes or causes are not. Link a market move to an event only when the times in the MARKET PACK and the sources support it, and phrase it as timing ("~ 이후", "~와 함께"), not as proven causation, unless a source states the cause.
 - Name the institution when a view comes from a fact card (e.g. 국제금융센터, 씨티, UBS).
-- A number supports only claims of its own kind. The MARKET PACK breadth counts (advancing/declining, new highs/lows) cover the whole market its sources name, not the S&P 500: say "미국 상장 종목 전체" when you use them, and never use them to explain why the index rose or how many sectors took part. What drove the index comes from the sector, big tech and mover data.
+- A number supports only claims of its own kind. The MARKET PACK breadth counts (advancing/declining, new highs/lows) cover the stocks its source counts, not the S&P 500: say "Finviz가 집계한 NYSE·Nasdaq·AMEX 종목" when you use them, and never use them to explain why the index rose or how many sectors took part. What drove the index comes from the sector, big tech and mover data. The sector figures are sector ETFs (XLK, XLC and so on): call them 업종 ETF and do not present them as contributions to the index.
 - Keep conditions and uncertainty. Ignore broken leftover lines in the brief.
 
 Fields:
