@@ -31,6 +31,7 @@ test("resolves static and dynamic shell routes", () => {
   // Briefing hub and its dated editions light the 브리핑 rail item.
   assert.deepEqual(resolveShellRoute("/brief/"), { active: "brief", title: "브리핑" });
   assert.deepEqual(resolveShellRoute("/brief/morning/2026-10-08/"), { active: "brief", title: "모닝 브리프" });
+  assert.deepEqual(resolveShellRoute("/brief/digest/2026-10-22"), { active: "brief", title: "데일리 다이제스트" });
   assert.equal(resolveShellRoute("/briefing"), null);
 });
 

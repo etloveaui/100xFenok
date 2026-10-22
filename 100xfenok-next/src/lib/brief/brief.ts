@@ -11,6 +11,28 @@ export function briefMorningDataUrl(date: string): string {
   return `/data/briefing/morning/${date}.json`;
 }
 
+/** One Daily Digest edition (`daily-digest/v1`), written by the AA digest job on M4. */
+export function briefDigestDataUrl(date: string): string {
+  return `/data/briefing/digest/${date}.json`;
+}
+
+/**
+ * The Daily Digest's design: the owner-picked c2 pack (claude-code-hub feno-canvas
+ * lookbook/packs/daily-digest/c2-headline-bars), copied into public/brief/. The page binds an
+ * edition into it the way the pack binder does, so the design is the pack's own code.
+ */
+export const BRIEF_DIGEST_PACK_URL = "/brief/digest-c2.html";
+
+export type BriefDigest = {
+  schema: string;
+  date: string;
+  market_date: string;
+  headline: string;
+  lead: string;
+  product_name?: string;
+  published_kst?: string;
+};
+
 /** Link-preview image (1200x630 PNG) the morning job renders and publishes with each edition. */
 export const BRIEF_OG_IMAGE = { width: 1200, height: 630 } as const;
 
@@ -43,13 +65,15 @@ export type BriefIndexEdition = {
   edge?: { score: number; label: string } | null;
   path: string;
   bytes?: number;
+  /** HH:MM KST; the digest job writes it. */
+  published_kst?: string;
 };
 
 export type BriefProduct = { id: string; name: string; cadence: string; desc: string; status: string };
 
 export type BriefIndex = {
   schema: string;
-  latest: { morning?: string };
+  latest: { morning?: string; digest?: string };
   editions: BriefIndexEdition[];
   products?: BriefProduct[];
 };

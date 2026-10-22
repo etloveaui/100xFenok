@@ -133,6 +133,10 @@ export default function BriefHubClient() {
   const LA = latestDoc && latestDoc.date === latestDate ? latestDoc.doc : null;
   const LP = LA?.pack ?? null;
   const products = index?.products?.length ? index.products : DEFAULT_PRODUCTS;
+  const digests = sortedEditions(index ?? null, "digest");
+  const latestDigest = digests.length ? digests[digests.length - 1] : null;
+  // Today's slot lights only for the digest of the same edition date as the morning brief.
+  const digestToday = latestDigest && latest && latestDigest.edition_date === latest.edition_date ? latestDigest : null;
   const published = LA?.published_kst ?? "06:22";
   const edgeChip = LP?.edge ?? latest?.edge ?? null;
 
@@ -212,8 +216,17 @@ export default function BriefHubClient() {
                       <div className="st">{`${published} 발행 · 직전 미국장 리뷰`}</div>
                     </div>
                   </TransitionLink>
+                  {digestToday ? (
+                    <TransitionLink className="slot done" href={ROUTES.briefDigest(digestToday.edition_date)}>
+                      <div className="c">
+                        <div className="tm">11:00</div>
+                        <div className="nm">데일리 다이제스트</div>
+                        <div className="st">{`${digestToday.published_kst ?? "11:05"} 발행 · 하루 시장 흐름 한 장 요약`}</div>
+                      </div>
+                    </TransitionLink>
+                  ) : null}
                   {[
-                    ["11:00", "데일리 다이제스트", "준비 중 · 하루 시장 흐름 한 장 요약"],
+                    ...(digestToday ? [] : [["11:00", "데일리 다이제스트", "준비 중 · 하루 시장 흐름 한 장 요약"]]),
                     ["22:00", "프리마켓 브리프", "준비 중 · 미국 장 시작 전 점검"],
                     ["05:00", "미국장 마감", "다음 모닝 브리프의 재료"],
                   ].map(([time, name, note]) => (
@@ -242,7 +255,7 @@ export default function BriefHubClient() {
               <HubSection title="모든 브리핑" label="Products">
                 <div className="shelf">
                   {products.map((product) => {
-                    const live = product.status === "live";
+                    const live = product.status === "live" || (product.id === "digest" && !!latestDigest);
                     const body = (
                       <>
                         <div className="nm">{product.name}</div>
@@ -252,6 +265,10 @@ export default function BriefHubClient() {
                     );
                     return live && product.id === "morning" ? (
                       <TransitionLink key={product.id} className="prod" href={ROUTES.briefMorning(latest.edition_date)}>
+                        {body}
+                      </TransitionLink>
+                    ) : live && product.id === "digest" && latestDigest ? (
+                      <TransitionLink key={product.id} className="prod" href={ROUTES.briefDigest(latestDigest.edition_date)}>
                         {body}
                       </TransitionLink>
                     ) : (

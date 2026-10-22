@@ -53,6 +53,7 @@ const SHELL_ROUTE_RULES: readonly ShellRouteRule[] = [
   { pattern: /^\/workbench$/, meta: fixed({ active: "workbench", title: WORKBENCH_PRODUCT_TITLE }) },
   { pattern: /^\/brief$/, meta: fixed({ active: "brief", title: "브리핑" }) },
   { pattern: /^\/brief\/morning\/[^/]+$/, meta: fixed({ active: "brief", title: "모닝 브리프" }) },
+  { pattern: /^\/brief\/digest\/[^/]+$/, meta: fixed({ active: "brief", title: "데일리 다이제스트" }) },
   { pattern: /^\/radar$/, meta: fixed({ active: "explore", title: "Market Radar", backHref: ROUTES.home }) },
   { pattern: /^\/market-valuation$/, meta: fixed({ active: "market", title: "시장", backHref: ROUTES.home }) },
   { pattern: /^\/market-valuation\/structure$/, meta: fixed({ active: "market", title: "시장 구조", backHref: ROUTES.market }) },
