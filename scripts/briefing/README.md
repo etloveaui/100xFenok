@@ -20,7 +20,10 @@ Design and owner decisions: `claude-code-hub/docs/planning/PLAN_100x-morning-bri
    100x CNN history as the fallback. The 7-session strip and the previous score come from `data/briefing/index.json`.
 5. **Writer (`writer.py`).** Opus 5.5 at effort medium writes first; Sonnet 5.5 runs if Opus fails (API error,
    stop reason, JSON or schema). The server-side refusal fallback is on. Each call appends a line to
-   `~/.local/state/100x-briefing/usage.jsonl`.
+   `~/.local/state/100x-briefing/usage.jsonl`. The system prompt carries the writing kit named by
+   `writer.style_kit` (a file in the AA checkout: human example paragraphs, failing sentence types, a deletion
+   test), shared with the AA Daily Digest and kept out of this public repository because it quotes other writers;
+   without the file the writer runs on its own rules.
 6. **Checks (`validate.py`, `stats.py`).**
    - Hard gates: the writer schema and the `briefing-morning/v1` schema.
    - Ticker fixes: mover tickers that are not on the SEC list, or not named in the sources, are blanked.
