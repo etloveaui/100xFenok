@@ -26,7 +26,7 @@ const nf=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 const cg=p=>Number.isFinite(p)?`<span class="cg ${p>0?'up':p<0?'dn':''}">${p>0?'▲ +':p<0?'▼ ':''}${p.toFixed(2)}%</span>`:'';
 const minutes=t=>{const a=String(t).match(/(\d{2}):(\d{2})/);return a?+a[1]*60+ +a[2]:null};
 const hh=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-const now=minutes(D.published_kst)??1080;
+const now=minutes(D.market_title)??minutes(D.published_kst)??1080;
 const timeline=(D.sections||[]).find(s=>s.figure?.kind==='timeline');
 const events=(timeline?.figure.items||D.tonight||[]).map(e=>{let m=minutes(e.time||e.time_kst);if(m===null)return null;if((e.date&&e.date>D.date)||m<now)m+=1440;return {...e,m};}).filter(Boolean).sort((a,b)=>a.m-b.m);
 $('#brand').textContent=D.product||'100x 프리마켓 브리프';$('#edition').textContent=D.date+' · '+hh(now)+' KST';$('#headline').textContent=D.headline;$('#lead').textContent=D.lead;
