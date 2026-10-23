@@ -416,8 +416,8 @@ def _payload_source_fields(payload):
     }
 
 
-def label_illiquid_history(payload, existing):
-    """Use a genuinely advancing ETF history while disclosing its old quote."""
+def label_illiquid_history(payload, existing, *, catalogue_etf=False):
+    """Use current ETF history while retaining the provider quote and classification."""
     if not isinstance(existing, dict):
         return payload
     previous = _payload_source_fields(existing).get("history_as_of")
@@ -426,6 +426,10 @@ def label_illiquid_history(payload, existing):
     provenance = {"quote_clock": "stale_illiquid", "freshness_basis": "history_as_of",
                   "quote_as_of": payload.get("quote_as_of"), "history_as_of": payload.get("history_as_of"),
                   "previous_history_as_of": previous}
+    if catalogue_etf:
+        provenance["instrument_classification"] = {
+            "asset_type": "etf", "source": "stockanalysis_etf", "ticker": payload.get("ticker"),
+        }
     candidate = {**payload, "provenance": provenance}
     if valid_illiquid_history(candidate):
         candidate["source_as_of"] = candidate["history_as_of"]
@@ -2661,6 +2665,7 @@ def main():
         print(stable_json({"tracker_unadjusted": results}, indent=2))
         return
 
+    catalogue_etfs = load_stockanalysis_etfs()
     state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
     lifecycle_evidence = verified_yahoo_terminal_evidence(lifecycle_as_of)
@@ -3007,8 +3012,8 @@ def main():
                     fetched_at=fetched_at,
                     data=data,
                 )
-                provider_payload = label_illiquid_history(provider_payload, existing)
-                payload = label_illiquid_history(payload, existing)
+                provider_payload = label_illiquid_history(provider_payload, existing, catalogue_etf=ticker in catalogue_etfs)
+                payload = label_illiquid_history(payload, existing, catalogue_etf=ticker in catalogue_etfs)
                 if state_store:
                     state_store.evaluate_recovery_candidate(
                         ticker, payload, provider_payload, canonical_payload=existing,

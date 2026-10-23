@@ -3741,6 +3741,83 @@ assert callable(namespace["load_universe"])
         equity = self.fetcher.decorate_finance_payload(ticker, "daily", "2026-10-11T00:00:00Z", equity_data)
         self.assertNotIn("provenance", self.fetcher.label_illiquid_history(equity, old))
 
+    def test_catalogue_etf_with_yahoo_equity_type_repairs_retained_history_clock(self):
+        ticker = "AMHI"
+        data = {
+            "info": {"symbol": ticker, "quoteType": "EQUITY",
+                     "regularMarketTime": int(datetime(2026, 10, 5, 13, 46, tzinfo=timezone.utc).timestamp())},
+            "history_1y": [{"date": "2026-10-21", "Close": 10}, {"date": "2026-10-22", "Close": 11}],
+        }
+        old = self.fetcher.decorate_finance_payload(ticker, "daily", "2026-10-23T01:00:00Z", data)
+        write_json(self.fetcher.OUT_DIR / f"{ticker}.json", old)
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {
+            "schema_version": "stockanalysis/v1", "asset_type": "etf", "records": [{"ticker": ticker}],
+        })
+        self.fetcher.S1_STOCK_PROMOTION_DRY_RUN = self.root / "terminal-evidence.json"
+        write_json(self.fetcher.S1_STOCK_PROMOTION_DRY_RUN, {
+            "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1", "dry_run": True,
+            "generated_at": "2026-10-23T15:00:00Z", "blocked_rows": [],
+        })
+        self.fetcher.load_universe_sources = lambda **_kwargs: {ticker: ["stockanalysis_etf"]}
+        self.fetcher._observed_now = lambda: "2026-10-23T15:00:00Z"
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            json.loads(json.dumps(data)), 1, None, {"attempts_used": 1, "latency_ms": 1, "failures": []})
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", ticker, "--profile", "daily", "--merge-existing",
+                        "--record-batch-state", "--event-name", "workflow_dispatch", "--sleep", "0", "--retries", "0"]
+            sys.stdout = io.StringIO()
+            try:
+                self.fetcher.main()
+            except SystemExit as exc:
+                self.assertEqual(exc.code, 0)
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+        candidate = json.loads((self.fetcher.OUT_DIR / f"{ticker}.json").read_text())
+        self.assertEqual(candidate["source_as_of"], "2026-10-22")
+        self.assertEqual(candidate["quote_as_of"], old["quote_as_of"])
+        self.assertEqual(candidate["history_as_of"], old["history_as_of"], "classification repair must not invent a new bar")
+        self.assertEqual(candidate["data"], data, "Yahoo raw classification and prices remain unchanged")
+        self.assertEqual(candidate["provenance"]["instrument_classification"], {
+            "asset_type": "etf", "source": "stockanalysis_etf", "ticker": ticker,
+        })
+        self.assertTrue(self.state.valid_illiquid_history(candidate))
+        self.assertTrue(self.state._valid_canonical_payload(candidate, ticker))
+        self.fetcher.validate_source_progression(old, candidate)
+        # The same provider shape without catalogue membership remains a real-equity refusal.
+        self.assertNotIn("provenance", self.fetcher.label_illiquid_history(old, old))
+        wrong_identity = json.loads(json.dumps(candidate))
+        wrong_identity["provenance"]["instrument_classification"]["ticker"] = "OTHER"
+        self.assertFalse(self.state.valid_illiquid_history(wrong_identity))
+        stale = json.loads(json.dumps(old))
+        stale["data"]["history_1y"][-1]["date"] = "2026-10-02"
+        stale["data"]["history_1y"][0]["date"] = "2026-10-01"
+        stale = self.fetcher.decorate_finance_payload(ticker, "daily", "2026-10-23T15:00:00Z", stale["data"])
+        self.assertNotIn("provenance", self.fetcher.label_illiquid_history(stale, stale, catalogue_etf=True))
+
+    def test_zsc_verified_halt_retires_selection_only_after_issuer_effective_date(self):
+        source = "https://www.prnewswire.com/news-releases/uscf-announces-changes-to-product-line-302874257.html"
+        self.assertNotIn("ZSC", self.state.verified_yahoo_terminal_evidence("2026-10-04T23:59:59Z")["tickers"])
+        evidence = self.state.verified_yahoo_terminal_evidence("2026-10-05T00:00:00Z")["tickers"]["ZSC"][0]
+        self.assertEqual(evidence["effective_date"], "2026-10-05")
+        self.assertEqual(evidence["source_url"], source)
+        self.assertTrue(evidence["terminal"])
+        self.assertEqual(self.state.current_yahoo_universe_sources({"ZSC": ["stockanalysis_etf"], "AMHI": ["stockanalysis_etf"]},
+                         "2026-10-23T15:00:00Z"), {"AMHI": ["stockanalysis_etf"]})
+
+        store = self.state.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)
+        canonical = self.fetcher.OUT_DIR / "ZSC.json"
+        write_json(canonical, self._daily_payload("ZSC"))
+        retained = canonical.read_bytes()
+        write_json(store._state_path("ZSC"), {"ticker": "ZSC", "retry": True, "current": {"source_as_of": "2026-10-09"}})
+        terminal = self.state.verified_yahoo_terminal_evidence("2026-10-23T15:00:00Z")
+        self.assertEqual(store.transition_terminal_tickers({"ZSC"}, terminal, {"observed_at": "2026-10-23T15:00:00Z"}), 1)
+        state = json.loads(store._state_path("ZSC").read_text())
+        self.assertEqual(state["resolution_state"], "terminal_provider_unsupported")
+        self.assertFalse(state["retry"])
+        self.assertEqual(state["current"]["source_as_of"], "2026-10-09")
+        self.assertEqual(canonical.read_bytes(), retained, "verified closure must preserve historical bytes")
+
     def test_settled_redemption_leaves_legacy_out_of_fetch_plan(self) -> None:
         self.fetcher.load_universe_sources = lambda **_kwargs: {
             "IWDL": ["stockanalysis_etf"],

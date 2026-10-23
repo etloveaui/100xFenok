@@ -54,6 +54,7 @@ YAHOO_SAME_SECURITY_EFFECTIVE = {
 # Public securities ended; merger consideration is not a ticker alias.
 # AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
 YAHOO_ENDED_SECURITIES = {
+    "ZSC": "USCF issuer liquidation notice; trading halted before 2026-10-05; liquidation on/about 2026-10-09",
     **{symbol: "Themes issuer liquidation notice; trading ceased after 2026-07-28"
        for symbol in ("HWAY", "AXPG", "ABNG", "UPSG", "CNCG", "CMGG", "DNNG", "LACG")},
     **{symbol: "YieldMax SEC liquidation supplement; trading ceased after 2026-06-15"
@@ -81,6 +82,7 @@ YAHOO_ENDED_SECURITIES = {
     "230360.KQ": "KRX final cash share exchange notice; delisted 2026-06-30",
 }
 YAHOO_SECURITY_END_DATES = {
+    "ZSC": "2026-10-05",
     **{symbol: "2026-07-29" for symbol in
        ("HWAY", "AXPG", "ABNG", "UPSG", "CNCG", "CMGG", "DNNG", "LACG")},
     "FEAT": "2026-06-16", "FIVY": "2026-06-16",
@@ -95,6 +97,7 @@ YAHOO_SECURITY_END_DATES = {
     "012510.KS": "2026-07-15", "230360.KQ": "2026-06-30",
 }
 YAHOO_LIFECYCLE_SOURCES = {
+    "ZSC": "https://www.prnewswire.com/news-releases/uscf-announces-changes-to-product-line-302874257.html",
     **{symbol: "https://www.globenewswire.com/news-release/2026/07/17/3329085/0/en/themes-etfs-and-leverage-shares-by-themes-closing-etfs-due-to-lack-of-assets.html"
        for symbol in ("HWAY", "AXPG", "ABNG", "UPSG", "CNCG", "CMGG", "DNNG", "LACG")},
     **{symbol: "https://www.sec.gov/Archives/edgar/data/1924868/000199937126011686/ym_497-052926.htm"
@@ -388,8 +391,15 @@ def valid_illiquid_history(payload: dict) -> bool:
     history = source["history_as_of"]
     quote = source["quote_as_of"]
     info = (payload.get("data") or {}).get("info") or {}
-    if (info.get("quoteType") != "ETF" or not history or not quote or not prior
-            or _iso_ms(prior) is None or history <= prior
+    classification = provenance.get("instrument_classification")
+    catalogue_etf = isinstance(classification, dict) and classification == {
+        "asset_type": "etf", "source": "stockanalysis_etf", "ticker": payload.get("ticker"),
+    }
+    # Correct a Yahoo EQUITY misclassification without inventing a newer bar.
+    # The catalogue-backed retained history still has to pass the source-age guard.
+    retained_classification_repair = catalogue_etf and info.get("quoteType") == "EQUITY" and history == prior
+    if (not (info.get("quoteType") == "ETF" or catalogue_etf) or not history or not quote or not prior
+            or _iso_ms(prior) is None or (history <= prior and not retained_classification_repair)
             or provenance.get("freshness_basis") != "history_as_of"
             or provenance.get("quote_as_of") != quote or provenance.get("history_as_of") != history):
         return False
