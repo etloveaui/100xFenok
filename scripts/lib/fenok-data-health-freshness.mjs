@@ -354,7 +354,7 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
         && Array.isArray(scheduled.symbols) && scheduled.symbols.length > 0
         && new Set(scheduled.symbols).size === scheduled.symbols.length
         && scheduled.symbols.every((id) => typeof id === "string"
-          && /^[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(id) && catalogue.has(id));
+          && /^(?:[A-Z0-9][A-Z0-9.\-]{0,11}|\^(?:KS11|KQ11))$/.test(id) && catalogue.has(id));
     });
     // The two cron members own their full pre-shard candidates, including
     // stale and unobserved names. Catalogue counts and stale_groups stay in
@@ -363,12 +363,15 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
     const symbols = [...new Set(completeSchedule
       ? scheduledMembers.flatMap(([index]) => index.scheduled_universe.symbols)
       : catalogues.flat())];
-    const members = symbols.map((id) => {
-      if (typeof id !== "string" || !/^[A-Z0-9^=.-]+$/i.test(id)) return memberDate(null, "source", id);
+    const members = symbols.flatMap((id) => {
+      if (typeof id !== "string" || !/^[A-Z0-9^=.-]+$/i.test(id)) return [memberDate(null, "source", id)];
       const state = readOptionalJson(dataRoot, `admin/yahoo-batch-quote-history/tickers/${id}.json`);
+      // A newer persisted lifecycle decision can retire a member from an
+      // earlier cron population. Keep its old payload as history, not debt.
+      if (state?.resolution_state === "terminal_provider_unsupported" && state.terminal) return [];
       const selected = state?.resolution_state === "unavailable" ? null
         : state?.resolution_state === "lkg_primary" ? state?.lkg : state?.current;
-      return memberDate(selected?.source_as_of, "source", id);
+      return [memberDate(selected?.source_as_of, "source", id)];
     });
     return {
       members,

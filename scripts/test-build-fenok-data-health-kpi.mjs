@@ -432,6 +432,30 @@ try {
   assert.equal(scheduled.max_age, yahooBatch.max_age, "scope correction must not relax the freshness bound");
   assert.equal(fs.readFileSync(cataloguePath, "utf8"), beforeCatalogue,
     "full catalogue counts and stale evidence are preserved independently of scheduled responsibility");
+  const koreanIndices = ["^KS11", "^KQ11"];
+  writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/index.json", {
+    ...stockScope, catalogue_symbols: [...stockScope.catalogue_symbols, ...koreanIndices],
+    scheduled_universe: { ...stockScope.scheduled_universe, symbols: ["SYM0", "SYM1", ...koreanIndices] },
+  });
+  for (const ticker of koreanIndices) writeJson(scheduledDataRoot, `admin/yahoo-batch-quote-history/tickers/${ticker}.json`, {
+    resolution_state: "fresh_primary", current: { source_as_of: "2026-09-25" },
+  });
+  const withKoreanIndices = summarizeDataSetFreshness(yahooLane, null, now, undefined, scheduledDataRoot);
+  assert.equal(withKoreanIndices.total_members, 6, "producer-supported Korean indices must not invalidate the entire scheduled population");
+  assert.equal(withKoreanIndices.fresh_members, 4);
+  writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/tickers/ZCBE.json", {
+    resolution_state: "terminal_provider_unsupported", terminal: { classified_at: now, method: "automatic_provider_lifecycle" },
+    current: { source_as_of: "2026-04-10" },
+  });
+  const afterRetirement = summarizeDataSetFreshness(yahooLane, null, now, undefined, scheduledDataRoot);
+  assert.equal(afterRetirement.total_members, 5, "persisted terminal state supersedes an earlier cron population");
+  assert.equal(afterRetirement.fresh_members, 4);
+  assert.equal(afterRetirement.source_health.counts.unknown, 1, "a live unobserved member remains counted");
+  assert.equal(afterRetirement.status, "delayed", "real remaining freshness debt still alarms");
+  writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/index.json", stockScope);
+  writeJson(scheduledDataRoot, "admin/yahoo-batch-quote-history/tickers/ZCBE.json", {
+    resolution_state: "fresh_primary", current: { source_as_of: "2026-04-10" },
+  });
   for (const invalidScope of [
     undefined,
     { ...etfScope.scheduled_universe, scope: "selection" },
