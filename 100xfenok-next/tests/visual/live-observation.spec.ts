@@ -59,6 +59,13 @@ test("retired analyzer routes redirect and removed development documents return 
 
 const radarDetail = (path: string, legacy = false) => `/radar?${legacy ? "legacy=1&" : ""}path=${encodeURIComponent(`tools/macro-monitor/details/${path}`)}`;
 
+const nativePosts = {
+  "post-playbook": { id: "playbook", path: "/posts/2025-06-22_playbook.html", canvases: 5 },
+  "post-stablecoin": { id: "stablecoin", path: "/posts/2025-06-23_stablecoin-revolution-complete-masterplan.html", canvases: 2 },
+  "post-rmd": { id: "rmd", path: "/posts/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html", canvases: 3 },
+  "post-tariff": { id: "tariff", path: "/posts/2026-02-21_tariff-ruling-comprehensive.html", canvases: 0 },
+} as const;
+
 const routes = [
   ["home", "/"], ["screener", "/screener"],
   ["screener-detail", "/screener?ticker=NVDA"], ["stock-nvda", "/stock/NVDA"],
@@ -77,6 +84,14 @@ const routes = [
   ["macro-inflation", "/macro-chart?preset=inflation"],
   ["macro-treasury-curve", "/macro-chart?preset=treasury"],
   ["macro-mortgage", "/macro-chart?preset=mortgage"],
+  ["portfolio", "/portfolio"],
+  ["post-playbook", nativePosts["post-playbook"].path],
+  ["post-stablecoin", nativePosts["post-stablecoin"].path],
+  ["post-rmd", nativePosts["post-rmd"].path],
+  ["post-tariff", nativePosts["post-tariff"].path],
+  ["ib-guide", "/ib?v2=1#guide"],
+  ["stock-aapl-financials", "/stock/AAPL?tab=financials"],
+  ["market-structure", "/market-valuation/structure"],
 ] as const;
 
 for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080 }]) {
@@ -171,6 +186,74 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
               observation.treasury_curve = await curve.innerText();
             }
           }
+          if (name in nativePosts) {
+            const post = nativePosts[name as keyof typeof nativePosts];
+            expect(response?.status(), "native post document HTTP status").toBe(200);
+            const article = page.locator(`[data-native-post="${post.id}"]`);
+            await expect(article).toBeVisible();
+            await expect(article.locator("section").first()).toBeVisible();
+            await expect(article.locator("canvas")).toHaveCount(post.canvases);
+            await expect(article.locator("iframe")).toHaveCount(0);
+            await expect(page.locator("[data-posts-detail-legacy-frame]")).toHaveCount(0);
+            if (post.id === "tariff") {
+              // This report uses tables/timeline markup, not canvas charts.
+              expect(await article.locator("tbody tr").count()).toBeGreaterThan(0);
+            }
+            observation.native_post = { id: post.id, sections: await article.locator("section").count(), canvases: await article.locator("canvas").count() };
+          }
+          if (name === "ib-guide") {
+            const tab = page.getByRole("tab", { name: "가이드 · 계산기", exact: true });
+            await expect(tab).toBeVisible();
+            await expect(tab).toHaveAttribute("aria-selected", "true");
+            const calculator = page.locator('[data-ib-guide="native"] section[aria-labelledby="ib-calc-title"]');
+            await expect(calculator).toBeVisible();
+            for (const [label, value] of [["가상 투자금 ($)", "13000"], ["누적 매수금 ($)", "1631"], ["평균 매수가 ($)", "70.9110"], ["보유 수량", "23"]]) {
+              await calculator.getByLabel(label, { exact: true }).fill(value);
+            }
+            await calculator.getByRole("button", { name: "주문 목록 계산", exact: true }).click();
+            const result = calculator.locator(".ib-guide-results dl");
+            await expect(result).toBeVisible();
+            const before = await result.innerText();
+            await calculator.getByLabel("가상 투자금 ($)", { exact: true }).fill("26000");
+            await calculator.getByRole("button", { name: "주문 목록 계산", exact: true }).click();
+            await expect(result).toBeVisible();
+            await expect(result).not.toHaveText(before);
+            await expect(calculator.getByRole("alert")).toHaveCount(0);
+            observation.guide_calculator = { before, after: await result.innerText() };
+          }
+          if (name === "sectors") {
+            const sox = page.locator("[data-sectors-sox]");
+            const industry = page.locator("[data-sectors-industry-metrics]");
+            await expect(sox).toBeVisible();
+            await expect(sox.getByRole("heading", { name: "필라델피아 반도체지수 (SOX)", exact: true })).toBeVisible();
+            await expect(industry).toBeVisible();
+            await expect(industry.getByRole("heading", { name: "지역·업종별 가치평가 지표", exact: true })).toBeVisible();
+            await expect(industry).toContainText("Damodaran");
+            observation.sector_panels = { sox: await sox.innerText(), industry: await industry.innerText() };
+          }
+          if (name === "stock-aapl-financials") {
+            const financials = page.locator(".cp-stock-tab-financials");
+            await expect(financials).toBeVisible();
+            const dividends = financials.locator("[data-stock-dividends]");
+            const count = await dividends.count();
+            expect(count).toBeLessThanOrEqual(1);
+            if (count) {
+              await expect(dividends).toBeVisible();
+              await expect(dividends.getByRole("heading", { name: "AAPL 배당 지급 이력", exact: true })).toBeVisible();
+              await expect(dividends.getByRole("button", { name: "최근 5년", exact: true })).toBeVisible();
+              observation.dividend_card = { state: "visible", text: await dividends.innerText() };
+            } else {
+              await expect(financials.getByRole("heading", { name: "AAPL 배당 지급 이력", exact: true })).toHaveCount(0);
+              observation.dividend_card = { state: "absent", note: "Whole-card absence is allowed when no dividend rows are available; not evidence that AAPL pays no dividend." };
+            }
+          }
+          if (name === "market-structure") {
+            const korea = page.locator("[data-korea-market-panel]");
+            await expect(korea.getByRole("heading", { name: "한국 10년 국채금리", exact: true })).toBeVisible();
+            await expect(korea).toContainText("IRLTLT01KRM156N", { timeout: 30_000 });
+            await expect(korea).toContainText(/월간 기준 \d{4}-\d{2}/);
+            observation.korea_market = await korea.innerText();
+          }
           // Trigger below-fold widgets without navigation or data mutation.
           let scannedToBottom = false;
           for (let step = 0; step < 20; step++) {
@@ -214,6 +297,11 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
           expect(response?.status(), "document HTTP status").toBeLessThan(400);
           expect(await page.locator("main").first().innerText(), "main must contain visible text").not.toMatch(/^\s*$/);
           if (name === "screener-detail") expect(observation.detail_panel_visible, "NVDA detail panel").toBe(true);
+          if (["home", "portfolio", "screener"].includes(name)) {
+            await expect(page.getByText("데이터 동기화 확인", { exact: true })).toHaveCount(0);
+            await expect(page.locator('[role="dialog"]')).toHaveCount(0);
+            observation.adoption_prompt = "absent";
+          }
           expect(pageErrors, "uncaught page errors").toEqual([]);
         } catch (error) { failure = String(error); }
         finally {
