@@ -286,8 +286,20 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                 return {"current": {"IBIC": selected}}
         def primary(rows):
             periods = {"daily_1y": rows, "monthly_1y": [{"t": "2026-10-01", "c": 25.0}]}
-            return {"ticker": "IBIC", "raw": {"history_periods": periods},
-                    "normalized": {"history_periods": periods, "overview": {}}}
+            payload = etf_payload("IBIC", None)
+            payload.update(fetched_at="2026-10-06T02:14:14Z",
+                           raw={"history_periods": periods})
+            payload["normalized"]["history_periods"] = periods
+            payload["source_as_of"] = fetcher.stockanalysis_detail_source_timestamp(payload)
+            return payload
+        def select_primary(payload):
+            body = write_json(fetcher.OUT_DIR / "etfs/IBIC.json", payload)
+            digest = hashlib.sha256(body).hexdigest()
+            object_path = f"providers/stockanalysis/etf_detail/objects/IBIC/{digest}.json"
+            write_json(state_root / object_path, payload)
+            selected.update(provider="stockanalysis", provider_path="data/stockanalysis/etfs/IBIC.json",
+                            payload_sha256=digest, source_as_of=payload["source_as_of"],
+                            observed_at=payload["fetched_at"])
         native = [{"t": "2025-10-02", "c": 25.69}, {"t": "2026-10-02", "c": 25.64}]
         first = primary(native)
         with (patch.object(fetcher, "DATA_SUPPLY_STATE_ROOT", state_root),
@@ -309,16 +321,17 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                                  "partial_reason_codes": ["holdings_countries_unavailable"]})
             fetcher.retain_yahoo_etf_history_archive("IBIC", country_only)
             self.assertEqual(country_only["normalized"]["history_archive"], first["normalized"]["history_archive"])
-            write_json(fetcher.OUT_DIR / "etfs/IBIC.json", first)
-            selected["provider"] = "stockanalysis"
+            select_primary(first)
             # The native tail advances and omits an interior Yahoo date. Its
             # current price basis remains native while the old archive persists.
             later = primary([{"t": "2025-10-03", "c": 25.71}, {"t": "2026-10-05", "c": 25.66}])
             fetcher.retain_yahoo_etf_history_archive("IBIC", later)
-            self.assertEqual(later["normalized"]["history_archive"], first["normalized"]["history_archive"])
+            self.assertEqual(later["normalized"]["history_archive"][0], first["normalized"]["history_archive"][0])
+            self.assertEqual(later["normalized"]["history_archive"][1]["provider"], "stockanalysis")
+            self.assertEqual(later["normalized"]["history_archive"][1]["original_payload_sha256"], selected["payload_sha256"])
             self.assertEqual(later["normalized"]["history_periods"]["daily_1y"], later["raw"]["history_periods"]["daily_1y"])
             self.assertTrue(validate_etf_history_archive(later))
-            write_json(fetcher.OUT_DIR / "etfs/IBIC.json", later)
+            select_primary(later)
             next_stamp = "2026-10-03T19:51:28Z"
             next_rows = [{"date": day, "Close": 25.0 + index} for index, day in enumerate(
                 ("2025-10-03", "2026-10-02", "2026-10-03"))]
@@ -336,12 +349,16 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             finance["data"] = next_source["raw"]["yf"]
             write_json(self.root / "truth/data/yf/finance/IBIC.json", finance)
             selected.update({"provider": "yahoo_finance", "payload_sha256": next_digest,
-                             "source_as_of": next_stamp})
+                             "provider_path": "data/yf/etf-details/IBIC.json",
+                             "source_as_of": next_stamp, "observed_at": next_source["fetched_at"]})
             canonical_file.write_text('{"ticker": "IBIC", "newer": true}')
             write_json(self.root / "truth/data/yf/finance/IBIC.json", {"newer": True})
             third = primary([{"t": row["date"], "c": row["Close"]} for row in next_rows])
             fetcher.retain_yahoo_etf_history_archive("IBIC", third)
-            self.assertEqual(len(third["normalized"]["history_archive"]), 2)
+            self.assertEqual(len([row for row in third["normalized"]["history_archive"]
+                                  if row["provider"] == "yahoo_finance"]), 2)
+            self.assertEqual(len([row for row in third["normalized"]["history_archive"]
+                                  if row["provider"] == "stockanalysis"]), 2)
             self.assertTrue({"2025-09-26", "2026-09-30", "2026-10-03"} <= archived_etf_history(third))
             self.assertEqual(third["normalized"]["history_periods"]["daily_1y"], third["raw"]["history_periods"]["daily_1y"])
 

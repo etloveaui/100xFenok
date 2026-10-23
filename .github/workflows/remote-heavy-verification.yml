@@ -87,6 +87,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Match App Quality: these imported modules are ignored build outputs,
+      # so an exact source checkout is not yet a usable typecheck input.
+      - name: Generate build-time modules
+        if: ${{ inputs.suite == 'npm-script' }}
+        run: |
+          npm run build:version
+          mkdir -p public/data/catalog public/data/stockanalysis
+          cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
+          node --input-type=module <<'JS'
+          import { writeFile } from 'node:fs/promises';
+          const response = await fetch('https://100xfenok.etloveaui.workers.dev/data/stockanalysis/etf_universe.json', { signal: AbortSignal.timeout(30000) });
+          const generation = response.headers.get('x-data-plane-generation');
+          if (!response.ok || !generation?.startsWith('stockanalysis-catalogue-')) throw new Error(`Active ETF universe unavailable: HTTP ${response.status}, generation ${generation}`);
+          const body = await response.text();
+          const universe = JSON.parse(body);
+          if (!Array.isArray(universe.records) || universe.records.length === 0) throw new Error('Active ETF universe has no records');
+          await writeFile('public/data/stockanalysis/etf_universe.json', body);
+          console.log(`ETF universe: ${universe.records.length} records from ${generation}`);
+          JS
+          NEXT_BUILD_TARGET=cloudflare npx --no-install next typegen
+
       - name: Run closed verification suite
         id: verification
         env:

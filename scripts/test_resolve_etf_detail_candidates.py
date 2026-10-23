@@ -388,7 +388,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         )
         self.assertEqual(artifact_entities(manifest), ["CIR", "HYGW"])
 
-    def test_failure_only_artifact_expires_fallback_then_recovers_fresh_primary(self) -> None:
+    def test_failure_only_artifact_preserves_selection_then_recovers_fresh_primary(self) -> None:
         for entity in ("CIR", "UNLISTED"):
             self.publish_pair(entity, "2026-08-01T00:00:00Z", "2026-08-01T00:00:01Z")
         resolve_entities(self.store, entities=["CIR", "UNLISTED"],
@@ -405,22 +405,20 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         ]}), encoding="utf-8")
         self.assertFalse(any((self.root / "providers").glob("*/etf_detail/pending/CIR.json")))
 
-        for decided_at, committed in (("2026-08-20T00:01:00Z", True),
-                                      ("2026-08-20T01:00:00Z", False)):
+        for decided_at in ("2026-08-20T00:01:00Z", "2026-08-20T01:00:00Z"):
             with mock.patch.object(sys, "argv", self.cli_args(manifest, decided_at)), \
                     mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
                 main()
             rows = json.loads(stdout.getvalue())["results"]
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["entity"], "CIR")
-            self.assertEqual(rows[0]["resolution_state"], "unavailable")
-            self.assertEqual(rows[0]["committed"], committed)
-        unavailable = self.store.read_active_domain("etf_detail")
-        self.assertNotIn("CIR", unavailable["current"])
-        self.assertEqual(unavailable["recovery"]["CIR"]["last_transition"], "unavailable")
-        self.assertEqual(unavailable["current"]["UNLISTED"], prior["current"]["UNLISTED"])
+            self.assertIsNone(rows[0]["resolution_state"])
+            self.assertFalse(rows[0]["committed"])
+            self.assertIn("no pending provider candidate for recovery-only artifact", rows[0]["resolution_error"])
+        retained = self.store.read_active_domain("etf_detail")
+        self.assertEqual(retained, prior)
         self.assertEqual(
-            (self.root / unavailable["lkg"]["CIR"]["payload_ref"]["path"]).read_bytes(), prior_bytes
+            (self.root / retained["current"]["CIR"]["payload_ref"]["path"]).read_bytes(), prior_bytes
         )
 
         payload = {
@@ -453,7 +451,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertEqual(row["source_as_of"], payload["source_as_of"])
         self.assertTrue(row["committed"])
         recovered = self.store.read_active_domain("etf_detail")
-        self.assertNotIn("CIR", recovered["lkg"])
+        self.assertEqual(recovered["lkg"]["CIR"], prior["current"]["CIR"])
         self.assertEqual(recovered["current"]["CIR"]["payload_sha256"], primary["payload_sha256"])
         self.assertEqual(recovered["current"]["UNLISTED"], prior["current"]["UNLISTED"])
 
@@ -474,9 +472,8 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                 mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
             main()
         rows = {row["entity"]: row for row in json.loads(stdout.getvalue())["results"]}
-        self.assertIn("no recorded provider observations", rows["AEMPTY"]["resolution_error"])
-        self.assertIn("no fresh provider candidate exists for initial selection", rows["BFAIL"]["resolution_error"])
         for entity in ("AEMPTY", "BFAIL"):
+            self.assertIn("no pending provider candidate for recovery-only artifact", rows[entity]["resolution_error"])
             self.assertFalse(rows[entity]["committed"])
             self.assertIsNone(rows[entity]["resolution_state"])
             self.assertIsNone(rows[entity]["source_as_of"])
@@ -507,7 +504,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                 if not pending_in_manifest:
                     self.assertTrue((self.root / pending_path).is_file())
 
-    def test_failure_only_scope_preserves_complete_provider_evidence_guard(self) -> None:
+    def test_failure_only_scope_does_not_replay_incomplete_historical_evidence(self) -> None:
         self.publish_pair("CIR", "2026-08-01T00:00:00Z", "2026-08-01T00:00:01Z")
         resolve_entities(self.store, entities=["CIR"], decided_at="2026-08-01T01:00:00Z")
         prior = self.store.read_active_domain("etf_detail")
@@ -518,9 +515,11 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         with mock.patch("resolve_etf_detail_candidates.latest_recorded_observations", return_value={"CIR": [failure]}), \
                 mock.patch.object(sys, "argv", self.cli_args(manifest, "2026-08-20T00:01:00Z")), \
                 mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
-            with self.assertRaisesRegex(SchemaError, "requires complete provider evidence"):
-                main()
-        self.assertEqual(stdout.getvalue(), "")
+            main()
+        row = json.loads(stdout.getvalue())["results"][0]
+        self.assertFalse(row["committed"])
+        self.assertIsNone(row["resolution_state"])
+        self.assertIn("no pending provider candidate for recovery-only artifact", row["resolution_error"])
         self.assertEqual(self.store.read_active_domain("etf_detail")["transaction_id"], prior["transaction_id"])
 
     def test_six_provider_bound_yahoo_candidates_promote_exact_source_stamp(self) -> None:
@@ -1481,27 +1480,22 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertNotIn("AKAF", active["current"])
         self.assertEqual(active["recovery"]["AKAF"]["last_transition"], "unavailable")
 
-    def test_workflow_runs_resolver_and_projection_inside_writer_before_git_commit(self) -> None:
+    def test_workflow_resolves_and_bundles_inside_family_writer_before_promotion(self) -> None:
         workflow = (SCRIPT_DIR.parent / ".github/workflows/fetch-stockanalysis.yml").read_text(
             encoding="utf-8"
         )
-        publish = workflow.split("  publish-stockanalysis:\n", 1)[1]
+        publish = workflow.split("  publish-stockanalysis-etf-plane:\n", 1)[1].split("  refresh-etf-health:\n", 1)[0]
         resolve_call = "python3 scripts/resolve_etf_detail_candidates.py"
-        stage_call = "scripts/stage-lane-manifest.sh"
-        build_call = "npm run build:data-supply-public"
-        reconcile_call = "node scripts/sync-public-data.mjs --write"
-        overrides_call = "node sync-static-overrides.mjs"
-        mirror_reconcile_call = "npm run reconcile:data-supply-public-mirror"
-        self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis:\n", 1)[0])
-        self.assertIn("group: fenok-data-writer-refs/heads/main", publish)
-        self.assertLess(publish.index("audit-stage"), publish.index(resolve_call))
-        post_resolver_stage = publish.index(stage_call, publish.index(resolve_call))
-        self.assertLess(publish.index(resolve_call), post_resolver_stage)
-        self.assertLess(post_resolver_stage, publish.index(build_call))
-        self.assertLess(publish.index(build_call), publish.index(reconcile_call))
-        self.assertLess(publish.index(reconcile_call), publish.index(overrides_call))
-        self.assertLess(publish.index(overrides_call), publish.index(mirror_reconcile_call))
-        self.assertLess(publish.index(mirror_reconcile_call), publish.index("git commit"))
+        bundle_call = "python3 scripts/stockanalysis_etf_plane.py"
+        self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis-etf-plane:\n", 1)[0])
+        self.assertIn("group: stockanalysis-etf-detail-publish", publish)
+        self.assertLess(publish.index('--verify-receipt "$RECEIPT"'), publish.index(resolve_call))
+        self.assertLess(publish.index(resolve_call), publish.index(bundle_call))
+        self.assertLess(publish.index(bundle_call), publish.index("Publish guarded stockanalysis-etf-detail generation"))
+        self.assertIn("PUBLISH_EXPECTED_ACTIVE_GENERATION_ID", publish)
+        self.assertIn("PUBLISH_BINDING_ARTIFACT_DIGEST", publish)
+        self.assertIn("absRoot: process.env.ETF_CANDIDATE_ROOT", publish)
+        self.assertNotIn("git commit", publish)
         self.assertNotIn("fetched_at", (SCRIPT_DIR / "resolve_etf_detail_candidates.py").read_text())
 
     def test_producer_records_policy_bound_yahoo_endpoint_family(self) -> None:
