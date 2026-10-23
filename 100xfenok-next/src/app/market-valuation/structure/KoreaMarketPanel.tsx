@@ -31,6 +31,7 @@ const isNumber = (value: unknown): value is number => typeof value === "number" 
 
 export default function KoreaMarketPanel() {
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [yields, setYields] = useState<MarketChartPoint[] | null>(null);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +55,19 @@ export default function KoreaMarketPanel() {
     }).catch(() => { if (!cancelled) setState({ status: "failed" }); });
     return () => { cancelled = true; };
   }, [attempt]);
+  useEffect(() => {
+    let cancelled = false;
+    setYields(null);
+    fetchJsonOrNull<{ series?: Record<string, { date: string; value: number | null }[]> }>("/data/macro/fred-banking-monthly.json")
+      .then((data) => {
+        if (cancelled) return;
+        const rows = data?.series?.IRLTLT01KRM156N;
+        setYields(Array.isArray(rows) ? rows.flatMap((row) => isDay(row?.date) && isNumber(row.value)
+          ? [{ label: row.date, value: row.value }] : []).sort((a, b) => a.label.localeCompare(b.label)) : []);
+      }).catch(() => { if (!cancelled) setYields([]); });
+    return () => { cancelled = true; };
+  }, [attempt]);
+  const latestYield = yields?.at(-1);
   const retry = () => setAttempt((value) => value + 1);
   const ready = state.status === "ready" ? state : null;
   const aggregate = ready?.aggregate;
@@ -79,6 +93,17 @@ export default function KoreaMarketPanel() {
             freshness={aggregate && ready.history.length ? rail?.freshness ?? "partial" : "partial"}
             coverage={`${ready.history.length}개 관측일`} />
         </> : null}
+    </Panel>
+    <Panel className="mt-4" loading={yields === null}>
+      <PanelHeader title="한국 10년 국채금리" eyebrow="FRED · 월간" />
+      {yields?.length ? <>
+        <Stat label="10년물 금리" value={`${latestYield!.value!.toFixed(3)}%`} sub={`월간 기준 ${latestYield!.label.slice(0, 7)}`} />
+        <MarketChartFrame title="한국 10년물 월간 추이" ariaLabel="한국 10년 국채금리 월간 이력"
+          series={[{ id: "korea-10y", label: "한국 10년물", points: yields, colorToken: "brand" }]}
+          ranges={[{ id: "1Y", label: "1년", months: 12 }, { id: "5Y", label: "5년", months: 60 }, { id: "MAX", label: "전체" }]}
+          defaultRangeId="5Y" yAxisTitle="금리 (%)" formatValue={(value) => value === null ? "—" : `${value.toFixed(3)}%`} sortLabels bare />
+        <EvidenceRail freshness="fixed" stateLabel="월간 관측" source="FRED · IRLTLT01KRM156N" asOf={latestYield!.label.slice(0, 7)} coverage={`월간 · ${yields.length}개 관측월`} />
+      </> : yields ? <EmptyState reason="한국 10년물 월간 자료를 불러오지 못했습니다." actionLabel="다시 불러오기" onAction={retry} /> : null}
     </Panel>
   </section>;
 }
