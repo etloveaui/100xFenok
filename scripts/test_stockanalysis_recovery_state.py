@@ -180,6 +180,35 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                         "source_as_of": prior["source_as_of"]}, "retry": False})
         self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", detail("2026-10-02")))
 
+    def test_native_chart_loss_is_rejected_even_with_fresh_quote_and_daily_history(self):
+        prior = etf_payload("CPNX", "2026-10-12T20:00:00Z")
+        prior["fetched_at"] = "2026-10-13T11:24:34Z"
+        prior["raw"] = {"overview": {"chart": {"data": [{"t": 1791797400, "c": 12.3}]}}}
+        path = self.store.canonical_path("etf", "CPNX")
+        before = write_json(path, prior)
+        self.store.record_success("etf", "CPNX", prior, {"observed_at": prior["fetched_at"]})
+        candidate = json.loads(json.dumps(prior))
+        candidate.update(source_as_of="2026-10-19T20:00:00Z", fetched_at="2026-10-23T12:46:48Z")
+        quote = {"td": "2026-10-19", "p": 11.47}
+        periods = {"daily_1y": [{"t": "2026-10-19", "c": 11.47}]}
+        candidate["raw"].update(quote=quote, history_periods=periods)
+        candidate["normalized"].update(quote=quote, history_periods=periods)
+        for chart in ({"data": []}, {}, None, {"data": "invalid"}):
+            with self.subTest(chart=chart):
+                candidate["raw"]["overview"]["chart"] = chart
+                self.assertEqual(etf_detail_regression(candidate, prior), "overview.chart")
+                self.assertFalse(self.store.recovery_candidate_advances("etf", "CPNX", candidate))
+                self.assertEqual(path.read_bytes(), before)
+        candidate["raw"]["overview"].pop("chart")
+        self.assertEqual(etf_detail_regression(candidate, prior), "overview.chart")
+        candidate["raw"]["overview"]["chart"] = {"data": [{"t": 1792440000, "c": 11.47}]}
+        self.assertIsNone(etf_detail_regression(candidate, prior))
+        self.assertTrue(self.store.recovery_candidate_advances("etf", "CPNX", candidate))
+        no_chart_prior = json.loads(json.dumps(prior))
+        no_chart_prior["raw"]["overview"]["chart"] = {"data": []}
+        candidate["raw"]["overview"]["chart"] = {"data": []}
+        self.assertIsNone(etf_detail_regression(candidate, no_chart_prior))
+
     def test_complete_native_portfolio_can_shrink_after_its_holdings_date_advances(self):
         def portfolio(count, day):
             rows = [{"n": f"Position {index}", "as": f"{100 / count:.2f}%"} for index in range(count)]

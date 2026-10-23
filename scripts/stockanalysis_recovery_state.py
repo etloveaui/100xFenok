@@ -664,6 +664,16 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
     if not isinstance(new, dict) or not isinstance(new.get("overview"), dict):
         return "normalized.overview"
 
+    if candidate.get("source") == baseline.get("source") == "stockanalysis":
+        old_chart = ((baseline.get("raw") or {}).get("overview") or {}).get("chart")
+        new_chart = ((candidate.get("raw") or {}).get("overview") or {}).get("chart")
+        old_rows = old_chart.get("data") if isinstance(old_chart, dict) else None
+        new_rows = new_chart.get("data") if isinstance(new_chart, dict) else None
+        # Intraday chart availability is independent of daily history and quote
+        # freshness. An empty provider chart must not erase the complete detail.
+        if isinstance(old_rows, list) and old_rows and (not isinstance(new_rows, list) or not new_rows):
+            return "overview.chart"
+
     def present(value: Any) -> bool:
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             return math.isfinite(value)
