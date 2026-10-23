@@ -9,7 +9,7 @@
 //   fixes the 760px fixed-width clipping — feedback #8.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatInteger } from "@/lib/format";
+import { formatInteger, formatPlainPercent } from "@/lib/format";
 
 import {
   annualReturnsModel,
@@ -260,6 +260,62 @@ export function AnnualReturnsChartPanel() {
   );
 }
 
+const INDEX_YIELD_FEEDS = [
+  { id: "sp500", label: "S&P 500" },
+  { id: "nasdaq100", label: "나스닥 100" },
+  { id: "dowjones", label: "다우존스" },
+] as const;
+
+type IndexYieldReading = { value: number; updated: string };
+
+function IndexDividendYields() {
+  const [readings, setReadings] = useState<Array<IndexYieldReading | null> | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    Promise.all(INDEX_YIELD_FEEDS.map(async ({ id }) => {
+      try {
+        const response = await fetch(`/data/slickcharts/${id}-yield.json`, { signal: controller.signal });
+        if (!response.ok) return null;
+        const document = await response.json();
+        if (document.index !== id || typeof document.yield !== "number"
+          || !Number.isFinite(document.yield) || document.yield < 0
+          || typeof document.updated !== "string" || !Number.isFinite(Date.parse(document.updated))) return null;
+        return { value: document.yield, updated: document.updated };
+      } catch {
+        return null;
+      }
+    })).then(next => {
+      if (!controller.signal.aborted) setReadings(next);
+    });
+    return () => controller.abort();
+  }, []);
+
+  return (
+    <section className="mt-3 border-t border-[var(--c-line)] pt-3" aria-label="지수 배당수익률" data-index-dividend-yields>
+      <h3 className="text-[12px] font-bold text-[var(--c-ink-2)]">지수 배당수익률</h3>
+      <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3" aria-busy={readings === null}>
+        {INDEX_YIELD_FEEDS.map(({ id, label }, index) => {
+          const reading = readings?.[index];
+          return (
+            <div key={id} className="rounded-lg bg-[var(--c-surface-2)] px-3 py-2">
+              <dt className="text-[12px] font-semibold text-[var(--c-ink-3)]">{label}</dt>
+              <dd className="mt-1 text-sm font-bold tabular-nums text-[var(--c-ink)]">
+                {formatPlainPercent(reading?.value, { fraction: false, digits: 2 })}
+              </dd>
+              <dd className="mt-1 text-[11px] tabular-nums text-[var(--c-ink-3)]">
+                {reading ? <>수집 <time dateTime={reading.updated}>{formatAsOf(reading.updated)}</time></>
+                  : readings === null ? "불러오는 중" : "데이터를 불러오지 못했습니다"}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+      <p className="mt-2 text-[11px] text-[var(--c-ink-3)]">SlickCharts · 월간 수집 · 각 수집일의 배당수익률</p>
+    </section>
+  );
+}
+
 export function YardeniOverlayChartPanel({
   bare = false,
   onStatus,
@@ -354,6 +410,7 @@ export function YardeniOverlayChartPanel({
             1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
           </p>
         ) : null}
+        <IndexDividendYields />
       </div>
     );
   }
@@ -410,6 +467,7 @@ export function YardeniOverlayChartPanel({
           1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
         </p>
       ) : null}
+      <IndexDividendYields />
     </section>
   );
 }
