@@ -529,12 +529,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Premarket remains held while the owner reviews its redesigned pack.
-  if (pathname.startsWith("/brief/premarket/")) {
-    return withNoindexHeader(new NextResponse("발행된 프리마켓 브리프가 없습니다.", {
-      status: 404,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-    }));
   }
 
   // Ahead of any bridge response: a safe, known-missing post must leave with

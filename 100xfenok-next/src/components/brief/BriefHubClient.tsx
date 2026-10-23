@@ -27,7 +27,7 @@ import { ROUTES } from "@/lib/routes";
 const DEFAULT_PRODUCTS: BriefProduct[] = [
   { id: "morning", name: "모닝 브리프", cadence: "매일 07:00", desc: "방금 끝난 미국장 리뷰", status: "live" },
   { id: "digest", name: "데일리 다이제스트", cadence: "매일 11:00", desc: "하루 시장 흐름 한 장 요약", status: "coming-soon" },
-  { id: "premarket", name: "프리마켓 브리프", cadence: "18:00", desc: "18:00 시세와 오늘 밤 일정", status: "coming-soon" },
+  { id: "premarket", name: "프리마켓 브리프", cadence: "18:00", desc: "18:00 시세와 오늘 밤 일정", status: "live" },
   { id: "opening-bell", name: "오프닝 벨", cadence: "미국장 개장 30분 후", desc: "개장 직후의 움직임과 장전 조건 점검", status: "coming-soon" },
   { id: "weekly-recap", name: "위클리 리캡", cadence: "매주", desc: "한 주 마감 정리", status: "coming-soon" },
   { id: "weekly-brief", name: "위클리 브리프", cadence: "매주", desc: "다음 주를 여는 주간 브리프", status: "coming-soon" },
