@@ -52,6 +52,10 @@ YAHOO_SAME_SECURITY_EFFECTIVE = {
 # Public securities ended; merger consideration is not a ticker alias.
 # AVB: 2.793 VMRK shares; CTRA: 0.70 DVN shares. EA was taken private.
 YAHOO_ENDED_SECURITIES = {
+    **{symbol: "Themes issuer liquidation notice; trading ceased after 2026-07-28"
+       for symbol in ("HWAY", "AXPG", "ABNG", "UPSG", "CNCG", "CMGG", "DNNG", "LACG")},
+    **{symbol: "YieldMax SEC liquidation supplement; trading ceased after 2026-06-15"
+       for symbol in ("FEAT", "FIVY")},
     **{symbol: "WEBs SEC liquidation supplement; trading halted after 2026-08-26"
        for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
     "USML": "UBS redemption settled 2026-08-19",
@@ -75,6 +79,9 @@ YAHOO_ENDED_SECURITIES = {
     "230360.KQ": "KRX final cash share exchange notice; delisted 2026-06-30",
 }
 YAHOO_SECURITY_END_DATES = {
+    **{symbol: "2026-07-29" for symbol in
+       ("HWAY", "AXPG", "ABNG", "UPSG", "CNCG", "CMGG", "DNNG", "LACG")},
+    "FEAT": "2026-06-16", "FIVY": "2026-06-16",
     **{symbol: "2026-08-27" for symbol in
        ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
     "USML": "2026-08-19", "QRVO": "2026-10-05", "WBD": "2026-10-06",
@@ -86,6 +93,10 @@ YAHOO_SECURITY_END_DATES = {
     "012510.KS": "2026-07-15", "230360.KQ": "2026-06-30",
 }
 YAHOO_LIFECYCLE_SOURCES = {
+    **{symbol: "https://www.globenewswire.com/news-release/2026/07/17/3329085/0/en/themes-etfs-and-leverage-shares-by-themes-closing-etfs-due-to-lack-of-assets.html"
+       for symbol in ("HWAY", "AXPG", "ABNG", "UPSG", "CNCG", "CMGG", "DNNG", "LACG")},
+    **{symbol: "https://www.sec.gov/Archives/edgar/data/1924868/000199937126011686/ym_497-052926.htm"
+       for symbol in ("FEAT", "FIVY")},
     "MAPP": "https://www.sec.gov/Archives/edgar/data/1860434/000119312526353573/d180613d497.htm",
     **{symbol: "https://www.sec.gov/Archives/edgar/data/1580843/000121390026090266/ea0302118-01_497.htm"
        for symbol in ("DVIN", "DVRE", "DVUT", "DVXB", "DVXC", "DVXE", "DVXF", "DVXK", "DVXP", "DVXV", "DVXY")},
