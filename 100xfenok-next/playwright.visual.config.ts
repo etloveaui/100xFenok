@@ -50,7 +50,8 @@ return defineConfig({
     trace: isLiveObservation ? "off" : "retain-on-failure",
     screenshot: isLiveObservation ? "off" : "only-on-failure",
     video: "off",
-    extraHTTPHeaders: liveRequestHeaders(),
+    // Live observations add this header through a same-origin route only.
+    extraHTTPHeaders: isLiveObservation ? {} : liveRequestHeaders(),
     launchOptions: {
       args: ["--hide-scrollbars", "--disable-features=Translate"],
       ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),
