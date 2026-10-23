@@ -3027,7 +3027,7 @@ export function runCostGate({ planClassA, planClassB, planBytes, env, timeoutMs 
     // A gate child that never returns used to park the publisher (and the
     // global writer lock it holds) until the job timeout. Bound it: on expiry
     // the child is killed and the gate resolves as measurement-unverified,
-    // which remains visible as unverified while publication may continue.
+    // which fails closed through the existing exit-3 path.
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
@@ -3059,8 +3059,8 @@ export function runCostGate({ planClassA, planClassB, planBytes, env, timeoutMs 
 // The gate answers three different things and used to record two of them the
 // same way. "blocked" means it measured a breach; "unverified" means it could
 // not measure at all, which was every block in recorded history up to
-// 2026-08-21. Only a measured breach stops publication; unverified stays
-// explicit in the outcome instead of being reported as OK.
+// 2026-08-21. Both still stop publication - see gateBlocksPublication - but the
+// record now says which happened.
 export const GATE_MEASUREMENT_UNVERIFIED_EXIT = 3;
 
 export function gateVerdict(gate) {
@@ -3246,11 +3246,10 @@ export function familyDeclaresStrictGate(familyName) {
   return Boolean(PLANE_PUBLISHER_EXCEPTIONS[familyName]?.strict_gate);
 }
 
-// Owner 2026-10-23: measurement outages must not stop valid publication.
-// Keep measured breaches and each family's measured-warning policy intact.
-// Destructive retention and rollback retain their separate admission checks.
+// An unverifiable measurement still blocks, for strict and tolerant families
+// alike. Relaxing fail-closed admission requires an owner decision; distinguishing
+// an unverified measurement from a measured breach does not change that policy.
 export function gateBlocksPublication({ gateCode, strictGate }) {
-  if (gateCode === GATE_MEASUREMENT_UNVERIFIED_EXIT) return false;
   return strictGate ? gateCode !== 0 : (gateCode !== 0 && gateCode !== 1);
 }
 
@@ -3749,14 +3748,10 @@ export async function runPublisherCli({
     if (!args.json && gateBefore.stdout.trim()) {
       stderr(gateBefore.stdout.trim());
     }
-    if (gateBefore.code === GATE_MEASUREMENT_UNVERIFIED_EXIT) {
-      if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
-      stderr("publish-cloud-data-generation: WARNING cost measurement unverified; continuing publication with unverified outcome evidence");
-    }
     // Gate strictness is per family and declared in the registry. Tolerant
     // families keep exactly their existing behaviour, where exit 1 is the
     // script's 70% WARN and publication proceeds. A strict family treats ANY
-    // measured nonzero code as a block — the 70% warn is already tighter than the
+    // nonzero code as a block — the 70% warn is already tighter than the
     // owner's 80% stop, and for the first publication of the largest payload in
     // the estate the conservative reading is the correct one. Strictness also
     // ignores --tolerate-gate-block, so a manual dispatch cannot reintroduce
@@ -3869,10 +3864,6 @@ export async function runPublisherCli({
         planBytes: plannedBytes,
         env,
       });
-      if (gateBefore.code === GATE_MEASUREMENT_UNVERIFIED_EXIT) {
-        if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
-        stderr("publish-cloud-data-generation: WARNING incremental cost measurement unverified; continuing with unverified outcome evidence");
-      }
       if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
         if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
         stderr(`publish-cloud-data-generation: incremental storage plan blocked (exit ${gateBefore.code}); no write attempted`);

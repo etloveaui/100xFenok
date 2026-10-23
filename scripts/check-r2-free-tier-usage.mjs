@@ -5,7 +5,7 @@
 // costs warn at KRW 5,000 and block at KRW 8,000, leaving headroom for other
 // services/tax. 1,500 KRW/USD is a conservative planning rate, not live FX.
 // Retain the existing 40/70 GB storage limits. This is not an account billing cap.
-// Unverified measurements warn without blocking publication; measured breaches block.
+// Unknown measurements still block publication.
 //
 // One shared deadline covers billing, analytics, all inventory pages and retries
 // (default 60s; R2_MEASURE_FETCH_TIMEOUT_MS overrides the measurement budget).

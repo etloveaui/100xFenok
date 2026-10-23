@@ -23,8 +23,8 @@
 // and a bounded attempt count. It was the only Retry-After reader in the repo.
 // That policy is now shared rather than duplicated, so the two cannot drift.
 //
-// Owner 2026-10-23 permits publication on an unverified measurement while
-// preserving its distinct outcome and blocking measured breaches.
+// Unverified measurements still block publication for strict and tolerant
+// families. Changing that policy requires an owner decision.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -174,12 +174,12 @@ assert.ok(
   "the shard schema must accept the verdict the publisher now writes, or every record fails validation",
 );
 
-// --- Measurement outages warn; measured breaches still block -----------------
+// --- Unverified measurements and measured breaches both block ----------------
 for (const strictGate of [true, false]) {
   assert.equal(
     gateBlocksPublication({ gateCode: GATE_MEASUREMENT_UNVERIFIED_EXIT, strictGate }),
-    false,
-    `an unverifiable measurement must not block publication (strict=${strictGate})`,
+    true,
+    `an unverifiable measurement must still block (strict=${strictGate}); relaxing it is an owner call`,
   );
   assert.equal(gateBlocksPublication({ gateCode: 2, strictGate }), true);
   assert.equal(gateBlocksPublication({ gateCode: 0, strictGate }), false);
