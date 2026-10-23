@@ -14,6 +14,7 @@ export type PostCatalogEntry = {
 };
 
 const NATIVE_POSTS = {
+  "/posts-raw/2026-02-21_tariff-ruling-comprehensive.html": "tariff",
   "/posts-raw/2025-06-30_Alpha_Pick_RMD/2025-06-30_Alpha_Pick_RMD-main.html": "rmd",
   "/posts-raw/2025-06-23_stablecoin-revolution-complete-masterplan.html": "stablecoin",
   "/posts-raw/2025-06-22_playbook.html": "playbook",
