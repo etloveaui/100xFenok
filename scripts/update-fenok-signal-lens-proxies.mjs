@@ -16,9 +16,30 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildOccFreshnessMarker } from "./fetch-fenok-occ-options-volume.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
+
+function publicationReadiness({ finraState, occPayload, finraSucceeded, occSucceeded, runId, runAttempt }) {
+  const finra = finraSucceeded && Array.isArray(finraState?.retry_set)
+    && finraState.retry_set.length === 0
+    && Boolean(finraState.items?.regsho_daily?.current?.source_as_of)
+    && Object.values(finraState.items).every(item => item.retry !== true);
+  const attempt = occPayload?.current_attempt;
+  let occ = false;
+  if (occSucceeded && attempt?.attempt_ref === String(runId)
+    && Number(attempt.attempt_number) === Number(runAttempt)
+    && Number(attempt.selected_tickers) > 0) {
+    try {
+      buildOccFreshnessMarker({ candidateDocument: occPayload, generatedAt: occPayload.generated_at });
+      occ = true;
+    } catch { /* No valid, provider-bound rows: retain the published marker. */ }
+  }
+  // Retry tracks the unserved target, not whether a usable fallback can be
+  // published. Historical holes remain diagnostics, never a publication gate.
+  return { finra, occ };
+}
 
 function parseArgs(argv) {
   const args = {
@@ -251,4 +272,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 export {
   buildPlan,
   parseArgs,
+  publicationReadiness,
 };

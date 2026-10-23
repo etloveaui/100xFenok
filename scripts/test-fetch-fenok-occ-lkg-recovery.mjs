@@ -15,12 +15,14 @@ import {
   occFreshnessMarkerSourceAsOf,
   occOutputSourceAsOf,
   parseArgs,
+  publicSlimAvailability,
   shouldManageOccLkg,
   validOccFreshnessMarker,
   validOccOutputDocument,
 } from "./fetch-fenok-occ-options-volume.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
+import { publicationReadiness } from "./update-fenok-signal-lens-proxies.mjs";
 
 function naturalRun(runId, observedAt) {
   return { runId, runAttempt: 1, eventName: "schedule", observedAt };
@@ -109,6 +111,33 @@ function outputDocument(sourceDate, runId = "run") {
 }
 
 const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "provider failed" })];
+
+// A failed target must not freeze a newer usable fallback or independent FINRA.
+{
+  const occPayload = outputDocument("2026-10-21", "publication-run");
+  Object.assign(occPayload.current_attempt, {
+    status: "degraded_walkback", target_source_date: "2026-10-22", fallback_active: true,
+    missing_day_backfill: { outside_lookback_holes: ["2026-09-15"] },
+  });
+  const input = {
+    finraState: { retry_set: [], items: { regsho_daily: { current: { source_as_of: "2026-10-22" }, retry: false } } },
+    occPayload, finraSucceeded: true, occSucceeded: true, runId: "publication-run", runAttempt: 1,
+  };
+  assert.deepEqual(publicationReadiness(input), { finra: true, occ: true });
+  assert.deepEqual(publicationReadiness({ ...input, occSucceeded: false }), { finra: true, occ: false });
+  assert.deepEqual(publicationReadiness({ ...input, finraSucceeded: false }), { finra: false, occ: true });
+  assert.deepEqual(publicationReadiness({ ...input, runId: "later-run" }), { finra: true, occ: false });
+  assert.deepEqual(publicationReadiness({ ...input, runAttempt: 2 }), { finra: true, occ: false });
+  const marker = publicSlimAvailability({
+    source_date: "20261019", current_attempt: occPayload.current_attempt, rows: [], side_attempts: [],
+  });
+  assert.equal(marker.source_date, "20261021", "backfill must not regress the served source date");
+  assert.equal(marker.current_attempt.status, "degraded_walkback");
+  assert.equal(Object.hasOwn(marker, "rows"), false);
+  assert.equal(Object.hasOwn(marker, "side_attempts"), false);
+  assert.deepEqual(publicationReadiness({ ...input, occPayload: { ...occPayload, rows: [] } }),
+    { finra: true, occ: false });
+}
 
 // Sequential all-eligible runs finalize recovery state on the last batch only.
 {

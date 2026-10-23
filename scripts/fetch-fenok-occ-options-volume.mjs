@@ -685,8 +685,16 @@ function writeJson(relPath, payload) {
   fs.writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
-function writePublicSlimAvailability(availability) {
+function publicSlimAvailability(availability) {
   const { rows, side_attempts, ...slim } = availability ?? {};
+  // The last fetched date may be an older backfill. Date the public marker
+  // by the rows actually served across this run's non-empty batches.
+  const servedDate = availability?.current_attempt?.served_source_date;
+  return { ...slim, source_date: servedDate ? servedDate.replaceAll("-", "") : slim.source_date };
+}
+
+function writePublicSlimAvailability(availability) {
+  const slim = publicSlimAvailability(availability);
   const abs = path.join(repoRoot, PUBLIC_AVAILABILITY_FILE);
   ensureDir(abs);
   fs.writeFileSync(abs, `${JSON.stringify(slim, null, 2)}\n`, "utf8");
@@ -2384,6 +2392,7 @@ export {
   parseControlledFailureLanes,
   parseArgs,
   planOccMissingDayBackfill,
+  publicSlimAvailability,
   reduceOccEndpointResults,
   reportOccThresholdStopDiagnostic,
   retainLatestTickerSourceDates,
