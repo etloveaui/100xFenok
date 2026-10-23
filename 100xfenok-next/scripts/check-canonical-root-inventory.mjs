@@ -631,15 +631,6 @@ function ownerFamilyForHighRisk(row) {
       first_action: "preserve the current-facts LLM guide at /llm-guide.html; re-verify route facts before any future replacement",
     });
   }
-  if (pathName === "/tools/asset/multichart.html") {
-    return family({
-      id: "multichart_legacy_tool",
-      owner_route: "/multichart",
-      compatibility_route: "/macro-chart",
-      owner_area: "macro_chart_workbench",
-      first_action: "compare legacy multichart tool with macro/multichart owners before any redirect proposal",
-    });
-  }
   return null;
 }
 

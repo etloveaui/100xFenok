@@ -33,7 +33,6 @@ async function inspectStaticContracts() {
     etfsClientSource,
     stockPageSource,
     multichartPageSource,
-    multichartHtmlSource,
     shellSource,
     shellStyleSource,
     productNavSource,
@@ -57,7 +56,6 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/app/etfs/EtfPageClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/stock/[ticker]/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/multichart/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
     readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/styles/app-shell.css", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/product-nav.ts", import.meta.url), "utf8"),
@@ -314,8 +312,8 @@ async function inspectStaticContracts() {
   ) {
     addFailure(failures, "multichart-route", "multichart must render the fused stock-compare Macro Chart mode instead of redirecting or iframe-only legacy");
   }
-  if (!multichartHtmlSource.includes("stooq-proxy.etloveaui.workers.dev") || !multichartHtmlSource.includes("stooq_cache_") || !macroSource.includes("MARKET_COMPARE_LENSES")) {
-    addFailure(failures, "multichart-stooq-worker", "Stooq Worker proxy + 24h cache contract missing");
+  if (!macroSource.includes("MARKET_COMPARE_LENSES")) {
+    addFailure(failures, "multichart-compare-lenses", "Native stock comparison lenses missing");
   }
   for (const label of ["시장 비교", "수익률 비교", "실제 가격", "벤치마크 대비", "+ 티커 추가"]) {
     if (!macroSource.includes(label)) {

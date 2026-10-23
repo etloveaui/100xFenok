@@ -1,17 +1,10 @@
 const fs = require('fs');
 const assert = require('assert');
 
-const html = fs.readFileSync('tools/asset/multichart.html', 'utf8');
-
-// Test 1: responsive grid class
-assert(html.includes('md:grid-cols-3'), 'Responsive grid class missing');
-
-// Test 2: y-axis tick callback formatting
-assert(html.includes('maximumFractionDigits: 2'), 'Tick format limit missing');
-assert(html.includes("'$' + fmt") && html.includes("fmt + '%'"), 'Tick format unit missing');
-
-// Test 3: arrow icons in summary table
-assert(html.includes('▲') && html.includes('▼'), 'Arrow icons missing');
+// The native route owns stock comparison; the orphan HTML is retired.
+const multichartPage = fs.readFileSync('100xfenok-next/src/app/multichart/page.tsx', 'utf8');
+assert(multichartPage.includes('MacroChartClient'), 'Native multichart client missing');
+assert(multichartPage.includes('initialMode="stock-compare"'), 'Stock comparison mode missing');
 
 // Legacy GitHub Pages SPA root has been retired; content folders remain as
 // static sources for the Next/OpenNext application.
