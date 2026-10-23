@@ -13,10 +13,6 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-function expectedSandboxServiceWorkerError(routeName: string, message: string): boolean {
-  return routeName === "digest" && /service\s*worker/i.test(message)
-    && /sandbox/i.test(message) && /allow-same-origin/i.test(message);
-}
 test.beforeAll(async ({ request }) => {
   if (!process.env.QA_BASE_URL) throw new Error("Live observation requires QA_BASE_URL");
   const { liveRequestHeaders } = await import("../../../scripts/lib/live-request-headers.mjs");
@@ -64,21 +60,16 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
       test(name, async ({ page }, testInfo) => {
         const route = staticPath ?? (editionDates[name] ? `/brief/${name}/${editionDates[name]}` : null);
         const pageErrors: string[] = [];
-        const expectedPageErrors: string[] = [];
-        const unexpectedPageErrors: string[] = [];
         const consoleErrors: Array<{ text: string; location: unknown }> = [];
         const failedRequests: Array<{ url: string; method: string; error: string | null }> = [];
         const httpErrors: Array<{ url: string; status: number }> = [];
         const observation: Record<string, unknown> = {
           name, route, viewport, observed_at: new Date().toISOString(),
-          briefing_index_error: indexError, pageErrors, expectedPageErrors, unexpectedPageErrors, consoleErrors, failedRequests, httpErrors,
+          briefing_index_error: indexError, pageErrors, consoleErrors, failedRequests, httpErrors,
           expected_data_notes: "Anonymous /api/user/me 401 and partial-data source-date badges are observations, not failures.",
           date_interpretation: "Raw visible dates; compare with source cadence/calendar, not simply today.",
         };
-        page.on("pageerror", error => {
-          pageErrors.push(error.message);
-          (expectedSandboxServiceWorkerError(name, error.message) ? expectedPageErrors : unexpectedPageErrors).push(error.message);
-        });
+        page.on("pageerror", error => pageErrors.push(error.message));
         page.on("console", message => {
           if (message.type() === "error") consoleErrors.push({ text: message.text(), location: message.location() });
         });
@@ -96,6 +87,15 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
           await page.locator("main").first().waitFor({ state: "visible", timeout: 15_000 });
           await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
           await page.waitForTimeout(1500);
+          if (name === "screener" || name === "screener-detail") {
+            const tools = page.locator('[data-screener-analysis-tools="true"]');
+            await expect(tools).toBeVisible();
+            await expect(tools.getByRole("button", { name: /^필터 분석 CSV \(/ })).toBeVisible();
+            await expect(tools.getByRole("button", { name: /^선택 분석 CSV \(/ })).toBeVisible();
+            await expect(tools.locator("summary")).toHaveText("종목 · 섹터 · 국가 비교 (최대 4개)");
+            await expect(tools.locator("summary")).toBeVisible();
+            observation.analysis_tools = await tools.innerText();
+          }
           if (name === "screener-detail") {
             // The ticker query filters rows; expanding the row opens the panel.
             if (viewport.width === 412) {
@@ -188,7 +188,7 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
           expect(response?.status(), "document HTTP status").toBeLessThan(400);
           expect(await page.locator("main").first().innerText(), "main must contain visible text").not.toMatch(/^\s*$/);
           if (name === "screener-detail") expect(observation.detail_panel_visible, "NVDA detail panel").toBe(true);
-          expect(unexpectedPageErrors, "uncaught page errors excluding the recorded digest sandbox serviceWorker restriction").toEqual([]);
+          expect(pageErrors, "uncaught page errors").toEqual([]);
         } catch (error) { failure = String(error); }
         finally {
           observation.final_url = page.url();

@@ -60,7 +60,8 @@ return defineConfig({
   projects: isLiveObservation ? [{
     name: "live-observation",
     testMatch: "live-observation.spec.ts",
-    use: { browserName: "chromium", deviceScaleFactor: 1 },
+    // Blocking injects a navigator.serviceWorker read into sandboxed srcdoc frames.
+    use: { browserName: "chromium", deviceScaleFactor: 1, serviceWorkers: "allow" },
   }] : [
     {
       name: "desktop-1440",
