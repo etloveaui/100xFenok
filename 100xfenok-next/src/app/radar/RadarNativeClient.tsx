@@ -186,7 +186,7 @@ function CardShell({
 
 export default function RadarNativeClient({ initialCategory }: { initialCategory: RadarCategory }) {
   const category = initialCategory;
-  const { flow, stress, banking, sentiment, retry } = useRadarData();
+  const { flow, stress, banking, credit, sentiment, retry } = useRadarData();
 
   const cards = [
     { id: "flow", group: "liquidity" as const },
@@ -331,6 +331,23 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                 </dl>
               </div>
             ) : null}
+            <details className="mt-4" data-radar-credit-detail="true">
+              <summary className="cursor-pointer text-sm font-bold text-slate-700">분기 신용 상세 · 연체율 / 순상각률</summary>
+              <p className="mt-2 text-xs text-slate-500">FRED · 단위 % · 전분기 변화 %p · 기준일은 각 시리즈의 관측일</p>
+              {credit.state !== "ready" ? <StateNote state={credit.state} onRetry={retry} /> : (
+                <dl className="mt-2 space-y-2">
+                  {credit.series.map((series) => {
+                    const latest = series.points.at(-1);
+                    const previous = series.points.at(-2);
+                    const delta = latest && previous ? latest.val - previous.val : null;
+                    return <div key={series.id} className="rounded-lg bg-slate-50 p-2 text-xs">
+                      <dt className="font-bold text-slate-700">{series.label}</dt>
+                      <dd className="mt-1 text-slate-600">{latest ? `${latest.val.toFixed(2)}% · ${latest.date}` : "관측 없음"}{delta !== null ? ` · 전분기 ${delta >= 0 ? "+" : ""}${delta.toFixed(2)}%p` : ""}</dd>
+                    </div>;
+                  })}
+                </dl>
+              )}
+            </details>
           </CardShell>
         )}
 

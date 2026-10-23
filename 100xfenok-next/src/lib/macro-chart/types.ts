@@ -20,11 +20,11 @@ export type MacroSeriesUnitKind =
   | "usd"
   | "contracts";
 
-export type MacroSeriesFrequency = "daily" | "weekly" | "monthly" | "quarterly";
+export type MacroSeriesFrequency = "daily" | "weekly" | "monthly" | "quarterly" | "annual";
 
 export type MacroValueTransform = "raw" | "change" | "pctChange" | "yoy" | "rebase100";
 
-export type MacroOutputFrequency = "daily" | "weekly" | "monthly" | "quarterly";
+export type MacroOutputFrequency = "daily" | "weekly" | "monthly" | "quarterly" | "annual";
 
 export type MacroAggregation = "average" | "sum" | "end";
 
@@ -36,6 +36,7 @@ export interface MacroSeriesViewOptions {
 export type MacroSeriesSourceKind = "local-json" | "stooq";
 
 export type MacroSeriesAccessor =
+  | { kind: "annualInflation" }
   | {
       kind: "array";
       valueKey: string;

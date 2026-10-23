@@ -17,7 +17,23 @@ import type {
 
 export type CardState = "loading" | "ready" | "missing" | "failed";
 
+export type CreditDetail = { id: string; label: string; points: SeriesPoint[] };
+
+export const CREDIT_SERIES = [
+  ["DRALACBN", "전체 대출 연체율"],
+  ["DRCCLACBS", "신용카드 연체율"],
+  ["DRCLACBS", "소비자 대출 연체율"],
+  ["DRBLACBS", "기업 대출 연체율"],
+  ["DRCRELEXFACBS", "상업용 부동산 연체율"],
+  ["CORALACBN", "전체 대출 순상각률"],
+  ["CORCCACBS", "신용카드 순상각률"],
+  ["CORCACBS", "소비자 대출 순상각률"],
+  ["CORBLACBS", "기업 대출 순상각률"],
+  ["CORCREXFACBS", "상업용 부동산 순상각률"],
+] as const;
+
 export type RadarData = {
+  credit: { state: CardState; series: CreditDetail[] };
   flow: { state: CardState; snapshot: FlowSnapshot | null };
   stress: { state: CardState; snapshot: StressSnapshot | null };
   banking: { state: CardState; snapshot: BankingSnapshot | null };
@@ -49,6 +65,7 @@ function fredSeries(file: FredFile | null, id: string, days?: number): SeriesPoi
     return `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
   })() : null;
   return rows
+    .filter((row) => row?.value !== null && row?.value !== undefined && row?.value !== "")
     .map((row) => ({ date: row?.date ?? "", val: Number(row?.value) }))
     .filter((row) => (start === null || row.date >= start) && row.date.length === 10 && Number.isFinite(row.val));
 }
@@ -61,6 +78,7 @@ function latestValue(rows: Array<Record<string, unknown>>, key: string): number 
 
 export function useRadarData(): RadarData {
   const [nonce, setNonce] = useState(0);
+  const [credit, setCredit] = useState<RadarData["credit"]>({ state: "loading", series: [] });
   const [flow, setFlow] = useState<RadarData["flow"]>({ state: "loading", snapshot: null });
   const [stress, setStress] = useState<RadarData["stress"]>({ state: "loading", snapshot: null });
   const [banking, setBanking] = useState<RadarData["banking"]>({ state: "loading", snapshot: null });
@@ -70,6 +88,7 @@ export function useRadarData(): RadarData {
 
   useEffect(() => {
     let cancelled = false;
+    setCredit({ state: "loading", series: [] });
     setFlow({ state: "loading", snapshot: null });
     setStress({ state: "loading", snapshot: null });
     setBanking({ state: "loading", snapshot: null });
@@ -86,6 +105,8 @@ export function useRadarData(): RadarData {
         getJson<StableFile>("/data/macro/stablecoins.json"),
       ]);
       if (cancelled) return;
+      const creditSeries = CREDIT_SERIES.map(([id, label]) => ({ id, label, points: fredSeries(fredQuarterly, id).sort((a, b) => a.date.localeCompare(b.date)) }));
+      setCredit({ state: !fredQuarterly ? "failed" : creditSeries.some((series) => series.points.length) ? "ready" : "missing", series: creditSeries });
       const reached = [fredMacro, fredDaily, fredWeekly, fredQuarterly, tga, fdic, stable].some(Boolean);
 
       // Keep the full monthly series so calendar-year matching never depends
@@ -192,5 +213,5 @@ export function useRadarData(): RadarData {
     };
   }, [nonce]);
 
-  return { flow, stress, banking, sentiment, retry };
+  return { flow, stress, banking, credit, sentiment, retry };
 }

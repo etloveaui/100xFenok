@@ -30,6 +30,7 @@ const catalog = catalogJson as unknown as {
 };
 
 function accessorFromPathShape(pathShape: string): MacroSeriesAccessor {
+  if (pathShape === "$.inflation[] {year,rate}") return { kind: "annualInflation" };
   if (pathShape.includes("bullish-bearish")) return { kind: "arrayDerived", derive: "aaii_spread" };
   const activity = pathShape.match(/^\$\.datasets\.([^.]+)\.records\[\]\.values\.([^\s]+)$/);
   if (activity) return { kind: "activity", dataset: activity[1], valueKey: activity[2] };

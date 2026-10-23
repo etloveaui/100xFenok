@@ -33,6 +33,7 @@ export interface LoadedMacroSeries {
   rawPoints: MacroRawPoint[];
   transformedPoints: MacroRawPoint[];
   error?: string;
+  sourceUpdated?: string;
 }
 
 export interface MacroChartWindow {
@@ -82,6 +83,7 @@ const FREQUENCY_RANK: Record<MacroOutputFrequency, number> = {
   weekly: 1,
   monthly: 2,
   quarterly: 3,
+  annual: 4,
 };
 
 function isoWeekStart(iso: string): string {
@@ -93,6 +95,7 @@ function isoWeekStart(iso: string): string {
 }
 
 function bucketKey(date: string, frequency: MacroOutputFrequency): string {
+  if (frequency === "annual") return date.slice(0, 4);
   if (frequency === "daily") return date;
   if (frequency === "weekly") return isoWeekStart(date);
   if (frequency === "monthly") return date.slice(0, 7);
@@ -200,6 +203,12 @@ function extractActivity(payload: unknown, accessor: Extract<MacroSeriesAccessor
 }
 
 function extractPoints(payload: unknown, accessor: MacroSeriesAccessor): MacroRawPoint[] {
+  if (accessor.kind === "annualInflation") {
+    return rowsToPoints(asArray(asRecord(payload).inflation).map((row) => {
+      const record = asRecord(row);
+      return { date: String(record.year ?? ""), value: record.rate };
+    }), "value").filter((point) => /^\d{4}$/.test(point.date));
+  }
   if (accessor.kind === "array") {
     return rowsToPoints(asArray(payload), accessor.valueKey, accessor.dateKey);
   }
@@ -280,7 +289,8 @@ export async function loadMacroSeries(
   return extracted.map(({ definition, rawPoints, error }) => {
     const transform = transforms.get(definition.id) ?? definition.defaultTransform ?? "raw";
     const options = viewOptions.get(definition.id);
-    const outputFrequency = options?.frequency ?? definition.frequency;
+    const requestedFrequency = options?.frequency ?? definition.frequency;
+    const outputFrequency = FREQUENCY_RANK[requestedFrequency] < FREQUENCY_RANK[definition.frequency] ? definition.frequency : requestedFrequency;
     const aggregation = options?.aggregation ?? "average";
     const windowPoints = cutoffPoints(rawPoints, anchor, window);
     const aggregatedPoints = aggregateMacroPoints(windowPoints, definition.frequency, outputFrequency, aggregation);
@@ -288,7 +298,9 @@ export async function loadMacroSeries(
       ? definition
       : { ...definition, frequency: outputFrequency };
     const transformedPoints = downsampleMacroPoints(applyMacroTransform(aggregatedPoints, transform, transformDefinition));
-    return { definition, transform, outputFrequency, aggregation, rawPoints: windowPoints, transformedPoints, error };
+    const updated = asRecord(payloads.get(definition.sourcePath)).updated;
+    const sourceUpdated = typeof updated === "string" ? updated : undefined;
+    return { definition, transform, outputFrequency, aggregation, rawPoints: windowPoints, transformedPoints, error, sourceUpdated };
   });
 }
 
@@ -314,6 +326,7 @@ const EXPECTED_CADENCE_MS: Record<MacroOutputFrequency, number> = {
   weekly: 7 * 86_400_000,
   monthly: 31 * 86_400_000,
   quarterly: 92 * 86_400_000,
+  annual: 366 * 86_400_000,
 };
 
 const GAP_THRESHOLD_MULTIPLIER: Record<MacroOutputFrequency, number> = {
@@ -321,6 +334,7 @@ const GAP_THRESHOLD_MULTIPLIER: Record<MacroOutputFrequency, number> = {
   weekly: 1.8,
   monthly: 1.6,
   quarterly: 1.6,
+  annual: 1.6,
 };
 
 function marketPointsWithCadenceGaps(item: LoadedMacroSeries): MarketChartSeries["points"] {

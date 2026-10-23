@@ -5,6 +5,7 @@ function isFiniteValue(value: number | null | undefined): value is number {
 }
 
 function yoyLag(definition: MacroSeriesDefinition): number {
+  if (definition.frequency === "annual") return 1;
   if (definition.frequency === "quarterly") return 4;
   if (definition.frequency === "monthly") return 12;
   if (definition.frequency === "weekly") return 52;

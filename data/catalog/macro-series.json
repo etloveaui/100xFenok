@@ -18,6 +18,7 @@
     { "surface": "portfolio", "href": "/portfolio?macro=risk-liquidity", "groups": ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"] }
   ],
   "series": [
+    {"id": "us_inflation_annual", "label": "미국 연간 인플레이션", "short_label": "연간 인플레이션", "group": "activity", "unit": "percent", "frequency": "annual", "source_path": "/data/slickcharts/inflation.json", "path_shape": "$.inflation[] {year,rate}", "description": "Slickcharts 연도별 인플레이션 (%). 현재 연도 값은 연말 확정치가 아닙니다."},
     { "id": "sp500", "label": "S&P 500", "short_label": "S&P 500", "group": "equity", "unit": "index", "frequency": "daily", "source_path": "/data/indices/sp500.json", "path_shape": "$[] {date,value}", "default_transform": "rebase100" },
     { "id": "nasdaq", "label": "Nasdaq", "short_label": "Nasdaq", "group": "equity", "unit": "index", "frequency": "daily", "source_path": "/data/indices/nasdaq.json", "path_shape": "$[] {date,value}", "default_transform": "rebase100" },
     { "id": "vix", "label": "VIX", "group": "sentiment", "unit": "index", "frequency": "daily", "source_path": "/data/sentiment/vix.json", "path_shape": "$[] {date,value}" },
@@ -55,6 +56,7 @@
     { "id": "ism_services_headline", "label": "ISM Services", "short_label": "ISM Services", "group": "activity", "unit": "index", "frequency": "monthly", "source_path": "/data/macro/activity-surveys.json", "path_shape": "$.datasets.ism_services.records[].values.headline" }
   ],
   "presets": [
+    { "id": "inflation", "label": "연간 인플레이션", "series": ["us_inflation_annual:raw"] },
     { "id": "risk-liquidity", "label": "리스크와 유동성", "series": ["sp500:rebase100", "DGS10:raw", "HY_spread:raw", "M2SL:yoy"] },
     { "id": "liquidity", "label": "유동성", "series": ["WALCL:rebase100", "WRESBAL:rebase100", "RRPONTSYD:rebase100", "tga:rebase100", "stablecoins:rebase100"] },
     { "id": "activity", "label": "경기활동", "series": ["oecd_cli_us:raw", "pmi_mfg_us_sp:raw", "ism_mfg_headline:raw", "ism_services_headline:raw"] },

@@ -110,7 +110,7 @@ const NBER_RECESSION_DATE_BANDS: readonly MarketChartDateBand[] = NBER_US_RECESS
 );
 const MACRO_RANGE_IDS = new Set(MACRO_RANGES.map((range) => range.id));
 const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "change", "pctChange", "yoy", "rebase100"]);
-const MACRO_FREQUENCY_IDS = new Set<MacroOutputFrequency>(["daily", "weekly", "monthly", "quarterly"]);
+const MACRO_FREQUENCY_IDS = new Set<MacroOutputFrequency>(["daily", "weekly", "monthly", "quarterly", "annual"]);
 const MACRO_AGGREGATION_IDS = new Set<MacroAggregation>(["average", "sum", "end"]);
 const MACRO_AXIS_IDS = new Set(["auto", "left", "right"]);
 const MACRO_COLOR_OPTIONS = okabeItoPalette.slice(0, 6);
@@ -428,7 +428,7 @@ const MACRO_TOP_LENSES = [
       macroContextId: "sentiment" as const,
     },
   },
-  { id: "inflation", label: "인플레이션", unavailable: "인플레이션 시리즈는 아직 없습니다" },
+  { id: "inflation", label: "인플레이션", state: { selected: [{ id: "us_inflation_annual", transform: "raw" as const }], rangeId: "MAX", axisById: {}, macroContextId: "activity" as const } },
   {
     id: "rates-credit",
     label: "금리·신용",
@@ -826,6 +826,7 @@ const MACRO_FREQUENCY_DISPLAY_LABELS: Record<MacroSeriesDefinition["frequency"],
   weekly: "주간",
   monthly: "월간",
   quarterly: "분기",
+  annual: "연간",
 };
 
 const MACRO_UNIT_DISPLAY_LABELS: Record<MacroSeriesDefinition["unit"], string> = {
@@ -867,6 +868,7 @@ const MACRO_FREQUENCY_LABELS: Record<MacroOutputFrequency, string> = {
   weekly: "주",
   monthly: "월",
   quarterly: "분기",
+  annual: "연간",
 };
 
 const MACRO_AGGREGATION_LABELS: Record<MacroAggregation, string> = {
@@ -880,6 +882,7 @@ const MACRO_FREQUENCY_RANK: Record<MacroOutputFrequency, number> = {
   weekly: 1,
   monthly: 2,
   quarterly: 3,
+  annual: 4,
 };
 
 function frequencyAvailable(definition: MacroSeriesDefinition, frequency: MacroOutputFrequency) {
@@ -1915,10 +1918,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
 
   const applyTopLens = useCallback((lens: (typeof MACRO_TOP_LENSES)[number]) => {
     setActiveTopLensId(lens.id);
-    if ("unavailable" in lens) {
-      setLimitNotice(lens.unavailable);
-      return;
-    }
     if ("collection" in lens) {
       setSeriesEditorOpen(true);
       window.setTimeout(() => document.querySelector('[data-macro-chart-collections="true"]')?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
@@ -2435,9 +2434,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   type="button"
                   onClick={() => applyTopLens(lens)}
                   aria-pressed={activeTopLensId === lens.id}
-                  disabled={"unavailable" in lens}
-                  title={"unavailable" in lens ? lens.unavailable : undefined}
-                  data-unavailable={"unavailable" in lens ? "true" : undefined}
                 >
                   {lens.label}
                 </button>
@@ -2533,6 +2529,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                             {(["daily", "weekly", "monthly"] as const).map((frequency) => (
                               <button key={frequency} type="button" disabled={!frequencyAvailable(definition, frequency)} aria-pressed={(selection.frequency ?? definition.frequency) === frequency} onClick={() => setFrequency(selection.id, frequency)}>{MACRO_FREQUENCY_LABELS[frequency]}</button>
                             ))}
+                            {definition.frequency === "annual" ? <span>연간 · 연도 기준</span> : null}
                             {definition.frequency === "quarterly" ? <button type="button" aria-pressed={selection.frequency === "quarterly"} onClick={() => setFrequency(selection.id, "quarterly")}>분기</button> : null}
                           </div>
                           <div className="cpw5-macro-v2-aggregation" aria-label="집계">
@@ -2614,7 +2611,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     }}
                     sortLabels
                     spanGaps={false}
-                    xScaleMode="time"
+                    xScaleMode={row.series.every((item) => seriesById(item.id)?.frequency === "annual") ? "category" : "time"}
                     dateBands={showRecessionShading ? NBER_RECESSION_DATE_BANDS : undefined}
                     seriesAreRangeFiltered
                     heightClassName="cpw5-macro-v2-plot"
@@ -2646,6 +2643,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 {activeLoadState.loaded.map((item) => (
                   <span key={item.definition.id} data-series-load-state={item.error ? "failed" : "ready"}>
                     {item.definition.shortLabel} · {sourceDisplayLabel(item.definition)} · {item.error ? "불러오기 실패" : item.transformedPoints.at(-1)?.date ?? "관측 없음"}
+                    {item.definition.frequency === "annual" ? `년 기준 · 연간 % · 갱신 ${item.sourceUpdated ?? "미확인"} · 현재 연도는 연말 확정치가 아닙니다` : null}
                   </span>
                 ))}
               </div>
