@@ -325,9 +325,12 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   const markerBefore = fs.readFileSync(markerPath(root));
   const canonicalBefore = fs.readFileSync(canonicalPath(root));
   const cacheDir = path.join(root, "cache");
+  const eligibleManifest = path.join(root, "eligible.json");
+  fs.writeFileSync(eligibleManifest, JSON.stringify(["NVDA"]));
   let requests = 0;
   const injected = await build(parseArgs([
     "--all-eligible",
+    "--eligible-manifest", eligibleManifest,
     "--batch-size", "1000",
     "--batch-index", "0",
   ]), {
@@ -364,6 +367,7 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
 
   const emptyTail = await build(parseArgs([
     "--all-eligible",
+    "--eligible-manifest", eligibleManifest,
     "--batch-size", "250",
     "--batch-index", "4",
   ]), {
@@ -496,8 +500,10 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
   const recoveredItem = recoveredState.items[OCC_LKG_KEY];
 
 
-  assert.equal(recoveredItem.lkg.source_as_of, "2026-07-14");
+  assert.equal(recoveredItem.lkg.source_as_of, "2026-07-16");
   assert.equal(recoveredItem.current.source_as_of, "2026-07-16");
+  assert.deepEqual(readJson(lkgPath(root)), readJson(markerPath(root)),
+    "successful recovery retains the newly validated marker as LKG");
 }
 
 // Corrupted provider proof is rejected before promotion.
