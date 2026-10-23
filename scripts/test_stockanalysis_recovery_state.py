@@ -254,6 +254,60 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         old["normalized"]["countries"] = [{"name": "United States", "weight": 100}]
         self.assertEqual(etf_detail_regression(new, old), "countries")
 
+    def test_empty_native_chart_recovers_from_bound_archive_without_advancing_its_date(self):
+        from datetime import datetime
+        spec = importlib.util.spec_from_file_location("stockanalysis_chart_fixture", SCRIPT_DIR / "fetch-stockanalysis.py")
+        fetcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fetcher)
+        def detail(day, chart):
+            epoch = int(datetime.fromisoformat(f"{day}T20:00:00+00:00").timestamp())
+            rows = [{"t": "2026-09-30", "c": 10}, {"t": day, "c": 11}]
+            payload = etf_payload("SMZ", f"{day}T20:00:00Z")
+            payload.update(fetched_at=f"{day}T21:00:00Z", raw={
+                "quote": {"td": day, "ts": epoch}, "overview": {"chart": chart},
+                "history_periods": {"daily_1y": rows}})
+            payload["normalized"]["history_periods"] = {"daily_1y": rows}
+            return payload
+        old_chart = {"expiration": 1, "data": [{"t": 1790881200, "c": 11}, {"t": 1790881260, "c": None}]}
+        prior = detail("2026-10-01", old_chart)
+        current = detail("2026-10-02", {"expiration": 2, "data": []})
+        current["raw"]["history_periods"]["daily_1y"].insert(1, {"t": "2026-10-01", "c": 11})
+        class FakeStore:
+            def read_active_domain(self, _domain):
+                return {"current": {}}
+        with (patch.object(fetcher, "OUT_DIR", self.root / "truth/data/stockanalysis"),
+              patch.object(fetcher, "STORAGE_ROOT", self.root / "truth"),
+              patch.object(fetcher, "data_supply_store", return_value=FakeStore())):
+            canonical = fetcher.OUT_DIR / "etfs/SMZ.json"
+            original = write_json(canonical, prior)
+            fetcher.retain_yahoo_etf_history_archive("SMZ", current)
+            self.assertEqual(current["raw"]["overview"]["chart"], old_chart)
+            self.assertEqual(current["raw"]["overview_chart_observation"], {"expiration": 2, "data": []})
+            self.assertEqual(current["source_as_of"], "2026-10-02T20:00:00Z")
+            source = current["field_sources"]["overview_chart"]
+            self.assertEqual(source["status"], "retained")
+            self.assertEqual(source["source_as_of"], fetcher.epoch_source_timestamp(old_chart["data"][0]["t"]))
+            self.assertEqual(source["payload_sha256"], hashlib.sha256(original).hexdigest())
+            self.assertEqual(len(current["normalized"]["history_archive"]), 1)
+            self.assertTrue(validate_etf_history_archive(current))
+            self.assertIsNone(etf_detail_regression(current, prior))
+            # The published regression already has an empty chart, but its
+            # verified native archive still holds the original complete bytes.
+            damaged = json.loads(json.dumps(current))
+            damaged["raw"]["overview"]["chart"] = {"data": []}
+            damaged.pop("field_sources")
+            write_json(canonical, damaged)
+            recovered = json.loads(json.dumps(damaged))
+            fetcher.retain_yahoo_etf_history_archive("SMZ", recovered)
+            self.assertEqual(recovered["raw"]["overview"]["chart"], old_chart)
+            self.assertEqual(recovered["field_sources"]["overview_chart"], source)
+            damaged["normalized"]["history_archive"][0]["source_payload"] += " "
+            write_json(canonical, damaged)
+            rejected = json.loads(json.dumps(damaged))
+            with self.assertRaisesRegex(ValueError, "source binding"):
+                fetcher.retain_yahoo_etf_history_archive("SMZ", rejected)
+            self.assertEqual(rejected["raw"]["overview"]["chart"]["data"], [])
+
     def test_archived_yahoo_daily_series_requires_exact_embedded_bytes(self):
         from datetime import datetime
         raw_rows = [{"t": "2025-10-02", "c": 25.69}, {"t": "2026-10-02", "c": 25.64}]

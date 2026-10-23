@@ -4051,7 +4051,13 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
                 snapshots.append(snapshot)
         if snapshots:
             normalized["holdings_history"] = snapshots
-        missing_native_dates = bool(retained_overview or smaller_complete_portfolio)
+        old_chart = (original.get("raw", {}).get("overview") or {}).get("chart")
+        candidate_chart = raw_overview.get("chart")
+        chart_missing = isinstance(candidate_chart, dict) and candidate_chart.get("data") == []
+        original_chart_retained = ((original.get("field_sources") or {}).get("overview_chart") or {}).get("status") == "retained"
+        missing_native_dates = bool(retained_overview or smaller_complete_portfolio or (
+            chart_missing and isinstance(old_chart, dict) and old_chart.get("data")
+            and not original_chart_retained))
         for period, rows in old_periods.items():
             # Empty optional history has no dates to preserve; malformed nonempty rows still fail.
             old_days = (
@@ -4120,6 +4126,37 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
             for field, stamp in clocks.items()})
     if not validate_etf_history_archive(payload):
         raise ValueError("StockAnalysis ETF history archive is invalid")
+    raw_overview = (payload.get("raw") or {}).get("overview")
+    if isinstance(raw_overview, dict) and isinstance(raw_overview.get("chart"), dict) and raw_overview["chart"].get("data") == []:
+        # An empty intraday response does not erase an independently dated
+        # chart. Only verified native source bytes may supply this component.
+        chart_sources = [(json.loads(body), hashlib.sha256(body).hexdigest()) for body in native_sources]
+        chart_sources.extend((json.loads(item["source_payload"]), item["original_payload_sha256"])
+                             for item in archives if item.get("provider") == "stockanalysis")
+        retained = []
+        for original, digest in chart_sources:
+            if (((original.get("field_sources") or {}).get("overview_chart") or {}).get("status") == "retained"):
+                continue
+            chart = (original.get("raw", {}).get("overview") or {}).get("chart")
+            rows = chart.get("data") if isinstance(chart, dict) else None
+            if not isinstance(rows, list) or not rows:
+                continue
+            priced = [row for row in rows if isinstance(row, dict)
+                      and isinstance(row.get("c"), (int, float)) and not isinstance(row["c"], bool)
+                      and math.isfinite(row["c"]) and row["c"] > 0]
+            stamps = [epoch_source_timestamp(row.get("t")) for row in priced]
+            if (not stamps or any(stamp is None or parse_iso_timestamp(stamp) > parse_iso_timestamp(original["fetched_at"])
+                                  for stamp in stamps)):
+                continue
+            retained.append((max(stamps), digest, chart))
+        if retained:
+            stamp, digest, chart = max(retained, key=lambda row: row[0])
+            payload["raw"]["overview_chart_observation"] = deepcopy(raw_overview["chart"])
+            raw_overview["chart"] = deepcopy(chart)
+            payload.setdefault("field_sources", {})["overview_chart"] = {
+                "provider": "stockanalysis", "source_as_of": stamp,
+                "status": "retained", "payload_sha256": digest,
+            }
 
 
 def validate_stockanalysis_etf_payload(ticker: str, payload: dict) -> None:
