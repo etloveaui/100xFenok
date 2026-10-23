@@ -529,8 +529,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  }
-
   // Ahead of any bridge response: a safe, known-missing post must leave with
   // a real 404 rather than a 200 carrying a not-found body.
   const postsNotFoundRewrite = getPostsNotFoundRewrite(request);
