@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { boundedDiagnosticDetail } from "../lib/diagnostic-detail.mjs";
 
 import {
   GLOBAL_WRITER_GROUP,
@@ -394,7 +395,7 @@ export async function main({ fetchImpl = fetch, loadPolicyImpl = loadPolicy } = 
       repository,
       checkedAtUtc,
       status: "unknown",
-      message: `observation error: ${error.message}`,
+      message: `observation error: ${boundedDiagnosticDetail(error.cause ?? error)}`,
       thresholds: null,
       candidateDepth: null,
       oldestCandidateAgeMinutes: null,
@@ -407,6 +408,7 @@ export async function main({ fetchImpl = fetch, loadPolicyImpl = loadPolicy } = 
     console.error(`[alarm] ${result.metric}: depth=${result.candidateDepth} oldest_age_minutes=${result.oldestCandidateAgeMinutes ?? "unknown"}`);
     process.exitCode = ALERT_EXIT;
   } else if (result.status === "unknown") {
+    console.error(`[unknown] ${result.metric}: ${boundedDiagnosticDetail(result.message)}`);
     process.exitCode = UNKNOWN_EXIT;
   }
   return result;

@@ -13,9 +13,11 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 from typing import Callable
 import uuid
+from lib.diagnostic_detail import bounded_diagnostic_detail
 
 
 PROTOCOL = "stockanalysis-acquire-artifact/v1"
@@ -847,4 +849,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except subprocess.CalledProcessError as error:
+        print(f"stockanalysis-artifact subprocess: {bounded_diagnostic_detail(error.stderr or error)}", file=sys.stderr)
+        raise

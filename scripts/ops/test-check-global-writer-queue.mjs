@@ -263,6 +263,9 @@ const stockanalysisPolicy = {
 {
   const previousRepository = process.env.GITHUB_REPOSITORY;
   process.env.GITHUB_REPOSITORY = "octo/repo";
+  const diagnostics = [];
+  const originalError = console.error;
+  console.error = message => diagnostics.push(message);
   const result = await main({
     loadPolicyImpl: () => stockanalysisPolicy,
     fetchImpl: async () => ({
@@ -271,9 +274,12 @@ const stockanalysisPolicy = {
       async json() { return { message: "service unavailable" }; },
     }),
   });
+  console.error = originalError;
   if (previousRepository === undefined) delete process.env.GITHUB_REPOSITORY;
   else process.env.GITHUB_REPOSITORY = previousRepository;
   assert.equal(result.status, "unknown", "API failure must not look like an empty queue");
+  assert.match(diagnostics.join("\n"), /\[unknown\].*service unavailable/,
+    "the cause must reach stderr even when stdout is redirected to queue-state.json");
   assert.match(result.message, /observation error:.*service unavailable/);
   assert.equal(process.exitCode, 3, "API observation failure exits with the distinct unknown code");
   process.exitCode = 0;

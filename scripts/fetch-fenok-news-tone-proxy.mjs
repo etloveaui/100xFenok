@@ -18,6 +18,7 @@ import {
 } from "./lib/data-supply-lkg-store.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { writeJsonAtomic } from "./lib/atomic-file.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -502,13 +503,17 @@ async function fetchLegacyTocRecords({
     .slice(0, Math.min(MAX_LEGACY_TOC_REQUESTS, maxRequests));
   const records = [];
   let totalDecompressedBytes = 0;
+  let firstFailure = null;
   const batchSize = Math.max(1, Number(concurrency) || LEGACY_TOC_FETCH_CONCURRENCY);
   for (let index = 0; index < urls.length; index += batchSize) {
     const batch = urls.slice(index, index + batchSize);
     const responses = await Promise.all(batch.map(async (url) => {
       try {
         const response = await rawGetBufferFn(url);
-        if (response.statusCode !== 200) return [];
+        if (response.statusCode !== 200) {
+          firstFailure ??= new Error(`HTTP ${response.statusCode}`);
+          return [];
+        }
         const text = decodeLegacyTocGzip(response.body);
         // Keep only the rows that name a reference company: one file carries
         // about 1,800 rows and a 72 h scan reads about 550 files.
@@ -517,7 +522,8 @@ async function fetchLegacyTocRecords({
           records: parseLegacyTocJsonl(text)
             .filter((record) => matchLegacyTocTickers(record, { expectedTickers }).length > 0),
         };
-      } catch {
+      } catch (error) {
+        firstFailure ??= error;
         return [];
       }
     }));
@@ -531,6 +537,9 @@ async function fetchLegacyTocRecords({
     }
     const articlesByTicker = collectLegacyTocArticles(records, { expectedTickers, maxRecords });
     if (hasAtLeastOneLegacyArticle(articlesByTicker, expectedTickers)) break;
+  }
+  if (records.length === 0 && firstFailure) {
+    console.error(`GDELT legacy fallback returned no records; first failure: ${boundedDiagnosticDetail(firstFailure)}`);
   }
   return records;
 }

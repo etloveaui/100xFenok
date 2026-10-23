@@ -12,6 +12,7 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 import { isBusinessDay } from "./lib/market-calendar.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 
 import {
   LaneLkgStore,
@@ -2001,7 +2002,8 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
           publicKosdaqMarketCap,
           run: recoveryRun,
         });
-      } catch {
+      } catch (error) {
+        console.error(`KRX bridge recovery failed: ${boundedDiagnosticDetail(error)}`);
         recovery = applyKrxLkgContract({
           repoRoot: lkgRepoRoot,
           bridgeIndexPath: config.bridgeIndexPath,

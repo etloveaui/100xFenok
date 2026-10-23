@@ -97,6 +97,12 @@ for (const steps of [
   assert.equal((await probeUnprovenancedLive({ fetchImpl: sequenceFetch(steps) })).allowed, false);
 }
 assert.equal((await probeUnprovenancedLive({ baseUrl: "https://example.invalid" })).allowed, false);
+const failedTransport = await probeUnprovenancedLive({
+  fetchImpl: sequenceFetch([new Error("connection refused token=fixture-secret")]),
+});
+assert.equal(failedTransport.allowed, false);
+assert.match(failedTransport.detail, /connection refused/);
+assert.doesNotMatch(failedTransport.detail, /fixture-secret/);
 
 const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "deploy-source-fence-"));
 try {

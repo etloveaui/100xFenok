@@ -20,6 +20,7 @@ import {
   isDeployProvenance,
 } from "./lib/deploy-provenance.mjs";
 import { liveRequestHeaders } from "./lib/live-request-headers.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 
 export const DEPLOY_SOURCE_FENCE_CANONICAL_LIVE_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 
@@ -42,7 +43,8 @@ function readProvenance(provenancePath) {
     return isDeployProvenance(payload)
       ? { payload, state: "present-valid" }
       : { payload: null, state: "present-invalid" };
-  } catch {
+  } catch (error) {
+    console.error(`::error::Deploy provenance read failed: ${boundedDiagnosticDetail(error)}`);
     return { payload: null, state: "present-invalid" };
   }
 }
@@ -56,6 +58,7 @@ function isAncestor(ancestorSha, descendantSha, cwd) {
   );
   if (result.status === 0) return true;
   if (result.status === 1) return false;
+  console.error(`::error::Deploy ancestry query failed: ${boundedDiagnosticDetail(result.error ?? result.stderr)}`);
   return null;
 }
 
@@ -81,8 +84,8 @@ async function fetchProbeResponse(fetchImpl, url, timeoutMs) {
       return { error: "response status unavailable", response: null };
     }
     return { error: null, response };
-  } catch {
-    return { error: "transport failure", response: null };
+  } catch (error) {
+    return { error: `transport failure: ${boundedDiagnosticDetail(error.cause ?? error)}`, response: null };
   } finally {
     clearTimeout(timer);
   }
@@ -126,8 +129,8 @@ export async function probeUnprovenancedLive({
   let liveBuildId;
   try {
     liveBuildId = (await buildProbe.response.text()).replace(/[\r\n]/g, "").trim();
-  } catch {
-    return blockedProbe("live-probe-transport", "BUILD_ID body read failed");
+  } catch (error) {
+    return blockedProbe("live-probe-transport", `BUILD_ID body read failed: ${boundedDiagnosticDetail(error.cause ?? error)}`);
   }
   if (!liveBuildId) {
     return blockedProbe("live-build-id-empty", "BUILD_ID returned HTTP 200 but no nonempty identity");
@@ -269,8 +272,8 @@ const invokedAsMain = process.argv[1]
 if (invokedAsMain) {
   try {
     process.exitCode = await runDeploySourceFenceCli();
-  } catch {
-    console.error("::error::Deploy source fence terminated unexpectedly.");
+  } catch (error) {
+    console.error(`::error::Deploy source fence terminated unexpectedly: ${boundedDiagnosticDetail(error.cause ?? error)}`);
     process.exitCode = 1;
   }
 }

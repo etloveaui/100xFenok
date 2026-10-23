@@ -10,7 +10,9 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
+from lib.diagnostic_detail import bounded_diagnostic_detail
 
 
 SYMBOL_RE = re.compile(r"^(?:[A-Z0-9][A-Z0-9.\-]{0,11}|\^(?:KS11|KQ11))$")
@@ -184,14 +186,18 @@ def verified_yahoo_terminal_evidence(as_of):
 
 @lru_cache(maxsize=512)
 def _calendar_age(source: str, observed_hour: str, market_ticker: str) -> dict:
-    result = subprocess.run(
-        ["node", "--input-type=module", "-e",
-         "import {yahooBusinessDayAge} from './scripts/lib/market-calendar.mjs';"
-         "import {YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS as limit} from './scripts/lib/kpi-contract-constants.mjs';"
-         "console.log(JSON.stringify({age:yahooBusinessDayAge(...JSON.parse(process.argv[1])),limit}));",
-         json.dumps([source, observed_hour, market_ticker])],
-        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e",
+             "import {yahooBusinessDayAge} from './scripts/lib/market-calendar.mjs';"
+             "import {YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS as limit} from './scripts/lib/kpi-contract-constants.mjs';"
+             "console.log(JSON.stringify({age:yahooBusinessDayAge(...JSON.parse(process.argv[1])),limit}));",
+             json.dumps([source, observed_hour, market_ticker])],
+            cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, check=True,
+        )
+    except subprocess.CalledProcessError as error:
+        print(f"Yahoo calendar subprocess: {bounded_diagnostic_detail(error.stderr or error)}", file=sys.stderr)
+        raise
     return json.loads(result.stdout)
 
 
