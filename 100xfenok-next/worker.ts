@@ -154,6 +154,31 @@ async function servePackedLegacyDataAsset(
   return new Response(body, { status: 200, headers });
 }
 
+// OLD Wind-Down is retired (owner 2026-10-23): its pages go to the NEW app and
+// its API answers 410. Pages, API files, the Durable Object, KV and data stay
+// in place. The redirect is a temporary 302 so it stays reversible.
+const OLD_WINDDOWN_REDIRECT_TARGET = "https://winddown.etloveaui.workers.dev/";
+
+function isUnderPath(pathname: string, base: string): boolean {
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
+function handleRetiredWindDownRequest(url: URL): Response | null {
+  const headers = {
+    "cache-control": "no-store",
+    "x-content-type-options": "nosniff",
+  };
+  if (isUnderPath(url.pathname, "/api/winddown")) {
+    return new Response(null, { status: 410, headers });
+  }
+  if (isUnderPath(url.pathname, "/winddown")) {
+    return new Response(null, {
+      status: 302,
+      headers: { ...headers, location: OLD_WINDDOWN_REDIRECT_TARGET },
+    });
+  }
+  return null;
+}
 
 const worker = {
   async fetch(request: Request, env: unknown, ctx: unknown) {
@@ -184,6 +209,9 @@ const worker = {
     // Next middleware and rate limits never see it and it cannot be cached.
     const routed = await handleCloudDataPlaneRequest(request, env);
     if (routed) return routed;
+
+    const retiredWindDown = handleRetiredWindDownRequest(url);
+    if (retiredWindDown) return retiredWindDown;
 
     const gateResponse = await handleWorkerClosedSiteGate(request, env);
     if (gateResponse) return gateResponse;
