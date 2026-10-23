@@ -3376,6 +3376,25 @@ def fetch_etf(
                 else f"holdings_surface_http_{exc.code}"
             )
     overview_holdings = (overview_data.get("holdingsTable") or {}).get("holdings")
+    # Some funds disable the separate holdings page while publishing their
+    # entire dated portfolio on the overview. A top-ten sample is insufficient.
+    overview_table = overview_data.get("holdingsTable") or {}
+    overview_count = overview_table.get("count")
+    overview_date = parse_stockanalysis_date(overview_table.get("updated"))
+    if (not holdings_data.get("holdings")
+            and isinstance(overview_holdings, list) and overview_holdings
+            and isinstance(overview_count, int) and not isinstance(overview_count, bool)
+            and overview_count == len(overview_holdings)
+            and overview_date is not None
+            and overview_date <= parse_iso_timestamp(now_iso())
+            and all(isinstance(row, dict) and (row.get("n") or row.get("name"))
+                    for row in overview_holdings)):
+        holdings_data = {"holdings": overview_holdings, "count": overview_count,
+                         "date": overview_table["updated"]}
+        holdings_path = overview_path
+        holdings_unavailable = False
+        holdings_surface_fallback = True
+        holdings_unavailability_reason = None
     if (ticker in OFFICIAL_HOLDINGS_FALLBACKS
             and not holdings_data.get("holdings") and not overview_holdings):
         holdings_path, holdings_data, official_holdings_provenance = fetch_official_etf_holdings(ticker, timeout)
@@ -3510,7 +3529,12 @@ def fetch_etf(
         *(["quote_deferred_initial_reconcile"] if not include_quote else []),
         *(f"history_{key}_{row['reason_code']}" for key, row in sorted(history_errors.items())),
     ]
-    if partial_reason_codes:
+    if partial_reason_codes == ["holdings_countries_unavailable"]:
+        # Country exposure is optional; its absence does not make a complete
+        # dated portfolio partial or force an unrelated Yahoo replacement.
+        payload.setdefault("field_sources", {})["countries"] = {
+            "provider": "stockanalysis", "source_as_of": None, "status": "unavailable"}
+    elif partial_reason_codes:
         payload["detail_status"] = "stockanalysis_partial"
         payload["partial_reason_codes"] = partial_reason_codes
     if provider_source_as_of is None:
@@ -3530,55 +3554,61 @@ def collect_etf_payload(ticker: str, timeout: int, include_history: bool) -> dic
             holdings_date = issuer["field_dates"]["holdings"]
             native_date = parse_stockanalysis_date(normalized.get("holdings_updated"))
             issuer_date = parse_stockanalysis_date(holdings_date)
-            if issuer_date is None or (native_date is not None and issuer_date < native_date):
-                raise ValueError("issuer holdings snapshot is older than the native holdings")
-            payload["raw"]["official_issuer"] = issuer
-            provenance = {"provider": issuer["provider"], "landing_page": issuer["source_url"],
-                          "source_as_of": holdings_date, "position_scope": "issuer_published_snapshot",
-                          "completeness": issuer.get("completeness")}
-            payload["raw"]["official_holdings"] = provenance
-            payload["holdings_source"] = provenance
-            normalized.update(holdings=issuer["holdings"], holding_count=len(issuer["holdings"]),
-                              holdings_updated=holdings_date)
-            for issuer_key, overview_key in (("shares_outstanding", "sharesOut"), ("aum", "aum")):
-                value = (issuer.get("quote") or {}).get(issuer_key)
-                field_date = (issuer.get("field_dates") or {}).get(issuer_key)
-                if (isinstance(value, (int, float)) and not isinstance(value, bool)
-                        and math.isfinite(value) and value > 0 and field_date == holdings_date):
-                    normalized.setdefault("overview", {})[overview_key] = value
-                    payload.setdefault("field_sources", {})[overview_key] = {
-                        "provider": issuer["provider"], "source_as_of": field_date,
-                        "source_url": issuer["source_url"], "status": "available"}
-            classification = issuer.get("classification") or {}
-            if issuer["provider"] == "corgi" and classification.get("underlying_ticker"):
-                normalized["classification"] = {
-                    "is_leveraged": True, "leverage_factor": float(classification["leverage_factor"]),
-                    # XQTM and BRZX reference CQTM and EWZ ETFs, not one equity.
-                    "is_inverse": False, "is_single_stock": ticker not in {"XQTM", "BRZX"},
-                    "underlying": classification["underlying_ticker"],
-                    "source": issuer["source_url"], "confidence": "high"}
-            elif ticker == "THYP" and "staking" in classification.get("product_category", []):
-                normalized["classification"] = {
-                    "is_leveraged": False, "leverage_factor": None, "is_inverse": False,
-                    "is_single_stock": False, "underlying": None,
-                    "source": issuer["source_url"], "confidence": "high"}
-            payload["fetched_at"] = now_iso()
-            if issuer_holdings_snapshot(payload) is None:
-                raise ValueError("issuer holdings identity, date or rows are invalid")
-            reasons = [reason for reason in payload.get("partial_reason_codes", [])
-                       if not reason.startswith("holdings_")]
-            if reasons:
-                payload["partial_reason_codes"] = reasons
-            else:
-                payload.pop("partial_reason_codes", None)
-                payload.pop("detail_status", None)
-            payload["endpoint_contracts"]["holdings"] = {
-                "format": "issuer_payload", "provider": issuer["provider"],
-                "contract": "issuer_published_snapshot/v1"}
-            source = _etf_provider_source(payload)
-            if source is None:
-                raise ValueError("issuer detail component source clocks are unavailable")
-            payload["source_as_of"] = utc_iso(source)
+            if issuer_date is None:
+                raise ValueError("issuer holdings snapshot date is invalid")
+            use_issuer = native_date is None or issuer_date >= native_date
+            if not use_issuer and not is_complete_stockanalysis_etf_payload(ticker, payload):
+                raise ValueError("issuer holdings snapshot is older than incomplete native holdings")
+            # A lagging optional issuer snapshot must not block a complete,
+            # newer native portfolio or replace it with older holdings.
+            if use_issuer:
+                payload["raw"]["official_issuer"] = issuer
+                provenance = {"provider": issuer["provider"], "landing_page": issuer["source_url"],
+                              "source_as_of": holdings_date, "position_scope": "issuer_published_snapshot",
+                              "completeness": issuer.get("completeness")}
+                payload["raw"]["official_holdings"] = provenance
+                payload["holdings_source"] = provenance
+                normalized.update(holdings=issuer["holdings"], holding_count=len(issuer["holdings"]),
+                                  holdings_updated=holdings_date)
+                for issuer_key, overview_key in (("shares_outstanding", "sharesOut"), ("aum", "aum")):
+                    value = (issuer.get("quote") or {}).get(issuer_key)
+                    field_date = (issuer.get("field_dates") or {}).get(issuer_key)
+                    if (isinstance(value, (int, float)) and not isinstance(value, bool)
+                            and math.isfinite(value) and value > 0 and field_date == holdings_date):
+                        normalized.setdefault("overview", {})[overview_key] = value
+                        payload.setdefault("field_sources", {})[overview_key] = {
+                            "provider": issuer["provider"], "source_as_of": field_date,
+                            "source_url": issuer["source_url"], "status": "available"}
+                classification = issuer.get("classification") or {}
+                if issuer["provider"] == "corgi" and classification.get("underlying_ticker"):
+                    normalized["classification"] = {
+                        "is_leveraged": True, "leverage_factor": float(classification["leverage_factor"]),
+                        # XQTM and BRZX reference CQTM and EWZ ETFs, not one equity.
+                        "is_inverse": False, "is_single_stock": ticker not in {"XQTM", "BRZX"},
+                        "underlying": classification["underlying_ticker"],
+                        "source": issuer["source_url"], "confidence": "high"}
+                elif ticker == "THYP" and "staking" in classification.get("product_category", []):
+                    normalized["classification"] = {
+                        "is_leveraged": False, "leverage_factor": None, "is_inverse": False,
+                        "is_single_stock": False, "underlying": None,
+                        "source": issuer["source_url"], "confidence": "high"}
+                payload["fetched_at"] = now_iso()
+                if issuer_holdings_snapshot(payload) is None:
+                    raise ValueError("issuer holdings identity, date or rows are invalid")
+                reasons = [reason for reason in payload.get("partial_reason_codes", [])
+                           if not reason.startswith("holdings_")]
+                if reasons:
+                    payload["partial_reason_codes"] = reasons
+                else:
+                    payload.pop("partial_reason_codes", None)
+                    payload.pop("detail_status", None)
+                payload["endpoint_contracts"]["holdings"] = {
+                    "format": "issuer_payload", "provider": issuer["provider"],
+                    "contract": "issuer_published_snapshot/v1"}
+                source = _etf_provider_source(payload)
+                if source is None:
+                    raise ValueError("issuer detail component source clocks are unavailable")
+                payload["source_as_of"] = utc_iso(source)
         clocks = _etf_component_clocks(payload) or {}
         payload.setdefault("field_sources", {}).update({
             component: {"provider": (payload.get("holdings_source") or {}).get("provider", "stockanalysis")

@@ -1406,6 +1406,50 @@ module.main()
         self.assertNotIn("countries", decoded)
         self.assertNotIn("date", decoded)
 
+    def test_complete_dated_overview_portfolio_replaces_disabled_holdings_page(self):
+        overview = {"provider_holdings_available": False, "holdings": 2,
+                    "holdingsTable": {"count": 2, "updated": "Oct 21, 2026",
+                                      "holdings": [{"n": "Swap", "as": "150%"},
+                                                   {"n": "Cash", "as": "-50%"}]}}
+        def surface(_ticker, name, _timeout, **_kwargs):
+            return ("/overview", overview) if name == "overview" else ("/holdings", {})
+        with patch.object(self.fetcher, "fetch_svelte_detail", side_effect=surface), \
+             patch.object(self.fetcher, "fetch_etf_history_periods", return_value=({}, {}, {})), \
+             patch.object(self.fetcher, "fetch_json", return_value={"data": {"td": "2026-10-22"}}):
+            payload = self.fetcher.fetch_etf("HOOW", 1)
+            self.assertNotIn("detail_status", payload)
+            self.assertEqual(payload["field_sources"]["countries"]["status"], "unavailable")
+            self.assertEqual(payload["endpoints"]["holdings"], "/overview")
+            self.assertEqual(payload["raw"]["holdings"]["count"], 2)
+            self.assertTrue(self.fetcher.is_complete_stockanalysis_etf_payload("HOOW", payload))
+            for changes in ({"count": 20}, {"updated": None}, {"updated": "2099-01-01"}, {"count": True}):
+                with self.subTest(changes=changes):
+                    old = overview["holdingsTable"]
+                    overview["holdingsTable"] = {**old, **changes}
+                    partial = self.fetcher.fetch_etf("HOOW", 1)
+                    self.assertIn("holdings_unavailable", partial["partial_reason_codes"])
+                    self.assertFalse(self.fetcher.is_complete_stockanalysis_etf_payload("HOOW", partial))
+                    overview["holdingsTable"] = old
+
+    def test_lagging_issuer_snapshot_keeps_complete_newer_native_portfolio(self):
+        import copy
+        payload = {"schema_version": "stockanalysis/v1", "source": "stockanalysis",
+                   "asset_type": "etf", "ticker": "BILS", "source_as_of": "2026-10-22T00:00:00Z",
+                   "fetched_at": "2026-10-23T00:00:00Z", "raw": {"quote": {"td": "2026-10-22"}},
+                   "normalized": {"overview": {}, "holdings": [{"name": "Treasury"}],
+                                  "holdings_updated": "Oct 22, 2026"}}
+        issuer = {"field_dates": {"holdings": "2026-10-21"}}
+        with patch.object(self.fetcher, "fetch_etf", side_effect=lambda *_a, **_k: copy.deepcopy(payload)), \
+             patch.object(self.fetcher, "fetch_official_etf", return_value=issuer):
+            result = self.fetcher.collect_etf_payload("BILS", 1, True)
+            self.assertEqual(result["normalized"]["holdings"], payload["normalized"]["holdings"])
+            self.assertNotIn("official_issuer", result["raw"])
+            self.assertEqual(result["field_sources"]["holdings"]["source_as_of"], "2026-10-22T00:00:00Z")
+            payload["detail_status"] = "stockanalysis_partial"
+            payload["partial_reason_codes"] = ["holdings_date_unavailable"]
+            with self.assertRaisesRegex(ValueError, "older than incomplete native"):
+                self.fetcher.collect_etf_payload("BILS", 1, True)
+
     def test_initial_detail_reconcile_emits_honest_stockanalysis_partial(self) -> None:
         original_fetch_svelte = self.fetcher.fetch_svelte_detail
         original_fetch_json = self.fetcher.fetch_json
