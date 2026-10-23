@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import TreasuryCurve from "./TreasuryCurve";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
@@ -444,6 +445,18 @@ const MACRO_TOP_LENSES = [
       macroContextId: "bank-credit" as const,
     },
   },
+  { id: "treasury", label: "국채 곡선·스프레드", state: { selected: [
+    { id: "treasury_spread_10y_2y", transform: "raw" as const },
+    { id: "treasury_spread_10y_3m", transform: "raw" as const },
+  ], rangeId: "MAX", axisById: {}, macroContextId: "bank-credit" as const } },
+  { id: "mortgage", label: "주택담보대출", state: { selected: [
+    { id: "mortgage_30y_fixed", transform: "raw" as const },
+    { id: "mortgage_15y_fixed", transform: "raw" as const },
+    { id: "mortgage_30y_jumbo", transform: "raw" as const },
+    { id: "mortgage_arm", transform: "raw" as const },
+    { id: "mortgage_fha", transform: "raw" as const },
+    { id: "mortgage_va", transform: "raw" as const },
+  ], rangeId: "MAX", axisById: {}, macroContextId: "bank-credit" as const } },
   { id: "collection", label: "내 컬렉션", collection: true },
 ] as const;
 
@@ -834,6 +847,7 @@ const MACRO_UNIT_DISPLAY_LABELS: Record<MacroSeriesDefinition["unit"], string> =
   score: "점수",
   ratio: "비율",
   percent: "%",
+  percentage_points: "%p",
   spread: "스프레드",
   usd_billion: "$B",
   usd_million: "$M",
@@ -2643,6 +2657,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 {activeLoadState.loaded.map((item) => (
                   <span key={item.definition.id} data-series-load-state={item.error ? "failed" : "ready"}>
                     {item.definition.shortLabel} · {sourceDisplayLabel(item.definition)} · {item.error ? "불러오기 실패" : item.transformedPoints.at(-1)?.date ?? "관측 없음"}
+                    {item.definition.sourcePath.includes("slickcharts/") && item.definition.frequency !== "annual" ? ` · 갱신 ${item.sourceUpdated ?? "미확인"}` : null}
                     {item.definition.frequency === "annual" ? `년 기준 · 연간 % · 갱신 ${item.sourceUpdated ?? "미확인"} · 현재 연도는 연말 확정치가 아닙니다` : null}
                   </span>
                 ))}
@@ -2835,6 +2850,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           </div>
         ) : null}
       </details>
+
+      {selected.some((item) => item.id.startsWith("treasury_")) ? <TreasuryCurve /> : null}
 
       {macroContextId === "sentiment" ? (
         <details className="cpw5-macro-table-panel" data-macro-chart-sentiment-components="true">

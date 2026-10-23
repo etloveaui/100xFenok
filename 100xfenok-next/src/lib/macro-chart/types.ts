@@ -14,6 +14,7 @@ export type MacroSeriesUnitKind =
   | "score"
   | "ratio"
   | "percent"
+  | "percentage_points"
   | "spread"
   | "usd_billion"
   | "usd_million"
@@ -37,6 +38,7 @@ export type MacroSeriesSourceKind = "local-json" | "stooq";
 
 export type MacroSeriesAccessor =
   | { kind: "annualInflation" }
+  | { kind: "historyRate"; field: "maturity" | "type"; match: string; subtract?: string }
   | {
       kind: "array";
       valueKey: string;

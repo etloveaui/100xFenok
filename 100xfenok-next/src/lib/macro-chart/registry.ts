@@ -11,6 +11,7 @@ type CatalogSeries = {
   frequency: MacroSeriesDefinition["frequency"];
   source_path: string;
   path_shape: string;
+  accessor?: MacroSeriesAccessor;
   short_label?: string;
   description?: string;
   default_transform?: MacroValueTransform;
@@ -55,7 +56,7 @@ export const MACRO_SERIES_CATALOG: readonly MacroSeriesDefinition[] = catalog.se
   unit: item.unit,
   frequency: item.frequency,
   sourcePath: item.source_path,
-  accessor: accessorFromPathShape(item.path_shape),
+  accessor: item.accessor ?? accessorFromPathShape(item.path_shape),
   description: item.description ?? item.label,
   defaultTransform: item.default_transform,
 }));

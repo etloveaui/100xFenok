@@ -128,6 +128,8 @@ export function macroContextOrDefault(value: string | string[] | null | undefine
 }
 
 export function macroContextIdForPreset(presetId: string | null | undefined): MacroContextId {
+  if (presetId === "treasury" || presetId === "mortgage") return "bank-credit";
+  if (presetId === "inflation") return "activity";
   if (presetId === "activity") return "activity";
   if (presetId === "liquidity") return "risk-liquidity";
   if (presetId?.startsWith("sentiment")) return "sentiment";

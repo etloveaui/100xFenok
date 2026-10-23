@@ -203,6 +203,15 @@ function extractActivity(payload: unknown, accessor: Extract<MacroSeriesAccessor
 }
 
 function extractPoints(payload: unknown, accessor: MacroSeriesAccessor): MacroRawPoint[] {
+  if (accessor.kind === "historyRate") {
+    return rowsToPoints(asArray(asRecord(payload).history).map((row) => {
+      const record = asRecord(row);
+      const rates = asArray(record.rates).map(asRecord);
+      const value = asNumber(rates.find((rate) => rate[accessor.field] === accessor.match)?.rate);
+      const subtract = accessor.subtract ? asNumber(rates.find((rate) => rate[accessor.field] === accessor.subtract)?.rate) : 0;
+      return { date: record.date, value: value === null || subtract === null ? null : value - subtract };
+    }), "value");
+  }
   if (accessor.kind === "annualInflation") {
     return rowsToPoints(asArray(asRecord(payload).inflation).map((row) => {
       const record = asRecord(row);
@@ -306,6 +315,7 @@ export async function loadMacroSeries(
 
 export function unitLabel(unit: MacroSeriesUnitKind): string {
   if (unit === "percent") return "%";
+  if (unit === "percentage_points") return "%p";
   if (unit === "spread") return "spread";
   if (unit === "ratio") return "ratio";
   if (unit === "usd_billion") return "$B";
