@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import PriceValuationBands from "./PriceValuationBands";
+import CrashDrawdownComparison from "./CrashDrawdownComparison";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import {
   useBenchmarkOrdinals,
@@ -1007,6 +1008,8 @@ export default function MarketValuationClient({
         erpSourceDate={erpInsight?.sourceDate ?? null}
         onProvenance={setReferenceProvenance}
       />
+
+      <CrashDrawdownComparison />
 
       <p className="mv-foot">
         백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다.
