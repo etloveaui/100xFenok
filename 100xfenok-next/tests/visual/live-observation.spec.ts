@@ -91,6 +91,7 @@ const routes = [
   ["post-tariff", nativePosts["post-tariff"].path],
   ["ib-guide", "/ib?v2=1#guide"],
   ["stock-aapl-financials", "/stock/AAPL?tab=financials"],
+  ["stock-tsla-financials", "/stock/TSLA?tab=financials"],
   ["market-structure", "/market-valuation/structure"],
 ] as const;
 
@@ -123,6 +124,12 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
         let failure: string | null = null;
         try {
           if (!route) throw new Error(`No valid latest ${name} edition in live index`);
+          // Observe both actual browser loads before asserting a hidden card.
+          const dividendResponses = name === "stock-aapl-financials" || name === "stock-tsla-financials"
+            ? Promise.all(["recent", "historical"].map(period => page.waitForResponse(
+              response => new URL(response.url()).pathname === `/data/slickcharts/stocks-dividends-${period}.json`,
+              { timeout: 30_000 },
+            ))).catch(() => null) : null;
           const response = await page.goto(route, { waitUntil: "domcontentloaded", timeout: 30_000 });
           observation.status = response?.status() ?? null;
           await page.locator("main").first().waitFor({ state: "visible", timeout: 15_000 });
@@ -231,20 +238,65 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
             await expect(industry).toContainText("Damodaran");
             observation.sector_panels = { sox: await sox.innerText(), industry: await industry.innerText() };
           }
-          if (name === "stock-aapl-financials") {
+          if (name === "etfs") {
+            const shelf = page.locator("[data-ark-funds-shelf]");
+            await expect(shelf).toBeVisible({ timeout: 30_000 });
+            await expect(shelf).toContainText(/수집 \d{4}-\d{2}-\d{2} 스냅샷/);
+            const ark = shelf.getByRole("region", { name: "ARK 운용 ETF", exact: true });
+            const indices = shelf.getByRole("region", { name: "지수 ETF 비교", exact: true });
+            await expect(ark.getByRole("link", { name: "ARKK", exact: true })).toHaveAttribute("href", "/etfs/ARKK");
+            await expect(indices.getByRole("link", { name: "SPY", exact: true })).toHaveAttribute("href", "/etfs/SPY");
+            observation.ark_shelf = await shelf.innerText();
+          }
+          if (name === "market-events") {
+            const movers = page.locator("[data-repeat-movers]");
+            await expect(movers).toBeVisible({ timeout: 30_000 });
+            await expect(movers).toContainText(/\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}/);
+            for (const label of ["상승 상위 반복", "하락 상위 반복"]) {
+              const group = movers.getByRole("region", { name: label, exact: true });
+              await expect(group.getByRole("heading", { name: label, exact: true })).toBeVisible();
+              const rows = await group.locator("li").count();
+              if (rows) await expect(group.locator("li").first()).toContainText(/\d+회/);
+              else await expect(group.getByText("두 번 이상 등장한 종목이 없습니다.", { exact: true })).toBeVisible();
+            }
+            observation.repeat_movers = await movers.innerText();
+          }
+          if (name === "market-valuation") {
+            const crash = page.locator("[data-crash-drawdown-comparison]");
+            await expect(crash.getByText("최근 시장 vs 1929년 대공황", { exact: true })).toBeVisible({ timeout: 30_000 });
+            await expect(crash).toContainText(/1929-09-03 고점 → 1932-07-08 저점/);
+            await expect(crash).toContainText("-89.19%");
+            await expect(crash).toContainText(/자료 수집 \d{4}-\d{2}-\d{2}/);
+            await expect(crash.getByRole("img", { name: "1929년 다우 고점 대비 하락률 이력", exact: true })).toBeVisible();
+            observation.crash_comparison = await crash.innerText();
+          }
+          if (name === "stock-aapl-financials" || name === "stock-tsla-financials") {
+            const ticker = name === "stock-aapl-financials" ? "AAPL" : "TSLA";
+            const loaded = await dividendResponses;
+            expect(loaded, "both dividend browser responses must finish").not.toBeNull();
+            const rowCounts: number[] = [];
+            for (const response of loaded!) {
+              expect(response.ok(), response.url()).toBe(true);
+              const doc = await response.json();
+              expect(Array.isArray(doc.stocks), "dividend source rows").toBe(true);
+              const rows = doc.stocks.find((row: { symbol: string }) => row.symbol === ticker)?.dividends ?? [];
+              rowCounts.push(rows.length);
+            }
             const financials = page.locator(".cp-stock-tab-financials");
             await expect(financials).toBeVisible();
             const dividends = financials.locator("[data-stock-dividends]");
-            const count = await dividends.count();
-            expect(count).toBeLessThanOrEqual(1);
-            if (count) {
-              await expect(dividends).toBeVisible();
+            if (ticker === "AAPL") {
+              expect(rowCounts.reduce((sum, count) => sum + count, 0), "AAPL source must contain dividend rows").toBeGreaterThan(0);
+              await expect(dividends).toBeVisible({ timeout: 30_000 });
               await expect(dividends.getByText("AAPL 배당 지급 이력", { exact: true })).toBeVisible();
+              await expect(dividends.locator("tbody tr").first()).toBeVisible();
               await expect(dividends.getByRole("button", { name: "최근 5년", exact: true })).toBeVisible();
-              observation.dividend_card = { state: "visible", text: await dividends.innerText() };
+              observation.dividend_card = { ticker, rowCounts, state: "visible", text: await dividends.innerText() };
             } else {
-              await expect(financials.getByText("AAPL 배당 지급 이력", { exact: true })).toHaveCount(0);
-              observation.dividend_card = { state: "absent", note: "Whole-card absence is allowed when no dividend rows are available; not evidence that AAPL pays no dividend." };
+              expect(rowCounts, "TSLA must have no rows in either source").toEqual([0, 0]);
+              await expect(dividends).toHaveCount(0);
+              await expect(financials.getByText("TSLA 배당 지급 이력", { exact: true })).toHaveCount(0);
+              observation.dividend_card = { ticker, rowCounts, state: "hidden" };
             }
           }
           if (name === "market-structure") {
