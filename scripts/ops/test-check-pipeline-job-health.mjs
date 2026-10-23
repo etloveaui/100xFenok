@@ -1,5 +1,6 @@
 import { EXTERNAL_CLOCK_CRONS, externalClockEvent } from "../../ops/a1-lanes/external-clock.mjs";
 import assert from "node:assert/strict";
+import { buildAlarmState, alarmStateResolved, writeWorkflowOutputs } from "./emit-alarm-state.mjs";
 import { canonicalJson } from "../lib/json-canonical.mjs";
 import { sha256Bytes, sha256Canonical } from "../lib/cloud-data-plane-generation.mjs";
 import { spawnSync } from "node:child_process";
@@ -28,6 +29,59 @@ import {
   needsMissedWindowReverification,
   parseWorkflowRunsPayload,
 } from "./check-pipeline-job-health.mjs";
+
+// Exercise the production detector/emitter functions without touching canonical state.
+function proveAlarmTransition(label, openHealth, clearHealth, body, expected) {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-transition-"));
+  try {
+    assert.match(body, expected);
+    const open = buildAlarmState({ health: openHealth });
+    const clear = buildAlarmState({ health: clearHealth, prior: open });
+    assert.equal(open.status, "open");
+    assert.equal(clear.status, "clear");
+    assert.equal(alarmStateResolved(open, clear), true);
+    const outputPath = path.join(temp, "github-output");
+    writeWorkflowOutputs({ outputPath, incidentChanged: true, incidentResolved: alarmStateResolved(open, clear) });
+    assert.match(fs.readFileSync(outputPath, "utf8"), /incident_resolved=true/);
+    console.log(`PROOF ${label} open: ${JSON.stringify(open.open_incidents)} / clear: ${clear.status} incident_resolved=true`);
+  } finally { fs.rmSync(temp, { recursive: true, force: true }); }
+}
+
+{
+  const snapshot = (at, fresh) => ({ generated_at: at, sets: [{ set: "member_fixture",
+    status: fresh === 1495 ? "fresh" : "delayed", fresh_members: fresh, total_members: 1495 }] });
+  const previous = snapshot("2026-10-23T10:00:00Z", 1461);
+  const options = { now: Date.parse("2026-10-23T11:01:00Z"), crons: ["0 10,11 * * *"] };
+  const open = classifyKpiGenerationStoppage([snapshot("2026-10-23T11:00:00Z", 1461), previous], options);
+  assert.deepEqual(open.outcome_alarms[0].reasons, ["member_ratio_low"]);
+  const clear = classifyKpiGenerationStoppage([snapshot("2026-10-23T11:00:00Z", 1495), previous], options);
+  assert.equal(clear.status, "ok");
+  const body = buildIssueBody([{ kpi_stopped_sets: open.stopped_sets, kpi_outcome_alarms: open.outcome_alarms }]);
+  proveAlarmTransition("15a/member_ratio_low", { status: "alarm", data_health_kpi: open },
+    { status: "ok", data_health_kpi: clear }, body, /Members inside bound: 1461\/1495/);
+}
+
+{
+  const workflow = deriveWorkflowWatchPolicy().watched.find(row => row.file === "fetch-yahoo-ticker.yml");
+  const run = (hour, conclusion) => {
+    const slot = `2026-10-23T${String(hour).padStart(2, "0")}:05:00.000Z`;
+    return { id: hour, event: "workflow_dispatch", status: "completed", conclusion,
+      created_at: slot, run_started_at: slot, html_url: `https://example.invalid/run/${hour}`,
+      display_title: `external-clock/a1/v1 ${workflow.file} ${slot}` };
+  };
+  const failures = [run(11, "failure"), run(10, "failure")];
+  const open = evaluateWorkflow(workflow, failures, { now: Date.parse("2026-10-23T11:06:00Z") });
+  assert.equal(open.streak, 2);
+  assert.deepEqual(open.alarm_reasons, ["failure_streak"]);
+  const options = { now: Date.parse("2026-10-23T12:06:00Z") };
+  const manual = evaluateWorkflow(workflow, [{ ...run(12, "success"), display_title: "Human dispatch" }, ...failures], options);
+  assert.equal(manual.status, "alarm", "unmarked manual success cannot clear automatic failures");
+  assert.equal(manual.recovery_pending_next_scheduled_run, true);
+  const clear = evaluateWorkflow(workflow, [run(12, "success"), ...failures], options);
+  assert.equal(clear.streak, 0);
+  proveAlarmTransition("15c/yahoo_external_clock", { status: "alarm", workflows: [open] },
+    { status: "ok", workflows: [clear] }, buildIssueBody([open]), /Consecutive failures: 2/);
+}
 
 // A permitted UNVERIFIED publication must not make a sustained cost-measurement
 // outage invisible. Exercise the existing report shell and detector together.
@@ -573,6 +627,13 @@ function writeWorkflow(root, file, source) {
     1,
     "the weekly workflow must retain its run-history paging threshold",
   );
+  const computedWatch = policy.watched.find(row => row.file === "coordinate-computed-signals.yml");
+  assert.deepEqual(computedWatch?.events, ["workflow_run"]);
+  assert.deepEqual(computedWatch?.crons, []);
+  assert.equal(computedWatch?.failure_streak_threshold, 1);
+  assert.equal(evaluateWorkflow(computedWatch, [{ ...F(302), event: "workflow_run" }]).status, "alarm");
+  assert.equal(evaluateWorkflow(computedWatch, [{ ...S(303), event: "workflow_run" },
+    { ...F(302), event: "workflow_run" }]).status, "ok");
   const symbolsWatch = policy.watched.find((row) => row.file === "slickcharts-symbols.yml");
   assert.deepEqual(symbolsWatch?.events, ["workflow_run"]);
   assert.deepEqual(symbolsWatch?.crons, []);

@@ -7,6 +7,8 @@
 // by design, which is exactly the gate-blocked path under test).
 
 import assert from "node:assert/strict";
+import { deriveWorkflowWatchPolicy, evaluateWorkflow, buildIssueBody } from "./ops/check-pipeline-job-health.mjs";
+import { buildAlarmState, alarmStateResolved, writeWorkflowOutputs } from "./ops/emit-alarm-state.mjs";
 import { spawn } from "node:child_process";
 // Pure resolver functions only — no miniflare, so this import stays runnable
 // here while the dedicated Worker suite keeps its runtime dependency.
@@ -81,6 +83,35 @@ const POLICY = {
   validate_freshness: () => true,
   validate_public_payload: () => true,
 };
+
+// Publisher outcomes feed the same watched-run detector and alarm emitter.
+async function provePublisherAlarm(label, file, failedCount, evidence) {
+  const workflow = deriveWorkflowWatchPolicy().watched.find(row => row.file === file);
+  assert.ok(workflow, `${file} must be enrolled in the actual watch policy`);
+  const event = file === "r2-usage-report.yml" ? "schedule" : "workflow_run";
+  const run = (id, hour, conclusion) => ({ id, event, status: "completed", conclusion,
+    created_at: `2026-10-23T${String(hour).padStart(2, "0")}:43:00Z`,
+    html_url: `https://example.invalid/run/${id}` });
+  const failures = Array.from({ length: failedCount }, (_, i) => run(20 - i, 12 - i * 6, "failure"));
+  const failed = evaluateWorkflow(workflow, failures, { now: Date.parse("2026-10-23T12:45:00Z") });
+  assert.equal(failed.status, "alarm");
+  assert.match(buildIssueBody([failed]), /Consecutive failures:/);
+  const recovered = evaluateWorkflow(workflow, [run(21, 18, "success"), ...failures],
+    { now: Date.parse("2026-10-23T18:45:00Z") });
+  assert.equal(recovered.status, "ok");
+  const open = buildAlarmState({ health: { status: "alarm", workflows: [failed] } });
+  const clear = buildAlarmState({ health: { status: "ok", workflows: [recovered] }, prior: open });
+  assert.equal(open.status, "open");
+  assert.equal(clear.status, "clear");
+  assert.equal(alarmStateResolved(open, clear), true);
+  const temp = await mkdtemp(path.join(os.tmpdir(), "publisher-alarm-"));
+  try {
+    const outputPath = path.join(temp, "github-output");
+    writeWorkflowOutputs({ outputPath, incidentChanged: true, incidentResolved: alarmStateResolved(open, clear) });
+    assert.match(await readFile(outputPath, "utf8"), /incident_resolved=true/);
+    console.log(`PROOF ${label} open: ${evidence}; ${JSON.stringify(open.open_incidents)} / clear: ${clear.status} incident_resolved=true`);
+  } finally { await rm(temp, { recursive: true, force: true }); }
+}
 
 // Publication selects only the existing registry roots, without admitting sibling files.
 async function testScouterExactRoots() {
@@ -3379,15 +3410,41 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(resumedSummary.result, "resumed");
   assert.equal(resumedSummary.gate_after_basis, "covered_by_preflight_plan");
   assert.equal(normalGateCalls, 1, "resumed publication must perform one full cost measurement");
-  const unverified = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory,
+  const unverifiedRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-unverified-first-"));
+  const unverifiedPlane = createMemoryCloudDataPlane();
+  const unverified = await invoke({ outcomesRoot: unverifiedRoot,
+    createPublishPlaneImpl: () => ({ plane: unverifiedPlane, objectsWritten: () => 0 }),
     gate: async () => ({ code: 3, stdout: "", stderr: "injected incomplete measurement" }),
   });
-  assert.equal(unverified.exitCode, 0, "unverified measurement permits actual publication/resume");
+  assert.equal(unverified.exitCode, 0, "unverified measurement permits a first publication");
   const unverifiedSummary = JSON.parse(unverified.stdout[0]);
+  assert.equal(unverifiedSummary.result, "published");
   assert.equal(unverifiedSummary.gate_before, "unverified");
   assert.equal(unverifiedSummary.gate_after, "unverified");
   assert.deepEqual(unverifiedSummary.gate_measurements, [{ stage: "preflight", verdict: "unverified", exit: 3 }]);
   assert.match(unverified.stderr.join("\n"), /::warning::R2 cost measurement UNVERIFIED/);
+  const measurementRecovered = await invoke({ outcomesRoot: unverifiedRoot,
+    createPublishPlaneImpl: () => ({ plane: unverifiedPlane, objectsWritten: () => 0 }),
+  });
+  assert.equal(measurementRecovered.exitCode, 0);
+  assert.equal(JSON.parse(measurementRecovered.stdout[0]).gate_before, "ok");
+  await provePublisherAlarm("R2/unverified", "r2-usage-report.yml", 2,
+    `published; ::warning::R2 cost measurement UNVERIFIED; gate_measurements=${JSON.stringify(unverifiedSummary.gate_measurements)}`);
+  const blockedPointer = await memoryPlane.pointerStore.get();
+  let blockedFactoryCalls = 0;
+  const blocked = await invoke({ outcomesRoot: successRoot,
+    createPublishPlaneImpl: () => { blockedFactoryCalls += 1; return memoryFactory(); },
+    gate: async () => ({ code: 2, stdout: "", stderr: "injected measured breach" }),
+  });
+  assert.equal(blocked.exitCode, 3);
+  assert.match(blocked.stderr.join("\n"), /cost gate blocked the publish/);
+  assert.equal(blockedFactoryCalls, 0);
+  assert.deepEqual(await memoryPlane.pointerStore.get(), blockedPointer);
+  const gateRecovered = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory });
+  assert.equal(gateRecovered.exitCode, 0);
+  await provePublisherAlarm("R2/measured_breach", "r2-usage-report.yml", 2,
+    "gate code=2 publisher exit=3 cost gate blocked the publish; plane_factory_calls=0 pointer_unchanged=true; recovery gate code=0");
+  await rm(unverifiedRoot, { recursive: true, force: true });
   const missingRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-missing-env-"));
   const missing = await invoke({ outcomesRoot: missingRoot, env: {}, createPublishPlaneImpl: memoryFactory });
   assert.equal(missing.exitCode, 2);
@@ -3723,6 +3780,8 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     assert.equal(await invoke(), 0, "ordinary coverage variation is allowed");
     built = await build(763);
     assert.equal(await invoke(), 0, "coverage recovery publishes");
+    await provePublisherAlarm("15b/null_collapse", "coordinate-computed-signals.yml", 1,
+      `${errors.find(line => line.includes("COMPUTED_FIELD_NULL_COLLAPSE"))}; pointer_unchanged=true object_writes=0; recovery published`);
     for (const total of [1, 8, 9]) {
       built = await build(total, total);
       assert.equal(await invoke(), 0);
