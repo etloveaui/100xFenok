@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-import { removePrivateDataSupplyPublicTrees } from "../sync-static-overrides.mjs";
+import { removePrivateDataSupplyPublicTrees, removePublicDevelopmentDocs } from "../sync-static-overrides.mjs";
 
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-data-supply-public-redaction-"));
 const appRoot = path.join(fixtureRoot, "100xfenok-next");
@@ -42,6 +42,20 @@ function removeFixtureNode(relativePath) {
 }
 
 try {
+  for (const name of ["CLAUDE.md", "DEV.md", "AGENTS.md", "ORCHESTRATOR.md"]) {
+    writeFixture(`public/tools/example/${name}`, "development instructions\n");
+    writeFixture(`tools/example/${name}`, "canonical development instructions\n");
+  }
+  writeFixture("public/tools/example/README.md", "product help\n");
+  writeFixture("public/tools/example/chart.html", "product page\n");
+  assert.equal(removePublicDevelopmentDocs({ baseDir: appRoot, logger: () => {} }).filesRemoved, 4);
+  assert.equal(removePublicDevelopmentDocs({ baseDir: appRoot, logger: () => {} }).filesRemoved, 0);
+  for (const name of ["CLAUDE.md", "DEV.md", "AGENTS.md", "ORCHESTRATOR.md"]) {
+    assert.ok(!fs.existsSync(path.join(appRoot, "public/tools/example", name)));
+    assert.ok(fs.existsSync(path.join(appRoot, "tools/example", name)), "canonical development docs survive");
+  }
+  assert.ok(fs.existsSync(path.join(appRoot, "public/tools/example/README.md")));
+  assert.ok(fs.existsSync(path.join(appRoot, "public/tools/example/chart.html")));
   writeFixture("public/data/safe/keep.json");
 
   writeFixture("public/data/admin/data-supply-state/v1/domains/etf_detail/active.json");

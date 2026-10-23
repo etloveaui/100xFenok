@@ -440,6 +440,14 @@ function walkFiles(dir) {
   return out;
 }
 
+export function removePublicDevelopmentDocs({ baseDir = rootDir, logger = console.log } = {}) {
+  const files = walkFiles(path.join(baseDir, "public"))
+    .filter((file) => /^(?:CLAUDE|AGENTS|ORCHESTRATOR|DEV)\.md$/i.test(path.basename(file)));
+  for (const file of files) fs.unlinkSync(file);
+  if (files.length) logger(`[sync-static-overrides] excluded ${files.length} public development documents`);
+  return { filesRemoved: files.length };
+}
+
 function sanitizePrivateTokens(node) {
   if (Array.isArray(node)) return node.map(sanitizePrivateTokens);
   if (node && typeof node === "object") {
@@ -637,6 +645,7 @@ if (fs.existsSync(occAvailability)) {
   writeJsonAtomic(path.join(rootDir, "public/data/computed/fenok_occ_options_availability.json"), slim);
 }
 removePrivateDataSupplyPublicTrees();
+removePublicDevelopmentDocs();
 redactPrivateArtifactPathMirrors();
 removePrivateResearchPublicTrees();
 removePrivateEdgarPublicTree();
