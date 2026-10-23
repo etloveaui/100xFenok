@@ -19,8 +19,8 @@ for (const [axis, allowance] of [["class_a", 1e6], ["class_b", 1e7]]) {
   const item = summary(1); item[axis].projected_month = allowance * 0.89;
   assert.equal(verdictFor(item, { ...plan, [axis]: allowance * 0.01 }, false).verdict, "warn");
 }
-assert.equal(verdictFor(summary(1), plan, true).verdict, "unverified");
-assert.equal(verdictFor(summary(70, 900000), plan, true).breaches.length, 1);
+assert.deepEqual(verdictFor(summary(1), plan, true).breaches, ["measurement_blind"]);
+assert.equal(verdictFor(summary(70, 900000), plan, false).breaches.length, 1);
 assert.equal(verdictFor(summary(1, 1000001), plan, false).with_plan.estimated_cost_krw, 6750);
 assert.equal(verdictFor(summary(1, 2000001), plan, false).verdict, "fail");
 assert.equal(storageCostUsd(10), 0);
@@ -66,7 +66,7 @@ assert.equal(result.storage.free_gb_month, 10, "the paid storage decision does n
   assert.deepEqual(paths, ["/other"], "each discovered bucket must be measured, not the default plane repeatedly");
   await assert.rejects(fetchInventory({ request, createClient: async () => ({
     listAllObjects: async () => { throw new Error("S3_LIST_BUDGET"); },
-  }) }), /S3_LIST_BUDGET/, "an incomplete inventory must remain unverified");
+  }) }), /S3_LIST_BUDGET/, "an incomplete inventory must still block publication");
   await assert.rejects(fetchInventory({ request, createClient: async () => ({
     listAllObjects: async () => [{ size: undefined }],
   }) }), /size is unavailable/);

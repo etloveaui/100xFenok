@@ -23,8 +23,10 @@
 // and a bounded attempt count. It was the only Retry-After reader in the repo.
 // That policy is now shared rather than duplicated, so the two cannot drift.
 //
-// Unverified measurements still block publication for strict and tolerant
-// families. Changing that policy requires an owner decision.
+// What is deliberately NOT changed: whether an unverifiable measurement blocks
+// publication. It still does, for strict and tolerant families alike. Fail-
+// closed is the safe default and relaxing it is a policy call for the owner, not
+// a side effect of making the signal honest.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -174,7 +176,7 @@ assert.ok(
   "the shard schema must accept the verdict the publisher now writes, or every record fails validation",
 );
 
-// --- Unverified measurements and measured breaches both block ----------------
+// --- Fail-closed is unchanged, and that is asserted so it stays a decision ----
 for (const strictGate of [true, false]) {
   assert.equal(
     gateBlocksPublication({ gateCode: GATE_MEASUREMENT_UNVERIFIED_EXIT, strictGate }),

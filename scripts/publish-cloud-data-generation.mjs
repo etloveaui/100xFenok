@@ -148,7 +148,7 @@ const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mj
 // a stalled measurement from holding the publish (and its writer lock) forever.
 const GATE_TIMEOUT_MS = (() => {
   const raw = Number(process.env.PUBLISH_GATE_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : 65_000;
+  return Number.isFinite(raw) && raw > 0 ? raw : 600_000;
 })();
 const R2_BUCKET = "fenok-data-plane";
 const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
@@ -3246,9 +3246,9 @@ export function familyDeclaresStrictGate(familyName) {
   return Boolean(PLANE_PUBLISHER_EXCEPTIONS[familyName]?.strict_gate);
 }
 
-// An unverifiable measurement still blocks, for strict and tolerant families
-// alike. Relaxing fail-closed admission requires an owner decision; distinguishing
-// an unverified measurement from a measured breach does not change that policy.
+// Unchanged on purpose: an unverifiable measurement still blocks, for strict and
+// tolerant families alike. Fail-closed is the safe default and relaxing it is an
+// owner decision, not a side effect of making the signal honest.
 export function gateBlocksPublication({ gateCode, strictGate }) {
   return strictGate ? gateCode !== 0 : (gateCode !== 0 && gateCode !== 1);
 }
@@ -3864,7 +3864,7 @@ export async function runPublisherCli({
         planBytes: plannedBytes,
         env,
       });
-      if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
+        if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
         if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
         stderr(`publish-cloud-data-generation: incremental storage plan blocked (exit ${gateBefore.code}); no write attempted`);
         return 3;

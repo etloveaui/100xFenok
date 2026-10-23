@@ -7,9 +7,10 @@
 // Retain the existing 40/70 GB storage limits. This is not an account billing cap.
 // Unknown measurements still block publication.
 //
-// One shared deadline covers billing, analytics, all inventory pages and retries
-// (default 60s; R2_MEASURE_FETCH_TIMEOUT_MS overrides the measurement budget).
-// Partial evidence can prove a breach, but can never certify an account as OK.
+// Every measurement fetch carries a bounded deadline (default 60s; override
+// with R2_MEASURE_FETCH_TIMEOUT_MS). A timed-out measurement throws and fails
+// closed (exit 2) exactly like any other unreadable API; only the billing
+// cycle-anchor probe keeps its existing fallback-to-configuration behavior.
 //
 // Usage:
 //   CLOUDFLARE_API_TOKEN=... node scripts/check-r2-free-tier-usage.mjs [--json]
@@ -36,7 +37,7 @@ import {
 // and "the measurement could not be trusted", so the ledger could not tell a
 // real overrun from an unreadable one and gateVerdict folded both into
 // "blocked". They are separate answers and now carry separate codes. Whether an
-// unverifiable measurement should block publication is decided by the caller.
+// unverifiable measurement should still block publication is unchanged: it does.
 const MEASUREMENT_UNVERIFIED_EXIT = 3;
 
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
@@ -93,15 +94,9 @@ const TRAILING_DAYS = 31;
 const iso = (d) => d.toISOString().slice(0, 10);
 const addDays = (d, n) => new Date(d.getTime() + n * 86_400_000);
 
-function remainingMeasurementMs(deadline) {
-  const remaining = deadline - Date.now();
-  if (remaining <= 0) throw new Error("measurement deadline reached");
-  return Math.min(FETCH_TIMEOUT_MS, remaining);
-}
-
-async function fetchWithTimeout(url, init = {}, deadline = Date.now() + FETCH_TIMEOUT_MS) {
+async function fetchWithTimeout(url, init = {}) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), remainingMeasurementMs(deadline));
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (error) {
@@ -117,8 +112,9 @@ async function fetchWithTimeout(url, init = {}, deadline = Date.now() + FETCH_TI
 // A response whose headers arrived but whose body never finishes used to hang
 // the gate (and through it, the publisher holding the writer lock) forever:
 // fetchWithTimeout's deadline covers headers only. Race every body read
-// against the same deadline so a mid-body stall is reported as unverified.
-async function readJsonBody(response, label, deadline = Date.now() + FETCH_TIMEOUT_MS) {
+// against the same deadline so a mid-body stall throws and fails closed like
+// any other unreadable measurement.
+async function readJsonBody(response, label) {
   let timer;
   try {
     return await Promise.race([
@@ -126,7 +122,7 @@ async function readJsonBody(response, label, deadline = Date.now() + FETCH_TIMEO
       new Promise((_, reject) => {
         timer = setTimeout(
           () => reject(new Error(`${label} body read timed out after ${FETCH_TIMEOUT_MS}ms`)),
-          remainingMeasurementMs(deadline),
+          FETCH_TIMEOUT_MS,
         );
       }),
     ]);
@@ -138,14 +134,14 @@ async function readJsonBody(response, label, deadline = Date.now() + FETCH_TIMEO
 // Ask the billing API for the R2 subscription's period end and derive the
 // anchor day from it. Returns null when the token lacks billing read or the
 // shape is unfamiliar — the caller then falls back to configuration and says so.
-async function fetchCycleAnchor(deadline) {
+async function fetchCycleAnchor() {
   try {
     const response = await fetchWithTimeout(
       `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/subscriptions`,
-      { headers: { Authorization: `Bearer ${TOKEN}` } }, deadline,
+      { headers: { Authorization: `Bearer ${TOKEN}` } },
     );
     if (!response.ok) return null;
-    const body = await readJsonBody(response, "billing subscriptions", deadline);
+    const body = await readJsonBody(response, "billing subscriptions");
     if (!body.success) return null;
     const r2 = (body.result ?? []).find((s) => (s?.rate_plan?.id ?? "").startsWith("r2"));
     const end = r2?.current_period_end;
@@ -191,7 +187,7 @@ const QUERY = `query($acc:String!,$start:Date!,$end:Date!){
   }}
 }`;
 
-async function fetchUsage(bounds, deadline) {
+async function fetchUsage(bounds) {
   const response = await fetchWithTimeout("https://api.cloudflare.com/client/v4/graphql", {
     method: "POST",
     headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json" },
@@ -199,9 +195,9 @@ async function fetchUsage(bounds, deadline) {
       query: QUERY,
       variables: { acc: ACCOUNT_ID, start: bounds.query_start, end: bounds.today },
     }),
-  }, deadline);
+  });
   if (!response.ok) throw new Error(`graphql http ${response.status}`);
-  const body = await readJsonBody(response, "graphql usage", deadline);
+  const body = await readJsonBody(response, "graphql usage");
   if (body.errors?.length) throw new Error(`graphql: ${JSON.stringify(body.errors)}`);
   const account = body?.data?.viewer?.accounts?.[0];
   if (!account) throw new Error("graphql returned no account row");
@@ -220,22 +216,18 @@ async function fetchUsage(bounds, deadline) {
 // rather than inferred. A structural check that the 429 branch exists passed
 // with that branch disabled, which is the vacuous-contract shape this whole
 // programme keeps finding.
-export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep,
-  deadline = Date.now() + FETCH_TIMEOUT_MS } = {}) {
+export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep } = {}) {
   const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}${path}`;
   let rateLimitAttempts = 0;
   let transientAttempts = 0;
   for (;;) {
-    remainingMeasurementMs(deadline);
-    const response = await transport(url, { headers: { Authorization: `Bearer ${TOKEN}` } }, deadline);
+    const response = await transport(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
     if (response.status === 429) {
       rateLimitAttempts += 1;
       if (rateLimitAttempts > MAX_RATE_LIMIT_ATTEMPTS) {
         throw new Error(`cf ${path} http 429 after ${MAX_RATE_LIMIT_ATTEMPTS} rate-limited attempts`);
       }
-      const delay = rateLimitDelayMs(response, rateLimitAttempts, url);
-      if (delay >= remainingMeasurementMs(deadline)) throw new Error("measurement retry exceeds deadline");
-      await sleepImpl(delay);
+      await sleepImpl(rateLimitDelayMs(response, rateLimitAttempts, url));
       continue;
     }
     if (response.status >= 500) {
@@ -243,13 +235,11 @@ export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep
       if (transientAttempts >= MAX_ATTEMPTS) {
         throw new Error(`cf ${path} http ${response.status} after ${MAX_ATTEMPTS} attempts`);
       }
-      const delay = BACKOFF_BASE_MS * 2 ** (transientAttempts - 1);
-      if (delay >= remainingMeasurementMs(deadline)) throw new Error("measurement retry exceeds deadline");
-      await sleepImpl(delay);
+      await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
       continue;
     }
     if (!response.ok) throw new Error(`cf ${path} http ${response.status}`);
-    const body = await readJsonBody(response, `cf ${path}`, deadline);
+    const body = await readJsonBody(response, `cf ${path}`);
     if (!body.success) throw new Error(`cf ${path}: ${JSON.stringify(body.errors)}`);
     return body;
   }
@@ -257,58 +247,36 @@ export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep
 
 // Storage needs the whole estate, including retained and unrelated families.
 // The existing S3 reader lists object metadata, without the slow REST
-// object walk. A shared deadline bounds pagination and retries together.
+// object walk. Its pagination/deadline failures still fail the gate closed.
 export async function fetchInventory({
   request = cf,
   createClient = createR2S3ClientFromExistingToken,
   fetchImpl = fetch,
-  deadline = Date.now() + FETCH_TIMEOUT_MS,
 } = {}) {
-  const list = await request("/r2/buckets", { deadline });
+  const list = await request("/r2/buckets");
   const buckets = (list?.result?.buckets ?? list?.result ?? []).map((b) => b.name).filter(Boolean);
   let bytes = 0;
   let objects = 0;
   let listCalls = 1;
-  try {
-    await runBoundedAsyncPool(buckets, async bucket => {
-      const client = await createClient({
-        env: { CLOUDFLARE_ACCOUNT_ID: ACCOUNT_ID, CLOUDFLARE_API_TOKEN: TOKEN },
-        bucket,
-        timeoutMs: remainingMeasurementMs(deadline),
-        fetchImpl: (url, init) => {
-          if (new URL(url).searchParams.get("list-type") === "2") listCalls += 1;
-          return fetchImpl(url, init);
-        },
-      });
-      let listed, failure;
-      try { listed = await client.listAllObjects({ deadline }); }
-      catch (error) { listed = error.partialObjects ?? []; failure = error; }
-      for (const object of listed) {
-        if (!Number.isSafeInteger(object.size) || object.size < 0) {
-          throw new Error("inventory object size is unavailable");
-        }
-        bytes += object.size;
-        objects += 1;
-      }
-      if (failure) throw failure;
+  await runBoundedAsyncPool(buckets, async bucket => {
+    const client = await createClient({
+      env: { CLOUDFLARE_ACCOUNT_ID: ACCOUNT_ID, CLOUDFLARE_API_TOKEN: TOKEN },
+      bucket,
+      timeoutMs: FETCH_TIMEOUT_MS,
+      fetchImpl: (url, init) => {
+        if (new URL(url).searchParams.get("list-type") === "2") listCalls += 1;
+        return fetchImpl(url, init);
+      },
     });
-  } catch (error) {
-    // Preserve the lower bound already observed in completed buckets.
-    error.inventory = { buckets: buckets.length, bytes, objects, truncated: true, list_calls: listCalls };
-    throw error;
-  }
+    for (const object of await client.listAllObjects()) {
+      if (!Number.isSafeInteger(object.size) || object.size < 0) {
+        throw new Error("inventory object size is unavailable");
+      }
+      bytes += object.size;
+      objects += 1;
+    }
+  });
   return { buckets: buckets.length, bytes, objects, truncated: false, list_calls: listCalls };
-}
-
-export async function measureAccount(bounds, { deadline = Date.now() + FETCH_TIMEOUT_MS,
-  usage = fetchUsage, inventory = fetchInventory } = {}) {
-  const [account, listed] = await Promise.allSettled([usage(bounds, deadline), inventory({ deadline })]);
-  const errors = [account, listed].filter(result => result.status === "rejected")
-    .map(result => result.reason?.message || String(result.reason));
-  const buckets = listed.status === "fulfilled" ? listed.value : listed.reason?.inventory
-    ?? { buckets: 0, bytes: 0, objects: 0, truncated: true, list_calls: 0 };
-  const summary = summarise(account.status === "fulfilled" ? account.value : {}, bounds, buckets);
-  return { summary, buckets, errors, blind: errors.length > 0 || buckets.truncated };
 }
 
 function tallyOperations(rows, fromDate) {
@@ -427,8 +395,8 @@ export function verdictFor(summary, plan, blind) {
   const breaches = axes.filter(([, f, , fail]) => f >= fail).map(([name]) => name);
   const warnings = axes.filter(([, f, warn, fail]) => f >= warn && f < fail).map(([name]) => name);
   const with_plan = Object.fromEntries(axes);
+  if (blind) return { verdict: "fail", breaches: ["measurement_blind"], warnings, with_plan };
   if (breaches.length) return { verdict: "fail", breaches, warnings, with_plan };
-  if (blind) return { verdict: "unverified", breaches, warnings, with_plan };
   if (warnings.length) return { verdict: "warn", breaches, warnings, with_plan };
   return { verdict: "ok", breaches, warnings, with_plan };
 }
@@ -450,23 +418,28 @@ async function main() {
     console.error("check-r2-free-tier-usage: CLOUDFLARE_API_TOKEN is not set — refusing to report ok on an unmeasured account");
     process.exit(2);
   }
-  const deadline = Date.now() + FETCH_TIMEOUT_MS;
-  // Billing discovery is optional; do not let it consume the measurement budget.
-  const bounds = cycleBounds(new Date(), await fetchCycleAnchor(Math.min(deadline, Date.now() + 5000)));
+  const bounds = cycleBounds(new Date(), await fetchCycleAnchor());
   const plan = {
     class_a: numericFlag("plan-class-a"),
     class_b: numericFlag("plan-class-b"),
     bytes: numericFlag("plan-bytes"),
   };
-  const { summary, buckets, errors, blind } = await measureAccount(bounds, { deadline });
-  if (errors.length) {
-    console.error(`check-r2-free-tier-usage: measurement incomplete (${errors.join("; ")}) — partial values are lower bounds, never verified OK`);
+  let summary;
+  let buckets;
+  try {
+    const [account, inv] = await Promise.all([fetchUsage(bounds), fetchInventory()]);
+    summary = summarise(account, bounds, inv);
+    buckets = inv;
+  } catch (error) {
+    console.error(`check-r2-free-tier-usage: measurement failed (${error.message}) — reporting unverified, never ok`);
+    process.exit(MEASUREMENT_UNVERIFIED_EXIT);
   }
   // The measurement's own S3 ListObjects requests are billable Class A too.
   plan.class_a += buckets.list_calls;
   // Storage now comes from the object listing, so an empty analytics dataset is
   // no longer blindness. The remaining blind case is a listing we could not
   // finish: we cannot certify bytes we did not count.
+  const blind = buckets.truncated;
   const { verdict, breaches, warnings, with_plan } = verdictFor(summary, plan, blind);
   const report = {
     schema_version: "r2-free-tier-usage/v2",
@@ -484,8 +457,6 @@ async function main() {
     bucket_count: buckets.buckets,
     inventory_list_calls: buckets.list_calls,
     measurement_blind: blind,
-    measurement_errors: errors,
-    measurement_values_are_lower_bounds: blind,
     ...summary,
   };
 
@@ -510,11 +481,11 @@ async function main() {
       console.log(`  WARN: ${summary.storage.pending_multipart_uploads} pending multipart upload(s) hold bytes this projection may not cover`);
     }
     console.log(`  measured   ${summary.storage.measured_from_listing.objects} objects / ${summary.storage.measured_from_listing.bytes} bytes from the listing across ${buckets.buckets} bucket(s); analytics peak ${summary.storage.analytics_peak_bytes} bytes`);
-    if (blind) console.log(`  UNVERIFIED: measurement incomplete; reported values are lower bounds`);
-    if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above its axis fail threshold (storage ${STORAGE_FAIL_GB} GB-month; estimated R2 cost KRW ${COST_FAIL_KRW})`);
+    if (blind) console.log(`  BLIND: object listing truncated — cannot certify bytes that were not counted`);
+    else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above its axis fail threshold (storage ${STORAGE_FAIL_GB} GB-month; estimated R2 cost KRW ${COST_FAIL_KRW})`);
     else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above its axis warning threshold (storage ${STORAGE_WARN_GB} GB-month; operations ${pct(WARN_AT)} free or cost KRW ${COST_WARN_KRW})`);
   }
-  process.exit(verdict === "fail" ? 2 : verdict === "unverified" ? MEASUREMENT_UNVERIFIED_EXIT : verdict === "warn" ? 1 : 0);
+  process.exit(verdict === "fail" ? 2 : verdict === "warn" ? 1 : 0);
 }
 
 // Guarded so the module can be imported. Without this, `await main()` ran on
