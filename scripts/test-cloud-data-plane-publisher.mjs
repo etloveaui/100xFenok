@@ -3135,11 +3135,11 @@ await rm(retentionRoot, { recursive: true, force: true });
   console.log("retention REST helpers ok (list pagination, delete 200/404/400/network)");
 }
 
-// --- gate-blocked behaviour through the real CLI (offline) -------------------
+// --- unverified gate and missing-credential behaviour through the real CLI ---
 
 function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   const env = { ...process.env };
-  delete env.CLOUDFLARE_API_TOKEN; // the gate fails closed without a token — offline by design
+  delete env.CLOUDFLARE_API_TOKEN; // unverified, followed by the separate credential guard
   delete env.DATA_PLANE_ENDPOINT;
   delete env.DATA_PLANE_WRITE_KEY;
   // Every CLI run redirects publish-outcome evidence into its own throwaway
@@ -3175,29 +3175,20 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 
 {
   const tolerated = await runCli(["--tolerate-gate-block"]);
-  assert.equal(tolerated.code, 0, tolerated.stderr);
-  const lines = tolerated.stdout.trim().split("\n");
-  assert.equal(lines.length, 1);
-  const summary = JSON.parse(lines[0]);
-  assert.equal(summary.result, "gate_blocked");
-  assert.equal(summary.gate_exit, 2);
-  assert.match(summary.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
-  // The CLI reads its explicit offline fixture, independent of retired Git data.
-  assert.equal(summary.assets, 1);
-  assert.equal(summary.total_bytes, 8);
-  assert.equal(summary.unique_object_keys, 2); // 1 object + 1 manifest
-  assert.equal(summary.objects_deduped, 0);
+  assert.equal(tolerated.code, 2, tolerated.stderr);
+  assert.equal(tolerated.stdout.trim(), "");
+  assert.match(tolerated.stderr, /::warning::R2 cost measurement UNVERIFIED/);
+  assert.match(tolerated.stderr, /missing env/);
 
   const refused = await runCli([]);
-  assert.equal(refused.code, 3);
+  assert.equal(refused.code, 2);
   assert.equal(refused.stdout.trim(), "");
-  assert.match(refused.stderr, /cost gate blocked/);
+  assert.match(refused.stderr, /missing env/);
 
-  // Chaos flag parsing: a known mode is accepted (the gate still blocks first,
-  // offline), an unknown mode is rejected before anything runs.
+  // Known chaos modes parse, then the separate credential guard stops writes.
   const chaosAccepted = await runCli(["--chaos=stale-sequence", "--tolerate-gate-block"]);
-  assert.equal(chaosAccepted.code, 0, chaosAccepted.stderr);
-  assert.equal(JSON.parse(chaosAccepted.stdout.trim()).result, "gate_blocked");
+  assert.equal(chaosAccepted.code, 2, chaosAccepted.stderr);
+  assert.match(chaosAccepted.stderr, /missing env/);
   const chaosRejected = await runCli(["--chaos=bogus"]);
   assert.equal(chaosRejected.code, 1);
   assert.match(chaosRejected.stderr, /ARGS_INVALID/);
@@ -3388,6 +3379,15 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.equal(resumedSummary.result, "resumed");
   assert.equal(resumedSummary.gate_after_basis, "covered_by_preflight_plan");
   assert.equal(normalGateCalls, 1, "resumed publication must perform one full cost measurement");
+  const unverified = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory,
+    gate: async () => ({ code: 3, stdout: "", stderr: "injected incomplete measurement" }),
+  });
+  assert.equal(unverified.exitCode, 0, "unverified measurement permits actual publication/resume");
+  const unverifiedSummary = JSON.parse(unverified.stdout[0]);
+  assert.equal(unverifiedSummary.gate_before, "unverified");
+  assert.equal(unverifiedSummary.gate_after, "unverified");
+  assert.deepEqual(unverifiedSummary.gate_measurements, [{ stage: "preflight", verdict: "unverified", exit: 3 }]);
+  assert.match(unverified.stderr.join("\n"), /::warning::R2 cost measurement UNVERIFIED/);
   const missingRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-missing-env-"));
   const missing = await invoke({ outcomesRoot: missingRoot, env: {}, createPublishPlaneImpl: memoryFactory });
   assert.equal(missing.exitCode, 2);
@@ -3587,7 +3587,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 }
 
 // Current families admit the owner's budgeted cost WARN. The strict primitive
-// still rejects every nonzero verdict; FAIL/unverified block either mode.
+// still rejects WARN; measured FAIL blocks either mode, unverified proceeds.
 {
   assert.equal(familyDeclaresStrictGate("stockanalysis-etf-detail"), false,
     "ETF publication admits the existing cost WARN; FAIL remains terminal");
@@ -3598,6 +3598,9 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
 
   assert.equal(gateBlocksPublication({ gateCode: 1, strictGate: true }), true,
     "a strict family must block on the 70% WARN, not publish through it");
+  assert.equal(gateBlocksPublication({ gateCode: 3, strictGate: true }), false);
+  assert.equal(gateBlocksPublication({ gateCode: 3, strictGate: false }), false);
+  assert.equal(gateBlocksPublication({ gateCode: null, strictGate: false }), true);
   assert.equal(gateBlocksPublication({ gateCode: 2, strictGate: true }), true);
   assert.equal(gateBlocksPublication({ gateCode: 0, strictGate: true }), false);
   assert.equal(gateBlocksPublication({ gateCode: 1, strictGate: false }), false,

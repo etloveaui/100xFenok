@@ -3027,7 +3027,7 @@ export function runCostGate({ planClassA, planClassB, planBytes, env, timeoutMs 
     // A gate child that never returns used to park the publisher (and the
     // global writer lock it holds) until the job timeout. Bound it: on expiry
     // the child is killed and the gate resolves as measurement-unverified,
-    // which fails closed through the existing exit-3 path.
+    // which retains exit-3 evidence and warns under the owner publication policy.
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
@@ -3059,8 +3059,8 @@ export function runCostGate({ planClassA, planClassB, planBytes, env, timeoutMs 
 // The gate answers three different things and used to record two of them the
 // same way. "blocked" means it measured a breach; "unverified" means it could
 // not measure at all, which was every block in recorded history up to
-// 2026-08-21. Both still stop publication - see gateBlocksPublication - but the
-// record now says which happened.
+// 2026-08-21. The owner now permits unverified publication with a warning;
+// the record must still distinguish that from a verified measurement.
 export const GATE_MEASUREMENT_UNVERIFIED_EXIT = 3;
 
 export function gateVerdict(gate) {
@@ -3246,10 +3246,12 @@ export function familyDeclaresStrictGate(familyName) {
   return Boolean(PLANE_PUBLISHER_EXCEPTIONS[familyName]?.strict_gate);
 }
 
-// Unchanged on purpose: an unverifiable measurement still blocks, for strict and
-// tolerant families alike. Fail-closed is the safe default and relaxing it is an
-// owner decision, not a side effect of making the signal honest.
+// Owner 2026-10-23: "A로 하되 어지간하면 문제 없게 하라고".
+// Exit 3 permits publication with explicit unverified evidence and a WARNING.
+// Measured breaches (exit 2, including partial evidence) still block; unknown
+// process exits and the existing strict-family warning policy remain terminal.
 export function gateBlocksPublication({ gateCode, strictGate }) {
+  if (gateCode === GATE_MEASUREMENT_UNVERIFIED_EXIT) return false;
   return strictGate ? gateCode !== 0 : (gateCode !== 0 && gateCode !== 1);
 }
 
@@ -3753,16 +3755,17 @@ export async function runPublisherCli({
     if (!args.json && gateBefore.stdout.trim()) {
       stderr(gateBefore.stdout.trim());
     }
-    // Gate strictness is per family and declared in the registry. Tolerant
-    // families keep exactly their existing behaviour, where exit 1 is the
-    // script's 70% WARN and publication proceeds. A strict family treats ANY
-    // nonzero code as a block — the 70% warn is already tighter than the
-    // owner's 80% stop, and for the first publication of the largest payload in
-    // the estate the conservative reading is the correct one. Strictness also
-    // ignores --tolerate-gate-block, so a manual dispatch cannot reintroduce
-    // the false green the flag would produce. Either way this returns before
-    // the env check and before any plane is created, so a blocked gate performs
-    // no remote call, while the gate_blocked evidence is still recorded.
+    const gateMeasurements = [{ stage: "preflight", verdict: gateVerdict(gateBefore), exit: gateBefore.code }];
+    const warnUnverified = (gate) => {
+      if (gate.code !== GATE_MEASUREMENT_UNVERIFIED_EXIT) return;
+      stderr("::warning::R2 cost measurement UNVERIFIED; publication continues under owner policy. Values are lower bounds, not verified budget compliance.");
+      if (gate.stderr.trim()) stderr(gate.stderr.trim());
+    };
+    warnUnverified(gateBefore);
+    // Strict families still block cost WARN. Exit 3 is the explicit owner
+    // exception for all publication families; measured breaches and unexpected
+    // child exits stop before a plane is created. Retention and rollback retain
+    // their separate existing admission checks.
     const strictGate = familyDeclaresStrictGate(args.family);
     const gateBlocked = gateBlocksPublication({ gateCode: gateBefore.code, strictGate });
     if (gateBlocked) {
@@ -3869,7 +3872,9 @@ export async function runPublisherCli({
         planBytes: plannedBytes,
         env,
       });
-        if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
+      gateMeasurements.push({ stage: "incremental", verdict: gateVerdict(gateBefore), exit: gateBefore.code });
+      warnUnverified(gateBefore);
+      if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
         if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
         stderr(`publish-cloud-data-generation: incremental storage plan blocked (exit ${gateBefore.code}); no write attempted`);
         return 3;
@@ -3930,7 +3935,8 @@ export async function runPublisherCli({
           attempted_expected_sequence: expectedForPublish,
           pointer_sequence_before: pointerSequenceBefore,
           pointer_sequence_after: pointerNow?.sequence ?? 0,
-          gate_before: gateVerdict(gateBefore),
+          gate_before: gateMeasurements.some((gate) => gate.verdict === "unverified") ? "unverified" : gateVerdict(gateBefore),
+          gate_measurements: gateMeasurements,
           gate_after: gateVerdict(gateAfter),
         });
         return 0;
@@ -3952,7 +3958,8 @@ export async function runPublisherCli({
           receipt_state: receipt?.state ?? null,
           pointer_sequence_before: pointerSequenceBefore,
           pointer_sequence_after: pointerNow?.sequence ?? 0,
-          gate_before: gateVerdict(gateBefore),
+          gate_before: gateMeasurements.some((gate) => gate.verdict === "unverified") ? "unverified" : gateVerdict(gateBefore),
+          gate_measurements: gateMeasurements,
           gate_after: gateVerdict(gateAfter),
         });
         return 0;
@@ -4038,7 +4045,8 @@ export async function runPublisherCli({
       parity_body_verified_objects: verificationStats.body_verified_objects,
       parity_reused_assets: verificationStats.reused_assets,
       parity_reused_objects: verificationStats.reused_objects,
-      gate_before: gateVerdict(gateBefore),
+      gate_before: gateMeasurements.some((gate) => gate.verdict === "unverified") ? "unverified" : gateVerdict(gateBefore),
+      gate_measurements: gateMeasurements,
       gate_after: gateVerdict(gateBefore),
       gate_after_basis: "covered_by_preflight_plan",
     });

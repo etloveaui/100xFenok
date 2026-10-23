@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { fetchInventory, verdictFor, summarise, storageCostUsd, STORAGE_WARN_GB, STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
+import { measureAccountWithRetry, fetchInventory, verdictFor, summarise, storageCostUsd, STORAGE_WARN_GB, STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
 import { createR2S3Client, createR2S3ClientFromExistingToken } from "./lib/cloud-data-plane-s3.mjs";
 const summary = (gb, a = 0, b = 0) => ({ storage: { peak_bytes: gb * 1e9 },
   class_a: { projected_month: a }, class_b: { projected_month: b } });
@@ -82,3 +82,32 @@ for (const [status, length] of [[200, "42"], [404, null], [200, null], [200, "ba
   else await assert.rejects(client.headObject("objects/sha256/fixture"));
 }
 console.log("R2 storage budget: PASS (40/70 GB, planned increments, paid operation cost thresholds, blind measurement, billing rounding)");
+
+// Owner-approved fail-open applies only after one bounded whole measurement retry.
+{
+  const resultFor = (gb, blind, calls = 2) => ({ summary: summary(gb), buckets: { list_calls: calls }, errors: blind ? ["network"] : [], blind });
+  const run = async (results) => {
+    let clock = 0;
+    const deadlines = [];
+    const measured = await measureAccountWithRetry(bounds, plan, { deadline: 300, now: () => clock,
+      measure: async (_, { deadline }) => { deadlines.push(deadline); clock = deadline; return results.shift(); },
+    });
+    return { measured, deadlines };
+  };
+  const recovered = await run([resultFor(1, true), resultFor(1, false, 3)]);
+  assert.deepEqual(recovered.deadlines, [150, 300], "retry shares one 300-unit budget");
+  assert.equal(recovered.measured.blind, false);
+  assert.equal(recovered.measured.buckets.list_calls, 5, "both attempts incur listing operations");
+  assert.deepEqual(recovered.measured.attempts.map(a => a.verdict), ["unverified", "ok"]);
+  const blind = await run([resultFor(1, true), resultFor(1, true)]);
+  assert.equal(blind.measured.attempts.length, 2);
+  assert.equal(blind.measured.blind, true);
+  const breach = await run([resultFor(71, true)]);
+  assert.equal(breach.measured.attempts.length, 1, "partial evidence breach cannot be retried away");
+  assert.equal(breach.measured.attempts[0].verdict, "fail");
+  const clean = await run([resultFor(1, false)]);
+  assert.equal(clean.measured.attempts.length, 1, "healthy measurements are not repeated");
+  const laterBreach = await run([resultFor(1, true), resultFor(71, true)]);
+  assert.equal(laterBreach.measured.attempts[1].verdict, "fail");
+  console.log("R2 bounded whole-measurement retry: PASS");
+}

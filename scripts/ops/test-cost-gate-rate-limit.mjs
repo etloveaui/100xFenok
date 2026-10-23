@@ -176,12 +176,12 @@ assert.ok(
   "the shard schema must accept the verdict the publisher now writes, or every record fails validation",
 );
 
-// --- Fail-closed is unchanged, and that is asserted so it stays a decision ----
+// --- Owner permits unverified publication; measured breaches still block ----
 for (const strictGate of [true, false]) {
   assert.equal(
     gateBlocksPublication({ gateCode: GATE_MEASUREMENT_UNVERIFIED_EXIT, strictGate }),
-    true,
-    `an unverifiable measurement must still block (strict=${strictGate}); relaxing it is an owner call`,
+    false,
+    `owner-approved unverified publication must proceed (strict=${strictGate})`,
   );
   assert.equal(gateBlocksPublication({ gateCode: 2, strictGate }), true);
   assert.equal(gateBlocksPublication({ gateCode: 0, strictGate }), false);

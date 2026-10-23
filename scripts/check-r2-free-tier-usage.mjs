@@ -5,7 +5,8 @@
 // costs warn at KRW 5,000 and block at KRW 8,000, leaving headroom for other
 // services/tax. 1,500 KRW/USD is a conservative planning rate, not live FX.
 // Retain the existing 40/70 GB storage limits. This is not an account billing cap.
-// Unknown measurements still block publication.
+// Owner 2026-10-23: "A로 하되 어지간하면 문제 없게 하라고".
+// Unverified measurements warn and permit publication; measured breaches block.
 //
 // One shared deadline covers billing, analytics, all inventory pages and retries
 // Successful gates sampled 2026-10-23: n=17, median 92.860s, max 135.873s.
@@ -37,8 +38,8 @@ import {
 // Exit 2 used to mean BOTH "an axis is at or above 90% of the free allowance"
 // and "the measurement could not be trusted", so the ledger could not tell a
 // real overrun from an unreadable one and gateVerdict folded both into
-// "blocked". They are separate answers and now carry separate codes. Whether an
-// unverifiable measurement should still block publication is unchanged: it does.
+// "blocked". Separate codes preserve evidence even when publication proceeds
+// through an unverified measurement under the owner decision above.
 const MEASUREMENT_UNVERIFIED_EXIT = 3;
 
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
@@ -340,6 +341,30 @@ export async function measureAccount(bounds, { deadline = Date.now() + MEASUREME
   return { summary, buckets, errors, blind: errors.length > 0 || buckets.truncated };
 }
 
+
+// Reserve half of the remaining shared budget for one whole-measurement retry.
+// A partial measurement that already proves a breach is terminal, never retried
+// into a cheaper answer. Every listing request from both attempts is budgeted.
+export async function measureAccountWithRetry(bounds, plan, {
+  deadline = Date.now() + MEASUREMENT_TIMEOUT_MS,
+  measure = measureAccount,
+  now = Date.now,
+} = {}) {
+  const attempts = [];
+  let listCalls = 0;
+  let measured;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const started = now();
+    const attemptDeadline = attempt === 1 ? started + Math.max(0, (deadline - started) / 2) : deadline;
+    measured = await measure(bounds, { deadline: attemptDeadline });
+    listCalls += measured.buckets.list_calls;
+    const verdict = verdictFor(measured.summary, { ...plan, class_a: plan.class_a + listCalls }, measured.blind).verdict;
+    attempts.push({ attempt, elapsed_ms: now() - started, verdict, errors: measured.errors, list_calls: measured.buckets.list_calls });
+    if (verdict !== "unverified" || now() >= deadline) break;
+  }
+  return { ...measured, buckets: { ...measured.buckets, list_calls: listCalls }, attempts };
+}
+
 function tallyOperations(rows, fromDate) {
   let classA = 0;
   let classB = 0;
@@ -477,7 +502,8 @@ async function main() {
   const json = process.argv.includes("--json");
   if (!TOKEN) {
     console.error("check-r2-free-tier-usage: CLOUDFLARE_API_TOKEN is not set — refusing to report ok on an unmeasured account");
-    process.exit(2);
+    console.log(JSON.stringify({ verdict: "unverified", measurement_blind: true, measurement_errors: ["CLOUDFLARE_API_TOKEN is not set"] }));
+    process.exit(MEASUREMENT_UNVERIFIED_EXIT);
   }
   const deadline = Date.now() + MEASUREMENT_TIMEOUT_MS;
   // Billing discovery is optional; do not let it consume the measurement budget.
@@ -487,7 +513,7 @@ async function main() {
     class_b: numericFlag("plan-class-b"),
     bytes: numericFlag("plan-bytes"),
   };
-  const { summary, buckets, errors, blind } = await measureAccount(bounds, { deadline });
+  const { summary, buckets, errors, blind, attempts } = await measureAccountWithRetry(bounds, plan, { deadline });
   if (errors.length) {
     console.error(`check-r2-free-tier-usage: measurement incomplete (${errors.join("; ")}) — partial values are lower bounds, never verified OK`);
   }
@@ -513,6 +539,7 @@ async function main() {
     bucket_count: buckets.buckets,
     inventory_list_calls: buckets.list_calls,
     inventory_buckets: buckets.bucket_measurements ?? [],
+    measurement_attempts: attempts,
     measurement_blind: blind,
     measurement_errors: errors,
     measurement_values_are_lower_bounds: blind,
@@ -543,7 +570,8 @@ async function main() {
     for (const bucket of buckets.bucket_measurements ?? []) {
       console.log(`  inventory bucket=${bucket.bucket} objects=${bucket.objects} bytes=${bucket.bytes} pages=${bucket.pages} list_requests=${bucket.list_requests} elapsed_ms=${bucket.elapsed_ms} complete=${bucket.complete}`);
     }
-    if (blind) console.log(`  UNVERIFIED: measurement incomplete; reported values are lower bounds`);
+    console.log(`  measurement attempts: ${attempts.length}; total listing requests: ${buckets.list_calls}`);
+    if (blind) console.log(`  WARNING UNVERIFIED: measurement incomplete; reported values are lower bounds`);
     if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above its axis fail threshold (storage ${STORAGE_FAIL_GB} GB-month; estimated R2 cost KRW ${COST_FAIL_KRW})`);
     else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above its axis warning threshold (storage ${STORAGE_WARN_GB} GB-month; operations ${pct(WARN_AT)} free or cost KRW ${COST_WARN_KRW})`);
   }
