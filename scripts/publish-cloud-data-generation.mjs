@@ -2911,6 +2911,70 @@ function validateParityProof(verifiedObjects, manifest) {
   return verifiedObjects;
 }
 
+// Compare computed numeric fields across generations in the existing publication
+// path. Arrays share a denominator per field; compact rows use their field names.
+// A sharp collapse means both a >=50% relative loss and >=20 percentage points.
+// No prior numeric coverage means no baseline, rather than a fabricated pass.
+const computedAsset = asset => /(?:^|\/)computed\/.*\.json$/.test(asset.path);
+function coverageDocument(value) {
+  if (!value || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map(coverageDocument);
+  return Object.fromEntries(Object.entries(value).map(([key, child]) => [key,
+    key === "rows" && Array.isArray(value.fields) && Array.isArray(child)
+      ? child.map(row => Array.isArray(row)
+        ? Object.fromEntries(value.fields.map((field, i) => [field, row[i] ?? null])) : coverageDocument(row))
+      : coverageDocument(child)]));
+}
+function numericPaths(value, parts = [], paths = new Map()) {
+  if (typeof value === "number" && Number.isFinite(value)) paths.set(JSON.stringify(parts), parts);
+  else if (Array.isArray(value)) for (const row of value) numericPaths(row, [...parts, null], paths);
+  else if (value && typeof value === "object") for (const [key, child] of Object.entries(value)) numericPaths(child, [...parts, key], paths);
+  return paths;
+}
+function fieldCoverage(value, parts) {
+  if (!parts.length) return { total: 1, present: typeof value === "number" && Number.isFinite(value) ? 1 : 0 };
+  const [key, ...rest] = parts;
+  if (key !== null) return fieldCoverage(value?.[key], rest);
+  if (!Array.isArray(value) || !value.length) return { total: 1, present: 0 };
+  return value.reduce((sum, row) => {
+    const count = fieldCoverage(row, rest);
+    return { total: sum.total + count.total, present: sum.present + count.present };
+  }, { total: 0, present: 0 });
+}
+export async function assertComputedFieldCoverage({ pointer, manifest, payloads, objectStore }) {
+  if (!pointer?.active || !manifest.assets.some(computedAsset)) return;
+  const raw = await objectStore.get(pointer.active.manifest_key);
+  if (!(raw instanceof Uint8Array) || sha256Bytes(raw) !== pointer.active.manifest_sha256) {
+    fail("COMPUTED_BASELINE_INTEGRITY", "active manifest unavailable or corrupt");
+  }
+  const previous = JSON.parse(new TextDecoder().decode(raw));
+  validateGenerationManifest(previous);
+  if (previous.generation_id !== pointer.active.generation_id || previous.generation_id.slice(0, -17) !== manifest.generation_id.slice(0, -17)
+    || previous.source_sha !== pointer.source_sha) {
+    fail("COMPUTED_BASELINE_INTEGRITY", "active manifest identity mismatch");
+  }
+  const current = new Map(manifest.assets.map(asset => [asset.path, asset]));
+  for (const asset of previous.assets.filter(computedAsset)) {
+    const nextAsset = current.get(asset.path);
+    if (nextAsset?.sha256 === asset.sha256) continue;
+    const bytes = await objectStore.get(asset.object_key);
+    if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== asset.sha256 || bytes.length !== asset.bytes) {
+      fail("COMPUTED_BASELINE_INTEGRITY", asset.path);
+    }
+    const before = coverageDocument(JSON.parse(new TextDecoder().decode(bytes)));
+    const nextBytes = payloads.get(asset.path);
+    const after = nextBytes ? coverageDocument(JSON.parse(new TextDecoder().decode(nextBytes))) : null;
+    for (const parts of numericPaths(before).values()) {
+      const old = fieldCoverage(before, parts), next = fieldCoverage(after, parts);
+      const oldRatio = old.present / old.total, nextRatio = next.present / next.total;
+      if (nextRatio <= oldRatio * 0.5 && oldRatio - nextRatio >= 0.2) {
+        fail("COMPUTED_FIELD_NULL_COLLAPSE", `${asset.path} ${parts.map(part => part ?? "[]").join(".")}: `
+          + `${old.present}/${old.total} -> ${next.present}/${next.total}`);
+      }
+    }
+  }
+}
+
 // Exit evidence: resolve the active generation through the pointer. The
 // default path retains full byte parity. An explicit pre-promotion proof from
 // publishGeneration permits the post-CAS gate to verify pointer/manifest
@@ -3687,6 +3751,10 @@ export async function runPublisherCli({
       objects_deduped: summary.asset_count - uniqueAssetKeys,
     };
     const plannedFamilyBytes = family.plan.bytes ?? 2 * plan.total_bytes;
+    // One baseline manifest plus at most max_assets payload reads, with the
+    // same 2x margin as the existing gate. No listing or additional writes.
+    const coverageReadPlan = manifest.assets.some(computedAsset) ? 2 * (1 + family.policy.max_assets) : 0;
+    const plannedClassB = (family.plan.class_b ?? 0) + coverageReadPlan;
     log(`family ${args.family}: ${plan.assets} assets, ${plan.total_bytes} bytes,`
       + ` ${plan.unique_object_keys} unique objects (${plan.objects_deduped} deduped)`
       + ` -> generation ${manifest.generation_id}`);
@@ -3716,7 +3784,7 @@ export async function runPublisherCli({
         // Audit symmetry: the dry-run summary now reports the read plan the gate
         // would receive, so a reviewer can see all three declared dimensions
         // without running the publication.
-        planned_class_b: family.plan.class_b ?? 0,
+        planned_class_b: plannedClassB,
         planned_bytes: plannedFamilyBytes,
         gate: "not_run",
       });
@@ -3734,7 +3802,7 @@ export async function runPublisherCli({
     // conservative operation budget stays declared; bytes are admitted below
     // only after active-manifest and object-listing evidence is available.
     const incrementalWriteBudget = family.incremental_write_budget === true;
-    const gatePlan = { ...family.plan, bytes: incrementalWriteBudget ? 0 : plannedFamilyBytes };
+    const gatePlan = { ...family.plan, class_b: plannedClassB, bytes: incrementalWriteBudget ? 0 : plannedFamilyBytes };
     // Heartbeat: this gate shell-out is the first place a publish can sit
     // silent for tens of minutes, so its start/finish always reach stderr,
     // even under --json.
@@ -3831,6 +3899,7 @@ export async function runPublisherCli({
         fail("ACTIVE_BASIS_DRIFT", `${args.family} active generation differs from the materialized basis`);
       }
     }
+    await assertComputedFieldCoverage({ pointer: livePointer, manifest, payloads, objectStore: plane.objectStore });
     const pointerSequenceBefore = livePointer?.sequence ?? 0;
     const resolved = await resolveExpectedPointerSequence({
       pointer: livePointer,
@@ -3868,7 +3937,7 @@ export async function runPublisherCli({
       evidenceLog(`incremental write preflight: bytes=${objectWritePlan.bytes} planned_bytes=${plannedBytes} reused_objects=${objectWritePlan.reused_objects}`);
       gateBefore = await runCostGateImpl({
         planClassA: family.plan.class_a,
-        planClassB: family.plan.class_b ?? 0,
+        planClassB: plannedClassB,
         planBytes: plannedBytes,
         env,
       });

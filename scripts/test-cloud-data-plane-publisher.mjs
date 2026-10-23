@@ -3686,4 +3686,43 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   await rm(root, { recursive: true, force: true });
 }
 
+// The SPY failure must stop the real publisher before a PUT/pointer change.
+{
+  const root = await mkdtemp(path.join(os.tmpdir(), "computed-null-collapse-"));
+  const plane = createMemoryCloudDataPlane();
+  let writes = 0;
+  const tracked = { ...plane, objectStore: { ...plane.objectStore,
+    async putIfAbsent(...args) { writes += 1; return plane.objectStore.putIfAbsent(...args); } } };
+  const errors = [], gates = [];
+  const build = async (present) => {
+    await writeFile(path.join(root, "signals.json"), JSON.stringify({ source_as_of: "2026-07-31",
+      fields: ["sp500_tracking_similarity"], rows: Array.from({ length: 763 }, (_, i) => [i < present ? 90 : null]) }));
+    return buildFamilyManifest({ familyName: "computed-signals", absRoot: root,
+      relRoot: "public/data/computed", now: () => NOW_1 });
+  };
+  let built = await build(761);
+  const invoke = () => runPublisherCli({ argv: ["--family=computed-signals", "--json"],
+    env: { CLOUDFLARE_API_TOKEN: "fixture", DATA_PLANE_ENDPOINT: "https://example.invalid", DATA_PLANE_WRITE_KEY: "fixture" },
+    buildFamilyManifestImpl: async () => built,
+    createPublishPlaneImpl: () => ({ plane: tracked, objectsWritten: () => writes }),
+    runCostGateImpl: async options => { gates.push(options); return { code: 0, stdout: "", stderr: "" }; },
+    stdout: () => {}, stderr: line => errors.push(line),
+  });
+  try {
+    assert.equal(await invoke(), 0, "first generation establishes the baseline");
+    assert.equal(gates[0].planClassB, 2 * (1 + FAMILIES["computed-signals"].policy.max_assets));
+    const pointer = await plane.pointerStore.get(), beforeWrites = writes;
+    built = await build(0);
+    assert.equal(await invoke(), 1);
+    assert.ok(errors.some(line => line.includes("COMPUTED_FIELD_NULL_COLLAPSE")
+      && line.includes("sp500_tracking_similarity") && line.includes("761/763 -> 0/763")));
+    assert.equal(writes, beforeWrites, "collapse performs no object writes");
+    assert.deepEqual(await plane.pointerStore.get(), pointer, "collapse retains the active generation");
+    built = await build(750);
+    assert.equal(await invoke(), 0, "ordinary coverage variation is allowed");
+    built = await build(763);
+    assert.equal(await invoke(), 0, "coverage recovery publishes");
+  } finally { await rm(root, { recursive: true, force: true }); }
+}
+
 console.log("test-cloud-data-plane-publisher: ok");
