@@ -14,6 +14,7 @@ export type PostCatalogEntry = {
 };
 
 const NATIVE_POSTS = {
+  "/posts-raw/2025-06-23_stablecoin-revolution-complete-masterplan.html": "stablecoin",
   "/posts-raw/2025-06-22_playbook.html": "playbook",
 } as const;
 export type NativePostId = typeof NATIVE_POSTS[keyof typeof NATIVE_POSTS];
