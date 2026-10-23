@@ -176,6 +176,7 @@ jobs:
           import json
           import os
           import subprocess
+          import sys
           import time
           from urllib.parse import quote
 
@@ -184,7 +185,24 @@ jobs:
           branch = quote(os.environ["GITHUB_REF_NAME"], safe="")
 
           def api(path):
-              return json.loads(subprocess.check_output(["gh", "api", path], text=True))
+              for attempt in range(1, 5):
+                  try:
+                      return json.loads(subprocess.check_output(
+                          ["gh", "api", path], text=True, stderr=subprocess.PIPE))
+                  except subprocess.CalledProcessError as error:
+                      detail = error.stderr or ""
+                      transient = any(marker in detail.lower() for marker in (
+                          "i/o timeout", "tls handshake timeout", "context deadline exceeded",
+                          "connection reset", "temporary failure", "http 429",
+                          "http 500", "http 502", "http 503", "http 504",
+                      ))
+                      if not transient or attempt == 4:
+                          print(detail, end="", file=sys.stderr)
+                          raise
+                      delay = 2 * attempt
+                      print(f"GitHub API transient failure ({attempt}/4); retrying in {delay}s: {detail.strip()}",
+                            file=sys.stderr, flush=True)
+                      time.sleep(delay)
 
           current = api(f"repos/{repository}/actions/runs/{current_id}")
           deadline = time.monotonic() + 90 * 60
