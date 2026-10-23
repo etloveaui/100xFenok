@@ -12,7 +12,7 @@ M4 launchd job `com.fenok.100x-data-watch`. Every 30 minutes `watch.py` reads wo
 | `generated_at` of the active `platform-projections` health KPI | same | The second declared Update Manifest slot after generation, plus one hour for execution; the workflow on main supplies the calendar |
 
 The alarm is judged by its `check` job, which includes reporting and plane state promotion. A read
-that fails for 2 hours sends one "감시 불가" line. The first run is a silent baseline. A growing streak alone sends nothing. An undelivered line is retried on the next run; nothing in AA is ever restarted.
+that fails for 2 hours sends one "감시 불가" line. The first run is a silent baseline. A growing streak alone sends nothing. Incident identity is the heading plus the reason (a KPI set is `<set>:member_ratio_low`, also when the set lists more reasons on its line); member counts are evidence, never identity. Only a new identity is "악화 … 추가". A count change on the same incident is "개선" or "악화" by direction with the before and after counts; an improvement is a line after 3 members came back or at zero, any worsening is a line, and the last announced count is the baseline. `python3 -I scripts/datawatch/test_watch.py` checks this without network. An undelivered line is retried on the next run; nothing in AA is ever restarted.
 
 - State: `~/.local/state/100x-data-watch/` holds `state.json`, `status.json` (time, open incidents, the three ages;
   for agents), `watch.log` (one line per run) and `launchd.log` (tracebacks).
