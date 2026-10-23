@@ -13,14 +13,16 @@ function runner(issues = []) {
   return {
     repo: "owner/project",
     calls,
-    run(args) { calls.push(args); return args[1] === "list" ? JSON.stringify(issues) : ""; },
+    run(args) { calls.push(args); return args[0] === "api" ? JSON.stringify([issues]) : ""; },
   };
 }
-const writes = (mock) => mock.calls.filter((args) => args[1] !== "list");
+const writes = (mock) => mock.calls.filter((args) => args[0] !== "api");
 
 test("a measured recovery updates and closes only the exact bot-owned alarm", () => {
   const mock = runner([issue(1, { title: `${title} investigation`, author: { login: "owner", is_bot: false } }), issue()]);
   assert.equal(syncBudgetIssue(result("ok"), mock), "closed");
+  assert.equal(mock.calls[0][0], "api");
+  assert.ok(mock.calls[0].includes("--paginate"));
   assert.deepEqual(writes(mock).map((args) => [args[1], args[2]]), [["edit", "92"], ["close", "92"]]);
 });
 
@@ -55,12 +57,19 @@ test("repeated failures update the live body without an hourly comment storm", (
   assert.equal(writes(mock).some((args) => args[1] === "comment"), false);
 });
 
-test("ambiguous duplicate alarms and invalid results perform no writes", () => {
-  for (const [input, issues] of [[result("ok"), [issue(), issue(93)]], [result("unknown"), []], [{ ...result("ok"), issueBody: "" }, []]]) {
+test("duplicate alarms select the oldest while invalid input or lookup failure performs no writes", () => {
+  const duplicate = runner([issue(93), issue()]);
+  assert.equal(syncBudgetIssue(result("ok"), duplicate), "closed");
+  assert.deepEqual(writes(duplicate).map(args => args[2]), ["92", "92"]);
+  for (const [input, issues] of [[result("unknown"), []], [{ ...result("ok"), issueBody: "" }, []]]) {
     const mock = runner(issues);
     assert.throws(() => syncBudgetIssue(input, mock));
     assert.deepEqual(writes(mock), []);
   }
+  const failed = runner();
+  failed.run = () => { throw new Error("API inventory unavailable"); };
+  assert.throws(() => syncBudgetIssue(result("alert"), failed), /API inventory unavailable/);
+  assert.deepEqual(writes(failed), []);
 });
 
 test("a human-owned same-title issue is never closed or edited", () => {

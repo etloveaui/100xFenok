@@ -19,14 +19,16 @@ export function syncBudgetIssue(result, { repo, run = gh } = {}) {
     || typeof result?.issueBody !== "string" || !result.issueBody.trim()) {
     throw new Error("Invalid budget result or repository; no issue may be changed");
   }
-  const issues = JSON.parse(run(["issue", "list", "--repo", repo, "--state", "open",
-    "--search", `${result.issueTitle} in:title`, "--json", "number,title,body,author", "--limit", "100"]));
-  if (!Array.isArray(issues) || issues.length >= 100) throw new Error("Issue lookup may be incomplete");
+  const pages = JSON.parse(run(["api", `repos/${repo}/issues?state=open&per_page=100&sort=created&direction=asc`,
+    "--paginate", "--slurp"]));
+  if (!Array.isArray(pages) || pages.some(page => !Array.isArray(page))) throw new Error("Invalid issue inventory");
+  const issues = pages.flat();
   const matches = issues.filter((issue) => issue.title === result.issueTitle
-    && (issue.author?.login === "github-actions[bot]"
-      || (["github-actions", "app/github-actions"].includes(issue.author?.login)
-        && issue.author?.is_bot === true)));
-  if (matches.length > 1) throw new Error("Ambiguous duplicate budget alarms; no issue may be changed");
+    && !issue.pull_request
+    && ((issue.user?.login ?? issue.author?.login) === "github-actions[bot]"
+      || (["github-actions", "app/github-actions"].includes(issue.user?.login ?? issue.author?.login)
+        && (issue.user?.type === "Bot" || issue.author?.is_bot === true))))
+    .sort((a, b) => a.number - b.number);
   const existing = matches[0];
   if (existing && (!Number.isSafeInteger(existing.number) || existing.number <= 0)) throw new Error("Invalid issue identity");
   if (existing) {

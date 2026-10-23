@@ -72,6 +72,7 @@ import {
   restoreStates,
   runWindow,
   serializeJournal,
+  JOURNAL_TITLE,
 } from "./ops/retention-window.mjs";
 
 const REL_ROOT = "data/test-fixtures/cloud-data-plane-retention-safety";
@@ -926,9 +927,10 @@ try {
       const call = async (args) => {
         calls.push(args);
         const [a, b] = args;
-        if (a === "issue" && b === "list" && args.includes("number,title")) return {ok: true, stdout: "[]"};
         if (a === "issue" && b === "create" && args.includes("100xFenok pipeline job failure alarm")) return {ok: true, stdout: "https://example.test/issues/8"};
-        if (a === "issue" && b === "list") return { ok: true, stdout: JSON.stringify(journalBox.number && !fail.searchLag ? [{ number: journalBox.number }] : []) };
+        if (a === "api" && b.includes("/issues?")) return { ok: true, stdout: JSON.stringify([
+          journalBox.number ? [{ number: journalBox.number, title: JOURNAL_TITLE }] : [],
+        ]) };
         if (a === "issue" && b === "view") return { ok: true, stdout: JSON.stringify({ comments: journalBox.journal ? [{ body: serializeJournal(journalBox.journal) }] : [] }) };
         if (a === "issue" && b === "comment") {
           const file = args[args.indexOf("--body-file") + 1];
@@ -1007,7 +1009,8 @@ try {
         publishers: { publishers: [{ file: "a.yml", name: "a.yml" }, { file: "b.yml", name: "b.yml" }], referenceOnly: [], unclassified: [] } },
     });
     assert.equal(partialDisable.result, "retention_window_aborted");
-    assert.equal(gh.calls.filter(c => c[0] === "issue" && c[1] === "list").length, 1, "lease readback uses the returned issue number despite search indexing lag");
+    assert.equal(gh.calls.filter(c => c[0] === "api" && c[1].includes("/issues?state=open")).length, 1,
+      "lease readback uses the returned issue number after direct issue enumeration");
     assert.ok(gh.calls.some((c) => c[0] === "workflow" && c[1] === "enable" && c[2] === "a.yml"), "the disabled prefix is restored");
     assert.equal(gh.workflows.find((w) => w.file === "a.yml").state, "active");
 

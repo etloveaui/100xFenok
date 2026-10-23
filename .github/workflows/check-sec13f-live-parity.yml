@@ -146,6 +146,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           title="100xFenok SEC 13F live semantic parity alarm"
           {
             printf '%s\n\n' '[alert] SEC 13F live semantic parity or serving-scope smoke failed.'
@@ -153,7 +154,10 @@ jobs:
             if [ -f "$RUNNER_TEMP/sec13f-privacy.log" ]; then cat "$RUNNER_TEMP/sec13f-privacy.log"; fi
             printf '\nObserved by: %s\n' "$RUN_URL"
           } > "$RUNNER_TEMP/sec13f-parity-issue.md"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
+            | sort -n | sed -n '1p')"
           if [ -n "$existing" ]; then
             gh issue edit "$existing" --body-file "$RUNNER_TEMP/sec13f-parity-issue.md"
           else
@@ -166,8 +170,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           title="100xFenok SEC 13F live semantic parity alarm"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
+            | sort -n | sed -n '1p')"
           [ -n "$existing" ] || exit 0
           gh issue comment "$existing" --body "[all-clear] SEC 13F semantic parity and private-route smoke recovered. Observed by: $RUN_URL"
           gh issue close "$existing" --reason completed

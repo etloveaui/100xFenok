@@ -129,7 +129,7 @@ function createGhDriver({ execFileImpl = promisify(execFile), repo = null, now =
     try {
       const scopedArgs = args[0] === "api" ? args : [...args, ...repoArgs];
       const { stdout } = await execFileImpl("gh", scopedArgs, {
-        env: process.env,
+        env: { ...process.env, ...(repo ? { GH_REPO: repo } : {}) },
         maxBuffer: 10 * 1024 * 1024,
         ...(timeout > 0 ? { timeout, killSignal: "SIGKILL" } : {}),
       });
@@ -144,12 +144,20 @@ function createGhDriver({ execFileImpl = promisify(execFile), repo = null, now =
 
 // --- journal ------------------------------------------------------------------
 
+async function repositoryIssues(gh, state) {
+  const response = await gh.call(["api",
+    `repos/{owner}/{repo}/issues?state=${state}&per_page=100&sort=created&direction=asc`,
+    "--paginate", "--slurp"]);
+  if (!response.ok) fail("GH_COMMAND_FAILED", "issue inventory");
+  const pages = JSON.parse(response.stdout);
+  if (!Array.isArray(pages) || pages.some(page => !Array.isArray(page))) fail("GH_COMMAND_FAILED", "invalid issue inventory");
+  return pages.flat().filter(row => !row.pull_request).sort((a, b) => a.number - b.number);
+}
+
 async function readJournal({ gh, number = null }) {
   if (!number) {
-  const list = await gh.call(["issue", "list", "--state", "open", "--search", `${JOURNAL_TITLE} in:title`, "--json", "number"], { allowFailure: true });
-  if (!list.ok) fail("GH_COMMAND_FAILED", "issue list");
-  const issues = JSON.parse(list.stdout || "[]");
-  number = issues[0]?.number ?? null;
+    const issues = await repositoryIssues(gh, "open");
+    number = issues.find(row => row.title === JOURNAL_TITLE)?.number ?? null;
   }
   if (!number) return { number: null, journal: null };
   const view = await gh.call(["issue", "view", String(number), "--json", "comments"], { allowFailure: true });
@@ -182,8 +190,8 @@ async function notifyRecovery({gh, journal, confirmed, unconfirmed}) {
   if (!confirmed.length) return;
   const title = "100xFenok pipeline job failure alarm";
   const marker = `[r2-recovery:${journal?.lease?.run_id ?? "legacy"}]`;
-  const found = await gh.call(["issue", "list", "--state", "all", "--search", `${title} in:title`, "--json", "number,title"]);
-  const issue = JSON.parse(found.stdout).find(row => row.title === title);
+  const matches = (await repositoryIssues(gh, "all")).filter(row => row.title === title);
+  const issue = matches.find(row => row.state === "open") ?? matches[0];
   if (issue) {
     const prior = await gh.call(["issue", "view", String(issue.number), "--json", "comments"]);
     if (JSON.parse(prior.stdout).comments.some(row => row.body.includes(marker))) return;

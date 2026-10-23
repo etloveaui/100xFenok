@@ -152,8 +152,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INCIDENT_CHANGED: ${{ steps.alarm_state.outputs.incident_changed }}
         run: |
+          set -euo pipefail
           title="$(cat pipeline-job-health-title.txt)"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
+            | sort -n | sed -n '1p')"
           if [ -n "$existing" ]; then
             # The body is the operator's live view and is rewritten on every
             # firing. Editing a body sends no notification, so a stable incident
@@ -178,13 +182,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           state="$(node -p "JSON.parse(require('fs').readFileSync('data/admin/alarm-state.json', 'utf8')).status")"
           if [ "$state" != clear ]; then
             echo "detector state is $state; no all-clear"
             exit 0
           fi
           title="100xFenok pipeline job failure alarm"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
+            | sort -n | sed -n '1p')"
           if [ -z "$existing" ]; then
             echo "no open OPS issue; nothing to clear"
             exit 0

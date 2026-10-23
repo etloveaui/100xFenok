@@ -105,6 +105,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           title="100xFenok data-plane serving probe alarm"
           # Keep the full report in the run log, but persist only failing rows
           # and their reasons. Repeating every OK row made one issue exceed a
@@ -134,7 +135,10 @@ jobs:
               printf '\n%s\n' "Observed by: $RUN_URL"
             } > probe-issue.md
           fi
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
+            | sort -n | sed -n '1p')"
           if [ -n "$existing" ]; then
             gh issue edit "$existing" --body-file probe-issue.md
           else
@@ -150,8 +154,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           title="100xFenok data-plane serving probe alarm"
-          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
+            | sort -n | sed -n '1p')"
           [ -n "$existing" ] || exit 0
           gh issue comment "$existing" --body "[all-clear] Every enrolled asset is served from its published generation and meets its source-date and publication-heartbeat policy. Observed by: $RUN_URL"
           gh issue close "$existing" --reason completed

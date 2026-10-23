@@ -114,8 +114,12 @@ async function main() {
   }
   let issue = null;
   for (let page = 1; ; page++) {
-    const rows = await github(`issues?state=open&per_page=100&page=${page}`);
-    issue = rows.find(row => !row.pull_request && [title, `${title} alarm`].includes(row.title));
+    // Closed inventory issues retain the baseline; clearing the alarm must not
+    // reset the next week's comparison or create another rolling record.
+    const rows = await github(`issues?state=all&per_page=100&sort=created&direction=asc&page=${page}`);
+    if (!Array.isArray(rows)) throw new Error("Invalid weekly inventory issue list");
+    issue = rows.filter(row => !row.pull_request && [title, `${title} alarm`].includes(row.title))
+      .sort((a, b) => a.number - b.number)[0];
     if (issue || rows.length < 100) break;
   }
   const embedded = issue?.body?.match(/<!-- weekly-inventory-state\n([\s\S]*?)\n-->/);
@@ -129,13 +133,19 @@ async function main() {
     : `주간 점검 기준선: 기존 항목 ${Object.keys(findings).length}개를 기록했습니다. 새 경보는 보내지 않습니다.`;
   console.log(summary);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
-  if (previous && !added.length && !resolved.length) return;
+  const state = active.length ? "open" : "closed";
+  if (previous && !added.length && !resolved.length && issue.state === state) return;
   const body = [summary, "", `읽은 목록: 워크플로 ${totals.workflows}, 수집 경로 ${totals.lanes}, 데이터 분류 ${totals.families}, 화면 ${totals.routes}, 외부 수집기 ${totals.external_collectors}.`,
     ...active.flatMap(key => ["", `## ${findings[key].detail}`, `- Alarm reasons: ${key}`]),
     "", "<details><summary>현재 관찰 항목</summary>", "", ...Object.values(findings).map(row => `- ${row.detail}`), "", "</details>",
     "", `<!-- weekly-inventory-state\n${JSON.stringify({ observed_at: now, totals, findings, active })}\n-->`].join("\n");
-  await github(issue ? `issues/${issue.number}` : "issues", {
-    method: issue ? "PATCH" : "POST", body: JSON.stringify({ title: active.length ? `${title} alarm` : title, body }),
+  const saved = await github(issue ? `issues/${issue.number}` : "issues", {
+    method: issue ? "PATCH" : "POST", body: JSON.stringify({ title: active.length ? `${title} alarm` : title, body,
+      ...(issue ? { state, ...(state === "closed" ? { state_reason: "completed" } : {}) } : {}) }),
+  });
+  // GitHub creates issues open; keep the first zero-alarm baseline closed too.
+  if (!issue && state === "closed") await github(`issues/${saved.number}`, {
+    method: "PATCH", body: JSON.stringify({ state: "closed", state_reason: "completed" }),
   });
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });
