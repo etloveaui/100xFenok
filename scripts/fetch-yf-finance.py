@@ -2245,7 +2245,7 @@ PRICE_HISTORY_SYMBOL = re.compile(r"^\^?[A-Z0-9][A-Z0-9.\-]{0,19}$")
 
 
 def price_history_universe(selection):
-    # Membership is private runtime data. Do not emit any member names.
+    # Membership is private runtime data; emit names only for failed members.
     # The active ETF selection carries the owner list it was built from. Reading
     # the raw owner secret here failed every run between an AA holdings sync
     # and the next selection publication.
@@ -2271,17 +2271,19 @@ def price_history_rows(frame):
         values = [float(v) if isinstance(v, Number) and math.isfinite(float(v)) else None for v in values]
         o, h, l, c, a, v = values
         if c is None or a is None or min(c, a) <= 0 or (v is not None and v < 0):
-            raise ValueError("price-history contains an invalid OHLC observation")
+            raise ValueError(f"price-history invalid OHLC at {stamp.date()}: {values}")
         o, h, l = [v if v is not None and v > 0 else None for v in (o, h, l)]
         if all(v is not None for v in (o, h, l)) and (h < max(o, l, c) or l > min(o, h, c)):
-            raise ValueError("price-history contains an invalid OHLC observation")
+            raise ValueError(f"price-history invalid OHLC at {stamp.date()}: {values}")
         rows.append([stamp.date().isoformat(), o, h, l, c, a, int(v) if v is not None else None])
-    if not rows or len({r[0] for r in rows}) != len(rows):
-        raise ValueError("price-history is empty or has duplicate dates")
+    if not rows:
+        raise ValueError("no price data found for price-history")
+    if len({r[0] for r in rows}) != len(rows):
+        raise ValueError("price-history has duplicate dates")
     return sorted(rows)
 
 
-def write_price_history_packs(root, fetched, year, acquisition):
+def write_price_history_packs(root, fetched, year, acquisition, *, required_tickers=None):
     """Content-addressed closed years are append-only, including new members."""
     root = Path(root)
     index_path = root / "index.json"
@@ -2354,7 +2356,8 @@ def write_price_history_packs(root, fetched, year, acquisition):
         entry.update(first_date=rows[0][0], last_date=rows[-1][0], row_count=len(rows))
     index = {"schema_version": "yahoo-price-history/v1", "source": "Yahoo Finance",
              "columns": PRICE_HISTORY_COLUMNS, "current_year": year,
-             "source_as_of": min(tickers[t]["last_date"] for t in fetched),
+             "source_as_of": min(tickers[t]["last_date"] for t in
+                                 (required_tickers if required_tickers is not None else tickers) if t in tickers),
              "tickers": tickers, "acquisition": acquisition}
     root.mkdir(parents=True, exist_ok=True)
     index_path.write_bytes(encoded(index))
@@ -2371,6 +2374,7 @@ def run_price_history(args):
     import yfinance as yf
     from curl_cffi.requests import Session
 
+    args.retries = validate_retry_count(args.retries)
     selection = json.loads(PRICE_HISTORY_SELECTION.read_text())
     symbols = price_history_universe(selection)
     year = datetime.now(ZoneInfo("America/New_York")).year
@@ -2394,8 +2398,10 @@ def run_price_history(args):
         return response
 
     Session.request = measured_request
-    logging.getLogger("yfinance").setLevel(logging.CRITICAL)
-    fetched = {}
+    logger = logging.getLogger("yfinance")
+    previous_level = logger.level
+    logger.setLevel(logging.CRITICAL)
+    fetched, errors = {}, []
     try:
         with open(os.devnull, "w") as quiet:
             for ordinal, ticker in enumerate(symbols, 1):
@@ -2414,27 +2420,60 @@ def run_price_history(args):
                             fetched[ticker] = price_history_rows(frame)
                         success = True
                         break
-                    except Exception:
-                        if attempt < args.retries:
-                            time.sleep(2)
-                if not success:
-                    raise ValueError(f"price-history member {ordinal}/{len(symbols)} failed; no generation published")
-                print(f"price-history {ordinal}/{len(symbols)} OK rows={len(fetched[ticker])}", flush=True)
+                    except Exception as error:
+                        failure = {"ticker": ticker, "error": f"{type(error).__name__}: {error}"[:2000]}
+                        kind = yahoo_failure_kind(failure)
+                        if isinstance(error, ValueError) and str(error).startswith((
+                                "price-history invalid OHLC", "price-history has duplicate dates")):
+                            kind = "candidate_rejected"
+                        failure["failure_kind"] = kind
+                        retryable = kind in {"transient_provider_miss", "systemic_rate_limit",
+                                             "systemic_authentication", "systemic_decode"}
+                        print(f"price-history {ticker} attempt={attempt + 1}/{args.retries + 1} "
+                              f"{failure['error']}", flush=True)
+                        if not retryable or attempt == args.retries:
+                            errors.append(failure)
+                            break
+                        time.sleep(min(30, 2 ** (attempt + 1)))
+                if success:
+                    print(f"price-history {ordinal}/{len(symbols)} OK rows={len(fetched[ticker])}", flush=True)
+                else:
+                    retained_date = prior["tickers"].get(ticker, {}).get("last_date")
+                    print(f"price-history {ticker} refused; retained source date={retained_date or 'none'}", flush=True)
                 time.sleep(args.sleep)
     finally:
         Session.request = original
-        metrics["seconds"] = round(time.monotonic() - started, 3)
-        if len(fetched) != len(symbols):
-            print(json.dumps({"price_history": metrics, "completed_count": len(fetched),
-                              "published": False}), flush=True)
+        logger.setLevel(previous_level)
     metrics["seconds"] = round(time.monotonic() - started, 3)
-    index = write_price_history_packs(PRICE_HISTORY_ROOT, fetched, year, metrics)
+    refused = [row["ticker"] for row in errors]
+    retained = [t for t in refused if t in prior["tickers"]]
+    deferred = [t for t in refused if t not in prior["tickers"]]
+    assessment = {"tickers": refused, "retained_lkg_tickers": retained,
+                  "deferred_without_lkg_tickers": deferred,
+                  "reasons": _systemic_failure_reasons(errors) + [
+                      f"{row['ticker']} has an unexpected acquisition failure"
+                      for row in errors if row["failure_kind"] == "unexpected"]}
+    verdict = yahoo_run_verdict(
+        current_results={"attempted": len(symbols), "failed": len(errors), "errors": errors},
+        errors=errors, retry_symbols=refused, assessments=[assessment])
+    metrics.update(errors=errors, retry_symbols=refused,
+                   retained_lkg_tickers=retained, deferred_without_lkg_tickers=deferred,
+                   run_verdict=verdict)
+    if not fetched and not prior["tickers"]:
+        print(json.dumps({"price_history": metrics, "candidate_ready": False}), flush=True)
+        return 1
+    # The writer reads every retained pack and keeps its dates. Failed members
+    # retry on the next invocation because the bounded union is always visited.
+    index = write_price_history_packs(PRICE_HISTORY_ROOT, fetched, year, metrics, required_tickers=symbols)
+    if os.environ.get("GITHUB_OUTPUT"):
+        with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+            output.write("candidate_ready=true\n")
     files = list(PRICE_HISTORY_ROOT.rglob("*.json"))
     print(json.dumps({"price_history": metrics, "rows": sum(v["row_count"] for v in index["tickers"].values()),
                       "first_date": min(v["first_date"] for v in index["tickers"].values()),
                       "last_date": max(v["last_date"] for v in index["tickers"].values()),
                       "assets": len(files), "bytes": sum(p.stat().st_size for p in files)}), flush=True)
-    return 0
+    return verdict["exit_code"]
 
 
 def main():

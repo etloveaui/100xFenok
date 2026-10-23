@@ -65,7 +65,7 @@ on:
         required: false
         default: 'false'
       profile:
-        description: 'Fetch profile: daily, core, full, etf, or history-backfill (private lifetime prices only)'
+        description: 'Fetch profile: daily, core, full, etf, history-daily, or history-backfill (private lifetime prices only)'
         required: false
         default: 'full'
       max_age_hours:
@@ -167,7 +167,7 @@ jobs:
         run: node scripts/check-external-clock-slot.mjs fetch-yf-finance.yml
 
   acquire-yf-finance:
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && github.event.inputs.profile != 'history-backfill' }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && github.event.inputs.profile != 'history-backfill' && github.event.inputs.profile != 'history-daily' }}
     needs: clock-admission
     runs-on: ubuntu-latest
     timeout-minutes: 240
@@ -808,7 +808,7 @@ jobs:
     # Reuse the existing post-close stock slot; no separate acquisition schedule.
     # Initial backfill bypasses the rolling-window producer and its UM dispatch.
     needs: [clock-admission, acquire-yf-finance, publish-yf-finance]
-    if: ${{ always() && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event.inputs.profile == 'history-backfill' || (needs.clock-admission.outputs.automatic == 'true' && needs.clock-admission.outputs.mode == 'stocks' && needs.publish-yf-finance.result == 'success')) }}
+    if: ${{ always() && needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (github.event.inputs.profile == 'history-backfill' || github.event.inputs.profile == 'history-daily' || (needs.clock-admission.outputs.automatic == 'true' && needs.clock-admission.outputs.mode == 'stocks' && needs.publish-yf-finance.result == 'success')) }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 45
@@ -864,6 +864,16 @@ jobs:
           }
           JS
       - name: Fetch observed prices and build yearly packs
-        run: python3 scripts/fetch-yf-finance.py --price-history-mode "$PRICE_HISTORY_MODE" --sleep 0.35 --retries 1 --ticker-timeout 90
+        id: history
+        run: |
+          status=0
+          python3 scripts/fetch-yf-finance.py --price-history-mode "$PRICE_HISTORY_MODE" --sleep 0.35 --retries 2 --ticker-timeout 90 || status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
       - name: Publish private price-history generation
+        if: steps.history.outputs.candidate_ready == 'true'
         run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-price-history --json
+      - name: Enforce price-history refusal budget after publishing valid members
+        if: always()
+        env:
+          HISTORY_EXIT_CODE: ${{ steps.history.outputs.exit_code }}
+        run: test "$HISTORY_EXIT_CODE" = "0"

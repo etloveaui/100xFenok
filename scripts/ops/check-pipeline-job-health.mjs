@@ -7,7 +7,7 @@ import { createDefaultMaterializePlane, readActiveFamilyIdentity } from "../mate
 import { sha256Bytes, validateGenerationManifest } from "../lib/cloud-data-plane-generation.mjs";
 import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
 import { STATE_TITLE as RETENTION_STATE_TITLE, classifyRetentionSchedule } from "./retention-schedule.mjs";
-import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot, externalClockEvent } from "../../ops/a1-lanes/external-clock.mjs";
+import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot, externalClockEvent, clockCronMatches } from "../../ops/a1-lanes/external-clock.mjs";
 // The same declared-slot derivation the admission check uses, so a scheduled
 // fallback and its marked clock run land on one key instead of two.
 import { scheduledSlot } from "../check-external-clock-slot.mjs";
@@ -277,7 +277,8 @@ export function deriveWorkflowWatchPolicy({
       return {
         file,
         label,
-        events,
+        events: file === "fetch-yf-finance.yml" ? [...new Set([...events, "repository_dispatch"])] : events,
+        ...(file === "fetch-yf-finance.yml" ? { failure_streak_by_external_clock_cron: true } : {}),
         crons: declaredCrons,
         ...(producerLanes ? {
           scheduled_producer: true,
@@ -877,8 +878,26 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   });
   // One declared slot, one streak entry. Package order and every non-streak
   // rule below keep using the uncollapsed list.
-  const streakRuns = coalesceSlots(workflow, countedRuns);
-  const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(streakRuns);
+  let streakRecoveryRuns = countedRuns;
+  let streakRuns = coalesceSlots(workflow, countedRuns);
+  let streakResult = computeFailureStreak(streakRuns);
+  // Yahoo's ETF slot skips price-history. Neither that success nor a native
+  // fallback success proves recovery of the failing external stock slot.
+  if (workflow.failure_streak_by_external_clock_cron) {
+    for (const cron of externalClockCrons(workflow.file)) {
+      const slotRuns = coalesceSlots(workflow, countedRuns.filter((run) => {
+        const slot = externalClockSlot(workflow, run);
+        return slot !== null && clockCronMatches(cron, new Date(slot));
+      }));
+      const result = computeFailureStreak(slotRuns);
+      if (result.streak > streakResult.streak) {
+        streakRecoveryRuns = slotRuns;
+        streakRuns = slotRuns;
+        streakResult = result;
+      }
+    }
+  }
+  const { streak, firstFailingIndex, evictedRunUrls } = streakResult;
   // Only the next admitted automatic cycle proves the scheduled lane recovered.
   // An unmarked manual success is useful evidence, but remains pending below.
   const newestSuccessId = countedRuns.reduce((max, run) => {
@@ -900,10 +919,13 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
     run?.queue_evicted !== true
       && !TRANSPARENT_CONCLUSIONS.has(run?.conclusion)
       && FAILURE_CONCLUSIONS.has(run?.conclusion));
+  const newestStreakSuccessId = streakRecoveryRuns.reduce((max, run) =>
+    run?.conclusion === "success" && Number.isFinite(Number(run.id))
+      ? Math.max(max, Number(run.id)) : max, -Infinity);
   const streakRecovered = Boolean(
     newestStreakFailure
       && Number.isFinite(Number(newestStreakFailure.id))
-      && Number(newestStreakFailure.id) < newestSuccessId,
+      && Number(newestStreakFailure.id) < newestStreakSuccessId,
   );
   const latest = countedRuns[0] || null;
   const failureStreakThreshold = workflow.failure_streak_threshold === SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
