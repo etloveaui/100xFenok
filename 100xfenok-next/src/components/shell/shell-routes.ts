@@ -55,6 +55,7 @@ const SHELL_ROUTE_RULES: readonly ShellRouteRule[] = [
   { pattern: /^\/brief\/morning\/[^/]+$/, meta: fixed({ active: "brief", title: "모닝 브리프" }) },
   { pattern: /^\/brief\/digest\/[^/]+$/, meta: fixed({ active: "brief", title: "데일리 다이제스트" }) },
   { pattern: /^\/brief\/premarket\/[^/]+$/, meta: fixed({ active: "brief", title: "프리마켓 브리프" }) },
+  { pattern: /^\/brief\/opening-bell\/[^/]+$/, meta: fixed({ active: "brief", title: "오프닝 벨" }) },
   { pattern: /^\/radar$/, meta: fixed({ active: "explore", title: "Market Radar", backHref: ROUTES.home }) },
   { pattern: /^\/market-valuation$/, meta: fixed({ active: "market", title: "시장", backHref: ROUTES.home }) },
   { pattern: /^\/market-valuation\/structure$/, meta: fixed({ active: "market", title: "시장 구조", backHref: ROUTES.market }) },

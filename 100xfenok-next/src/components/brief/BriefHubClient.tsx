@@ -27,7 +27,8 @@ import { ROUTES } from "@/lib/routes";
 const DEFAULT_PRODUCTS: BriefProduct[] = [
   { id: "morning", name: "모닝 브리프", cadence: "매일 07:00", desc: "방금 끝난 미국장 리뷰", status: "live" },
   { id: "digest", name: "데일리 다이제스트", cadence: "매일 11:00", desc: "하루 시장 흐름 한 장 요약", status: "coming-soon" },
-  { id: "premarket", name: "프리마켓 브리프", cadence: "매일 밤", desc: "미국 장 시작 전 점검", status: "coming-soon" },
+  { id: "premarket", name: "프리마켓 브리프", cadence: "18:00", desc: "18:00 시세와 오늘 밤 일정", status: "coming-soon" },
+  { id: "opening-bell", name: "오프닝 벨", cadence: "미국장 개장 30분 후", desc: "개장 직후의 움직임과 장전 조건 점검", status: "coming-soon" },
   { id: "weekly-recap", name: "위클리 리캡", cadence: "매주", desc: "한 주 마감 정리", status: "coming-soon" },
   { id: "weekly-brief", name: "위클리 브리프", cadence: "매주", desc: "다음 주를 여는 주간 브리프", status: "coming-soon" },
 ];
@@ -132,11 +133,18 @@ export default function BriefHubClient() {
   const editions = sortedEditions(index ?? null);
   const LA = latestDoc && latestDoc.date === latestDate ? latestDoc.doc : null;
   const LP = LA?.pack ?? null;
-  const products = index?.products?.length ? index.products : DEFAULT_PRODUCTS;
+  const products = [...(index?.products?.length ? index.products : DEFAULT_PRODUCTS)];
+  if (!products.some((p) => p.id === "opening-bell")) products.push(DEFAULT_PRODUCTS.find((p) => p.id === "opening-bell")!);
   const digests = sortedEditions(index ?? null, "digest");
   const latestDigest = digests.length ? digests[digests.length - 1] : null;
-  // Today's slot lights only for the digest of the same edition date as the morning brief.
-  const digestToday = latestDigest && latest && latestDigest.edition_date === latest.edition_date ? latestDigest : null;
+  const premarkets = sortedEditions(index ?? null, "premarket");
+  const latestPremarket = premarkets.at(-1) ?? null;
+  const openings = sortedEditions(index ?? null, "opening-bell");
+  const latestOpening = openings.at(-1) ?? null;
+  const briefingDay = [latest?.edition_date, latestPremarket?.edition_date, latestOpening?.edition_date].filter(Boolean).sort().at(-1);
+  const digestToday = latestDigest?.edition_date === briefingDay ? latestDigest : null;
+  const premarketToday = latestPremarket?.edition_date === briefingDay ? latestPremarket : null;
+  const openingToday = latestOpening?.edition_date === briefingDay ? latestOpening : null;
   const published = LA?.published_kst ?? "06:22";
   const edgeChip = LP?.edge ?? latest?.edge ?? null;
 
@@ -225,9 +233,28 @@ export default function BriefHubClient() {
                       </div>
                     </TransitionLink>
                   ) : null}
+                  {premarketToday ? (
+                    <TransitionLink className="slot done" href={ROUTES.briefPremarket(premarketToday.edition_date)}>
+                      <div className="c">
+                        <div className="tm">18:00</div>
+                        <div className="nm">프리마켓 브리프</div>
+                        <div className="st">{`${premarketToday.published_kst ?? "18:00"} 발행 · 오늘 밤 미국장 점검`}</div>
+                      </div>
+                    </TransitionLink>
+                  ) : null}
+                  {openingToday ? (
+                    <TransitionLink className="slot done" href={ROUTES.briefOpeningBell(openingToday.edition_date)}>
+                      <div className="c">
+                        <div className="tm">개장 +30분</div>
+                        <div className="nm">오프닝 벨</div>
+                        <div className="st">{`${openingToday.published_kst ?? ""} 발행 · 개장 직후 조건 점검`}</div>
+                      </div>
+                    </TransitionLink>
+                  ) : null}
                   {[
                     ...(digestToday ? [] : [["11:00", "데일리 다이제스트", "준비 중 · 하루 시장 흐름 한 장 요약"]]),
-                    ["22:00", "프리마켓 브리프", "준비 중 · 미국 장 시작 전 점검"],
+                    ...(premarketToday ? [] : [["18:00", "프리마켓 브리프", "준비 중 · 오늘 밤 미국장 점검"]]),
+                    ...(openingToday ? [] : [["개장 +30분", "오프닝 벨", "준비 중 · 개장 직후 조건 점검"]]),
                     ["05:00", "미국장 마감", "다음 모닝 브리프의 재료"],
                   ].map(([time, name, note]) => (
                     <div className="slot" key={time}>
@@ -255,7 +282,8 @@ export default function BriefHubClient() {
               <HubSection title="모든 브리핑" label="Products">
                 <div className="shelf">
                   {products.map((product) => {
-                    const live = product.status === "live" || (product.id === "digest" && !!latestDigest);
+                    const live = product.status === "live" || (product.id === "digest" && !!latestDigest)
+                      || (product.id === "premarket" && !!latestPremarket) || (product.id === "opening-bell" && !!latestOpening);
                     const body = (
                       <>
                         <div className="nm">{product.name}</div>
@@ -269,6 +297,14 @@ export default function BriefHubClient() {
                       </TransitionLink>
                     ) : live && product.id === "digest" && latestDigest ? (
                       <TransitionLink key={product.id} className="prod" href={ROUTES.briefDigest(latestDigest.edition_date)}>
+                        {body}
+                      </TransitionLink>
+                    ) : live && product.id === "premarket" && latestPremarket ? (
+                      <TransitionLink key={product.id} className="prod" href={ROUTES.briefPremarket(latestPremarket.edition_date)}>
+                        {body}
+                      </TransitionLink>
+                    ) : live && product.id === "opening-bell" && latestOpening ? (
+                      <TransitionLink key={product.id} className="prod" href={ROUTES.briefOpeningBell(latestOpening.edition_date)}>
                         {body}
                       </TransitionLink>
                     ) : (

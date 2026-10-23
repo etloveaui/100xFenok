@@ -26,6 +26,12 @@ export const BRIEF_DIGEST_PACK_URL = "/brief/digest-c2.html";
 /** The Premarket renderer is replaceable without changing the edition JSON or route. */
 export const BRIEF_PREMARKET_PACK_URL = "/brief/premarket-pack.html";
 
+export const BRIEF_OPENING_BELL_PACK_URL = "/brief/opening-bell-pack.html";
+
+export function briefOpeningBellDataUrl(date: string): string {
+  return `/data/briefing/opening-bell/${date}.json`;
+}
+
 export function briefPremarketDataUrl(date: string): string {
   return `/data/briefing/premarket/${date}.json`;
 }
@@ -80,7 +86,7 @@ export type BriefProduct = { id: string; name: string; cadence: string; desc: st
 
 export type BriefIndex = {
   schema: string;
-  latest: { morning?: string; digest?: string };
+  latest: { morning?: string; digest?: string; premarket?: string; "opening-bell"?: string };
   editions: BriefIndexEdition[];
   products?: BriefProduct[];
 };
