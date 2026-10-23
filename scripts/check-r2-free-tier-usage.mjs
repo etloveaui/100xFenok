@@ -296,7 +296,15 @@ export async function fetchInventory({
           },
         });
         let listed, failure;
-        try { listed = await client.listAllObjects({ deadline, onPage: () => { measured.pages += 1; } }); }
+        try {
+          // Both large stores use lowercase SHA-256 keys under one directory;
+          // delimiter-only scans would leave their bulk serial. The first/last
+          // ranges also cover all unrelated and future keys outside the prefix.
+          const bulkPrefix = bucket === "fenok-data-plane" ? "objects/sha256/"
+            : bucket === "feno-canvas-aa-flow-bodies" ? "materials/" : null;
+          const splitKeys = bulkPrefix ? [..."2468ace"].map(digit => `${bulkPrefix}${digit}`) : [];
+          listed = await client.listAllObjects({ deadline, splitKeys, onPage: () => { measured.pages += 1; } });
+        }
         catch (error) { listed = error.partialObjects ?? []; failure = error; }
         for (const object of listed) {
           if (!Number.isSafeInteger(object.size) || object.size < 0) {

@@ -341,33 +341,69 @@ export function createR2S3Client({
   return {
     bucket,
 
-    async listAllObjects({ deadline, onPage } = {}) {
+    async listAllObjects({ deadline, onPage, splitKeys = [] } = {}) {
+      // Inclusive upper / exclusive lower bounds cover the entire keyspace.
+      // Cuts only affect scheduling, never which families or keys are counted.
+      const compare = (a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b));
+      if (!Array.isArray(splitKeys) || splitKeys.length > 31
+          || splitKeys.some((key, i) => typeof key !== "string" || !key
+            || (i > 0 && compare(splitKeys[i - 1], key) >= 0))) {
+        fail("S3_LIST_BUDGET", "listing cuts must be ordered unique keys (at most 31)");
+      }
       const entries = [];
-      let token = null;
-      let pages = 0;
-      const tokens = new Set();
-      try {
+      const ranges = [...splitKeys, null].map((endAt, i) => ({
+        startAfter: i ? splitKeys[i - 1] : null, endAt,
+      }));
+      let nextRange = 0;
+      async function listRange({ startAfter, endAt }) {
+        let token = null;
+        let pages = 0;
+        let previousKey = startAfter;
+        const tokens = new Set();
         do {
-          if (++pages > 100 || (token && tokens.has(token))) fail("S3_LIST_BUDGET", "listing exceeds declared budget or repeats cursor");
+          if (++pages > 100 || (token && tokens.has(token))) fail("S3_LIST_BUDGET", "listing range exceeds declared budget or repeats cursor");
           if (token) tokens.add(token);
           const query = {
             "list-type": "2",
             "max-keys": String(S3_LIST_PAGE_MAX_KEYS),
-            ...(token ? { "continuation-token": token } : {}),
+            ...(token ? { "continuation-token": token }
+              : startAfter ? { "start-after": startAfter } : {}),
           };
           const { response, body } = await request({ method: "GET", key: "", query, deadline });
           if (!response.ok) fail("S3_HTTP", `list http ${response.status}: ${errorSnippet(body)}`);
           const page = parseListObjectsV2Xml(new TextDecoder().decode(body));
-          entries.push(...page.entries);
-          onPage?.({ objects: page.entries.length });
+          // Reject ignored start-after, duplicate or unordered keys instead of
+          // certifying an overlapping/incomplete range as a full inventory.
+          for (const object of page.entries) {
+            if (typeof object.key !== "string" || !object.key
+                || (previousKey !== null && compare(object.key, previousKey) <= 0)) {
+              fail("S3_XML_INVALID", "listing keys are missing, repeated or out of order");
+            }
+            previousKey = object.key;
+          }
+          const owned = page.entries.filter(object => endAt === null || compare(object.key, endAt) <= 0);
+          entries.push(...owned);
+          onPage?.({ objects: owned.length });
+          if (endAt !== null && previousKey !== null && compare(previousKey, endAt) >= 0) return;
           token = page.isTruncated ? page.nextContinuationToken : null;
           if (page.isTruncated && !token) fail("S3_XML_INVALID", "truncated list page without a continuation token");
         } while (token);
-      } catch (error) {
-        // An incomplete listing is still an error. Its observed prefix can
-        // prove a storage breach, but must never be treated as a full listing.
-        error.partialObjects = entries;
-        throw error;
+      }
+      // Drain all workers even on failure: completed sibling ranges can prove
+      // a breach, but any incomplete range still makes the inventory unverified.
+      const settled = await Promise.allSettled(Array.from({ length: Math.min(4, ranges.length) }, async () => {
+        const failures = [];
+        while (nextRange < ranges.length) {
+          const range = ranges[nextRange++];
+          try { await listRange(range); } catch (error) { failures.push(error); }
+        }
+        if (failures.length) throw failures[0];
+      }));
+      entries.sort((a, b) => compare(a.key, b.key));
+      const failed = settled.find(result => result.status === "rejected");
+      if (failed) {
+        failed.reason.partialObjects = entries;
+        throw failed.reason;
       }
       return entries;
     },
