@@ -84,6 +84,24 @@ function parseCnnComponents(payload: unknown): { latest: CnnComponentSnapshot; p
   return { latest, previous: snapshots.find((item) => item.date < latest.date) ?? null };
 }
 
+type CryptoSnapshot = { date: string; updated: string; coins: Array<{ symbol: string; price: number | null; share: number | null; change: number | null }> };
+type CryptoState = { status: "idle" | "loading" | "error" } | { status: "ready"; snapshot: CryptoSnapshot };
+
+function parseCryptoSnapshot(payload: unknown): CryptoSnapshot {
+  const root = payload as { updated?: unknown; history?: Array<{ date?: unknown; currencies?: Array<{ symbol?: unknown; price?: unknown; marketShare?: unknown; change24h?: unknown }> }> } | null;
+  const latest = (Array.isArray(root?.history) ? root.history : [])
+    .filter((row) => typeof row?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(row.date) && Array.isArray(row.currencies))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+  if (!latest) throw new Error("Crypto snapshot has no observation");
+  const finite = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : null;
+  return { date: String(latest.date), updated: typeof root?.updated === "string" ? root.updated : "미확인",
+    coins: ["BTC", "ETH"].map((symbol) => {
+      const row = latest.currencies?.find((coin) => coin?.symbol === symbol);
+      return { symbol, price: finite(row?.price), share: finite(row?.marketShare), change: finite(row?.change24h) };
+    }),
+  };
+}
+
 const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "3M", label: "3M", months: 3 },
   { id: "6M", label: "6M", months: 6 },
@@ -367,17 +385,18 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
   {
     id: "sentiment",
     label: "시장 심리 렌즈",
-    detail: "CNN·크립토 공포탐욕과 주식·채권 변동성을 비교한다.",
+    detail: "CNN·크립토 심리, 변동성, CFTC 주간 순포지션(별도 계약 축)을 비교한다.",
     state: {
       selected: [
         { id: "cnn_fear_greed", transform: "raw" },
         { id: "crypto_fear_greed", transform: "raw" },
         { id: "vix", transform: "raw" },
         { id: "move", transform: "raw" },
+        { id: "cftc_sp500_net", transform: "raw" },
       ],
       rangeId: "3Y",
       hiddenIds: [],
-      axisById: { vix: "right", move: "right" },
+      axisById: { cftc_sp500_net: "right" },
       formulas: [],
     },
   },
@@ -423,9 +442,10 @@ const MACRO_TOP_LENSES = [
         { id: "crypto_fear_greed", transform: "raw" as const },
         { id: "vix", transform: "raw" as const },
         { id: "move", transform: "raw" as const },
+        { id: "cftc_sp500_net", transform: "raw" as const },
       ],
       rangeId: "3Y",
-      axisById: { vix: "right" as const, move: "right" as const },
+      axisById: { cftc_sp500_net: "right" as const },
       macroContextId: "sentiment" as const,
     },
   },
@@ -1617,6 +1637,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [loadRetryKey, setLoadRetryKey] = useState(0);
   const [cnnComponentsState, setCnnComponentsState] = useState<CnnComponentsState>({ status: "idle" });
   const [cnnComponentsRetryKey, setCnnComponentsRetryKey] = useState(0);
+  const [cryptoState, setCryptoState] = useState<CryptoState>({ status: "idle" });
+  const [cryptoRetryKey, setCryptoRetryKey] = useState(0);
   const [seriesEditorOpen, setSeriesEditorOpen] = useState(stockCompareMode);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -1728,6 +1750,17 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       cancelled = true;
     };
   }, [clientStateReady, loadRetryKey, rangeId, selectedDefinitions, transformMap, viewOptions]);
+
+  useEffect(() => {
+    if (!clientStateReady || macroContextId !== "sentiment") return;
+    const controller = new AbortController();
+    Promise.resolve().then(() => { if (!controller.signal.aborted) setCryptoState({ status: "loading" }); });
+    void fetch("/data/slickcharts/currency.json", { signal: controller.signal })
+      .then((response) => { if (!response.ok) throw new Error(String(response.status)); return response.json(); })
+      .then((payload) => { if (!controller.signal.aborted) setCryptoState({ status: "ready", snapshot: parseCryptoSnapshot(payload) }); })
+      .catch(() => { if (!controller.signal.aborted) setCryptoState({ status: "error" }); });
+    return () => controller.abort();
+  }, [clientStateReady, cryptoRetryKey, macroContextId]);
 
   useEffect(() => {
     if (!clientStateReady || macroContextId !== "sentiment") return;
@@ -2852,6 +2885,22 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       </details>
 
       {selected.some((item) => item.id.startsWith("treasury_")) ? <TreasuryCurve /> : null}
+
+      {macroContextId === "sentiment" ? <section className="cpw5-macro-table-panel" data-macro-crypto-chips="true" aria-label="BTC ETH 가격과 시장점유율">
+        <h2 className="font-bold">BTC · ETH</h2>
+        {cryptoState.status === "ready" ? <>
+          <dl className="my-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {cryptoState.snapshot.coins.map((coin) => <div key={coin.symbol} className="rounded-lg border border-slate-200 p-3">
+              <dt className="font-bold">{coin.symbol}</dt>
+              <dd className="text-lg font-bold">{coin.price === null ? "가격 없음" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(coin.price)}</dd>
+              <dd className="text-sm">시장점유율 {coin.share === null ? "미확인" : `${coin.share.toFixed(2)}%`} · 24시간 {coin.change === null ? "미확인" : `${coin.change >= 0 ? "+" : ""}${coin.change.toFixed(2)}%`}</dd>
+            </div>)}
+          </dl>
+          <p className="text-xs text-slate-500">Slickcharts 암호화폐 · 관측 {cryptoState.snapshot.date} · 갱신 {cryptoState.snapshot.updated} · 시장점유율은 원본 제공값</p>
+        </> : cryptoState.status === "error" ? <p role="alert">암호화폐 자료를 불러오지 못했습니다. <button type="button" onClick={() => setCryptoRetryKey((value) => value + 1)}>다시 시도</button></p>
+          : <p role="status">암호화폐 자료를 불러오는 중입니다.</p>}
+        <p className="mt-2 text-xs text-slate-500">CFTC S&P 500 순포지션은 주간 계약 수이며 심리 점수와 별도 축으로 표시합니다.</p>
+      </section> : null}
 
       {macroContextId === "sentiment" ? (
         <details className="cpw5-macro-table-panel" data-macro-chart-sentiment-components="true">

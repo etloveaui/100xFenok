@@ -8,7 +8,7 @@
     { "id": "bank-credit", "label": "은행·신용", "href": "/macro-chart?macro=bank-credit&series=bank_credit,deposits,fdic_tier1,HY_spread,DGS10&transform=yoy,yoy,raw,raw,raw&range=10Y&axis=fdic_tier1:right,HY_spread:right,DGS10:right&formula=spread:bank_credit:deposits" },
     { "id": "activity", "label": "경기활동", "href": "/macro-chart?macro=activity&preset=activity&range=MAX" },
     { "id": "crypto-liquidity", "label": "크립토 유동성", "href": "/macro-chart?macro=crypto-liquidity&series=stablecoins,nasdaq,sp500,crypto_fear_greed,vix&transform=rebase100,rebase100,rebase100,raw,raw&range=5Y&hidden=vix&axis=crypto_fear_greed:right,vix:right&formula=ratio:nasdaq:stablecoins" },
-    { "id": "sentiment", "label": "시장 심리", "href": "/macro-chart?macro=sentiment&series=cnn_fear_greed,crypto_fear_greed,vix,move&range=3Y&axis=vix:right,move:right" }
+    { "id": "sentiment", "label": "시장 심리", "href": "/macro-chart?macro=sentiment&series=cnn_fear_greed,crypto_fear_greed,vix,move,cftc_sp500_net&range=3Y&axis=cftc_sp500_net:right" }
   ],
   "connection_surfaces": [
     { "surface": "screener", "href": "/screener?macro=risk-liquidity&preset=connected&connection=indexMembership", "groups": ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"] },
@@ -84,7 +84,7 @@
     { "id": "risk-liquidity", "label": "리스크와 유동성", "series": ["sp500:rebase100", "DGS10:raw", "HY_spread:raw", "M2SL:yoy"] },
     { "id": "liquidity", "label": "유동성", "series": ["WALCL:rebase100", "WRESBAL:rebase100", "RRPONTSYD:rebase100", "tga:rebase100", "stablecoins:rebase100"] },
     { "id": "activity", "label": "경기활동", "series": ["oecd_cli_us:raw", "pmi_mfg_us_sp:raw", "ism_mfg_headline:raw", "ism_services_headline:raw"] },
-    { "id": "sentiment", "label": "시장 심리", "series": ["cnn_fear_greed:raw", "crypto_fear_greed:raw", "vix:raw", "move:raw"] },
+    { "id": "sentiment", "label": "시장 심리", "series": ["cnn_fear_greed:raw", "crypto_fear_greed:raw", "vix:raw", "move:raw", "cftc_sp500_net:raw"] },
     { "id": "sentiment-positioning", "label": "심리·포지션", "series": ["aaii_spread:raw", "cftc_sp500_net:raw", "cnn_put_call:raw"] },
     { "id": "sentiment-cnn", "label": "CNN 세부 지표", "series": ["cnn_fear_greed:raw", "cnn_momentum:raw", "cnn_strength:raw", "cnn_breadth:raw", "cnn_junk_bond:raw", "cnn_safe_haven:raw", "cnn_put_call:raw"] }
   ]

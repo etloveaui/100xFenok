@@ -99,7 +99,7 @@ export const MACRO_CONTEXTS: Record<MacroContextId, MacroWorkbenchContext> = {
     label: "시장 심리",
     shortLabel: "심리",
     detail: "주식·채권 변동성과 CNN·크립토 공포탐욕 지수를 같은 날짜 기준으로 비교합니다.",
-    chartHref: ROUTES.macroChartQuery("macro=sentiment&series=cnn_fear_greed,crypto_fear_greed,vix,move&range=3Y&axis=vix:right,move:right"),
+    chartHref: ROUTES.macroChartQuery("macro=sentiment&series=cnn_fear_greed,crypto_fear_greed,vix,move,cftc_sp500_net&range=3Y&axis=cftc_sp500_net:right"),
     screenerHref: `${ROUTES.screener}?macro=sentiment&preset=momentum&action=momentum`,
     etfHref: `${ROUTES.etfs}?macro=sentiment&type=inverse`,
     stockHref: `${ROUTES.stock("SPY")}?macro=sentiment`,
