@@ -11,6 +11,8 @@ import {
   legacyPublicFileExists,
   sanitizeLegacyPath,
 } from '@/lib/server/legacy-bridge';
+import SentimentSignalDetail from './SentimentSignalDetail';
+import { SENTIMENT_VIEWS } from './sentiment-detail-data';
 import BankingHealthDetail from './BankingHealthDetail';
 import LiquidityStressDetail from './LiquidityStressDetail';
 import LiquidityFlowDetail from './LiquidityFlowDetail';
@@ -78,6 +80,16 @@ export default async function RadarPage({ searchParams }: PageProps) {
     const detail = <BankingHealthDetail />;
     if (version === 'v1') return <ShellChromeOff>{detail}</ShellChromeOff>;
     return <AppShell active="explore" title="은행 건전성" backHref={ROUTES.radar}>{detail}</AppShell>;
+  }
+
+  const sentimentRoot = 'tools/macro-monitor/details/sentiment-signal/';
+  const sentimentView = safePath === `${sentimentRoot}index.html` ? 'cnn-fg'
+    : safePath === `${sentimentRoot}charts/table-cnn-components.html` ? 'components'
+    : SENTIMENT_VIEWS.find((view) => safePath === `${sentimentRoot}charts/chart-${view.id}.html`)?.id;
+  if (sentimentView && getSingleSearchParam(params.legacy) !== '1') {
+    const detail = <SentimentSignalDetail initialView={sentimentView} />;
+    if (version === 'v1') return <ShellChromeOff>{detail}</ShellChromeOff>;
+    return <AppShell active="explore" title="시장 심리 상세" backHref={ROUTES.radar}>{detail}</AppShell>;
   }
 
   // Unmigrated details and explicit legacy links keep their existing renderer.
