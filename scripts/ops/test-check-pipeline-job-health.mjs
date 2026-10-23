@@ -250,7 +250,7 @@ import {
   quarterly.forEach(snapshot => { snapshot.sets[0].status = "fresh"; });
   assert.equal(classifySnapshot(quarterly).status, "ok", "in-bound quarterly source may remain unchanged");
   const lowMembers = structuredClone(sameAttempt);
-  lowMembers.forEach(snapshot => Object.assign(snapshot.sets[0], { fresh_members: 85, total_members: 100 }));
+  lowMembers.forEach(snapshot => Object.assign(snapshot.sets[0], { fresh_members: 1461, total_members: 1495 }));
   assert.deepEqual(classifySnapshot(lowMembers).outcome_alarms[0].reasons, ["member_ratio_low"]);
   lowMembers[0].sets.push({ set: "unobserved_lane", status: "unknown" });
   assert.equal(classifySnapshot(lowMembers).status, "alarm", "one unknown lane must not hide known unhealthy data");

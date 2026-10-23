@@ -11,6 +11,21 @@ import { fetchEtfFamilyHealth, buildIssueBody } from "./ops/check-pipeline-job-h
 import { buildAlarmState } from "./ops/emit-alarm-state.mjs";
 
 const now = "2026-10-11T10:00:00.000Z";
+// Per-member cadence already includes grace; a second percentage allowance hides stale members.
+{
+  const policy = { fresh_ttl_hours: 48, emergency_lkg_ttl_days: 7 };
+  const members = [
+    ...Array.from({ length: 1461 }, (_, i) => ({ member: `F${i}`, source_as_of: now })),
+    ...Array.from({ length: 27 }, (_, i) => ({ member: `S${i}`, source_as_of: "2026-10-08" })),
+    ...Array.from({ length: 2 }, (_, i) => ({ member: `E${i}`, source_as_of: "2026-10-01" })),
+    ...Array.from({ length: 5 }, (_, i) => ({ member: `U${i}`, source_as_of: null })),
+  ];
+  const summary = summarizeSourceHealth(members, now, policy);
+  assert.equal(summary.status, "degraded");
+  assert.deepEqual(summary.counts, { fresh: 1461, stale: 27, expired: 2, unknown: 5 });
+  assert.equal(summary.reason, "member_ratio_low");
+  assert.equal(summarizeSourceHealth(members.map(row => ({ ...row, source_as_of: now })), now, policy).status, "fresh");
+}
 const root = await fs.mkdtemp(path.join(os.tmpdir(), "family-health-"));
 const prefix = "data/stockanalysis/etfs";
 const binding = { runId: "100", runAttempt: "1", now };

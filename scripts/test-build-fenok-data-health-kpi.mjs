@@ -367,7 +367,7 @@ try {
   assert.equal(yahooBatch.newest_source_date, "2026-09-25");
   assert.equal(yahooBatch.oldest_source_date, "2026-04-10");
   assert.equal(yahooBatch.oldest_source_member, "ZCBE");
-  assert.equal(yahooBatch.status, "fresh", "a 95% fresh share meets the fresh threshold despite one outlier");
+  assert.equal(yahooBatch.status, "delayed", "members outside their cadence bounds must change the set status");
   assert.equal(yahooBatch.fresh_members, 95);
   assert.equal(yahooBatch.total_members, 100);
   assert.equal(yahooBatch.served_path, "data/yf/finance", "the shared Yahoo output has an explicit public serving path");

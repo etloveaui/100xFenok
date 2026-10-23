@@ -467,7 +467,7 @@ function sourceOutcomeAlarms(latest, previous) {
   const breached = row => ["delayed", "stopped"].includes(row?.status);
   const lowRatio = row => Number.isSafeInteger(row?.total_members) && row.total_members > 0
     && Number.isSafeInteger(row.fresh_members) && row.fresh_members >= 0
-    && row.fresh_members * 100 < row.total_members * 95;
+    && row.fresh_members < row.total_members;
   return latest.sets.flatMap(row => {
     const old = prior.get(row.set);
     if (!breached(row) || !breached(old)) return [];

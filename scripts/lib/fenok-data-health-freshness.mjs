@@ -514,7 +514,7 @@ function memberSummary(lane, evidence, nowIso, calendars) {
   const status = dated.length === 0
     ? "unknown"
     : multiMember
-      ? freshMembers * 100 >= totalMembers * 95
+      ? freshMembers === totalMembers
         ? "fresh"
         : freshMembers * 100 >= totalMembers * 80 ? "delayed" : "stopped"
       : worstStatus(members.map((member) => member.status));
