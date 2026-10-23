@@ -14,10 +14,9 @@ import {
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import TransitionLink from "@/components/TransitionLink";
-import TickerTypeahead from "@/components/TickerTypeahead";
+import dynamic from "next/dynamic";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
 import UserAuthPill from "@/components/shell/UserAuthPill";
-import PersonalStoreSync from "@/components/personal/PersonalStoreSync";
 import { useUserHeartbeat } from "@/lib/auth/clientAuth";
 import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
@@ -32,6 +31,10 @@ import { useModal } from "@/hooks/useModal";
 import { NavItemPending, useNavigationPending } from "@/components/shell/navigation-progress";
 import { normalizeShellPathname, resolveShellRoute } from "@/components/shell/shell-routes";
 import { openCommandPalette } from "@/components/ui/CommandPalette";
+
+// Chrome-only modules are not needed on shell-free routes such as /intro.
+const TickerTypeahead = dynamic(() => import("@/components/TickerTypeahead"));
+const PersonalStoreSync = dynamic(() => import("@/components/personal/PersonalStoreSync"));
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
