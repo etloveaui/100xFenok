@@ -35,6 +35,8 @@ test.beforeAll(async ({ request }) => {
   } catch (error) { indexError = String(error); }
 });
 
+const radarDetail = (path: string, legacy = false) => `/radar?${legacy ? "legacy=1&" : ""}path=${encodeURIComponent(`tools/macro-monitor/details/${path}`)}`;
+
 const routes = [
   ["home", "/"], ["screener", "/screener"],
   ["screener-detail", "/screener?ticker=NVDA"], ["stock-nvda", "/stock/NVDA"],
@@ -43,6 +45,16 @@ const routes = [
   ["etf-spy", "/etfs/SPY"], ["superinvestors", "/superinvestors"],
   ["macro-chart", "/macro-chart"], ["brief", "/brief"],
   ["morning", null], ["digest", null],
+  ["radar", "/radar"],
+  ["radar-flow", radarDetail("liquidity-flow.html")],
+  ["radar-stress", radarDetail("liquidity-stress.html")],
+  ["radar-banking", radarDetail("banking-health.html")],
+  ["radar-sentiment", radarDetail("sentiment-signal/index.html")],
+  ["radar-cftc", radarDetail("sentiment-signal/charts/chart-cftc.html")],
+  ["radar-legacy", radarDetail("liquidity-flow.html", true)],
+  ["macro-inflation", "/macro-chart?preset=inflation"],
+  ["macro-treasury-curve", "/macro-chart?preset=treasury"],
+  ["macro-mortgage", "/macro-chart?preset=mortgage"],
 ] as const;
 
 for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080 }]) {
@@ -93,6 +105,45 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
             }
             await expect(page.getByText("단기·장기 독립 진단", { exact: true }).first()).toBeVisible();
             observation.detail_open_action = "expanded NVDA result row";
+          }
+          if (name.startsWith("radar-") && name !== "radar-legacy") {
+            const detail = page.locator('[data-radar-native-detail="true"]');
+            await expect(detail).toBeVisible();
+            const titles: Record<string, string> = {
+              "radar-flow": "유동성 흐름", "radar-stress": "유동성 스트레스",
+              "radar-banking": "은행 건전성", "radar-sentiment": "시장 심리 상세", "radar-cftc": "시장 심리 상세",
+            };
+            await expect(detail.getByRole("heading", { name: titles[name], exact: true })).toBeVisible();
+            await expect(page.locator("[data-radar-legacy-frame]")).toHaveCount(0);
+            if (name === "radar-sentiment" || name === "radar-cftc") {
+              const selector = detail.getByRole("combobox", { name: "상세 차트 / 표" });
+              await expect(selector).toHaveValue(name === "radar-cftc" ? "cftc" : "cnn-fg");
+              observation.sentiment_view = await selector.inputValue();
+            }
+            observation.native_detail = await detail.getByRole("heading", { level: 1 }).innerText();
+          }
+          if (name === "radar-legacy") {
+            const frame = page.locator("[data-radar-legacy-frame] iframe");
+            await expect(frame).toBeVisible();
+            await expect(frame).toHaveAttribute("src", /\/tools\/macro-monitor\/details\/liquidity-flow\.html/);
+            await expect(page.locator("[data-radar-native-detail]")).toHaveCount(0);
+            const body = page.frameLocator("[data-radar-legacy-frame] iframe").locator("body");
+            await expect(body).toContainText(/유동성|Liquidity/i);
+            observation.legacy_frame = { src: await frame.getAttribute("src"), text: await body.innerText() };
+          }
+          if (["macro-inflation", "macro-treasury-curve", "macro-mortgage"].includes(name)) {
+            const legend = page.locator('[data-macro-v2-legend-overlay="true"]');
+            const labels = name === "macro-inflation" ? ["연간 인플레이션"]
+              : name === "macro-treasury-curve" ? ["10Y − 2 Yr", "10Y − 3 Mo"]
+              : ["30년 고정", "15년 고정", "30년 점보", "7/6 SOFR ARM", "30년 FHA", "30년 VA"];
+            for (const label of labels) await expect(legend.getByRole("button").filter({ hasText: label })).toBeVisible();
+            await expect(legend.locator('[data-macro-v2-legend-sparkline="ready"]')).toHaveCount(labels.length, { timeout: 30_000 });
+            observation.preset_legend = await legend.innerText();
+            if (name === "macro-treasury-curve") {
+              const curve = page.locator('[data-macro-treasury-curve="true"]');
+              await expect(curve.getByRole("combobox", { name: "관측일" })).toBeVisible();
+              observation.treasury_curve = await curve.innerText();
+            }
           }
           // Trigger below-fold widgets without navigation or data mutation.
           let scannedToBottom = false;
