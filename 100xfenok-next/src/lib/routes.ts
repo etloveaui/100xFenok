@@ -52,6 +52,8 @@ export const ROUTES = {
   briefMorning: (date: string) => `/brief/morning/${encodeURIComponent(date)}`,
   /** One Daily Digest edition, by KST edition date (YYYY-MM-DD). */
   briefDigest: (date: string) => `/brief/digest/${encodeURIComponent(date)}`,
+  /** One Premarket edition, by KST date. */
+  briefPremarket: (date: string) => `/brief/premarket/${encodeURIComponent(date)}`,
   screenerTicker: (ticker: string) => withQuery("/screener", { ticker: normalizeForRouteTicker(ticker) }),
   portfolioTicker: (ticker: string) => withQuery("/portfolio", { ticker: normalizeForRouteTicker(ticker) }),
   superinvestorsByTicker: (ticker: string, returnTo?: string | null) =>
@@ -74,6 +76,7 @@ export const APP_ROUTE_PATTERNS = [
   "/brief",
   "/brief/morning/[date]",
   "/brief/digest/[date]",
+  "/brief/premarket/[date]",
   "/market",
   "/market-valuation",
   "/market-valuation/structure",

@@ -23,6 +23,13 @@ export function briefDigestDataUrl(date: string): string {
  */
 export const BRIEF_DIGEST_PACK_URL = "/brief/digest-c2.html";
 
+/** The Premarket renderer is replaceable without changing the edition JSON or route. */
+export const BRIEF_PREMARKET_PACK_URL = "/brief/premarket-pack.html";
+
+export function briefPremarketDataUrl(date: string): string {
+  return `/data/briefing/premarket/${date}.json`;
+}
+
 export type BriefDigest = {
   schema: string;
   date: string;
