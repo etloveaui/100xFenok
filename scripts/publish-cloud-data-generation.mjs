@@ -2915,6 +2915,9 @@ function validateParityProof(verifiedObjects, manifest) {
 // path. Arrays share a denominator per field; compact rows use their field names.
 // A sharp collapse means both a >=50% relative loss and >=20 percentage points.
 // No prior numeric coverage means no baseline, rather than a fabricated pass.
+// FINRA summaries have eight reference rows; fund quotes and availability
+// markers are singletons. Require at least ten members for a population check.
+const MIN_COMPUTED_COVERAGE_MEMBERS = 10;
 const computedAsset = asset => /(?:^|\/)computed\/.*\.json$/.test(asset.path);
 function coverageDocument(value) {
   if (!value || typeof value !== "object") return value;
@@ -2966,6 +2969,7 @@ export async function assertComputedFieldCoverage({ pointer, manifest, payloads,
     const after = nextBytes ? coverageDocument(JSON.parse(new TextDecoder().decode(nextBytes))) : null;
     for (const parts of numericPaths(before).values()) {
       const old = fieldCoverage(before, parts), next = fieldCoverage(after, parts);
+      if (old.total < MIN_COMPUTED_COVERAGE_MEMBERS) continue;
       const oldRatio = old.present / old.total, nextRatio = next.present / next.total;
       if (nextRatio <= oldRatio * 0.5 && oldRatio - nextRatio >= 0.2) {
         fail("COMPUTED_FIELD_NULL_COLLAPSE", `${asset.path} ${parts.map(part => part ?? "[]").join(".")}: `

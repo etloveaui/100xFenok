@@ -3694,9 +3694,10 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   const tracked = { ...plane, objectStore: { ...plane.objectStore,
     async putIfAbsent(...args) { writes += 1; return plane.objectStore.putIfAbsent(...args); } } };
   const errors = [], gates = [];
-  const build = async (present) => {
+  const build = async (present, total = 763) => {
     await writeFile(path.join(root, "signals.json"), JSON.stringify({ source_as_of: "2026-07-31",
-      fields: ["sp500_tracking_similarity"], rows: Array.from({ length: 763 }, (_, i) => [i < present ? 90 : null]) }));
+      normalized: { quote: { ep: present ? 21 : null } },
+      fields: ["sp500_tracking_similarity"], rows: Array.from({ length: total }, (_, i) => [i < present ? 90 : null]) }));
     return buildFamilyManifest({ familyName: "computed-signals", absRoot: root,
       relRoot: "public/data/computed", now: () => NOW_1 });
   };
@@ -3722,6 +3723,16 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     assert.equal(await invoke(), 0, "ordinary coverage variation is allowed");
     built = await build(763);
     assert.equal(await invoke(), 0, "coverage recovery publishes");
+    for (const total of [1, 8, 9]) {
+      built = await build(total, total);
+      assert.equal(await invoke(), 0);
+      built = await build(0, total);
+      assert.equal(await invoke(), 0, `CCOM quote ep and ${total}-row samples may become null`);
+    }
+    built = await build(10, 10);
+    assert.equal(await invoke(), 0);
+    built = await build(0, 10);
+    assert.equal(await invoke(), 1, "ten members is the first population-sized check");
   } finally { await rm(root, { recursive: true, force: true }); }
 }
 
