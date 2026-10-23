@@ -248,6 +248,9 @@ jobs:
             python3 scripts/yahoo_batch_state.py export-generation --state-root data/admin/yahoo-batch-quote-history
           fi
           python3 scripts/yahoo_batch_state.py hydrate-generation --state-root "$YAHOO_BATCH_STATE_ROOT"
+          # Restore observer events from the same private Yahoo generation as
+          # their finance bytes; the catalogue remains a separate writer.
+          python3 scripts/fetch-yf-finance.py --stock-detail-observations restore
           node --input-type=module <<'JS'
           import { cp, mkdir } from 'node:fs/promises';
           import path from 'node:path';
@@ -550,6 +553,7 @@ jobs:
           rm -rf "$ART"
           mkdir -p "$ART"
           python3 scripts/yahoo_batch_state.py export-generation --state-root "$YAHOO_BATCH_STATE_ROOT"
+          python3 scripts/fetch-yf-finance.py --stock-detail-observations export
           # Compare against the verified active tree, not Git's index. Ignored
           # generated files still participate, and unchanged bytes are not packed.
           python3 - "$ART/candidate-paths.z" <<'PYEOF'

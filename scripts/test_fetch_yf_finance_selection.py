@@ -3369,6 +3369,58 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(row["observation_origin"], "rebuild")
         self.assertEqual(row["collection_origin"], "manual")
 
+    def test_stock_detail_observations_survive_yahoo_only_artifact_and_next_export(self):
+        payload = {"schema_version": "yf-finance/v2", "ticker": "AAPL", "profile": "full",
+                   "fetched_at": "2026-07-10T10:00:00Z",
+                   "data": {"info": {"symbol": "AAPL", "quoteType": "EQUITY",
+                                     "currentPrice": 10, "previousClose": 9},
+                            "history_1y": [{"date": "2026-07-10", "Close": 10}]}}
+        self.fetcher._observed_now = lambda: "2026-07-10T10:01:00Z"
+        success = self.fetcher.write_finance_payload("AAPL", payload)
+        self.fetcher._observed_now = lambda: "2026-07-11T10:01:00Z"
+        self.fetcher.record_finance_failure("AAPL", "earlier refusal")
+        self.fetcher._observed_now = lambda: "2026-07-12T10:01:00Z"
+        failure = self.fetcher.record_finance_failure("AAPL", "latest refusal")
+        metadata_path = self.fetcher.OUT_DIR.parent / "_acquisition-state.json"
+        metadata = {"schema_version": "yahoo-generation-observations/v1",
+                    "observed_at": "2026-07-12T10:01:00Z", "tickers": {}, "universes": {}}
+        write_json(metadata_path, metadata)
+        self.assertEqual(self.fetcher.sync_stock_detail_observations("export")["stock_detail_observations"], 2)
+        packed = json.loads(metadata_path.read_bytes())
+        self.assertEqual({row["event_id"] for row in packed["stock_detail_observations"]},
+                         {success["event_id"], failure["event_id"]})
+        finance_bytes = (self.fetcher.OUT_DIR / "AAPL.json").read_bytes()
+        with TemporaryDirectory() as tmp:
+            # Only data/yf crosses the artifact boundary; no admin tree does.
+            root = Path(tmp)
+            self.fetcher.OUT_DIR = root / "data/yf/finance"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data/admin/data-supply-state/v1"
+            self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT = root
+            self.fetcher.OUT_DIR.mkdir(parents=True)
+            (self.fetcher.OUT_DIR / "AAPL.json").write_bytes(finance_bytes)
+            target = self.fetcher.OUT_DIR.parent / "_acquisition-state.json"
+            write_json(target, packed)
+            self.assertFalse(self.fetcher.DATA_SUPPLY_STATE_ROOT.exists())
+            self.fetcher.sync_stock_detail_observations("restore")
+            self.fetcher.sync_stock_detail_observations("restore")
+            events = [json.loads(line) for path in self.fetcher.DATA_SUPPLY_STATE_ROOT.glob("history/observations/*.jsonl")
+                      for line in path.read_text().splitlines()]
+            self.assertEqual({row["event_id"] for row in events}, {success["event_id"], failure["event_id"]})
+            self.assertEqual(len(events), 2)
+            pending = json.loads((self.fetcher.DATA_SUPPLY_STATE_ROOT /
+                "providers/yahoo_finance/stock_detail/pending/AAPL.json").read_text())
+            self.assertEqual((self.fetcher.DATA_SUPPLY_STATE_ROOT / pending["path"]).read_bytes(), finance_bytes)
+            # Lifecycle export rewrites its metadata; restored evidence must be
+            # carried forward even in an ETF-only run with no new stock attempt.
+            write_json(target, metadata)
+            self.fetcher.sync_stock_detail_observations("export")
+            self.assertEqual(json.loads(target.read_bytes())["stock_detail_observations"], packed["stock_detail_observations"])
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "unwritten-state"
+            (self.fetcher.OUT_DIR / "AAPL.json").write_bytes(b'{"tampered":true}')
+            with self.assertRaises(ValueError):
+                self.fetcher.sync_stock_detail_observations("restore")
+            self.assertFalse(self.fetcher.DATA_SUPPLY_STATE_ROOT.exists())
+
     def test_yahoo_only_write_keeps_canonical_ownership_without_enrollment(self) -> None:
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"
         payload = {

@@ -45,7 +45,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
-from data_supply_state import DataSupplyStateStore
+from data_supply_state import DataSupplyStateStore, validate_observation
 from estimate_archive import EstimateArchive, default_archive_root
 
 # Point-in-time analyst-estimate archive (#380): non-blocking sibling write.
@@ -632,6 +632,73 @@ def record_finance_failure(ticker, error):
         failure_detail=bounded_diagnostic_detail(error),
         origin="manual",
     )
+
+
+def sync_stock_detail_observations(action):
+    """Carry bounded observer evidence in Yahoo's existing private generation asset."""
+    metadata_path = OUT_DIR.parent / "_acquisition-state.json"
+    metadata = json.loads(metadata_path.read_bytes())
+    if metadata.get("schema_version") != "yahoo-generation-observations/v1":
+        raise ValueError("Yahoo acquisition metadata schema is invalid")
+    if action == "restore":
+        rows = metadata.get("stock_detail_observations", [])
+        if not isinstance(rows, list):
+            raise ValueError("Yahoo stock-detail observations must be a list")
+    elif action == "export":
+        latest, successful = {}, {}
+        for path in sorted((DATA_SUPPLY_STATE_ROOT / "history/observations").glob("*.jsonl")):
+            for line in path.read_bytes().splitlines():
+                row = json.loads(line)
+                if row.get("domain") != "stock_detail" or row.get("provider") != "yahoo_finance":
+                    continue
+                row = validate_observation(row)
+                entity = row["entity"]
+                for bucket in (latest, successful) if row["validation_status"] == "valid" else (latest,):
+                    if entity not in bucket or _parse_utc(row["observed_at"]) >= _parse_utc(bucket[entity]["observed_at"]):
+                        bucket[entity] = row
+        rows = list({row["event_id"]: row for row in [*successful.values(), *latest.values()]}.values())
+        rows.sort(key=lambda row: (row["entity"], row["observed_at"], row["event_id"]))
+    else:
+        raise ValueError("unsupported Yahoo stock-detail observation action")
+
+    # Finance bytes already travel in this same immutable Yahoo generation.
+    # Rebuild provider objects from those exact bytes instead of duplicating them.
+    checked, counts = [], {}
+    for raw in rows:
+        row = validate_observation(raw)
+        entity = row["entity"]
+        if (row["domain"] != "stock_detail" or row["provider"] != "yahoo_finance"
+                or not is_enrolled_stock_detail(entity)
+                or row["endpoint_family"] != "yahoo_finance_stock_detail"
+                or row["provider_schema"] != SCHEMA_VERSION
+                or row["provider_path"] != f"data/yf/finance/{entity}.json"):
+            raise ValueError("Yahoo stock-detail observation is outside its provider scope")
+        counts[entity] = counts.get(entity, 0) + 1
+        if counts[entity] > 2:
+            raise ValueError("Yahoo stock-detail observations exceed latest event and retained success")
+        body = None
+        if row["validation_status"] == "valid":
+            body = (OUT_DIR / f"{entity}.json").read_bytes()
+            candidate = validate_stock_detail_candidate(
+                provider="yahoo_finance", entity=entity, provider_path=row["provider_path"],
+                payload_bytes=body, observed_at=row["observed_at"],
+                expected_sha256=row["payload_sha256"], provider_truth_root=DATA_SUPPLY_PROVIDER_TRUTH_ROOT)
+            if candidate.source_as_of != row["source_as_of"]:
+                raise ValueError("Yahoo stock-detail observation source disagrees with finance bytes")
+        checked.append((row, body))
+    if action == "restore":
+        store = DataSupplyStateStore(DATA_SUPPLY_STATE_ROOT, provider_truth_root=DATA_SUPPLY_PROVIDER_TRUTH_ROOT)
+        for row, body in checked:
+            if body is not None:
+                store.store_provider_object(observation=row, payload=body)
+            store.record_observation(row)
+    else:
+        metadata["stock_detail_observations"] = rows
+        # Null source clocks on failed observations are part of their exact
+        # event identity; finance clean_value/stable_json deliberately drops nulls.
+        _atomic_write_bytes(metadata_path, json.dumps(
+            metadata, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8"))
+    return {"action": action, "stock_detail_observations": len(rows)}
 
 
 def curated_statement(df, items, periods):
@@ -2514,7 +2581,13 @@ def main():
     parser.add_argument("--tracker-unadjusted", action="store_true", help="RIM tracker lane only: full-history UNADJUSTED closes for SPY/QQQ/ONEQ/IWM/EWY/SOXX into sibling files; additive, canonical files untouched")
     parser.add_argument("--price-history-mode", choices=("backfill", "daily"),
                         help="private lifetime OHLC/adjusted-close yearly packs; no rolling-window overwrite")
+    parser.add_argument("--stock-detail-observations", choices=("restore", "export"),
+                        help="restore/export observer evidence in private Yahoo acquisition metadata")
     args = parser.parse_args()
+
+    if args.stock_detail_observations:
+        print(json.dumps(sync_stock_detail_observations(args.stock_detail_observations)), flush=True)
+        return
 
     if args.price_history_mode:
         return run_price_history(args)
