@@ -56,7 +56,13 @@ REASONS = {"failure_streak": "연속 실패", "missed_schedule_window": "실행 
            "health_record_stale": "건강 기록 멈춤",
            "serving_heartbeat_stale": "게시 갱신 기한 초과", "serving_source_stale": "원본 데이터 기한 초과",
            "stockanalysis_etf_detail:member_ratio_low": "StockAnalysis ETF 갱신 범위 부족",
-           "yahoo_etf_fallback:member_ratio_low": "Yahoo ETF 갱신 범위 부족"}
+           "yahoo_etf_fallback:member_ratio_low": "Yahoo ETF 갱신 범위 부족",
+           "yahoo_batch_quote_history:member_ratio_low": "Yahoo 시세 이력 갱신 범위 부족"}
+# "- <set>: member_ratio_low[, other reasons]; source ..." (a set that also stopped advancing lists both reasons).
+MEMBER_LINE = re.compile(r"- ([a-z][a-z0-9_]*): ([a-z][a-z0-9_]*(?:, [a-z][a-z0-9_]*)*); source .+")
+MEMBER_COUNT = re.compile(r"Members inside bound: (\d+)/(\d+)")
+LEGACY_COUNT = re.compile(r"Members inside bound: \d+/\d+")
+IMPROVE_MIN = 3  # an improvement is a line only after this many members came back (or at zero); any worsening is a line
 DELIVERED = ("success", "dedup_skipped", "already_delivered")
 MAX_CALLS = 7  # the Manifest calendar plus the existing six reads/probes
 TOKEN: str | None = None
@@ -113,7 +119,7 @@ def read_issues() -> dict:
         if "pull_request" in r or not r["title"].strip().lower().endswith("alarm"):
             continue
         inc, head, member_reason = {}, None, None
-        details, legacy_aliases = {}, {}
+        details, legacy_aliases, counts = {}, {}, {}
         for line in (r.get("body") or "").splitlines():  # the alarm rewrites the body: "## <incident>" + "- Alarm reasons: a, b"
             if line.startswith("## "):
                 member_reason = None
@@ -125,16 +131,18 @@ def read_issues() -> dict:
                 inc.setdefault(head, [])
             elif head and line.startswith("- Alarm reasons:"):
                 inc[head] = sorted(set(inc[head]) | {x.strip() for x in line.split(":", 1)[1].split(",") if x.strip()})
-            elif head == "Data health KPI" and (member := re.fullmatch(
-                    r"- ([a-z][a-z0-9_]*): (member_ratio_low); source .+", line)):
-                member_reason = f"{member[1]}:{member[2]}"
-                inc[head] = sorted(set(inc[head]) | {member_reason})
+            elif head == "Data health KPI" and (member := MEMBER_LINE.fullmatch(line)):
+                member_reason = None
+                if "member_ratio_low" in member[2].split(", "):
+                    member_reason = f"{member[1]}:member_ratio_low"
+                    inc[head] = sorted(set(inc[head]) | {member_reason})
             elif head and line.startswith("  - "):
                 reason = line.strip().removeprefix("- ")
-                if member_reason and re.fullmatch(r"Members inside bound: \d+/\d+", reason):
+                if member_reason and (found := MEMBER_COUNT.fullmatch(reason)):
                     # Numeric evidence stays in the message, not its transition identity.
                     count = reason.split(":", 1)[1].strip()
                     details[member_reason] = f"{REASONS.get(member_reason, member_reason)} ({count})"
+                    counts[member_reason] = [int(found[1]), int(found[2])]
                     legacy_aliases[reason] = member_reason
                     continue
                 if "heartbeat limit" in reason:
@@ -143,7 +151,8 @@ def read_issues() -> dict:
                     reason = "serving_source_stale"
                 inc[head] = sorted(set(inc[head]) | {reason})
         out[str(r["number"])] = {"title": r["title"], "url": r["html_url"], "incidents": inc,
-                                 "reason_details": details, "legacy_reason_aliases": legacy_aliases}
+                                 "reason_details": details, "legacy_reason_aliases": legacy_aliases,
+                                 "member_counts": counts}
     return out
 
 
@@ -226,9 +235,31 @@ def read_ledger() -> dt.datetime:
 READERS = {"issues": read_issues, "clock": read_clock, "ledger": read_ledger, "alarm": read_alarm}  # alarm last: it probes
 
 
-def idents(incidents: dict, aliases: dict | None = None) -> set:
+def idents(incidents: dict, aliases: dict | None = None, current: dict | None = None) -> set:
     aliases = aliases or {}
-    return {(h, aliases.get(r, r)) for h, rs in incidents.items() for r in (rs or [""])}
+    found = {(h, aliases.get(r, r)) for h, rs in incidents.items() for r in (rs or [""])}
+    legacy = {(h, r) for h, r in found if LEGACY_COUNT.fullmatch(r)}
+    if legacy:  # state written before counts left the identity: the sets it covered are already announced
+        found -= legacy
+        found |= {(h, r) for h, rs in (current or {}).items() for r in rs if r.endswith(":member_ratio_low")}
+    return found
+
+
+def count_update(old_counts: dict, new_counts: dict) -> list[tuple[str, str, list, list]]:
+    """Same incident, new member count: (reason, 'improved'|'worsened', old, new). An improvement is a line only when it
+    is material; a worsening always is. Counts are outside-bound members, so a smaller total with the same fresh set
+    still reads as improved."""
+    out = []
+    for reason, new in sorted(new_counts.items()):
+        old = old_counts.get(reason)
+        if not old or old == new:
+            continue
+        before, after = old[1] - old[0], new[1] - new[0]
+        if after > before:
+            out.append((reason, "worsened", old, new))
+        elif before - after >= IMPROVE_MIN or (after == 0 and before > 0):
+            out.append((reason, "improved", old, new))
+    return out
 
 
 def summary(pairs: set, fallback: str, details: dict | None = None) -> str:
@@ -290,7 +321,7 @@ def run(a: argparse.Namespace) -> int:
         for num, it in cur.items():
             old, link = new["issues"].get(num), f'<a href="{e(it["url"])}">이슈 #{num}</a>'
             now_ids = idents(it["incidents"])
-            added = now_ids - idents(old["incidents"], it.get("legacy_reason_aliases")) if old else set()
+            added = now_ids - idents(old["incidents"], it.get("legacy_reason_aliases"), it["incidents"]) if old else set()
             put = lambda s, n=num, v=it: s["issues"].__setitem__(n, v)  # noqa: E731
             if old is None and not baseline:
                 events.append((f"issue:{num}:opened", f"100x 데이터 경보 열림: {e(summary(now_ids, it['title'], it.get('reason_details')))} {link}", put))
@@ -299,7 +330,17 @@ def run(a: argparse.Namespace) -> int:
                 events.append((f"issue:{num}:worsened:{digest}",
                                f"100x 데이터 경보 악화: {e(summary(added, it['title'], it.get('reason_details')))} 추가 {link}", put))
             else:
-                put(new)
+                # The announced count is the baseline: a change too small to announce stays out of the snapshot so it
+                # can accumulate, and an announced one enters the snapshot only when its line is delivered.
+                old_counts, now_counts = (old or {}).get("member_counts") or {}, it.get("member_counts") or {}
+                ups = count_update(old_counts, now_counts) if old else []
+                new["issues"][num] = {**it, "member_counts": {r: old_counts.get(r, c) for r, c in now_counts.items()}}
+                for reason, direction, before, after in ups:
+                    label = REASONS.get(reason, reason)
+                    word = "개선" if direction == "improved" else "악화"
+                    events.append((f"issue:{num}:count:{reason}:{before[0]}/{before[1]}>{after[0]}/{after[1]}",
+                                   f"100x 데이터 경보 {word}: {e(label)} 범위 내 {before[0]}/{before[1]} → {after[0]}/{after[1]} {link}",
+                                   lambda s, n=num, r=reason, c=after: s["issues"][n]["member_counts"].__setitem__(r, c)))
         for num, old in list(new["issues"].items()):
             if num not in cur:
                 link = f'<a href="{e(old["url"])}">이슈 #{num}</a>'
