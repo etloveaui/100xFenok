@@ -238,24 +238,6 @@ const PROFILE_FALLBACK: ReadinessResponse["profiles"] = [
       "Constraint: 사용자가 켜지 않은 도구는 연결된 것처럼 말하지 않는다.",
     ].join("\n"),
   },
-  {
-    id: "mona",
-    label: "Wind-Down",
-    intent: "자기 전 영어 발화 코치입니다. 아는 단어로 문장 조립을 반복 연습시킵니다.",
-    constraints: ["자기 전 low voice", "한→영 즉답", "BEST3와 약점 노트 저장"],
-    sampleProbe: "시작",
-    // KO-first fallback to match the server Mona profile (Korean mis-recognition fix).
-    languageHints: ["ko-KR", "en-US"],
-    defaultSystemPrompt: [
-      "Profile: Wind-Down",
-      "Intent: 자기 전 영어 발화 코치입니다.",
-      "Voice: calm, low-energy, late-night pacing",
-      "Response style: 첫 답변은 두세 문장으로 짧게 답한다.",
-      "Constraint: 교과서 영어 금지. 미국인이 실제로 자주 쓰는 표현만.",
-      "Constraint: 단계 전환을 말로 알리지 말고, 어느 코너 할지 묻지 않는다.",
-      "Constraint: 중간 checkpoint와 끝의 BEST3를 저장한다.",
-    ].join("\n"),
-  },
 ];
 
 const VOICE_FALLBACK = [
