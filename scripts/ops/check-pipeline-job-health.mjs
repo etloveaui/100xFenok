@@ -73,6 +73,11 @@ export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({
 });
 
 export const NON_SCHEDULED_WORKFLOW_INCLUSIONS = Object.freeze({
+  "coordinate-computed-signals.yml": Object.freeze({
+    reason: "computed signals publication failures must page without an independent schedule",
+    events: Object.freeze(["workflow_run"]),
+    failure_streak_threshold: 1,
+  }),
   "validate-workflows.yml": Object.freeze({
     reason: "critical workflow syntax gate must page despite having no schedule",
     events: Object.freeze(["push"]),
