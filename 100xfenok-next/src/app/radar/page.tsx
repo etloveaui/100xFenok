@@ -11,6 +11,7 @@ import {
   legacyPublicFileExists,
   sanitizeLegacyPath,
 } from '@/lib/server/legacy-bridge';
+import LiquidityFlowDetail from './LiquidityFlowDetail';
 import RadarNativeClient, { type RadarCategory } from './RadarNativeClient';
 
 export const metadata: Metadata = {
@@ -58,7 +59,14 @@ export default async function RadarPage({ searchParams }: PageProps) {
   const hasSafePath = safePath ? await legacyPublicFileExists(safePath) : false;
   const category = resolveCategory(typeof rawCategory === 'string' ? rawCategory : null);
 
-  // 상세 자료는 기존 macro-monitor 상세 페이지를 그대로 연결한다.
+  // Preserve the legacy route explicitly while migrating each detail in place.
+  if (safePath === 'tools/macro-monitor/details/liquidity-flow.html' && getSingleSearchParam(params.legacy) !== '1') {
+    const detail = <LiquidityFlowDetail />;
+    if (version === 'v1') return <ShellChromeOff>{detail}</ShellChromeOff>;
+    return <AppShell active="explore" title="유동성 흐름" backHref={ROUTES.radar}>{detail}</AppShell>;
+  }
+
+  // Unmigrated details and explicit legacy links keep their existing renderer.
   if (safePath && hasSafePath) {
     const frame = (
       <RouteEmbedFrame

@@ -33,6 +33,7 @@ export const CREDIT_SERIES = [
 ] as const;
 
 export type RadarData = {
+  history: Record<string, SeriesPoint[]>;
   credit: { state: CardState; series: CreditDetail[] };
   flow: { state: CardState; snapshot: FlowSnapshot | null };
   stress: { state: CardState; snapshot: StressSnapshot | null };
@@ -67,7 +68,8 @@ function fredSeries(file: FredFile | null, id: string, days?: number): SeriesPoi
   return rows
     .filter((row) => row?.value !== null && row?.value !== undefined && row?.value !== "")
     .map((row) => ({ date: row?.date ?? "", val: Number(row?.value) }))
-    .filter((row) => (start === null || row.date >= start) && row.date.length === 10 && Number.isFinite(row.val));
+    .filter((row) => (start === null || row.date >= start) && row.date.length === 10 && Number.isFinite(row.val))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function latestValue(rows: Array<Record<string, unknown>>, key: string): number | null {
@@ -78,6 +80,7 @@ function latestValue(rows: Array<Record<string, unknown>>, key: string): number 
 
 export function useRadarData(): RadarData {
   const [nonce, setNonce] = useState(0);
+  const [history, setHistory] = useState<RadarData["history"]>({});
   const [credit, setCredit] = useState<RadarData["credit"]>({ state: "loading", series: [] });
   const [flow, setFlow] = useState<RadarData["flow"]>({ state: "loading", snapshot: null });
   const [stress, setStress] = useState<RadarData["stress"]>({ state: "loading", snapshot: null });
@@ -88,6 +91,7 @@ export function useRadarData(): RadarData {
 
   useEffect(() => {
     let cancelled = false;
+    setHistory({});
     setCredit({ state: "loading", series: [] });
     setFlow({ state: "loading", snapshot: null });
     setStress({ state: "loading", snapshot: null });
@@ -120,6 +124,7 @@ export function useRadarData(): RadarData {
       const stableSeries: SeriesPoint[] = (Array.isArray(stable?.series) ? stable.series : [])
         .map((row) => ({ date: row?.date ?? "", val: Number(row.val) }))
         .filter((row) => row.date.length === 10 && Number.isFinite(row.val));
+      setHistory({ M2SL: m2, WALCL: fredSeries(fredMacro, "WALCL"), RRPONTSYD: fredSeries(fredMacro, "RRPONTSYD"), tga: tgaSeries.slice().sort((a, b) => a.date.localeCompare(b.date)), stablecoins: stableSeries.slice().sort((a, b) => a.date.localeCompare(b.date)) });
       const stableCurrent = Number(stable?.current);
       if (!m2.length && !fedBs.length && !tgaSeries.length) {
         setFlow({ state: reached ? "missing" : "failed", snapshot: null });
@@ -213,5 +218,5 @@ export function useRadarData(): RadarData {
     };
   }, [nonce]);
 
-  return { flow, stress, banking, credit, sentiment, retry };
+  return { flow, stress, banking, credit, sentiment, history, retry };
 }
