@@ -1,29 +1,11 @@
 "use client";
 
 /**
- * personalStore — Client sync layer over device-local personalization (Spec §6, Task S4 & S4b).
- *
- * Keys supported:
- *   - "portfolio" -> localStorage "fenok.portfolio.v1"
- *   - "watchlist" -> localStorage "fenok.watchlist.v1"
- *   - "ib" -> localStorage "ib_profiles" and "ib_daily_data_<profile>_<symbol>"
- *   - "macro-presets" -> localStorage "100xfenok.macroChart.userPresets.v1"
- *   - "ib:<profileId>" -> split profile documents if IB data exceeds 256 KB
- *
- * Behavior:
- *   - Logged out: reads & writes localStorage only (byte-for-byte compatible with existing keys).
- *   - Logged in:
- *       - read: returns cached/local data immediately, fetches server in background;
- *         server updatedAt > local updatedAt -> adopts server data.
- *       - write: writes localStorage immediately, then debounces (500ms) PUT to /api/user/store/{key}.
- *       - subscribe(key, fn): reactive subscriber notified on any local or remote change.
- *   - Adopt-on-login:
- *       - Evaluates all 4 keys.
- *       - If multiple keys conflict, fires a single prompt listing all conflicting items:
- *         "포트폴리오 · 관심종목 · 무한매수 기록 · 매크로 프리셋".
+ * Signed out: existing device-local reads and writes.
+ * Signed in: the account is authoritative; localStorage is its cache.
+ * Preserve the original device bytes once before replacing any signed-in cache.
  */
-
-import { loadAuthToken, getCachedUser, onAuthUserChange } from "@/lib/auth/clientAuth";
+import { loadAuthToken } from "@/lib/auth/clientAuth";
 
 export type PersonalStoreKey =
   | "portfolio"
@@ -39,13 +21,6 @@ export const STORE_STORAGE_KEYS: Record<string, string> = {
   watchlist: "fenok.watchlist.v1",
   "macro-presets": "100xfenok.macroChart.userPresets.v1",
   ib: "ib_profiles",
-};
-
-export const STORE_KEY_LABELS: Record<string, string> = {
-  portfolio: "포트폴리오",
-  watchlist: "관심종목",
-  ib: "무한매수 기록",
-  "macro-presets": "매크로 프리셋",
 };
 
 export interface IbStoreDocument {
@@ -206,7 +181,32 @@ export function normalizeStoreKey(key: string): PersonalStoreKey | null {
 type Listener = () => void;
 const keyListeners = new Map<PersonalStoreKey, Set<Listener>>();
 const debounceTimers = new Map<PersonalStoreKey, ReturnType<typeof setTimeout>>();
-const inFlightSyncs = new Set<PersonalStoreKey>();
+const inFlightSyncs = new Map<string, Promise<void>>();
+const localRevisions = new Map<PersonalStoreKey, number>();
+const pendingWrites = new Set<string>();
+const queuedWriteTokens = new Map<PersonalStoreKey, string>();
+export const DEVICE_BACKUP_KEY = "fenok.personal-store.device-backup.v1";
+
+function ibDailyKeys(): string[] {
+  const storage = window.localStorage;
+  return Array.from({ length: storage.length }, (_, i) => storage.key(i))
+    .filter((key): key is string => !!key && key.startsWith("ib_daily_data_"));
+}
+
+/** Raw strings include malformed documents; never overwrite the first backup.
+ * If storage cannot save it, throw before modifying any of the device copies.
+ */
+function preserveDeviceCopy(): void {
+  const storage = window.localStorage;
+  if (storage.getItem(DEVICE_BACKUP_KEY) !== null) return;
+  const entries: Record<string, string | null> = {};
+  for (const key of [...Object.values(STORE_STORAGE_KEYS), ...ibDailyKeys()]) {
+    entries[key] = storage.getItem(key);
+  }
+  const backup = JSON.stringify({ createdAt: Date.now(), entries });
+  storage.setItem(DEVICE_BACKUP_KEY, backup);
+  if (storage.getItem(DEVICE_BACKUP_KEY) !== backup) throw new Error("Device backup was not saved");
+}
 
 export function read<T = unknown>(key: PersonalStoreKey | string): T | null {
   const norm = normalizeStoreKey(key);
@@ -239,6 +239,10 @@ export function write<T = unknown>(key: PersonalStoreKey | string, value: T): Pe
   if (!norm) return { ok: false, reason: "unavailable" };
   if (typeof window === "undefined") return { ok: false, reason: "unavailable" };
 
+  if (loadAuthToken()) {
+    try { preserveDeviceCopy(); } catch { return { ok: false, reason: "storage" }; }
+  }
+  localRevisions.set(norm, (localRevisions.get(norm) ?? 0) + 1);
   let localOk = true;
   if (norm === "ib") {
     if (value && typeof value === "object") {
@@ -330,9 +334,11 @@ function queueServerWrite(key: PersonalStoreKey, value: unknown): void {
 
   const timer = setTimeout(async () => {
     debounceTimers.delete(key);
+    queuedWriteTokens.delete(key);
+    pendingWrites.add(`${token}:${key}`);
     try {
       const activeToken = loadAuthToken();
-      if (!activeToken) return;
+      if (activeToken !== token) return;
 
       const updatedAt = getDocUpdatedAtMs(value);
       const raw = JSON.stringify({ value, updatedAt });
@@ -372,10 +378,13 @@ function queueServerWrite(key: PersonalStoreKey, value: unknown): void {
       });
     } catch {
       // Fail soft — local copy in localStorage is preserved
+    } finally {
+      pendingWrites.delete(`${token}:${key}`);
     }
   }, 500);
 
   debounceTimers.set(key, timer);
+  queuedWriteTokens.set(key, token);
 }
 
 export function getDocUpdatedAtMs(doc: unknown): number {
@@ -411,11 +420,19 @@ export function getDocUpdatedAtMs(doc: unknown): number {
 
 export async function triggerBackgroundSync(key: PersonalStoreKey | string): Promise<void> {
   const norm = normalizeStoreKey(key);
-  if (!norm || inFlightSyncs.has(norm)) return;
+  if (!norm || typeof window === "undefined") return;
   const token = loadAuthToken();
-  if (!token) return;
+  if (!token || queuedWriteTokens.get(norm) === token || pendingWrites.has(`${token}:${norm}`)) return;
+  const syncKey = `${token}:${norm}`;
+  const current = inFlightSyncs.get(syncKey);
+  if (current) return current;
+  const revision = localRevisions.get(norm) ?? 0;
+  const sync = syncServerCache(norm, token, revision).finally(() => inFlightSyncs.delete(syncKey));
+  inFlightSyncs.set(syncKey, sync);
+  return sync;
+}
 
-  inFlightSyncs.add(norm);
+async function syncServerCache(norm: PersonalStoreKey, token: string, revision: number): Promise<void> {
   try {
     const res = await fetch(`/api/user/store/${norm}`, {
       method: "GET",
@@ -424,7 +441,7 @@ export async function triggerBackgroundSync(key: PersonalStoreKey | string): Pro
     if (!res.ok) return;
 
     const body = (await res.json()) as { ok: boolean; value: unknown; updatedAt: number };
-    if (!body?.ok || body.value === null) return;
+    if (!body?.ok || !("value" in body)) return;
 
     let serverValue = body.value;
     if (norm === "ib" && serverValue && typeof serverValue === "object") {
@@ -439,15 +456,17 @@ export async function triggerBackgroundSync(key: PersonalStoreKey | string): Pro
               method: "GET",
               headers: { Authorization: `Bearer ${token}` },
             });
+            if (!pRes.ok) return;
             if (pRes.ok) {
               const pBody = (await pRes.json()) as { ok?: boolean; value?: IbProfileStoreDocument };
-              if (pBody?.ok && pBody.value) {
+              if (!pBody?.ok) return;
+              if (pBody.value) {
                 profileDocs[profileId] = pBody.value;
                 hasSplit = true;
               }
             }
           } catch {
-            // ignore
+            return; // Do not replace the cache with an incomplete account read.
           }
         }
         if (hasSplit) {
@@ -456,335 +475,35 @@ export async function triggerBackgroundSync(key: PersonalStoreKey | string): Pro
       }
     }
 
-    const localDoc = read(norm);
-    const localUpdatedAt = getDocUpdatedAtMs(localDoc);
-
-    // Last-write-wins by server updatedAt
-    if (body.updatedAt > localUpdatedAt) {
-      if (norm === "ib") {
-        unpackIbStoreToLocal(serverValue as IbStoreDocument);
+    // Ignore responses for a previous account or reads predating an explicit edit.
+    if (loadAuthToken() !== token || (localRevisions.get(norm) ?? 0) !== revision) return;
+    preserveDeviceCopy();
+    if (norm === "ib") {
+      // Replace the entire IB cache, including daily rows absent from the account.
+      const oldDailyKeys = ibDailyKeys();
+      const doc = serverValue as IbStoreDocument | null;
+      if (doc) {
+        unpackIbStoreToLocal(doc);
+        for (const key of oldDailyKeys) {
+          if (!(key.slice("ib_daily_data_".length) in (doc.daily ?? {}))) window.localStorage.removeItem(key);
+        }
       } else {
-        const storageKey = STORE_STORAGE_KEYS[norm];
-        if (storageKey) {
-          window.localStorage.setItem(storageKey, JSON.stringify(serverValue));
-        }
+        window.localStorage.removeItem("ib_profiles");
+        oldDailyKeys.forEach(key => window.localStorage.removeItem(key));
       }
-      notifyListeners(norm);
+    } else {
+      const storageKey = STORE_STORAGE_KEYS[norm];
+      if (storageKey) {
+        if (serverValue === null) window.localStorage.removeItem(storageKey);
+        else window.localStorage.setItem(storageKey, JSON.stringify(serverValue));
+      }
     }
+    notifyListeners(norm);
   } catch {
-    // Fail soft, offline fallback keeps local copy
-  } finally {
-    inFlightSyncs.delete(norm);
+    // Offline, failed account reads or failed backup writes leave the cache intact.
   }
 }
 
-// ---------------------------------------------------------------------------
-// Adopt-on-login: Scope C
-// ---------------------------------------------------------------------------
-
-export interface ConflictEntry {
-  key: PersonalStoreKey;
-  localData: unknown;
-  serverData: unknown;
-}
-
-export interface AdoptConflict {
-  key: PersonalStoreKey;
-  keys?: PersonalStoreKey[];
-  items?: string[];
-  localData: unknown;
-  serverData: unknown;
-  conflicts?: ConflictEntry[];
-  resolve: (choice: "adopt_local" | "keep_account") => Promise<void>;
-}
-
-type AdoptConflictListener = (conflict: AdoptConflict) => void;
-const conflictListeners = new Set<AdoptConflictListener>();
-
-export function onAdoptConflict(listener: AdoptConflictListener): () => void {
-  conflictListeners.add(listener);
-  return () => {
-    conflictListeners.delete(listener);
-  };
-}
-
-export function hasData(key: PersonalStoreKey | string, doc: unknown): boolean {
-  if (!doc) return false;
-  const norm = normalizeStoreKey(key);
-  if (!norm) return false;
-
-  if (norm === "portfolio") {
-    if (typeof doc === "object" && "portfolios" in doc && Array.isArray((doc as { portfolios: unknown }).portfolios)) {
-      return (doc as { portfolios: unknown[] }).portfolios.length > 0;
-    }
-    if (Array.isArray(doc)) return doc.length > 0;
-  }
-
-  if (norm === "watchlist") {
-    if (typeof doc === "object" && "tickers" in doc && Array.isArray((doc as { tickers: unknown }).tickers)) {
-      return (doc as { tickers: unknown[] }).tickers.length > 0;
-    }
-    if (Array.isArray(doc)) return doc.length > 0;
-  }
-
-  if (norm === "macro-presets") {
-    if (Array.isArray(doc)) return doc.length > 0;
-    if (typeof doc === "object" && "presets" in doc && Array.isArray((doc as { presets: unknown }).presets)) {
-      return (doc as { presets: unknown[] }).presets.length > 0;
-    }
-  }
-
-  if (norm === "ib" || norm.startsWith("ib:")) {
-    if (typeof doc === "object") {
-      const d = doc as Record<string, unknown>;
-      if (d.profiles && typeof d.profiles === "object" && Object.keys(d.profiles).length > 0) {
-        return true;
-      }
-      if (d.profile && typeof d.profile === "object") {
-        return true;
-      }
-      if (d.daily && typeof d.daily === "object" && Object.keys(d.daily).length > 0) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-export function isDifferent(key: PersonalStoreKey | string, localDoc: unknown, serverDoc: unknown): boolean {
-  if (!localDoc && !serverDoc) return false;
-  if (!localDoc || !serverDoc) return true;
-  const norm = normalizeStoreKey(key);
-
-  if (norm === "watchlist") {
-    const getTickers = (d: unknown): string[] => {
-      if (Array.isArray(d)) return d.map(String).map((s) => s.toUpperCase()).sort();
-      if (d && typeof d === "object" && "tickers" in d && Array.isArray((d as { tickers: unknown }).tickers)) {
-        return (d as { tickers: unknown[] }).tickers.map(String).map((s) => s.toUpperCase()).sort();
-      }
-      return [];
-    };
-    const tLocal = getTickers(localDoc);
-    const tServer = getTickers(serverDoc);
-    return JSON.stringify(tLocal) !== JSON.stringify(tServer);
-  }
-
-  if (norm === "portfolio") {
-    const getCleanPortfolios = (d: unknown): unknown[] => {
-      let list: unknown[] = [];
-      if (Array.isArray(d)) list = d;
-      else if (d && typeof d === "object" && "portfolios" in d && Array.isArray((d as { portfolios: unknown }).portfolios)) {
-        list = (d as { portfolios: unknown[] }).portfolios;
-      }
-      return list.map((p) => {
-        if (!p || typeof p !== "object") return p;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, ...rest } = p as { id?: string; [k: string]: unknown };
-        return rest;
-      });
-    };
-    return JSON.stringify(getCleanPortfolios(localDoc)) !== JSON.stringify(getCleanPortfolios(serverDoc));
-  }
-
-  if (norm === "macro-presets") {
-    const getCleanPresets = (d: unknown): unknown[] => {
-      const list = Array.isArray(d)
-        ? d
-        : d && typeof d === "object" && "presets" in d && Array.isArray((d as { presets: unknown }).presets)
-          ? (d as { presets: unknown[] }).presets
-          : [];
-      return list.map((p) => {
-        if (!p || typeof p !== "object") return p;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, updatedAt, ...rest } = p as { id?: string; updatedAt?: unknown; [k: string]: unknown };
-        return rest;
-      });
-    };
-    return JSON.stringify(getCleanPresets(localDoc)) !== JSON.stringify(getCleanPresets(serverDoc));
-  }
-
-  if (norm === "ib" || (norm && norm.startsWith("ib:"))) {
-    const cleanIb = (d: unknown): unknown => {
-      if (!d || typeof d !== "object") return d;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { updatedAt, ...rest } = d as Record<string, unknown>;
-      return rest;
-    };
-    return JSON.stringify(cleanIb(localDoc)) !== JSON.stringify(cleanIb(serverDoc));
-  }
-
-  return JSON.stringify(localDoc) !== JSON.stringify(serverDoc);
-}
-
-async function uploadStoreData(token: string, key: PersonalStoreKey, value: unknown): Promise<void> {
-  const updatedAt = getDocUpdatedAtMs(value);
-  const rawPayload = JSON.stringify({ value, updatedAt });
-  const byteLength = new TextEncoder().encode(rawPayload).byteLength;
-  if (key === "ib" && byteLength > MAX_STORE_SIZE_BYTES && value && typeof value === "object") {
-    const { rootDoc, profileDocs } = splitIbStoreDocument(value as IbStoreDocument);
-    await fetch("/api/user/store/ib", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ value: rootDoc, updatedAt }),
-    }).catch(() => {});
-    for (const [profileId, pDoc] of Object.entries(profileDocs)) {
-      await fetch(`/api/user/store/ib:${profileId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ value: pDoc, updatedAt }),
-      }).catch(() => {});
-    }
-    return;
-  }
-  await fetch(`/api/user/store/${key}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: rawPayload,
-  }).catch(() => {});
-}
-
-function applyServerDataLocally(key: PersonalStoreKey, serverValue: unknown): void {
-  if (key === "ib") {
-    unpackIbStoreToLocal(serverValue as IbStoreDocument);
-  } else {
-    const storageKey = STORE_STORAGE_KEYS[key];
-    if (storageKey) {
-      window.localStorage.setItem(storageKey, JSON.stringify(serverValue));
-    }
-  }
-  notifyListeners(key);
-}
-
-export async function checkAdoptOnLogin(): Promise<void> {
-  if (typeof window === "undefined") return;
-  const token = loadAuthToken();
-  if (!token) return;
-
-  const user = getCachedUser();
-  const sub = user?.sub || "user";
-  const sessionKey = `fenok.adopted.${sub}`;
-  try {
-    if (window.sessionStorage.getItem(sessionKey)) return;
-  } catch {
-    // sessionStorage blocked
-  }
-
-  const keysToCheck: PersonalStoreKey[] = ["portfolio", "watchlist", "ib", "macro-presets"];
-  const conflicts: ConflictEntry[] = [];
-
-  for (const key of keysToCheck) {
-    const local = read(key);
-    const localHas = hasData(key, local);
-
-    let serverValue: unknown = null;
-    try {
-      const res = await fetch(`/api/user/store/${key}`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const body = (await res.json()) as { ok: boolean; value: unknown };
-        serverValue = body?.value ?? null;
-      }
-    } catch {
-      continue;
-    }
-
-    if (key === "ib" && serverValue && typeof serverValue === "object") {
-      const root = serverValue as IbStoreDocument;
-      const profiles = root.profiles ?? {};
-      if (Object.keys(root.daily ?? {}).length === 0 && Object.keys(profiles).length > 0) {
-        const profileDocs: Record<string, IbProfileStoreDocument> = {};
-        let hasSplit = false;
-        for (const profileId of Object.keys(profiles)) {
-          try {
-            const pRes = await fetch(`/api/user/store/ib:${profileId}`, {
-              method: "GET",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (pRes.ok) {
-              const pBody = (await pRes.json()) as { ok?: boolean; value?: IbProfileStoreDocument };
-              if (pBody?.ok && pBody.value) {
-                profileDocs[profileId] = pBody.value;
-                hasSplit = true;
-              }
-            }
-          } catch {
-            // ignore
-          }
-        }
-        if (hasSplit) {
-          serverValue = mergeIbStoreDocuments(root, profileDocs);
-        }
-      }
-    }
-
-    const serverHas = hasData(key, serverValue);
-
-    // Rule 1: local has data, server empty -> upload silently
-    if (localHas && !serverHas) {
-      await uploadStoreData(token, key, local);
-      continue;
-    }
-
-    // Rule 2: local empty, server has data -> adopt server data locally silently
-    if (!localHas && serverHas) {
-      applyServerDataLocally(key, serverValue);
-      continue;
-    }
-
-    // Rule 3: both present and different -> collect conflict
-    if (localHas && serverHas && isDifferent(key, local, serverValue)) {
-      conflicts.push({ key, localData: local, serverData: serverValue });
-    }
-  }
-
-  // If any conflicts exist, trigger single prompt
-  if (conflicts.length > 0 && conflictListeners.size > 0) {
-    const conflict: AdoptConflict = {
-      key: conflicts[0].key,
-      keys: conflicts.map((c) => c.key),
-      items: conflicts.map((c) => STORE_KEY_LABELS[c.key] || c.key),
-      localData: conflicts[0].localData,
-      serverData: conflicts[0].serverData,
-      conflicts,
-      resolve: async (choice) => {
-        for (const item of conflicts) {
-          if (choice === "adopt_local") {
-            await uploadStoreData(token, item.key, item.localData);
-          } else {
-            applyServerDataLocally(item.key, item.serverData);
-          }
-        }
-      },
-    };
-    for (const listener of conflictListeners) {
-      listener(conflict);
-    }
-  }
-
-  try {
-    window.sessionStorage.setItem(sessionKey, "1");
-  } catch {
-    // sessionStorage blocked
-  }
-}
-
-// Auto-trigger adopt check on login change
-if (typeof window !== "undefined") {
-  onAuthUserChange((user) => {
-    if (user) {
-      checkAdoptOnLogin().catch(() => {});
-    }
-  });
+export async function syncAccountStores(): Promise<void> {
+  await Promise.all(["portfolio", "watchlist", "ib", "macro-presets"].map(triggerBackgroundSync));
 }

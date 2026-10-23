@@ -17,16 +17,14 @@ import {
   MAX_STORE_SIZE_BYTES,
 } from "../src/app/api/user/store/[key]/route";
 import {
-  hasData,
-  isDifferent,
   getDocUpdatedAtMs,
   normalizeStoreKey,
+  syncAccountStores,
+  triggerBackgroundSync,
+  DEVICE_BACKUP_KEY,
   read as storeRead,
   write as storeWrite,
   subscribe as subscribeStore,
-  checkAdoptOnLogin,
-  onAdoptConflict,
-  type AdoptConflict,
   type IbStoreDocument,
   type IbProfileStoreDocument,
   packIbStoreFromLocal,
@@ -296,7 +294,7 @@ test("API route /api/user/store/[key] round-trip GET and PUT with updatedAt", as
   assert.equal(afterData.updatedAt, customTime);
 });
 
-test("personalStore helpers: normalizeStoreKey, hasData, isDifferent, getDocUpdatedAtMs", () => {
+test("personalStore helpers: normalizeStoreKey, getDocUpdatedAtMs", () => {
   // normalizeStoreKey
   assert.equal(normalizeStoreKey("portfolio"), "portfolio");
   assert.equal(normalizeStoreKey("fenok.portfolio.v1"), "portfolio");
@@ -308,60 +306,6 @@ test("personalStore helpers: normalizeStoreKey, hasData, isDifferent, getDocUpda
   assert.equal(normalizeStoreKey("100xfenok.macroChart.userPresets.v1"), "macro-presets");
   assert.equal(normalizeStoreKey("ib:p1"), "ib:p1");
   assert.equal(normalizeStoreKey("other"), null);
-
-  // hasData
-  assert.equal(hasData("portfolio", null), false);
-  assert.equal(hasData("portfolio", {}), false);
-  assert.equal(hasData("portfolio", { portfolios: [] }), false);
-  assert.equal(hasData("portfolio", { portfolios: [{ id: "1", name: "P1" }] }), true);
-  assert.equal(hasData("watchlist", null), false);
-  assert.equal(hasData("watchlist", { tickers: [] }), false);
-  assert.equal(hasData("watchlist", { tickers: ["NVDA"] }), true);
-  assert.equal(hasData("macro-presets", null), false);
-  assert.equal(hasData("macro-presets", []), false);
-  assert.equal(hasData("macro-presets", [{ id: "preset-1", name: "Lens View" }]), true);
-  assert.equal(hasData("ib", null), false);
-  assert.equal(hasData("ib", {}), false);
-  assert.equal(hasData("ib", { profiles: {} }), false);
-  assert.equal(hasData("ib", { profiles: { p1: { name: "Profile 1" } } }), true);
-  assert.equal(hasData("ib", { daily: { p1_TQQQ: { holdings: 5 } } }), true);
-
-  // isDifferent: watchlist order-insensitive and case-insensitive
-  assert.equal(
-    isDifferent("watchlist", { tickers: ["NVDA", "AAPL"] }, { tickers: ["aapl", "nvda"] }),
-    false,
-  );
-  assert.equal(
-    isDifferent("watchlist", { tickers: ["NVDA"] }, { tickers: ["NVDA", "MSFT"] }),
-    true,
-  );
-
-  // isDifferent: portfolio ignores id differences if contents match
-  const pA = {
-    portfolios: [{ id: "id-local-1", name: "Main", holdings: [{ ticker: "AAPL", shares: 5 }] }],
-  };
-  const pB = {
-    portfolios: [{ id: "id-remote-2", name: "Main", holdings: [{ ticker: "AAPL", shares: 5 }] }],
-  };
-  const pC = {
-    portfolios: [{ id: "id-remote-2", name: "Main", holdings: [{ ticker: "AAPL", shares: 10 }] }],
-  };
-  assert.equal(isDifferent("portfolio", pA, pB), false);
-  assert.equal(isDifferent("portfolio", pA, pC), true);
-
-  // isDifferent: macro-presets ignores id and updatedAt differences
-  const mpA = [{ id: "user-1", name: "Lens", selected: [{ id: "fed_funds" }], updatedAt: "2026-09-01" }];
-  const mpB = [{ id: "user-2", name: "Lens", selected: [{ id: "fed_funds" }], updatedAt: "2026-09-17" }];
-  const mpC = [{ id: "user-1", name: "Lens", selected: [{ id: "cpi_yoy" }], updatedAt: "2026-09-01" }];
-  assert.equal(isDifferent("macro-presets", mpA, mpB), false);
-  assert.equal(isDifferent("macro-presets", mpA, mpC), true);
-
-  // isDifferent: ib ignores updatedAt differences
-  const ibA = { profiles: { p1: { id: "p1", name: "P1" } }, daily: { p1_TQQQ: { holdings: 10 } }, updatedAt: 100 };
-  const ibB = { profiles: { p1: { id: "p1", name: "P1" } }, daily: { p1_TQQQ: { holdings: 10 } }, updatedAt: 200 };
-  const ibC = { profiles: { p1: { id: "p1", name: "P1" } }, daily: { p1_TQQQ: { holdings: 20 } }, updatedAt: 100 };
-  assert.equal(isDifferent("ib", ibA, ibB), false);
-  assert.equal(isDifferent("ib", ibA, ibC), true);
 
   // getDocUpdatedAtMs
   const isoTime = "2026-09-17T12:00:00.000Z";
@@ -463,7 +407,7 @@ test("IB store size split rule for payloads exceeding 256 KB", async () => {
   }
 });
 
-test("personalStore client read, write, subscribe and adopt-on-login logic", async () => {
+test("personalStore account-authoritative cache, backup and signed-out behavior", async () => {
   // Set up mock localStorage and sessionStorage
   const localStore = new Map<string, string>();
   const sessionStore = new Map<string, string>();
@@ -544,336 +488,123 @@ test("personalStore client read, write, subscribe and adopt-on-login logic", asy
   assert.equal(notified, true);
   unsub();
 
-  // 3. Adopt-on-login: Scenario A - local has data, server empty -> silent upload
-  saveAuthToken("sub-123.valid-token");
-  notifyUserChange({
-    sub: "sub-123",
-    email: "user@example.com",
-    name: "User",
-    picture: "",
-    createdAt: 0,
-    updatedAt: 0,
-  });
-
   const originalFetch = globalThis.fetch;
-  let serverUploadedKey: string | null = null;
-  let serverUploadedBody: unknown = null;
-
+  const originalSetItem = mockLocalStorage.setItem;
+  const puts: Array<{ url: string; value: unknown; auth: string | null }> = [];
+  let server: Record<string, unknown> = {
+    portfolio: { portfolios: [{ id: "server", name: "Account Portfolio", holdings: [] }], updatedAt: 1 },
+    watchlist: { tickers: ["MSFT"], updatedAt: 1 },
+    ib: { profiles: { remote: { name: "Server IB" } }, daily: { remote_TQQQ: { holdings: 5 } } },
+    "macro-presets": [{ name: "Account Preset" }],
+  };
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input.toString();
-    if (url.includes("/api/user/store/portfolio")) {
-      if (init?.method === "PUT") {
-        serverUploadedKey = "portfolio";
-        serverUploadedBody = JSON.parse(init.body as string);
-        return new Response(JSON.stringify({ ok: true }), { status: 200 });
-      }
-      return new Response(
-        JSON.stringify({ ok: true, key: "portfolio", value: null, updatedAt: 0 }),
-        { status: 200 },
-      );
-    }
-    if (url.includes("/api/user/store/watchlist")) {
-      return new Response(
-        JSON.stringify({ ok: true, key: "watchlist", value: null, updatedAt: 0 }),
-        { status: 200 },
-      );
-    }
-    return new Response(JSON.stringify({ ok: false }), { status: 404 });
-  }) as typeof fetch;
-
-  try {
-    sessionStore.clear();
-    await checkAdoptOnLogin();
-    assert.equal(serverUploadedKey, "portfolio");
-    assert.ok(serverUploadedBody);
-  } finally {
-    globalThis.fetch = originalFetch;
-    clearAuthToken();
-    notifyUserChange(null);
-  }
-
-  // 4. Adopt-on-login: Scenario B - local empty, server has data -> silent adopt
-  localStore.clear();
-  sessionStore.clear();
-  saveAuthToken("sub-456.valid-token");
-  notifyUserChange({
-    sub: "sub-456",
-    email: "user2@example.com",
-    name: "User 2",
-    picture: "",
-    createdAt: 0,
-    updatedAt: 0,
-  });
-
-  const serverPortfolio = {
-    version: 1,
-    portfolios: [{ id: "server-p", name: "Account Portfolio", holdings: [] }],
-  };
-
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-    if (url.includes("/api/user/store/portfolio")) {
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          key: "portfolio",
-          value: serverPortfolio,
-          updatedAt: 100,
-        }),
-        { status: 200 },
-      );
-    }
-    return new Response(
-      JSON.stringify({ ok: true, key: "watchlist", value: null, updatedAt: 0 }),
-      { status: 200 },
-    );
-  }) as typeof fetch;
-
-  try {
-    await checkAdoptOnLogin();
-    const adopted = storeRead<{ portfolios: { name: string }[] }>("portfolio");
-    assert.equal(adopted?.portfolios[0]?.name, "Account Portfolio");
-  } finally {
-    globalThis.fetch = originalFetch;
-    clearAuthToken();
-    notifyUserChange(null);
-  }
-
-  // 5. Adopt-on-login: Scenario C - conflict (both present & different) -> triggers onAdoptConflict
-  localStore.clear();
-  sessionStore.clear();
-  storeWrite("portfolio", {
-    version: 1,
-    portfolios: [{ id: "local-p", name: "Local Conflict", holdings: [] }],
-  });
-
-  saveAuthToken("sub-789.valid-token");
-  notifyUserChange({
-    sub: "sub-789",
-    email: "user3@example.com",
-    name: "User 3",
-    picture: "",
-    createdAt: 0,
-    updatedAt: 0,
-  });
-
-  let conflictReceived: AdoptConflict | null = null;
-  const unsubConflict = onAdoptConflict((conflict) => {
-    conflictReceived = conflict;
-  });
-
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-    if (url.includes("/api/user/store/portfolio")) {
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          key: "portfolio",
-          value: serverPortfolio,
-          updatedAt: 200,
-        }),
-        { status: 200 },
-      );
-    }
-    return new Response(
-      JSON.stringify({ ok: true, key: "watchlist", value: null, updatedAt: 0 }),
-      { status: 200 },
-    );
-  }) as typeof fetch;
-
-  try {
-    await checkAdoptOnLogin();
-    assert.ok(conflictReceived);
-    assert.equal((conflictReceived as AdoptConflict).key, "portfolio");
-
-    // Test resolving conflict by keeping account
-    await (conflictReceived as AdoptConflict).resolve("keep_account");
-    const resolvedLocal = storeRead<{ portfolios: { name: string }[] }>("portfolio");
-    assert.equal(resolvedLocal?.portfolios[0]?.name, "Account Portfolio");
-  } finally {
-    globalThis.fetch = originalFetch;
-    unsubConflict();
-    clearAuthToken();
-    notifyUserChange(null);
-  }
-
-  // 6. Adopt-on-login: Scenario D - all 4 keys conflicting -> single prompt with all 4 items
-  localStore.clear();
-  sessionStore.clear();
-
-  storeWrite("portfolio", {
-    version: 1,
-    portfolios: [{ id: "lp", name: "Local Portfolio", holdings: [] }],
-  });
-  storeWrite("watchlist", {
-    version: 1,
-    tickers: ["NVDA", "AAPL"],
-  });
-  storeWrite("ib", {
-    version: "1.0",
-    activeProfileId: "p1",
-    profiles: { p1: { id: "p1", name: "Local IB" } },
-    daily: { p1_TQQQ: { totalInvested: 100, holdings: 1 } },
-  });
-  storeWrite("macro-presets", [
-    { id: "m-local", name: "Local Macro", selected: [{ id: "fed_funds" }] },
-  ]);
-
-  saveAuthToken("sub-multi.valid-token");
-  notifyUserChange({
-    sub: "sub-multi",
-    email: "multi@example.com",
-    name: "Multi User",
-    picture: "",
-    createdAt: 0,
-    updatedAt: 0,
-  });
-
-  const serverIb = {
-    version: "1.0",
-    activeProfileId: "p1",
-    profiles: { p1: { id: "p1", name: "Server IB" } },
-    daily: { p1_TQQQ: { totalInvested: 500, holdings: 5 } },
-  };
-  const serverPresets = [
-    { id: "m-server", name: "Server Macro", selected: [{ id: "cpi_yoy" }] },
-  ];
-  const serverWatchlist = {
-    version: 1,
-    tickers: ["MSFT", "GOOGL"],
-  };
-
-  const uploadedPutKeys: string[] = [];
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input.toString();
+    const url = String(input);
     if (init?.method === "PUT") {
-      for (const k of ["portfolio", "watchlist", "ib", "macro-presets"]) {
-        if (url.includes(`/api/user/store/${k}`)) {
-          uploadedPutKeys.push(k);
-          return new Response(JSON.stringify({ ok: true }), { status: 200 });
-        }
-      }
+      puts.push({ url, value: JSON.parse(String(init.body)).value, auth: new Headers(init.headers).get("Authorization") });
+      return Response.json({ ok: true });
     }
-    if (url.includes("/api/user/store/portfolio")) {
-      return new Response(JSON.stringify({ ok: true, key: "portfolio", value: serverPortfolio, updatedAt: 300 }), { status: 200 });
-    }
-    if (url.includes("/api/user/store/watchlist")) {
-      return new Response(JSON.stringify({ ok: true, key: "watchlist", value: serverWatchlist, updatedAt: 300 }), { status: 200 });
-    }
-    if (url.includes("/api/user/store/ib")) {
-      return new Response(JSON.stringify({ ok: true, key: "ib", value: serverIb, updatedAt: 300 }), { status: 200 });
-    }
-    if (url.includes("/api/user/store/macro-presets")) {
-      return new Response(JSON.stringify({ ok: true, key: "macro-presets", value: serverPresets, updatedAt: 300 }), { status: 200 });
-    }
-    return new Response(JSON.stringify({ ok: false }), { status: 404 });
-  }) as typeof fetch;
-
-  let multiConflict: AdoptConflict | null = null;
-  const unsubMulti = onAdoptConflict((c) => {
-    multiConflict = c;
-  });
-
-  try {
-    await checkAdoptOnLogin();
-    assert.ok(multiConflict);
-    assert.deepEqual((multiConflict as AdoptConflict).keys, [
-      "portfolio",
-      "watchlist",
-      "ib",
-      "macro-presets",
-    ]);
-    assert.deepEqual((multiConflict as AdoptConflict).items, [
-      "포트폴리오",
-      "관심종목",
-      "무한매수 기록",
-      "매크로 프리셋",
-    ]);
-
-    // Test resolving with keep_account -> overwrites all 4 keys locally
-    await (multiConflict as AdoptConflict).resolve("keep_account");
-    const portAfter = storeRead<{ portfolios: { name: string }[] }>("portfolio");
-    assert.equal(portAfter?.portfolios[0]?.name, "Account Portfolio");
-
-    const watchAfter = storeRead<{ tickers: string[] }>("watchlist");
-    assert.deepEqual(watchAfter?.tickers, ["MSFT", "GOOGL"]);
-
-    const ibAfter = storeRead<IbStoreDocument>("ib");
-    assert.equal(ibAfter?.profiles?.["p1"]?.name, "Server IB");
-    assert.equal((ibAfter?.daily?.["p1_TQQQ"] as { holdings: number })?.holdings, 5);
-
-    const macroAfter = storeRead<Array<{ name: string }>>("macro-presets");
-    assert.equal(macroAfter?.[0]?.name, "Server Macro");
-
-    // Test resolving with adopt_local
-    await (multiConflict as AdoptConflict).resolve("adopt_local");
-    assert.ok(uploadedPutKeys.includes("portfolio"));
-    assert.ok(uploadedPutKeys.includes("watchlist"));
-    assert.ok(uploadedPutKeys.includes("ib"));
-    assert.ok(uploadedPutKeys.includes("macro-presets"));
-  } finally {
-    globalThis.fetch = originalFetch;
-    unsubMulti();
-    clearAuthToken();
-    notifyUserChange(null);
-  }
-
-  // 7. Adopt-on-login: Scenario E - silent upload & silent adopt for ib and macro-presets
-  localStore.clear();
-  sessionStore.clear();
-
-  // Local has ib, server has empty -> silent upload
-  storeWrite("ib", {
-    version: "1.0",
-    activeProfileId: "p-silent",
-    profiles: { "p-silent": { id: "p-silent", name: "Silent IB" } },
-  });
-
-  saveAuthToken("sub-silent.valid-token");
-  notifyUserChange({
-    sub: "sub-silent",
-    email: "silent@example.com",
-    name: "Silent User",
-    picture: "",
-    createdAt: 0,
-    updatedAt: 0,
-  });
-
-  const silentPuts: string[] = [];
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input.toString();
-    if (init?.method === "PUT") {
-      if (url.includes("/api/user/store/ib")) silentPuts.push("ib");
-      if (url.includes("/api/user/store/macro-presets")) silentPuts.push("macro-presets");
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
-    }
-    if (url.includes("/api/user/store/ib")) {
-      return new Response(JSON.stringify({ ok: true, key: "ib", value: null, updatedAt: 0 }), { status: 200 });
-    }
-    if (url.includes("/api/user/store/macro-presets")) {
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          key: "macro-presets",
-          value: [{ id: "m-server-silent", name: "Server Silent Preset", selected: [] }],
-          updatedAt: 400,
-        }),
-        { status: 200 },
-      );
-    }
-    return new Response(JSON.stringify({ ok: true, value: null, updatedAt: 0 }), { status: 200 });
+    const key = url.split("/").pop()!;
+    return Response.json({ ok: true, value: server[key] ?? null, updatedAt: 1 });
   }) as typeof fetch;
 
   try {
-    await checkAdoptOnLogin();
-    // Silent upload happened for ib
-    assert.ok(silentPuts.includes("ib"));
-    // Silent adopt happened for macro-presets
-    const adoptedMacro = storeRead<Array<{ name: string }>>("macro-presets");
-    assert.equal(adoptedMacro?.[0]?.name, "Server Silent Preset");
+    // Preserve exact bytes, including malformed daily data, before any overwrite.
+    localStore.set("ib_daily_data_malformed", "{broken");
+    const originalDevice = Object.fromEntries(localStore);
+    saveAuthToken("account-a.token");
+    const writes: string[] = [];
+    mockLocalStorage.setItem = (key, value) => { writes.push(key); originalSetItem(key, value); };
+    await syncAccountStores();
+    assert.equal(writes[0], DEVICE_BACKUP_KEY);
+    const backupRaw = localStore.get(DEVICE_BACKUP_KEY)!;
+    const backup = JSON.parse(backupRaw).entries;
+    for (const [key, value] of Object.entries(originalDevice)) assert.equal(backup[key], value);
+    assert.deepEqual(storeRead("portfolio"), server.portfolio); // Older timestamp still wins.
+    assert.deepEqual(storeRead("watchlist"), server.watchlist);
+    assert.deepEqual(storeRead("macro-presets"), server["macro-presets"]);
+    assert.deepEqual(storeRead<IbStoreDocument>("ib")?.daily, { remote_TQQQ: { holdings: 5 } });
+    assert.equal(localStore.has("ib_daily_data_prof-a_TQQQ"), false);
+    assert.equal(localStore.has("ib_daily_data_malformed"), false);
+    assert.equal(puts.length, 0); // Loading never imports device data into the account.
+
+    // Empty account is authoritative too; backup remains the original snapshot.
+    server = {};
+    await syncAccountStores();
+    for (const key of ["portfolio", "watchlist", "ib", "macro-presets"]) assert.equal(storeRead(key), null);
+    assert.equal(localStore.get(DEVICE_BACKUP_KEY), backupRaw);
+    assert.equal(puts.length, 0);
+
+    // Explicit signed-in edits still write through to the account.
+    const edited = { tickers: ["AAPL"] };
+    storeWrite("watchlist", edited);
+    await new Promise(resolve => setTimeout(resolve, 550));
+    assert.deepEqual(puts.at(-1)?.value, edited);
+    assert.equal(puts.at(-1)?.auth, "Bearer account-a.token");
+
+    // A delayed GET must not erase a user edit or apply another account's response.
+    const normalFetch = globalThis.fetch;
+    let release!: (response: Response) => void;
+    globalThis.fetch = (() => new Promise<Response>(resolve => { release = resolve; })) as typeof fetch;
+    const pending = triggerBackgroundSync("portfolio");
+    const newPortfolio = { portfolios: [{ name: "Edited during load" }] };
+    storeWrite("portfolio", newPortfolio);
+    release(Response.json({ ok: true, value: { portfolios: [] }, updatedAt: 999 }));
+    await pending;
+    assert.deepEqual(storeRead("portfolio"), newPortfolio);
+    globalThis.fetch = normalFetch;
+    await new Promise(resolve => setTimeout(resolve, 550));
+    assert.deepEqual(puts.at(-1)?.value, newPortfolio);
+
+    globalThis.fetch = (() => new Promise<Response>(resolve => { release = resolve; })) as typeof fetch;
+    const oldAccountRead = triggerBackgroundSync("watchlist");
+    clearAuthToken();
+    release(Response.json({ ok: true, value: { tickers: ["WRONG"] } }));
+    await oldAccountRead;
+    assert.deepEqual(storeRead("watchlist"), edited);
+    globalThis.fetch = normalFetch;
+
+    // Logged-out edits remain device-only, and queued writes never move accounts.
+    const count = puts.length;
+    storeWrite("watchlist", { tickers: ["LOCAL"] });
+    await triggerBackgroundSync("watchlist");
+    assert.deepEqual(storeRead("watchlist"), { tickers: ["LOCAL"] });
+    assert.equal(puts.length, count);
+    saveAuthToken("account-a.token");
+    storeWrite("watchlist", { tickers: ["A"] });
+    saveAuthToken("account-b.token");
+    await triggerBackgroundSync("watchlist");
+    assert.equal(storeRead("watchlist"), null); // Prior account debounce does not block hydration.
+    await new Promise(resolve => setTimeout(resolve, 550));
+    assert.equal(puts.length, count);
+
+    // Failed reads and a failed backup leave existing device data untouched.
+    localStore.delete(DEVICE_BACKUP_KEY);
+    localStore.set("fenok.watchlist.v1", "unparsed-device-bytes");
+    globalThis.fetch = (async () => Response.json({ ok: false }, { status: 500 })) as typeof fetch;
+    await triggerBackgroundSync("watchlist");
+    assert.equal(localStore.get("fenok.watchlist.v1"), "unparsed-device-bytes");
+    assert.equal(localStore.has(DEVICE_BACKUP_KEY), false);
+    globalThis.fetch = normalFetch;
+    mockLocalStorage.setItem = (key, value) => {
+      if (key === DEVICE_BACKUP_KEY) throw new Error("Quota exceeded");
+      originalSetItem(key, value);
+    };
+    await triggerBackgroundSync("watchlist");
+    assert.equal(localStore.get("fenok.watchlist.v1"), "unparsed-device-bytes");
+    assert.equal(localStore.has(DEVICE_BACKUP_KEY), false);
+    mockLocalStorage.setItem = originalSetItem;
+
+    // Split IB documents hydrate fully; stale device daily rows do not survive.
+    globalThis.fetch = (async input => Response.json({ ok: true, value: String(input).endsWith("ib:p1")
+      ? { profileId: "p1", profile: { name: "Split" }, daily: { p1_TQQQ: { holdings: 7 } } }
+      : { profiles: { p1: { name: "Split" } }, daily: {} } })) as typeof fetch;
+    await triggerBackgroundSync("ib");
+    assert.deepEqual(storeRead<IbStoreDocument>("ib")?.daily, { p1_TQQQ: { holdings: 7 } });
   } finally {
+    mockLocalStorage.setItem = originalSetItem;
     globalThis.fetch = originalFetch;
     clearAuthToken();
     notifyUserChange(null);
+    delete (globalThis as unknown as { window?: unknown }).window;
   }
 });

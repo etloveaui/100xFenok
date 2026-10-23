@@ -17,7 +17,7 @@ import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
 import UserAuthPill from "@/components/shell/UserAuthPill";
-import AdoptStorePrompt from "@/components/personal/AdoptStorePrompt";
+import PersonalStoreSync from "@/components/personal/PersonalStoreSync";
 import { useUserHeartbeat } from "@/lib/auth/clientAuth";
 import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
@@ -774,7 +774,7 @@ function ShellChrome({
           </div>
         </div>
       ) : null}
-      <AdoptStorePrompt />
+      <PersonalStoreSync />
     </div>
   );
 }
