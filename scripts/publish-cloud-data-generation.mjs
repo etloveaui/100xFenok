@@ -112,6 +112,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { validFdicDocument } from "./fetch-fdic-tier1.mjs";
 import { STORAGE_FAIL_GB } from "./check-r2-free-tier-usage.mjs";
+import { buildSlickchartsRepeatMovers } from "./lib/slickcharts-repeat-movers.mjs";
 
 import {
   GENERATION_MANIFEST_SCHEMA,
@@ -1914,7 +1915,7 @@ export async function buildFamilyManifest({
     : null;
   const slickchartsFiles = familyName === "slickcharts" && explicitFiles === null
     ? (await walkFiles(absRoot)).filter(relative => relative.endsWith(".json")
-      && !["schema.json", "discovery-summary.json", "membership-changes.json", "universe.json"].includes(relative)) : null;
+      && !["schema.json", "discovery-summary.json", "membership-changes.json", "universe.json", "repeat-movers.json"].includes(relative)) : null;
   const publicRootFiles = explicitFiles === null && family.public_roots
     ? [...(family.files ?? []), ...(await Promise.all(family.public_roots.map(async (root) =>
       (await walkFiles(path.join(absRoot, root))).map((relative) => `${root}/${relative}`)))).flat()]
@@ -1986,6 +1987,22 @@ export async function buildFamilyManifest({
       griffin.privacy_class = "private";
       payloads.set(griffin.path, bytes);
       assets.sort((left, right) => left.path.localeCompare(right.path));
+    }
+  }
+  if (familyName === "slickcharts") {
+    const readInput = (name) => {
+      const bytes = payloads.get(`${relRoot}/${name}.json`);
+      return bytes ? JSON.parse(new TextDecoder().decode(bytes)) : null;
+    };
+    const repeatMovers = buildSlickchartsRepeatMovers(readInput("gainers"), readInput("losers"));
+    if (repeatMovers) {
+      const assetPath = `${relRoot}/repeat-movers.json`;
+      const bytes = new TextEncoder().encode(JSON.stringify(repeatMovers) + "\n");
+      const sha256 = sha256Bytes(bytes);
+      assets.push({ path: assetPath, object_key: `objects/sha256/${sha256}`,
+        sha256, bytes: bytes.byteLength, content_type: "application/json",
+        source_as_of: repeatMovers.source_as_of, privacy_class: "public" });
+      payloads.set(assetPath, bytes);
     }
   }
   if (familyName === "yahoo-finance") {

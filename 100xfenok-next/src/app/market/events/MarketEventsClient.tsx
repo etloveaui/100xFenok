@@ -12,6 +12,7 @@ import { loadMacroCalendar } from "@/lib/market-events/calendar-loader";
 import { loadEventSurface, type SurfaceDoc } from "@/lib/market-events/surface-loader";
 import MacroCalendarPanel from "./MacroCalendarPanel";
 import MarketEventsTimeline from "./MarketEventsTimeline";
+import RepeatMoversPanel from "./RepeatMoversPanel";
 
 type EventRow = Record<string, unknown>;
 type EventSort = "date" | "symbol" | "section";
@@ -334,6 +335,10 @@ export default function MarketEventsClient({
           macroCalendar={macro.calendar}
           onRetry={reload}
         />
+      </div>
+
+      <div style={{ marginTop: "var(--s4)" }}>
+        <RepeatMoversPanel />
       </div>
 
       <div style={{ marginTop: "var(--s4)" }}>

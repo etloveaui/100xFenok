@@ -5,6 +5,7 @@ import EtfHeroPanel from "./EtfHeroPanel";
 import EtfSummaryStrip from "./EtfSummaryStrip";
 import EtfTodayPanel from "./EtfTodayPanel";
 import EtfToolsPanel from "./EtfToolsPanel";
+import ArkFundsShelf from "./ArkFundsShelf";
 import EtfUnifiedTable from "./EtfUnifiedTable";
 import EtfUniversePanel from "./EtfUniversePanel";
 import { useEtfSurfaceData } from "./etfSurfaceData";
@@ -26,6 +27,8 @@ export default function EtfPageClient({ initialMacroContextId }: { initialMacroC
       <EtfUniversePanel surface={surface} />
 
       <EtfTodayPanel surface={surface} />
+
+      <ArkFundsShelf />
 
       <EtfUnifiedTable surface={surface} />
 

@@ -89,6 +89,7 @@ export const PLANE_ENROLLMENT_EXACT = Object.freeze([
   ["/data/slickcharts/dowjones-yield.json","slickcharts"],
   ["/data/slickcharts/dowjones.json","slickcharts"],
   ["/data/slickcharts/etf.json","slickcharts"],
+  ["/data/slickcharts/repeat-movers.json","slickcharts"],
   ["/data/slickcharts/eth-returns.json","slickcharts"],
   ["/data/slickcharts/gainers.json","slickcharts"],
   ["/data/slickcharts/inflation.json","slickcharts"],
