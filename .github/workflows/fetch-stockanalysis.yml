@@ -108,11 +108,12 @@ on:
         description: 'Maximum base ETF detail targets before incremental retries (0 = all selected targets)'
         required: false
         default: '100'
-      natural_etf_weekday:
-        description: 'Run the regular weekday ETF refresh now (daily selection plus 400-member rotation)'
+      natural_profile:
+        description: 'Run a regular collector profile now: ETF weekday selection/400-member rotation or daily stock/financial pairs (manual lineage)'
         required: false
-        type: boolean
-        default: false
+        type: choice
+        options: [none, etf_weekday, stock_daily]
+        default: none
       sleep:
         description: 'Seconds between requests'
         required: false
@@ -293,17 +294,17 @@ jobs:
           INPUT_OFFSET: ${{ github.event.inputs.offset }}
           INPUT_LIMIT_ETFS: ${{ github.event.inputs.limit_etfs }}
           INPUT_MAX_UNIVERSE_PAGES: '100'
-          INPUT_NATURAL_ETF_WEEKDAY: ${{ inputs.natural_etf_weekday && 'true' || 'false' }}
+          INPUT_NATURAL_PROFILE: ${{ inputs.natural_profile || 'none' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep }}
           EVENT_NAME: ${{ needs.clock-admission.outputs.event_name }}
           EVENT_SCHEDULE: ${{ needs.clock-admission.outputs.schedule }}
           CLOCK_MODE: ${{ needs.clock-admission.outputs.mode }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_NATURAL_ETF_WEEKDAY" = "true" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && { [ "$INPUT_NATURAL_PROFILE" = "etf_weekday" ] || [ "$INPUT_NATURAL_PROFILE" = "stock_daily" ]; }; then
             # Select only the collector path. Clock admission, the GitHub event
             # and the artifact event stay manual, so no scheduled slot is covered.
             EVENT_NAME="schedule"
-            CLOCK_MODE="etf_weekday"
+            CLOCK_MODE="$INPUT_NATURAL_PROFILE"
             INPUT_ETFS=""
             INPUT_STOCKS=""
             INPUT_STOCKS_ONLY="false"
@@ -565,7 +566,7 @@ jobs:
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
       - name: Refresh history-gap plan after live backfill
-        if: ${{ github.event.inputs.history_gaps_only == 'true' && !inputs.natural_etf_weekday }}
+        if: ${{ github.event.inputs.history_gaps_only == 'true' && inputs.natural_profile != 'etf_weekday' && inputs.natural_profile != 'stock_daily' }}
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
@@ -691,8 +692,8 @@ jobs:
         ((needs.clock-admission.outputs.event_name == 'schedule' &&
           (needs.clock-admission.outputs.mode == 'etf_weekday' || needs.clock-admission.outputs.mode == 'etf_general')) ||
          (needs.clock-admission.outputs.event_name == 'workflow_dispatch' &&
-          (inputs.natural_etf_weekday ||
-           ((inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
+          (inputs.natural_profile == 'etf_weekday' ||
+           (inputs.natural_profile != 'stock_daily' && (inputs.core_basket_refresh == 'true' || inputs.etfs != '') &&
             inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
             inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''))))))
     runs-on: ubuntu-latest
@@ -1302,7 +1303,7 @@ jobs:
       (
         needs.publish-stockanalysis-etf-plane.result == 'success' ||
         (
-          !inputs.natural_etf_weekday &&
+          inputs.natural_profile != 'etf_weekday' &&
           (needs.clock-admission.outputs.event_name != 'schedule' ||
             (needs.clock-admission.outputs.mode != 'etf_weekday' && needs.clock-admission.outputs.mode != 'etf_general')) &&
           needs.publish-stockanalysis-etf-plane.result == 'skipped'
@@ -1329,8 +1330,10 @@ jobs:
     needs: clock-admission
     if: >-
       needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' &&
-      (needs.clock-admission.outputs.event_name == 'schedule' &&
-      needs.clock-admission.outputs.mode == 'stock_daily')
+      ((needs.clock-admission.outputs.event_name == 'schedule' &&
+        needs.clock-admission.outputs.mode == 'stock_daily') ||
+       (needs.clock-admission.outputs.event_name == 'workflow_dispatch' &&
+        inputs.natural_profile == 'stock_daily'))
     permissions:
       contents: write
       actions: read
