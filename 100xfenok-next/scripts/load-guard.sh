@@ -24,6 +24,30 @@ blocked() {
   exit 75
 }
 
+# Keep stdout and the Git status unchanged; only failed probes gain a bounded
+# diagnostic. FD 3 forwards stdout past the stderr capture without a temp file.
+git_probe() {
+  local diagnostic status helper_dir helper
+  {
+    diagnostic="$("$GIT_BIN" "$@" 2>&1 1>&3)"
+    status=$?
+  } 3>&1
+  if [ "$status" -ne 0 ] && [ -n "$diagnostic" ]; then
+    helper_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    helper="$helper_dir/lib/diagnostic-detail.mjs"
+    if [ ! -f "$helper" ]; then
+      helper="$helper_dir/../../scripts/lib/diagnostic-detail.mjs"
+    fi
+    printf '%s' "$diagnostic" | node --input-type=module -e '
+      import fs from "node:fs";
+      import { pathToFileURL } from "node:url";
+      const { boundedDiagnosticDetail } = await import(pathToFileURL(process.argv[1]).href);
+      console.error(`Git probe failed: ${boundedDiagnosticDetail(fs.readFileSync(0, "utf8"))}`);
+    ' "$helper"
+  fi
+  return "$status"
+}
+
 remote_suite_for_command() {
   if [ "$#" -eq 2 ] && [ "$1" = "--npm-script" ]; then
     printf '%s\n' "npm-script"
@@ -53,8 +77,8 @@ allow_hosted_nested_execution() {
   fi
 
   local repo_root nested_head
-  repo_root="$("$GIT_BIN" rev-parse --show-toplevel 2>/dev/null)" || blocked "nested_checkout_unavailable" "run_from_the_hosted_checkout"
-  nested_head="$("$GIT_BIN" -C "$repo_root" rev-parse --verify HEAD^{commit} 2>/dev/null)" || blocked "nested_HEAD_unavailable" "run_from_the_hosted_checkout"
+  repo_root="$(git_probe rev-parse --show-toplevel)" || blocked "nested_checkout_unavailable" "run_from_the_hosted_checkout"
+  nested_head="$(git_probe -C "$repo_root" rev-parse --verify HEAD^{commit})" || blocked "nested_HEAD_unavailable" "run_from_the_hosted_checkout"
   if [ "$nested_head" != "${FENOK_REMOTE_HEAVY_EXPECTED_REVISION}" ]; then
     blocked "nested_revision_mismatch" "run_the_requested_revision_from_the_hosted_workflow"
   fi
@@ -84,13 +108,13 @@ dispatch_remote_suite() {
     exit "$nested_status"
   fi
 
-  repo_root="$("$GIT_BIN" rev-parse --show-toplevel 2>/dev/null)" || blocked "git_repository_unavailable" "run_from_the_repository_checkout"
-  worktree_status="$("$GIT_BIN" -C "$repo_root" status --porcelain=v1 --untracked-files=all 2>/dev/null)" || blocked "git_status_unavailable" "run_from_a_healthy_repository_checkout"
+  repo_root="$(git_probe rev-parse --show-toplevel)" || blocked "git_repository_unavailable" "run_from_the_repository_checkout"
+  worktree_status="$(git_probe -C "$repo_root" status --porcelain=v1 --untracked-files=all)" || blocked "git_status_unavailable" "run_from_a_healthy_repository_checkout"
   if [ -n "$worktree_status" ]; then
     blocked "dirty_worktree" "use_a_clean_current_origin_checkout"
   fi
 
-  head="$("$GIT_BIN" -C "$repo_root" rev-parse --verify HEAD^{commit} 2>/dev/null)" || blocked "HEAD_unavailable" "use_a_clean_current_origin_checkout"
+  head="$(git_probe -C "$repo_root" rev-parse --verify HEAD^{commit})" || blocked "HEAD_unavailable" "use_a_clean_current_origin_checkout"
   if [[ ! "$head" =~ ^[0-9a-f]{40}$ ]]; then
     blocked "HEAD_revision_invalid" "use_a_clean_current_origin_checkout"
   fi
@@ -106,9 +130,9 @@ dispatch_remote_suite() {
   remote_ref="refs/heads/$source_ref"
 
   if [ "$source_ref" = "main" ]; then
-    remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin refs/heads/main 2>/dev/null)" \
+    remote_result="$(git_probe -C "$repo_root" ls-remote --exit-code origin refs/heads/main)" \
       || blocked "origin_ref_unavailable" "push_the_selected_branch_and_retry"
-  elif ! remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin "$remote_ref" 2>/dev/null)"; then
+  elif ! remote_result="$(git_probe -C "$repo_root" ls-remote --exit-code origin "$remote_ref")"; then
     blocked "origin_ref_unavailable" "push_the_selected_branch_and_retry"
   fi
   remote_line_count="$(printf '%s\n' "$remote_result" | awk 'NF { count += 1 } END { print count + 0 }')"
