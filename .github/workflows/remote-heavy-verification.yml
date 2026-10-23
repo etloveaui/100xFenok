@@ -34,6 +34,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment: ${{ inputs.suite == 'npm-script' && inputs.script == 'build:source-freshness-pins' && 'production' || '' }}
     defaults:
       run:
         working-directory: 100xfenok-next
@@ -90,7 +91,7 @@ jobs:
       # Match App Quality: these imported modules are ignored build outputs,
       # so an exact source checkout is not yet a usable typecheck input.
       - name: Generate build-time modules
-        if: ${{ inputs.suite == 'npm-script' }}
+        if: ${{ inputs.suite == 'npm-script' && inputs.script != 'build:source-freshness-pins' }}
         run: |
           npm run build:version
           mkdir -p public/data/catalog public/data/stockanalysis
@@ -113,6 +114,10 @@ jobs:
         env:
           SUITE: ${{ inputs.suite }}
           SCRIPT: ${{ inputs.script }}
+          CLOUDFLARE_API_TOKEN: ${{ inputs.suite == 'npm-script' && inputs.script == 'build:source-freshness-pins' && secrets.CLOUDFLARE_API_TOKEN || '' }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ inputs.suite == 'npm-script' && inputs.script == 'build:source-freshness-pins' && secrets.DATA_PLANE_WRITE_KEY || '' }}
           FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
           FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ inputs.revision }}
         run: |
@@ -175,8 +180,6 @@ jobs:
           path: |
             scripts/fixtures/data_supply/detection_floor/cases.expected.json
             data/admin/data-supply-detection-floor.json
-            data/admin/fenok-edge-coverage-index.json
-            100xfenok-next/public/data/admin/fenok-edge-coverage-index.json
             data/admin/fenok-data-health-kpi.json
             100xfenok-next/public/data/admin/fenok-data-health-kpi.json
           if-no-files-found: error
