@@ -11,6 +11,7 @@ import {
   legacyPublicFileExists,
   sanitizeLegacyPath,
 } from '@/lib/server/legacy-bridge';
+import BankingHealthDetail from './BankingHealthDetail';
 import LiquidityStressDetail from './LiquidityStressDetail';
 import LiquidityFlowDetail from './LiquidityFlowDetail';
 import RadarNativeClient, { type RadarCategory } from './RadarNativeClient';
@@ -71,6 +72,12 @@ export default async function RadarPage({ searchParams }: PageProps) {
     const detail = <LiquidityStressDetail />;
     if (version === 'v1') return <ShellChromeOff>{detail}</ShellChromeOff>;
     return <AppShell active="explore" title="유동성 스트레스" backHref={ROUTES.radar}>{detail}</AppShell>;
+  }
+
+  if (safePath === 'tools/macro-monitor/details/banking-health.html' && getSingleSearchParam(params.legacy) !== '1') {
+    const detail = <BankingHealthDetail />;
+    if (version === 'v1') return <ShellChromeOff>{detail}</ShellChromeOff>;
+    return <AppShell active="explore" title="은행 건전성" backHref={ROUTES.radar}>{detail}</AppShell>;
   }
 
   // Unmigrated details and explicit legacy links keep their existing renderer.

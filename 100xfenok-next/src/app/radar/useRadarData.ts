@@ -164,6 +164,12 @@ export function useRadarData(): RadarData {
       const fdicTier1: SeriesPoint[] = (Array.isArray(fdic?.data) ? fdic.data : [])
         .map((row) => ({ date: row?.date ?? "", val: Number(row?.value) }))
         .filter((row) => row.date.length === 10 && Number.isFinite(row.val));
+      setHistory((current) => ({ ...current,
+        TOTLL: fredSeries(fredWeekly, "TOTLL"), DPSACBW027SBOG: fredSeries(fredWeekly, "DPSACBW027SBOG"),
+        BOGZ1FL010000016Q: fredSeries(fredQuarterly, "BOGZ1FL010000016Q"),
+        DGS10: fredSeries(fredDaily, "DGS10"), BAMLH0A0HYM2: fredSeries(fredDaily, "BAMLH0A0HYM2"),
+        fdic_tier1: fdicTier1.slice().sort((a, b) => a.date.localeCompare(b.date)),
+      }));
       if (!fdicTier1.length && !fedTier1.length) {
         setBanking({ state: reached ? "missing" : "failed", snapshot: null });
       } else {
