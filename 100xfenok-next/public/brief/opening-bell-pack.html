@@ -245,7 +245,7 @@ const charts=[],times=[];
 const sign=v=>(v>0?'+':'')+v.toLocaleString('ko-KR',{maximumFractionDigits:3});
 $('#dateline').textContent=C.date+' · '+C.published_kst+' KST';$('#eyebrow').textContent='오프닝 벨 · '+C.date+' · 미국 개장+30분';$('#headline').textContent=C.headline;$('#lead').textContent=C.lead;
 const F=C.follows;
-if(F){const a=document.createElement('a');a.href=/^https?:\/\//.test(F.url)?F.url:'#';a.textContent=F.product+' · '+F.headline;$('#follow').append('앞선 판: ',a);}
+if(F){const a=document.createElement(F.url?'a':'span');if(F.url)a.href=/^https?:\/\//.test(F.url)?F.url:'#';a.textContent=F.product+' · '+F.headline;$('#follow').append('앞선 판: ',a);}
 $('#pairs').innerHTML=`<li class="pair"><article class="cell cl"><p class="tg">프리마켓 · 앞선 판</p><p class="t">${esc(F?.headline||'앞선 판 없음')}</p></article><article class="cell ob"><p class="tg">개장 후 · 이번 판</p><p class="t">${esc(C.headline)}</p></article></li>`;
 function chart(f,el){
  if(!f)return;
