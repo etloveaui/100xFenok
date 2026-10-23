@@ -251,14 +251,25 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
           if (name === "market-events") {
             const movers = page.locator("[data-repeat-movers]");
             await expect(movers).toBeVisible({ timeout: 30_000 });
-            await expect(movers).toContainText(/\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}/);
-            for (const label of ["상승 상위 반복", "하락 상위 반복"]) {
-              const group = movers.getByRole("region", { name: label, exact: true });
-              await expect(group.getByRole("heading", { name: label, exact: true })).toBeVisible();
-              const rows = await group.locator("li").count();
-              if (rows) await expect(group.locator("li").first()).toContainText(/\d+회/);
-              else await expect(group.getByText("두 번 이상 등장한 종목이 없습니다.", { exact: true })).toBeVisible();
+            const state = await movers.getAttribute("data-repeat-movers-state");
+            expect(["ready", "unavailable"]).toContain(state);
+            if (state === "unavailable") {
+              await expect(movers.getByRole("status")).toContainText("반복 등락 종목 집계를 아직 확인할 수 없습니다.");
+              await expect(movers.getByRole("status")).toContainText("자료 기준일 미확인");
+              await expect(movers.locator("time")).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}T/);
+              await expect(movers.getByRole("button", { name: "다시 시도", exact: true })).toBeVisible();
+              await expect(movers.locator("li")).toHaveCount(0);
+            } else {
+              await expect(movers).toContainText(/\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}/);
+              for (const label of ["상승 상위 반복", "하락 상위 반복"]) {
+                const group = movers.getByRole("region", { name: label, exact: true });
+                await expect(group.getByRole("heading", { name: label, exact: true })).toBeVisible();
+                const rows = await group.locator("li").count();
+                if (rows) await expect(group.locator("li").first()).toContainText(/\d+회/);
+                else await expect(group.getByText("두 번 이상 등장한 종목이 없습니다.", { exact: true })).toBeVisible();
+              }
             }
+            observation.repeat_movers_state = state;
             observation.repeat_movers = await movers.innerText();
           }
           if (name === "market-valuation") {
