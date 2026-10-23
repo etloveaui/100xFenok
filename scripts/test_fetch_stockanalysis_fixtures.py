@@ -1454,6 +1454,40 @@ module.main()
             with self.assertRaisesRegex(ValueError, "older than incomplete native"):
                 self.fetcher.collect_etf_payload("BILS", 1, True)
 
+    def test_tuttle_dcap_and_foto_keep_exact_identity_date_count_and_signed_weights(self):
+        import copy
+        import official_etf_sources as issuer
+        for ticker, cusip, isin in (("DCAP", "26923V522", "US26923V5223"),
+                                    ("FOTO", "26923V597", "US26923V5975")):
+            payload = {"fund": {"ticker": ticker, "cusip": cusip, "isin": isin},
+                       "latest": {"ticker": ticker, "fund_id": "fund", "cusip": cusip,
+                                  "isin": isin, "as_of_date": "2026-10-21", "holdings_count": 2},
+                       "holdings": [{"fund_id": "fund", "ticker": ticker, "as_of_date": "2026-10-21",
+                                     "security_name": name, "weight": weight, "market_value": 10,
+                                     "quantity": 1} for name, weight in (("Swap", 120), ("CASH AND CASH EQUIVALENTS", -20))]}
+            with patch.object(issuer, "_http_get", return_value=json.dumps(payload).encode()):
+                result = issuer.fetch_official_etf(ticker, 1)
+            self.assertEqual([row["weight_pct"] for row in result["holdings"]], [120, -20])
+            self.assertEqual(result["holdings_snapshot"]["row_count"], 2)
+            for mode in ("fund_identity", "latest_identity", "count", "row_date", "row_fund", "row_ticker"):
+                broken = copy.deepcopy(payload)
+                if mode == "fund_identity":
+                    broken["fund"]["cusip"] = "wrong"
+                elif mode == "latest_identity":
+                    broken["latest"]["isin"] = "wrong"
+                elif mode == "count":
+                    broken["latest"]["holdings_count"] = 3
+                elif mode == "row_date":
+                    broken["holdings"][0]["as_of_date"] = "2026-10-20"
+                elif mode == "row_fund":
+                    broken["holdings"][0]["fund_id"] = "other"
+                else:
+                    broken["holdings"][0]["ticker"] = "OTHER"
+                with self.subTest(ticker=ticker, mode=mode), \
+                     patch.object(issuer, "_http_get", return_value=json.dumps(broken).encode()), \
+                     self.assertRaises(issuer.OfficialEtfSourceError):
+                    issuer.fetch_official_etf(ticker, 1)
+
     def test_initial_detail_reconcile_emits_honest_stockanalysis_partial(self) -> None:
         original_fetch_svelte = self.fetcher.fetch_svelte_detail
         original_fetch_json = self.fetcher.fetch_json

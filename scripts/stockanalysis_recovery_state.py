@@ -625,7 +625,8 @@ def issuer_holdings_snapshot(payload: dict) -> datetime | None:
                    "SETH": "https://www.proshares.com/our-etfs/leveraged-and-Inverse/seth",
                    "SVXY": "https://www.proshares.com/our-etfs/strategic/svxy/",
                    "HXF": "https://mast-funds.com/wp-admin/admin-post.php?action=download_holdings_csv&ticker=HXF",
-                   "FOTO": "https://jdkfnvgkfwotjlyovbrk.supabase.co/functions/v1/fund-public-api?ticker=FOTO&view=all"})
+                   **{symbol: f"https://jdkfnvgkfwotjlyovbrk.supabase.co/functions/v1/fund-public-api?ticker={symbol}&view=all"
+                      for symbol in ("FOTO", "DCAP")}})
     if ticker == "SPBC" and issuer_date is not None:
         expected["SPBC"] = ("https://www.simplify.us/sites/default/files/excel_holdings/"
                             f"{issuer_date:%Y_%m_%d}_Simplify_Portfolio_EOD_Tracker.xlsx")
@@ -776,6 +777,18 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
             continue
         new_dates = _etf_history_date_set(new_periods.get(period))
         if not new_dates or max(new_dates) < max(old_dates):
+            old_daily = _etf_history_date_set(old_periods.get("daily_1y"))
+            new_daily = _etf_history_date_set(new_periods.get("daily_1y"))
+            # A restarted native price series may not have a completed month
+            # yet. Keep its old aggregates in the verified native archive;
+            # missing/malformed periods and truncated daily windows still fail.
+            if (same_native and candidate.get("ticker") == baseline.get("ticker")
+                    and period in OPTIONAL_ETF_HISTORY_PERIODS
+                    and new_periods.get(period) == []
+                    and period not in ((candidate.get("raw") or {}).get("history_endpoint_errors") or {})
+                    and old_daily and new_daily and min(new_daily) > max(old_daily)
+                    and old_dates <= archived_periods.get(period, set())):
+                continue
             return f"history_periods.{period}"
         # A rolling window may retire its oldest prefix as the tail advances;
         # an unchanged tail cannot excuse fewer dates or a missing interior.

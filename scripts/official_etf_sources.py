@@ -48,6 +48,7 @@ from datetime import datetime, timezone
 
 SUPPORTED_TICKERS = (
     "FOTO",
+    "DCAP",
     "ACHX",
     "ARMA",
     "AVGC",
@@ -213,6 +214,7 @@ _MASTFUNDS_CSV_URLS = {
 
 _TUTTLE_FUND_API_URLS = {
     "FOTO": "https://jdkfnvgkfwotjlyovbrk.supabase.co/functions/v1/fund-public-api?ticker=FOTO&view=all",
+    "DCAP": "https://jdkfnvgkfwotjlyovbrk.supabase.co/functions/v1/fund-public-api?ticker=DCAP&view=all",
 }
 _PROSHARES_PAGE_URLS = {
     "BITI": "https://www.proshares.com/our-etfs/leveraged-and-inverse/biti",
@@ -2581,9 +2583,11 @@ def _fetch_tuttle_fund_api(ticker: str, timeout: int) -> dict:
             f"Tuttle fund API response is not bound to {symbol}: "
             f"{_text((fund or {}).get('ticker')) if isinstance(fund, dict) else None!r}")
     latest = payload.get("latest")
+    cusip, isin = {"FOTO": ("26923V597", "US26923V5975"),
+                   "DCAP": ("26923V522", "US26923V5223")}[symbol]
     if (not isinstance(latest, dict) or latest.get("ticker") != symbol
             or not _text(latest.get("fund_id"))
-            or fund.get("cusip") != "26923V597" or fund.get("isin") != "US26923V5975"
+            or fund.get("cusip") != cusip or fund.get("isin") != isin
             or latest.get("cusip") != fund.get("cusip")
             or latest.get("isin") != fund.get("isin")):
         raise OfficialEtfSourceError(f"Tuttle latest block is not bound to {symbol}")

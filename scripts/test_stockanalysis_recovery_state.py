@@ -406,6 +406,51 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertTrue(self.store.recovery_candidate_advances("etf", "IBIC", candidate("2026-10-02", True)))
         self.assertFalse(self.store.recovery_candidate_advances("etf", "IBIC", candidate("2026-09-30", True)))
 
+    def test_restarted_native_series_keeps_empty_monthly_history_in_bound_archive(self):
+        spec = importlib.util.spec_from_file_location("fetcher_restart", SCRIPT_DIR / "fetch-stockanalysis.py")
+        fetcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fetcher)
+        def payload(day, daily, monthly):
+            periods = {"daily_1y": daily, "monthly_1y": monthly}
+            return {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                    "ticker": "DFAC", "source_as_of": day + "T00:00:00Z",
+                    "fetched_at": "2026-10-23T00:00:00Z", "raw": {"history_periods": periods},
+                    "normalized": {"overview": {}, "history_periods": periods}}
+        prior = payload("2026-09-30", [{"t": "2026-09-29", "c": 40}, {"t": "2026-09-30", "c": 41}],
+                        [{"t": "2026-09-01", "c": 39}])
+        current = payload("2026-10-22", [{"t": "2026-10-06", "c": 44}, {"t": "2026-10-22", "c": 45}], [])
+        class Store:
+            def read_active_domain(self, _domain):
+                return {"current": {}}
+        with patch.object(fetcher, "OUT_DIR", self.data_root), \
+             patch.object(fetcher, "data_supply_store", return_value=Store()):
+            write_json(self.data_root / "etfs/DFAC.json", prior)
+            self.assertEqual(etf_detail_regression(current, prior), "history_periods.monthly_1y")
+            fetcher.retain_yahoo_etf_history_archive("DFAC", current)
+        self.assertTrue(validate_etf_history_archive(current))
+        self.assertEqual(current["raw"]["history_periods"]["monthly_1y"], [])
+        self.assertIsNone(etf_detail_regression(current, prior))
+        for mode in ("no_archive", "missing", "malformed", "overlapping_daily", "empty_daily", "endpoint_error"):
+            broken = json.loads(json.dumps(current))
+            raw_periods = broken["raw"]["history_periods"]
+            normalized_periods = broken["normalized"]["history_periods"]
+            if mode == "no_archive":
+                broken["normalized"].pop("history_archive")
+            elif mode == "missing":
+                raw_periods.pop("monthly_1y")
+                normalized_periods.pop("monthly_1y")
+            elif mode == "malformed":
+                raw_periods["monthly_1y"] = normalized_periods["monthly_1y"] = [{"t": "bad", "c": 1}]
+            elif mode == "overlapping_daily":
+                raw_periods["daily_1y"] = normalized_periods["daily_1y"] = [
+                    {"t": "2026-09-30", "c": 41}, {"t": "2026-10-22", "c": 45}]
+            elif mode == "empty_daily":
+                raw_periods["daily_1y"] = normalized_periods["daily_1y"] = []
+            else:
+                broken["raw"]["history_endpoint_errors"] = {"monthly_1y": {"reason_code": "http_400"}}
+            with self.subTest(mode=mode):
+                self.assertIsNotNone(etf_detail_regression(broken, prior))
+
     def test_ordinary_aggregate_floor_applies_when_component_clocks_are_empty(self):
         old = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
                "ticker": "IBIH", "source_as_of": "2026-10-02T00:00:00Z", "fetched_at": "2026-10-05T02:14:14Z",
