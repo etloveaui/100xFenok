@@ -19,7 +19,7 @@ export const RETIRED_PUBLIC_SURFACES = [
     id: "stock-analyzer",
     title: "Stock Analyzer",
     badge: "TOOLS",
-    description: "레거시 종목 분석 도구와 네이티브 미리보기를 보관합니다.",
+    description: "종목 분석 CSV와 비교 기능을 스크리너로 통합했습니다.",
     href: "/tools/stock-analyzer",
     routes: [
       { source: "/tools/stock-analyzer", destination: "/screener" },
@@ -74,7 +74,17 @@ function normalizeRetiredPublicPath(pathname: string): string {
   return pathname.replace(/\/+$/, "") || "/";
 }
 
+/** Removed assets have no administrator or design-version exception. */
+export function isRemovedStockAnalyzerPath(pathname: string): boolean {
+  const normalized = normalizeRetiredPublicPath(pathname);
+  return normalized === "/tools/stock-analyzer"
+    || normalized === "/tools/stock-analyzer/native"
+    || normalized === "/tools/stock_analyzer"
+    || normalized.startsWith("/tools/stock_analyzer/");
+}
+
 export function getRetiredPublicDestination(pathname: string): string | null {
+  if (isRemovedStockAnalyzerPath(pathname)) return "/screener";
   return RETIRED_PUBLIC_DESTINATIONS.get(normalizeRetiredPublicPath(pathname)) ?? null;
 }
 

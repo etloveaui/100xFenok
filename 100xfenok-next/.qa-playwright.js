@@ -600,55 +600,6 @@ async function runDesktopDropdownChecks(page) {
   return checks;
 }
 
-async function runStockAnalyzerNativeChecks(page) {
-  const sortLabel = page.locator('[data-stock-sort-label="true"]');
-  await sortLabel.waitFor({ state: "visible", timeout: 10000 });
-
-  const readState = async () => ({
-    sortLabel: await sortLabel.textContent(),
-    firstSymbol:
-      (await page.locator('tbody tr td').first().textContent().catch(() => null)) ||
-      (await page.locator('button[key], [data-stock-analyzer-native="true"] button').first().textContent().catch(() => null)),
-  });
-
-  const clickTabAndWait = async (buttonName, expectedText) => {
-    const button = page.getByRole("button", { name: buttonName });
-    await button.scrollIntoViewIfNeeded();
-    await button.click({ force: true });
-    await page.waitForFunction(
-      ({ selector, expected }) => {
-        const element = document.querySelector(selector);
-        return (
-          element instanceof HTMLElement &&
-          element.textContent &&
-          element.textContent.includes(expected)
-        );
-      },
-      { selector: '[data-stock-sort-label="true"]', expected: expectedText },
-      { timeout: 3000 },
-    );
-  };
-
-  await clickTabAndWait("Growth View", "Growth");
-  const growthState = await readState();
-
-  await clickTabAndWait("Ranking View", "Rank");
-  const rankingState = await readState();
-
-  await clickTabAndWait("EPS View", "EPS");
-  const epsState = await readState();
-
-  return {
-    growthState,
-    rankingState,
-    epsState,
-    pass:
-      String(growthState.sortLabel || "").includes("Growth") &&
-      String(rankingState.sortLabel || "").includes("Rank") &&
-      String(epsState.sortLabel || "").includes("EPS"),
-  };
-}
-
 async function runEtfChecks(page, route) {
   const checks = [];
   const detailTicker =
@@ -1054,26 +1005,6 @@ async function runDataStateSurfaceChecks(page, route) {
         }
       }
 
-      if (route === "/tools/stock-analyzer/native" && !item.navigationError) {
-        try {
-          const nativeCheck = await runStockAnalyzerNativeChecks(page);
-          results.push({
-            viewport: vp.name,
-            route,
-            check: "stockAnalyzerNativeTabs",
-            ...nativeCheck,
-          });
-        } catch (err) {
-          results.push({
-            viewport: vp.name,
-            route,
-            check: "stockAnalyzerNativeTabs",
-            pass: false,
-            error: String(err),
-          });
-        }
-      }
-
       if (route.startsWith("/etfs") && !item.navigationError) {
         try {
           const etfChecks = await runEtfChecks(page, route);
@@ -1137,7 +1068,6 @@ async function runDataStateSurfaceChecks(page, route) {
     ) {
       return true;
     }
-    if (r.route === "/tools/stock-analyzer" && r.expectedIframeSrcMatched === false) return true;
     if (r.check === "p2DataStateVisible") return r.pass === false;
     if (r.linkedChecks && r.linkedChecks.some((c) => c.status >= 400)) return true;
     if ((r.criticalSameOriginDataFailureCount || 0) > 0) return true;

@@ -281,11 +281,11 @@ export function StockAnalyzerDashboard() {
               새로고침
             </button>
             <Link
-              href="/tools/stock-analyzer"
+              href="/screener"
               className="min-h-11 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
-              data-stock-analyzer-native-action="legacy"
+              data-stock-analyzer-native-action="screener"
             >
-              기본 화면
+              스크리너
             </Link>
           </div>
         </div>

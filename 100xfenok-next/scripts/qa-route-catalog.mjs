@@ -115,7 +115,6 @@ export const EXPECTED_IFRAME_ROUTES = new Set([
   "/admin/market-radar",
   "/admin/valuation-lab",
   "/admin/ib-helper",
-  "/tools/stock-analyzer",
 ]);
 
 // ---- Expected inner-shell clean routes (no v5 chrome wrapping) ----
@@ -135,5 +134,4 @@ export const EXPECTED_IFRAME_SRC_BY_ROUTE = {
   "/admin/market-radar": "/admin/market-radar/index.html",
   "/admin/valuation-lab": "/admin/valuation-lab/index.html",
   "/admin/ib-helper": "/ib/ib-helper/index.html",
-  "/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html",
 };

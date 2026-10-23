@@ -402,7 +402,7 @@ function lowRiskRetireReadiness(legacyClassification, appRoutes, routeBackedEqui
     const replacementAssetPresent = Boolean(routeBackedTarget?.target_exists);
     const staticReadyForOwnerReview = replacementRoutePresent && replacementAssetPresent;
     const replacementRouteSmokePath = `${candidate.route}/`;
-    const replacementTargetSmokePath = routeBackedTarget?.target_path ?? "/tools/stock_analyzer/stock_analyzer.html";
+    const replacementTargetSmokePath = routeBackedTarget?.target_path ?? candidate.route;
     const ownerApprovalPacket = {
       schema_version: "owner-approval-packet/v0.1",
       approval_packet_ready: staticReadyForOwnerReview,

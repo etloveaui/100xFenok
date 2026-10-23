@@ -167,8 +167,8 @@ export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
   posts: "retired — archive implementation and historical permalinks are preserved without public root promotion.",
   alphaScout: "retired — report HTML and JSON assets are preserved without public root promotion.",
   dailyWrap: "retired — dated reports, viewer, and data assets are preserved without public root promotion.",
-  stockAnalyzer: "retired — legacy analyzer implementation and shared data are preserved without public root promotion.",
-  stockAnalyzerNative: "retired — native preview implementation and shared data are preserved without public root promotion.",
+  stockAnalyzer: "retired — permanent compatibility redirect to Screener; legacy assets removed after native CSV and comparison migration.",
+  stockAnalyzerNative: "retired — permanent compatibility redirect to Screener; the preview no longer has a separate entry point.",
 };
 
 export const SITEMAP_PRODUCT_ROUTES = [

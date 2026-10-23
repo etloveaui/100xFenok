@@ -12,6 +12,7 @@ import {
 import { resolvePostCandidates } from "@/lib/post-candidates";
 import {
   getRetiredPublicDestination,
+  isRemovedStockAnalyzerPath,
   isRetiredPublicDeepLink,
 } from "@/lib/retired-public-routes";
 import {
@@ -566,12 +567,12 @@ export async function middleware(request: NextRequest) {
   if (
     retiredDestination &&
     !preservedRetiredDeepLink &&
-    !(await hasAdminSession())
+    (isRemovedStockAnalyzerPath(pathname) || !(await hasAdminSession()))
   ) {
     const targetUrl = request.nextUrl.clone();
     targetUrl.pathname = retiredDestination;
     targetUrl.search = "";
-    return withNoindexHeader(NextResponse.redirect(targetUrl, 307));
+    return withNoindexHeader(NextResponse.redirect(targetUrl, isRemovedStockAnalyzerPath(pathname) ? 308 : 307));
   }
   if (retiredDestination || preservedRetiredDeepLink) {
     return withNoindexHeader(NextResponse.next());

@@ -12,11 +12,6 @@ export const metadata: Metadata = {
 };
 
 const archiveCopy: Record<string, { label: string; description: string; icon: string }> = {
-  [ROUTES.stockAnalyzer]: {
-    label: "종목 분석기",
-    description: "기존 종목 분석 화면을 관리자 전용으로 확인합니다.",
-    icon: "fa-chart-line",
-  },
   [ROUTES.alphaScout]: {
     label: "알파 스카우트",
     description: "보관된 알파 리포트와 탐색 화면을 확인합니다.",
@@ -54,7 +49,7 @@ export default function AdminArchivePage() {
       </section>
 
       <section className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-        {RETIRED_PUBLIC_SURFACES.map((surface) => {
+        {RETIRED_PUBLIC_SURFACES.filter((surface) => surface.id !== "stock-analyzer").map((surface) => {
           const copy = archiveCopy[surface.href];
 
           return (

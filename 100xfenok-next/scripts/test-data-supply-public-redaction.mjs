@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-import { removePrivateDataSupplyPublicTrees, removePublicDevelopmentDocs } from "../sync-static-overrides.mjs";
+import { removePrivateDataSupplyPublicTrees, removePublicDevelopmentDocs, removePublicTreeExcept } from "../sync-static-overrides.mjs";
 
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-data-supply-public-redaction-"));
 const appRoot = path.join(fixtureRoot, "100xfenok-next");
@@ -56,6 +56,11 @@ try {
   }
   assert.ok(fs.existsSync(path.join(appRoot, "public/tools/example/README.md")));
   assert.ok(fs.existsSync(path.join(appRoot, "public/tools/example/chart.html")));
+  writeFixture("public/tools/stock_analyzer/stock_analyzer.html", "stale legacy page");
+  writeFixture("public/tools/stock_analyzer/data/global_scouter_integrated.json", "stale legacy data");
+  assert.equal(removePublicTreeExcept("public/tools/stock_analyzer", [], { baseDir: appRoot, logger: () => {} }).filesRemoved, 2);
+  assert.ok(!fs.existsSync(path.join(appRoot, "public/tools/stock_analyzer/stock_analyzer.html")));
+  assert.ok(fs.existsSync(path.join(appRoot, "public/tools/example/chart.html")), "other live tools survive");
   writeFixture("public/data/safe/keep.json");
 
   writeFixture("public/data/admin/data-supply-state/v1/domains/etf_detail/active.json");

@@ -16,6 +16,7 @@ import {
 import {
   RETIRED_PUBLIC_SURFACES,
   getRetiredPublicDestination,
+  isRemovedStockAnalyzerPath,
   isRetiredPublicDeepLink,
 } from "../src/lib/retired-public-routes";
 import { resolvePostCandidates } from "../src/lib/post-candidates";
@@ -126,8 +127,8 @@ function assertMiddlewareSourceContracts(source: string): void {
   );
   assert.match(
     source,
-    /NextResponse\.redirect\(targetUrl, 307\)/,
-    "anonymous retired-root requests must use a temporary redirect",
+    /NextResponse\.redirect\(targetUrl, isRemovedStockAnalyzerPath\(pathname\) \? 308 : 307\)/,
+    "removed Stock Analyzer paths must redirect permanently while preserved archives keep their temporary public redirect",
   );
   assert.match(
     source,
@@ -141,8 +142,8 @@ function assertMiddlewareSourceContracts(source: string): void {
   );
   assert.match(
     source,
-    /retiredDestination\s*&&\s*!preservedRetiredDeepLink\s*&&\s*!\(await hasAdminSession\(\)\)/s,
-    "only non-preserved retired roots may redirect anonymously",
+    /retiredDestination\s*&&\s*!preservedRetiredDeepLink\s*&&\s*\(isRemovedStockAnalyzerPath\(pathname\) \|\| !\(await hasAdminSession\(\)\)\)/s,
+    "removed Stock Analyzer paths must redirect even for administrators; other retired roots retain their archive exception",
   );
   assert.match(
     source,
@@ -172,6 +173,19 @@ assert.deepEqual(
 );
 assert.equal(getRetiredPublicDestination("/tools/stock-analyzer"), "/screener");
 assert.equal(getRetiredPublicDestination("/tools/stock-analyzer/native/"), "/screener");
+for (const pathname of ["/tools/stock-analyzer", "/tools/stock-analyzer/native/", "/tools/stock_analyzer/stock_analyzer.html", "/tools/stock_analyzer/data/global_scouter_integrated.json"]) {
+  assert.equal(isRemovedStockAnalyzerPath(pathname), true);
+  assert.equal(getRetiredPublicDestination(pathname), "/screener");
+}
+for (const pathname of ["/screener", "/tools/stock_analyzer-other/file.html", "/tools/stock-analyzer/native/preview", "/alpha-scout"]) {
+  assert.equal(isRemovedStockAnalyzerPath(pathname), false);
+}
+for (const route of ["tools/stock-analyzer", "tools/stock-analyzer/native"]) {
+  const source = fs.readFileSync(path.join(appRoot, "src/app", route, "page.tsx"), "utf8");
+  assert.match(source, /permanentRedirect\(ROUTES.screener\)/);
+  assert.doesNotMatch(source, /RouteEmbedFrame|version === "v1"/);
+}
+
 assert.equal(getRetiredPublicDestination("/alpha-scout"), "/");
 assert.equal(getRetiredPublicDestination("/posts/"), "/");
 assert.equal(getRetiredPublicDestination("/posts////"), "/");

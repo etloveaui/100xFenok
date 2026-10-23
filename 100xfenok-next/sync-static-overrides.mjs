@@ -646,6 +646,8 @@ if (fs.existsSync(occAvailability)) {
 }
 removePrivateDataSupplyPublicTrees();
 removePublicDevelopmentDocs();
+// Blanket static sync may leave ignored files from a prior legacy checkout.
+removePublicTreeExcept("public/tools/stock_analyzer", []);
 redactPrivateArtifactPathMirrors();
 removePrivateResearchPublicTrees();
 removePrivateEdgarPublicTree();
@@ -748,25 +750,6 @@ for (const relativePath of [
 compactFenokEdgePublicMirror();
 projectFenokDataHealthKpiPublicMirror();
 sanitizePublicPrivateTokenLeaks();
-
-applyReplacements("public/tools/stock_analyzer/stock_analyzer.html", [
-  [
-    "<title>Stock Analytics Dashboard - Sprint 4</title>",
-    "<title>Stock Analyzer</title>",
-  ],
-  [
-    '<h1 class="text-2xl font-bold text-gray-800">Stock Analytics Dashboard</h1>',
-    '<h1 class="text-2xl font-bold text-gray-800">Stock Analyzer</h1>',
-  ],
-  [
-    '<p class="text-sm text-gray-500">Sprint 4 - Integrated Analytics System</p>',
-    '<p class="text-sm text-gray-500">종목 탐색과 비교를 위한 분석 대시보드</p>',
-  ],
-]);
-
-
-
-
 
 applyReplacements("public/alpha-scout/alpha-scout-main.html", [
   [
