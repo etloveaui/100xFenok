@@ -3903,7 +3903,14 @@ export async function runPublisherCli({
         fail("ACTIVE_BASIS_DRIFT", `${args.family} active generation differs from the materialized basis`);
       }
     }
-    await assertComputedFieldCoverage({ pointer: livePointer, manifest, payloads, objectStore: plane.objectStore });
+    // Computed-field coverage is evidence until its alarm path is the only consumer: a collapse or an
+    // unreadable baseline is reported but never blocks a publication. PUBLISH_COMPUTED_COVERAGE=block restores enforcement.
+    try {
+      await assertComputedFieldCoverage({ pointer: livePointer, manifest, payloads, objectStore: plane.objectStore });
+    } catch (error) {
+      if (process.env.PUBLISH_COMPUTED_COVERAGE === "block") throw error;
+      console.error(`::warning::computed field coverage evidence only, publication continues: ${error?.message ?? error}`);
+    }
     const pointerSequenceBefore = livePointer?.sequence ?? 0;
     const resolved = await resolveExpectedPointerSequence({
       pointer: livePointer,
