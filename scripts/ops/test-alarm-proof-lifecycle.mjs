@@ -32,7 +32,7 @@ assert.equal(trigger.realComparison, "identical");
 assert.equal(incidentIdentitiesChanged(buildAlarmState({ health: real }), state), true);
 const clear = applyProofPhase({ health: real, prior: state, phase: "clear" });
 assert.equal(clear.realComparison, "identical");
-assert.equal(clear.health.status, "alarm", "real outage keeps issue open");
+assert.equal(clear.health.status, "alarm", "real outage remains active after proof removal");
 assert.deepEqual(clear.health.workflows, real.workflows);
 const cleared = buildAlarmState({ health: clear.health, prior: state });
 assert.equal(cleared.status, "open");
@@ -63,7 +63,7 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-proof-issue-"));
 try {
   fs.mkdirSync(path.join(temp, "data/admin"), { recursive: true });
   fs.mkdirSync(path.join(temp, "bin"));
-  fs.writeFileSync(path.join(temp, "bin/gh"), '#!/bin/sh\nif [ "$1" = api ]; then [ "$EXISTING" = yes ] && echo 17; exit 0; fi\nprintf "%s\\n" "$*" >> "$CALLS"\n', { mode: 0o755 });
+  fs.writeFileSync(path.join(temp, "bin/gh"), '#!/bin/sh\nif [ "$1" = api ]; then case "$*" in *"[PROOF] 100xFenok pipeline job failure alarm"*) [ "$EXISTING" = yes ] && echo 17;; *) echo 133;; esac; exit 0; fi\nprintf "%s\\n" "$*" >> "$CALLS"\n', { mode: 0o755 });
   fs.writeFileSync(path.join(temp, "pipeline-job-health-title.txt"), PROOF_TITLE);
   fs.writeFileSync(path.join(temp, "pipeline-job-health-issue.md"), "fixture body");
   const calls = path.join(temp, "calls");
@@ -77,16 +77,24 @@ try {
   runStep("Open or update OPS issue", { PROOF_PHASE: "trigger", EXISTING: "no" });
   assert.equal(fs.readFileSync(calls, "utf8").trim().split("\n").length, 1);
   assert.match(fs.readFileSync(calls, "utf8"), /^issue create/);
-  for (const state of ["open", "clear"]) {
+  assert.doesNotMatch(fs.readFileSync(calls, "utf8"), /issue (edit|comment|close) 133(?: |$)/);
+  fs.writeFileSync(calls, "");
+  runStep("Open or update OPS issue", { PROOF_PHASE: "trigger", EXISTING: "yes" });
+  assert.match(fs.readFileSync(calls, "utf8"), /issue edit 17 /);
+  assert.match(fs.readFileSync(calls, "utf8"), /issue comment 17 /);
+  assert.doesNotMatch(fs.readFileSync(calls, "utf8"), /issue (edit|comment|close) 133(?: |$)/);
+  for (const state of ["open", "clear", "unknown"]) {
     fs.writeFileSync(calls, "");
     fs.writeFileSync(path.join(temp, "data/admin/alarm-state.json"), JSON.stringify({ status: state }));
     runStep("Open or update OPS issue", { PROOF_PHASE: "clear", EXISTING: "yes" });
     runStep("Post all-clear on the OPS issue", { PROOF_PHASE: "clear", EXISTING: "yes" });
     const actions = fs.readFileSync(calls, "utf8").trim().split("\n");
     assert.equal(actions.filter(line => line.startsWith("issue comment")).length, 1);
-    assert.equal(actions.filter(line => line.startsWith("issue close")).length, state === "clear" ? 1 : 0);
+    assert.equal(actions.filter(line => line.startsWith("issue close")).length, 1);
     assert.equal(actions.filter(line => line.startsWith("issue create")).length, 0);
     assert.ok(actions.some(line => line.includes("[all-clear]")));
+    assert.ok(actions.some(line => line.includes("실제 사건은 #133 등 별도 이슈에서 계속 추적")));
+    assert.doesNotMatch(actions.join("\n"), /issue (edit|comment|close) 133(?: |$)/);
   }
 } finally { fs.rmSync(temp, { recursive: true, force: true }); }
 console.log("PROOF live_alarm_lifecycle open: seven tagged incidents, real incidents before/after: identical / clear: proof removed, real incidents preserved; healthy state clear");

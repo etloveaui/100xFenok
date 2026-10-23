@@ -206,6 +206,10 @@ jobs:
             exit 0
           fi
           title="${PROOF_ISSUE_TITLE:-100xFenok pipeline job failure alarm}"
+          if [ "$PROOF_PHASE" = clear ] && [ "$title" != '[PROOF] 100xFenok pipeline job failure alarm' ]; then
+            echo "Proof clear requires the exact proof issue title" >&2
+            exit 1
+          fi
           existing="$(gh api --paginate \
             "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
             --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
@@ -215,13 +219,11 @@ jobs:
             exit 0
           fi
           if [ "$PROOF_PHASE" = clear ]; then
-            if [ "$state" = clear ]; then
-              gh issue comment "$existing" --body "[all-clear] Proof incidents cleared; the detector is clear. Observed by: $RUN_URL"
-              gh issue close "$existing" --reason completed
-            else
-              gh issue comment "$existing" --body "[all-clear] Proof incidents cleared. Real detector state is $state; this issue remains open. Observed by: $RUN_URL"
-              echo "Proof incidents removed; real detector state $state keeps the issue open." >> "$GITHUB_STEP_SUMMARY"
-            fi
+            gh issue comment "$existing" --body "$(printf '%s\n' \
+              "[all-clear] Proof incidents cleared. Real detector state: $state. Observed by: $RUN_URL" \
+              '실제 사건은 #133 등 별도 이슈에서 계속 추적')"
+            gh issue close "$existing" --reason completed
+            echo "Proof issue closed; real detector state $state remains tracked in separate issues." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           gh issue comment "$existing" --body "$(printf '%s\n' \
