@@ -277,8 +277,8 @@ export function deriveWorkflowWatchPolicy({
       return {
         file,
         label,
-        events: file === "fetch-yf-finance.yml" ? [...new Set([...events, "repository_dispatch"])] : events,
-        ...(file === "fetch-yf-finance.yml" ? { failure_streak_by_external_clock_cron: true } : {}),
+        events: EXTERNAL_CLOCK_CRONS[file] ? [...new Set([...events, externalClockEvent(file)])] : events,
+        ...(externalClockCrons(file).length > 1 ? { failure_streak_by_external_clock_cron: true } : {}),
         crons: declaredCrons,
         ...(producerLanes ? {
           scheduled_producer: true,
@@ -881,8 +881,8 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now(), activeSched
   let streakRecoveryRuns = countedRuns;
   let streakRuns = coalesceSlots(workflow, countedRuns);
   let streakResult = computeFailureStreak(streakRuns);
-  // Yahoo's ETF slot skips price-history. Neither that success nor a native
-  // fallback success proves recovery of the failing external stock slot.
+  // Different clock cadences can run different jobs (stocks versus ETFs, for
+  // example). A successful cadence cannot clear another cadence's failures.
   if (workflow.failure_streak_by_external_clock_cron) {
     for (const cron of externalClockCrons(workflow.file)) {
       const slotRuns = coalesceSlots(workflow, countedRuns.filter((run) => {

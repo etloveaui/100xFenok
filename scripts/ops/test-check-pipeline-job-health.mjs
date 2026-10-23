@@ -1,3 +1,4 @@
+import { EXTERNAL_CLOCK_CRONS, externalClockEvent } from "../../ops/a1-lanes/external-clock.mjs";
 import assert from "node:assert/strict";
 import { canonicalJson } from "../lib/json-canonical.mjs";
 import { sha256Bytes, sha256Canonical } from "../lib/cloud-data-plane-generation.mjs";
@@ -486,6 +487,29 @@ function writeWorkflow(root, file, source) {
   const policy = deriveWorkflowWatchPolicy({
     workflowsDir: path.join(repoRoot, ".github", "workflows"),
   });
+  for (const [file, crons] of Object.entries(EXTERNAL_CLOCK_CRONS)) {
+    if (file in SCHEDULED_WORKFLOW_EXCLUSIONS) continue;
+    const watch = policy.watched.find(row => row.file === file);
+    assert.ok(watch?.events.includes(externalClockEvent(file)), `${file}: fetch clock event`);
+    assert.equal(Boolean(watch.failure_streak_by_external_clock_cron), crons.length > 1, `${file}: isolate distinct cadences`);
+    const manual = evaluateWorkflow(watch, [{ id: 1, event: externalClockEvent(file), status: "completed",
+      conclusion: "failure", display_title: "Human dispatch" }]);
+    assert.equal(manual.streak, 0, `${file}: unmarked runs stay excluded`);
+  }
+  const stockWatch = policy.watched.find(row => row.file === "fetch-stockanalysis.yml");
+  const stockRun = (id, slot, conclusion) => ({ id, event: "repository_dispatch", status: "completed", conclusion,
+    created_at: slot, run_started_at: slot, display_title: `external-clock/a1/v1 ${stockWatch.file} ${slot}` });
+  const stockFailures = [stockRun(3, "2026-10-23T21:20:00.000Z", "failure"),
+    stockRun(2, "2026-10-22T21:20:00.000Z", "failure")];
+  const mixedSlots = evaluateWorkflow(stockWatch,
+    [stockRun(4, "2026-10-23T23:50:00.000Z", "success"), ...stockFailures],
+    { now: Date.parse("2026-10-24T00:00:00Z") });
+  assert.equal(mixedSlots.streak, 2, "ETF success cannot clear the failing stock cadence");
+  assert.ok(mixedSlots.alarm_reasons.includes("failure_streak"));
+  const recoveredStock = evaluateWorkflow(stockWatch,
+    [stockRun(5, "2026-10-24T21:20:00.000Z", "success"), ...stockFailures],
+    { now: Date.parse("2026-10-24T21:30:00Z") });
+  assert.equal(recoveredStock.streak, 0, "matching cadence success clears the failure streak");
   assert.ok(policy.scheduled_count >= 31, "the scheduled-workflow inventory must not shrink silently");
   assert.equal(
     policy.watched.length,
@@ -514,13 +538,13 @@ function writeWorkflow(root, file, source) {
   );
   assert.deepEqual(
     policy.watched.find((row) => row.file === "deploy-worker.yml")?.events,
-    ["push", "schedule", "workflow_run"],
-    "every declared automatic trigger must count while manual dispatch stays excluded",
+    ["push", "schedule", "workflow_run", "workflow_dispatch"],
+    "automatic triggers include bound clock dispatch; unmarked human runs stay excluded",
   );
   assert.deepEqual(
     policy.watched.find((row) => row.file === "slickcharts-history.yml")?.events,
-    ["schedule"],
-    "manual remediation runs must never contribute to the alarm streak",
+    ["schedule", "workflow_dispatch"],
+    "clock dispatch is fetched but manual remediation runs remain excluded",
   );
   for (const file of [
     "build-stocks-analyzer.yml",
@@ -535,8 +559,8 @@ function writeWorkflow(root, file, source) {
   }
   assert.deepEqual(
     policy.watched.find((row) => row.file === "data-plane-serving-probe.yml")?.events,
-    ["schedule"],
-    "the probe contributes its scheduled cadence only; manual dispatch stays excluded",
+    ["schedule", "workflow_dispatch"],
+    "the probe includes bound clock dispatch; manual dispatch stays excluded",
   );
   assert.equal(
     policy.watched.find((row) => row.file === "slickcharts-weekly.yml")?.failure_streak_threshold,
