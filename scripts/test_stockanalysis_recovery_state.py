@@ -451,6 +451,57 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             with self.subTest(mode=mode):
                 self.assertIsNotNone(etf_detail_regression(broken, prior))
 
+    def test_verified_archive_preserves_old_portfolio_and_provider_null_optional_fields(self):
+        spec = importlib.util.spec_from_file_location("fetcher_components", SCRIPT_DIR / "fetch-stockanalysis.py")
+        fetcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fetcher)
+        old_rows = [{"n": f"Position {index}", "s": f"P{index}"} for index in range(4)]
+        new_rows = old_rows[:3]
+        old_periods = {"daily_1y": [{"t": "2026-09-10", "c": 10}]}
+        new_periods = {"daily_1y": [*old_periods["daily_1y"], {"t": "2026-10-22", "c": 11}]}
+        prior = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                 "ticker": "HOOW", "source_as_of": "2026-09-10T00:00:00Z", "fetched_at": "2026-09-11T00:00:00Z",
+                 "raw": {"holdings": {}, "history_periods": old_periods},
+                 "normalized": {"overview": {"aum": 1, "sharesOut": "100", "dividendYield": "2%"},
+                                "holdings": fetcher.normalize_holdings(old_rows), "holding_count": 4,
+                                "holdings_updated": "Sep 10, 2026", "history_periods": old_periods}}
+        current = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
+                   "ticker": "HOOW", "source_as_of": "2026-10-22T00:00:00Z", "fetched_at": "2026-10-23T00:00:00Z",
+                   "raw": {"overview": {"sharesOut": None, "dividendYield": None},
+                           "holdings": {"holdings": new_rows, "count": 3, "date": "Oct 21, 2026"},
+                           "history_periods": new_periods},
+                   "normalized": {"overview": {"aum": 2}, "holdings": fetcher.normalize_holdings(new_rows),
+                                  "holding_count": 3, "holdings_updated": "Oct 21, 2026", "history_periods": new_periods}}
+        class Store:
+            def read_active_domain(self, _domain):
+                return {"current": {}}
+        with patch.object(fetcher, "OUT_DIR", self.data_root), patch.object(fetcher, "data_supply_store", return_value=Store()):
+            write_json(self.data_root / "etfs/HOOW.json", prior)
+            self.assertIsNotNone(etf_detail_regression(current, prior))
+            fetcher.retain_yahoo_etf_history_archive("HOOW", current)
+            fetcher.retain_yahoo_etf_history_archive("HOOW", current)
+        self.assertEqual(len(current["normalized"]["history_archive"]), 1)
+        self.assertNotIn("dividendYield", current["normalized"]["overview"])
+        self.assertIsNone(etf_detail_regression(current, prior))
+        for mode in ("no_archive", "no_snapshot", "truncated", "not_later", "raw_field_missing", "required_field_missing", "tampered_archive"):
+            broken = json.loads(json.dumps(current))
+            if mode == "no_archive":
+                broken["normalized"].pop("history_archive")
+            elif mode == "no_snapshot":
+                broken["normalized"].pop("holdings_history")
+            elif mode == "truncated":
+                broken["raw"]["holdings"]["count"] = 4
+            elif mode == "not_later":
+                broken["raw"]["holdings"]["date"] = broken["normalized"]["holdings_updated"] = "Sep 10, 2026"
+            elif mode == "raw_field_missing":
+                broken["raw"]["overview"].pop("sharesOut")
+            elif mode == "required_field_missing":
+                broken["normalized"]["overview"].pop("aum")
+            else:
+                broken["normalized"]["history_archive"][0]["source_payload"] += " "
+            with self.subTest(mode=mode):
+                self.assertIsNotNone(etf_detail_regression(broken, prior))
+
     def test_ordinary_aggregate_floor_applies_when_component_clocks_are_empty(self):
         old = {"schema_version": "stockanalysis/v1", "source": "stockanalysis", "asset_type": "etf",
                "ticker": "IBIH", "source_as_of": "2026-10-02T00:00:00Z", "fetched_at": "2026-10-05T02:14:14Z",

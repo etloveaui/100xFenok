@@ -671,9 +671,37 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
             return value.strip().lower() not in {"", "-", "—", "n/a", "none", "null", "nan"}
         return value is not None and value != "" and value != [] and value != {}
 
+    def archived_component(field: str, value: Any) -> bool:
+        archives = new.get("history_archive") or []
+        if not isinstance(archives, list):
+            return False
+        for index, archive in enumerate(archives):
+            if (not isinstance(archive, dict) or archive.get("provider") != "stockanalysis"
+                    or _archive_record_dates(archive, candidate.get("ticker"), archives[:index]) is None):
+                continue
+            source = json.loads(archive["source_payload"])
+            if (source.get("ticker") != baseline.get("ticker")
+                    or source.get("source_as_of") != baseline.get("source_as_of")
+                    or source.get("fetched_at") != baseline.get("fetched_at")):
+                continue
+            original = source.get("normalized") or {}
+            if field.startswith("overview."):
+                original = original.get("overview") or {}
+                field_key = field.removeprefix("overview.")
+            else:
+                field_key = field
+            if original.get(field_key) == value:
+                return True
+        return False
+
     old_overview = old.get("overview") if isinstance(old.get("overview"), dict) else {}
     for field in ("aum", "expenseRatio", "dividendYield", "inception", "sharesOut"):
         if present(old_overview.get(field)) and not present(new["overview"].get(field)):
+            raw_overview = (candidate.get("raw") or {}).get("overview") or {}
+            if (field in {"dividendYield", "sharesOut"} and candidate.get("source") == baseline.get("source") == "stockanalysis"
+                    and field in raw_overview and raw_overview[field] is None
+                    and archived_component(f"overview.{field}", old_overview[field])):
+                continue
             return f"overview.{field}"
     old_holdings = old.get("holdings") if isinstance(old.get("holdings"), list) else []
     new_holdings = new.get("holdings") if isinstance(new.get("holdings"), list) else []
@@ -715,7 +743,16 @@ def etf_detail_regression(candidate: dict, baseline: dict) -> str | None:
     preserved_issuer_transition = bool(
         issuer_date and (old_date is None or issuer_date >= old_date)
         and etf_holdings_snapshot(baseline) in (new.get("holdings_history") or []))
-    if old_holdings and holding_rows(new_holdings) < holding_rows(old_holdings) and not preserved_issuer_transition:
+    new_native_date = complete_native_holdings_date(candidate, new_holdings)
+    preserved_native_transition = bool(
+        candidate.get("source") == baseline.get("source") == "stockanalysis"
+        and candidate.get("ticker") == baseline.get("ticker")
+        and new_native_date and old_date and new_native_date > old_date
+        and etf_holdings_snapshot(baseline) in (new.get("holdings_history") or [])
+        and archived_component("holdings", old_holdings)
+        and archived_component("holding_count", old.get("holding_count")))
+    if (old_holdings and holding_rows(new_holdings) < holding_rows(old_holdings)
+            and not preserved_issuer_transition and not preserved_native_transition):
         old_date = complete_native_holdings_date(baseline, old_holdings)
         new_date = complete_native_holdings_date(candidate, new_holdings)
         # A later complete fund portfolio can contain fewer positions. Both

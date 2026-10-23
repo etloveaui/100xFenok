@@ -4027,7 +4027,31 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
         ) if archives else {}
         if archived_periods is None:
             raise ValueError("prior StockAnalysis ETF archive dates are invalid")
-        missing_native_dates = False
+        # Provider-null optional overview fields remain unknown in the current
+        # view. Keep their previous values in the same verified native archive.
+        old_normalized = original.get("normalized") or {}
+        old_overview = old_normalized.get("overview") or {}
+        raw_overview = payload.get("raw", {}).get("overview") or {}
+        retained_overview = [field for field in ("dividendYield", "sharesOut")
+                             if old_overview.get(field) is not None
+                             and normalized.get("overview", {}).get(field) is None
+                             and field in raw_overview and raw_overview[field] is None]
+        snapshots = list(normalized.get("holdings_history") or [])
+        for snapshot in old_normalized.get("holdings_history") or []:
+            if snapshot not in snapshots:
+                snapshots.append(snapshot)
+        new_holdings_date = native_etf_holdings_component_date(payload)
+        old_holdings_date = parse_stockanalysis_date(old_normalized.get("holdings_updated"))
+        smaller_complete_portfolio = bool(
+            new_holdings_date and old_holdings_date and new_holdings_date > old_holdings_date
+            and len(old_normalized.get("holdings") or []) > len(normalized.get("holdings") or []))
+        if smaller_complete_portfolio:
+            snapshot = etf_holdings_snapshot(original)
+            if snapshot not in snapshots:
+                snapshots.append(snapshot)
+        if snapshots:
+            normalized["holdings_history"] = snapshots
+        missing_native_dates = bool(retained_overview or smaller_complete_portfolio)
         for period, rows in old_periods.items():
             # Empty optional history has no dates to preserve; malformed nonempty rows still fail.
             old_days = (
@@ -4070,7 +4094,8 @@ def retain_yahoo_etf_history_archive(ticker: str, payload: dict) -> None:
                 "history_first": dates[0].date().isoformat(),
                 "history_last": dates[1].date().isoformat(),
             }
-            archives.append(record)
+            if record["payload_sha256"] not in {item["payload_sha256"] for item in archives}:
+                archives.append(record)
     if archives:
         normalized["history_archive"] = archives
     if issuer_holdings_snapshot(payload) is not None:
