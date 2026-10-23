@@ -678,9 +678,13 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
         self.assertEqual(case["active"]["current"]["SLON"]["source_as_of"], "2026-09-25T20:00:00Z")
 
     def test_committed_adapter_pair_survives_downstream_observation_failure(self):
-        case = self.partial_primary_selected_yahoo_case(pending=True, metadata_error=True)
+        output = io.StringIO()
+        with patch("sys.stdout", output):
+            case = self.partial_primary_selected_yahoo_case(pending=True, metadata_error=True)
         self.assertEqual(case["result"]["fallback_refresh_status"], "failed")
         self.assertIn("injected observation persistence failure", case["result"]["fallback_refresh_error"])
+        self.assertIn("[etf SLON] Yahoo fallback refresh refused: RuntimeError: injected observation persistence failure",
+                      output.getvalue())
         provider, detail = (json.loads(raw) for raw in case["after"])
         self.assertEqual(detail["source_as_of"], "2026-09-25T20:00:00Z")
         self.assertEqual(detail["raw"]["yf"], provider["data"])

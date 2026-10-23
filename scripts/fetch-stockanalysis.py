@@ -7961,6 +7961,7 @@ def run_one(
                     except Exception as exc:
                         fallback_refresh_status = "failed"
                         fallback_refresh_error = bounded_diagnostic_detail(f"{type(exc).__name__}: {exc}")
+                        print(f"[etf {ticker}] Yahoo fallback refresh refused: {fallback_refresh_error}", flush=True)
                 if protected_complete:
                     return {
                         "ticker": ticker, "asset_type": kind, "status": "partial_observed_complete_primary_preserved",
