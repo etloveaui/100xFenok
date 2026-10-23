@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import IndustryMetricsPanel from "./IndustryMetricsPanel";
 import SoxPanel from "./SoxPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
 import RotationMapPanel from "./RotationMapPanel";
@@ -917,6 +918,7 @@ export default function SectorsClient() {
       </div>
 
       <SoxPanel />
+      <IndustryMetricsPanel />
 
       <div data-sectors-accordion="valuation">
         {openSections.has("valuation") ? (
