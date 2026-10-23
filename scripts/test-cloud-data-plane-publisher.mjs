@@ -7,7 +7,7 @@
 // by design, which is exactly the gate-blocked path under test).
 
 import assert from "node:assert/strict";
-import { deriveWorkflowWatchPolicy, evaluateWorkflow, buildIssueBody } from "./ops/check-pipeline-job-health.mjs";
+import { deriveWorkflowWatchPolicy, evaluateWorkflow, buildIssueBody, fetchComputedCoverageHealth } from "./ops/check-pipeline-job-health.mjs";
 import { buildAlarmState, alarmStateResolved, writeWorkflowOutputs } from "./ops/emit-alarm-state.mjs";
 import { spawn } from "node:child_process";
 // Pure resolver functions only — no miniflare, so this import stays runnable
@@ -36,6 +36,7 @@ import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflar
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
 import {
+  inspectComputedFieldCoverage,
   assertEffectiveManifestSemantics,
   assertPublishReceiptId,
   buildFamilyManifest,
@@ -3743,16 +3744,20 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   await rm(root, { recursive: true, force: true });
 }
 
-// The SPY failure must stop the real publisher before a PUT/pointer change.
+// Coverage observes successful publications; no coverage verdict may block one.
 {
   const root = await mkdtemp(path.join(os.tmpdir(), "computed-null-collapse-"));
   const plane = createMemoryCloudDataPlane();
-  let writes = 0;
+  let writes = 0, unreadableKey = null, failEvidenceWrite = false;
   const tracked = { ...plane, objectStore: { ...plane.objectStore,
-    async putIfAbsent(...args) { writes += 1; return plane.objectStore.putIfAbsent(...args); } } };
-  const errors = [], gates = [];
-  const build = async (present, total = 763) => {
-    await writeFile(path.join(root, "signals.json"), JSON.stringify({ source_as_of: "2026-07-31",
+    async get(key) { if (key === unreadableKey) throw new Error("injected baseline read failure"); return plane.objectStore.get(key); },
+    async putIfAbsent(key, ...args) {
+      if (failEvidenceWrite && key.startsWith("health/computed-coverage/")) throw new Error("injected evidence write failure");
+      writes += 1; return plane.objectStore.putIfAbsent(key, ...args);
+    } } };
+  const errors = [], gates = [], output = [];
+  const build = async (present, total = 763, revision = "initial") => {
+    await writeFile(path.join(root, "signals.json"), JSON.stringify({ source_as_of: "2026-07-31", revision,
       normalized: { quote: { ep: present ? 21 : null } },
       fields: ["sp500_tracking_similarity"], rows: Array.from({ length: total }, (_, i) => [i < present ? 90 : null]) }));
     return buildFamilyManifest({ familyName: "computed-signals", absRoot: root,
@@ -3760,38 +3765,82 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   };
   let built = await build(761);
   const invoke = () => runPublisherCli({ argv: ["--family=computed-signals", "--json"],
-    env: { CLOUDFLARE_API_TOKEN: "fixture", DATA_PLANE_ENDPOINT: "https://example.invalid", DATA_PLANE_WRITE_KEY: "fixture" },
+    env: { CLOUDFLARE_API_TOKEN: "fixture", DATA_PLANE_ENDPOINT: "https://example.invalid", DATA_PLANE_WRITE_KEY: "fixture",
+      PUBLISH_COMPUTED_COVERAGE: "block" }, // The retired override cannot block publication either.
     buildFamilyManifestImpl: async () => built,
     createPublishPlaneImpl: () => ({ plane: tracked, objectsWritten: () => writes }),
     runCostGateImpl: async options => { gates.push(options); return { code: 0, stdout: "", stderr: "" }; },
-    stdout: () => {}, stderr: line => errors.push(line),
+    stdout: line => output.push(JSON.parse(line)), stderr: line => errors.push(line),
   });
+  const health = async () => (await fetchComputedCoverageHealth({ families: ["computed-signals"], createPlane: () => plane }))[0];
   try {
-    assert.equal(await invoke(), 0, "first generation establishes the baseline");
+    assert.equal(await invoke(), 0);
+    assert.equal(output.at(-1).computed_coverage.status, "no_baseline");
     assert.equal(gates[0].planClassB, 2 * (1 + FAMILIES["computed-signals"].policy.max_assets));
     const pointer = await plane.pointerStore.get(), beforeWrites = writes;
     built = await build(0);
-    assert.equal(await invoke(), 1);
-    assert.ok(errors.some(line => line.includes("COMPUTED_FIELD_NULL_COLLAPSE")
-      && line.includes("sp500_tracking_similarity") && line.includes("761/763 -> 0/763")));
-    assert.equal(writes, beforeWrites, "collapse performs no object writes");
-    assert.deepEqual(await plane.pointerStore.get(), pointer, "collapse retains the active generation");
+    assert.equal(await invoke(), 0, "null collapse must publish successfully");
+    assert.equal(output.at(-1).result, "published");
+    assert.ok(writes > beforeWrites);
+    assert.notDeepEqual(await plane.pointerStore.get(), pointer, "collapsed generation is promoted");
+    const collapse = output.at(-1).computed_coverage;
+    assert.equal(collapse.status, "alarm");
+    assert.equal(collapse.persistence, "stored");
+    assert.equal(collapse.receipt_id, output.at(-1).receipt_id);
+    assert.deepEqual(collapse.findings[0].before, { present: 761, total: 763 });
+    assert.deepEqual(collapse.findings[0].after, { present: 0, total: 763 });
+    assert.ok(errors.some(line => line.includes("::warning::computed coverage alarm")));
+    const openRow = await health();
+    assert.deepEqual(openRow.alarm_reasons, ["computed_field_null_collapse"]);
+    assert.match(buildIssueBody([openRow]), /761\/763 -> 0\/763/);
+    const open = buildAlarmState({ health: { status: "alarm", workflows: [openRow] } });
+    assert.equal(open.open_incidents[0].computed_coverage.receipt_id, collapse.receipt_id);
+    assert.equal(await invoke(), 0, "idempotent retry stays nonblocking");
+    assert.equal((await health()).status, "alarm", "retry must preserve original collapse evidence");
+    built = await build(0, 763, "still-collapsed");
+    assert.equal(await invoke(), 0);
+    assert.equal((await health()).status, "alarm", "a later null generation is not recovery");
     built = await build(750);
-    assert.equal(await invoke(), 0, "ordinary coverage variation is allowed");
-    built = await build(763);
-    assert.equal(await invoke(), 0, "coverage recovery publishes");
-    await provePublisherAlarm("15b/null_collapse", "coordinate-computed-signals.yml", 1,
-      `${errors.find(line => line.includes("COMPUTED_FIELD_NULL_COLLAPSE"))}; pointer_unchanged=true object_writes=0; recovery published`);
+    assert.equal(await invoke(), 0, "actual field recovery publishes");
+    const recovered = await health();
+    assert.equal(recovered.status, "ok");
+    const clear = buildAlarmState({ health: { status: "ok", workflows: [recovered] }, prior: open });
+    assert.equal(clear.status, "clear");
+    assert.equal(alarmStateResolved(open, clear), true);
+    const outputPath = path.join(root, "alarm-output");
+    writeWorkflowOutputs({ outputPath, incidentChanged: true, incidentResolved: alarmStateResolved(open, clear) });
+    assert.match(await readFile(outputPath, "utf8"), /incident_resolved=true/);
+    console.log(`PROOF 15b/null_collapse open: publication=published exit=0; computed_field_null_collapse 761/763 -> 0/763; receipt evidence=${collapse.evidence_key} / clear: ${clear.status} incident_resolved=true`);
+
+    unreadableKey = (await plane.pointerStore.get()).active.manifest_key;
+    built = await build(749);
+    assert.equal(await invoke(), 0, "baseline read failure is evidence, never a publication failure");
+    assert.equal(output.at(-1).computed_coverage.status, "unverified");
+    assert.deepEqual((await health()).alarm_reasons, ["computed_coverage_unverified"]);
+    unreadableKey = null;
+    built = await build(748);
+    failEvidenceWrite = true;
+    assert.equal(await invoke(), 0, "even evidence storage failure cannot block publication");
+    assert.equal(output.at(-1).computed_coverage.persistence, "failed");
+    assert.equal((await health()).status, "unknown", "missing evidence must not claim healthy coverage");
+    failEvidenceWrite = false;
+
     for (const total of [1, 8, 9]) {
       built = await build(total, total);
       assert.equal(await invoke(), 0);
       built = await build(0, total);
-      assert.equal(await invoke(), 0, `CCOM quote ep and ${total}-row samples may become null`);
+      assert.equal(await invoke(), 0);
+      assert.equal(output.at(-1).computed_coverage.status, "ok", `${total}-row samples are below population floor`);
     }
     built = await build(10, 10);
     assert.equal(await invoke(), 0);
     built = await build(0, 10);
-    assert.equal(await invoke(), 1, "ten members is the first population-sized check");
+    assert.equal(await invoke(), 0);
+    assert.equal(output.at(-1).computed_coverage.status, "alarm", "ten-member collapse alarms without blocking");
+    const excluded = await inspectComputedFieldCoverage({ pointer: { active: {} },
+      manifest: { assets: [{ path: "data/computed/data-supply/etf-detail/payloads/CPNX.json" }] },
+      payloads: new Map(), objectStore: { get() { throw new Error("must not inspect entity payload"); } } });
+    assert.equal(excluded.status, "not_applicable");
   } finally { await rm(root, { recursive: true, force: true }); }
 }
 

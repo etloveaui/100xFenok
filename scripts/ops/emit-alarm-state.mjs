@@ -64,6 +64,7 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
   const openIncidents = workflowAlarms.map((w) => ({
     workflow: w.file ?? null,
     ...(w.proof === true ? { proof: true, proof_case: w.proof_case } : {}),
+    ...(w.computed_coverage ? { computed_coverage: w.computed_coverage } : {}),
     label: w.label ?? w.name ?? w.file ?? null,
     streak: typeof w.streak === "number" ? w.streak : null,
     failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,

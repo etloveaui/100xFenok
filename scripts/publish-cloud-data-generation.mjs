@@ -2914,11 +2914,27 @@ function validateParityProof(verifiedObjects, manifest) {
 // Compare computed numeric fields across generations in the existing publication
 // path. Arrays share a denominator per field; compact rows use their field names.
 // A sharp collapse means both a >=50% relative loss and >=20 percentage points.
+// Coverage is alarm evidence only; it never participates in publication admission.
 // No prior numeric coverage means no baseline, rather than a fabricated pass.
 // FINRA summaries have eight reference rows; fund quotes and availability
 // markers are singletons. Require at least ten members for a population check.
 const MIN_COMPUTED_COVERAGE_MEMBERS = 10;
-const computedAsset = asset => /(?:^|\/)computed\/.*\.json$/.test(asset.path);
+const computedAsset = asset => /(?:^|\/)computed\/.*\.json$/.test(asset.path)
+  && !/(?:^|\/)computed\/data-supply\/etf-detail\/payloads\//.test(asset.path);
+export const computedCoverageEvidenceKey = (family, receiptId) => `health/computed-coverage/${family}/${receiptId}.json`;
+export const COMPUTED_COVERAGE_FAMILIES = Object.entries(FAMILIES).filter(([, family]) => {
+  const root = family.manifest_prefix ?? family.root;
+  const paths = [...(family.files ?? ["population.json"]), ...(family.public_roots ?? [])]
+    .map(relative => `${root}/${relative}`)
+    .concat((family.private_assets ?? []).map(asset => asset.path));
+  return paths.some(path => computedAsset({ path }));
+}).map(([name]) => name);
+export function computedCoverageRecordMatches(record, { family, generationId, receiptId }) {
+  return record?.schema_version === "computed-coverage/v1" && record.family === family
+    && record.generation_id === generationId && record.receipt_id === receiptId
+    && ["ok", "alarm", "unverified", "no_baseline", "not_applicable"].includes(record.status)
+    && Array.isArray(record.findings);
+}
 function coverageDocument(value) {
   if (!value || typeof value !== "object") return value;
   if (Array.isArray(value)) return value.map(coverageDocument);
@@ -2944,38 +2960,98 @@ function fieldCoverage(value, parts) {
     return { total: sum.total + count.total, present: sum.present + count.present };
   }, { total: 0, present: 0 });
 }
-export async function assertComputedFieldCoverage({ pointer, manifest, payloads, objectStore }) {
-  if (!pointer?.active || !manifest.assets.some(computedAsset)) return;
-  const raw = await objectStore.get(pointer.active.manifest_key);
-  if (!(raw instanceof Uint8Array) || sha256Bytes(raw) !== pointer.active.manifest_sha256) {
-    fail("COMPUTED_BASELINE_INTEGRITY", "active manifest unavailable or corrupt");
-  }
-  const previous = JSON.parse(new TextDecoder().decode(raw));
-  validateGenerationManifest(previous);
-  if (previous.generation_id !== pointer.active.generation_id || previous.generation_id.slice(0, -17) !== manifest.generation_id.slice(0, -17)
-    || previous.source_sha !== pointer.source_sha) {
-    fail("COMPUTED_BASELINE_INTEGRITY", "active manifest identity mismatch");
+export async function inspectComputedFieldCoverage({ pointer, manifest, payloads, objectStore, family }) {
+  const result = { status: "ok", checked_fields: 0, findings: [] };
+  if (!manifest.assets.some(computedAsset)) return { ...result, status: "not_applicable" };
+  // An idempotent retry compares against the preceding generation, not itself.
+  const target = pointer?.active?.generation_id === manifest.generation_id ? pointer.previous : pointer?.active;
+  if (!target) return { ...result, status: "no_baseline" };
+  let previous, priorEvidence;
+  try {
+    const raw = await objectStore.get(target.manifest_key);
+    if (!(raw instanceof Uint8Array) || sha256Bytes(raw) !== target.manifest_sha256) {
+      throw new Error("active baseline manifest unavailable or corrupt");
+    }
+    previous = JSON.parse(new TextDecoder().decode(raw));
+    validateGenerationManifest(previous);
+    if (previous.generation_id !== target.generation_id
+      || previous.generation_id.slice(0, -17) !== manifest.generation_id.slice(0, -17)) {
+      throw new Error("baseline generation identity mismatch");
+    }
+    if (family && pointer?.prepared_receipt_id && target === pointer.active) {
+      const bytes = await objectStore.get(computedCoverageEvidenceKey(family, pointer.prepared_receipt_id));
+      if (bytes) {
+        const record = JSON.parse(new TextDecoder().decode(bytes));
+        if (computedCoverageRecordMatches(record, { family, generationId: target.generation_id, receiptId: pointer.prepared_receipt_id })) priorEvidence = record;
+      }
+    }
+  } catch (error) {
+    return { ...result, status: "unverified", findings: [{ path: target.manifest_key, field: null,
+      before: null, after: null, verdict: "unverified", error: error.message }] };
   }
   const current = new Map(manifest.assets.map(asset => [asset.path, asset]));
   for (const asset of previous.assets.filter(computedAsset)) {
-    const nextAsset = current.get(asset.path);
-    if (nextAsset?.sha256 === asset.sha256) continue;
-    const bytes = await objectStore.get(asset.object_key);
-    if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== asset.sha256 || bytes.length !== asset.bytes) {
-      fail("COMPUTED_BASELINE_INTEGRITY", asset.path);
-    }
-    const before = coverageDocument(JSON.parse(new TextDecoder().decode(bytes)));
-    const nextBytes = payloads.get(asset.path);
-    const after = nextBytes ? coverageDocument(JSON.parse(new TextDecoder().decode(nextBytes))) : null;
-    for (const parts of numericPaths(before).values()) {
-      const old = fieldCoverage(before, parts), next = fieldCoverage(after, parts);
-      if (old.total < MIN_COMPUTED_COVERAGE_MEMBERS) continue;
-      const oldRatio = old.present / old.total, nextRatio = next.present / next.total;
-      if (nextRatio <= oldRatio * 0.5 && oldRatio - nextRatio >= 0.2) {
-        fail("COMPUTED_FIELD_NULL_COLLAPSE", `${asset.path} ${parts.map(part => part ?? "[]").join(".")}: `
-          + `${old.present}/${old.total} -> ${next.present}/${next.total}`);
+    const carried = new Map((priorEvidence?.findings ?? []).filter(row => row.path === asset.path
+      && row.verdict === "collapse" && Array.isArray(row.field_path))
+      .map(row => [JSON.stringify(row.field_path), row]));
+    if (current.get(asset.path)?.sha256 === asset.sha256 && carried.size === 0) continue;
+    try {
+      const bytes = await objectStore.get(asset.object_key);
+      if (!(bytes instanceof Uint8Array) || sha256Bytes(bytes) !== asset.sha256 || bytes.length !== asset.bytes) {
+        throw new Error("baseline payload unavailable or corrupt");
       }
+      const before = coverageDocument(JSON.parse(new TextDecoder().decode(bytes)));
+      const nextBytes = payloads.get(asset.path);
+      const after = nextBytes ? coverageDocument(JSON.parse(new TextDecoder().decode(nextBytes))) : null;
+      // Retain the last observed numeric baseline until the field actually recovers.
+      const paths = numericPaths(before);
+      for (const [key, row] of carried) paths.set(key, row.field_path);
+      for (const [key, parts] of paths) {
+        const old = carried.get(key)?.before ?? fieldCoverage(before, parts), next = fieldCoverage(after, parts);
+        if (old.total < MIN_COMPUTED_COVERAGE_MEMBERS) continue;
+        result.checked_fields += 1;
+        const oldRatio = old.present / old.total, nextRatio = next.present / next.total;
+        const collapse = nextRatio <= oldRatio * 0.5 && oldRatio - nextRatio >= 0.2;
+        if (collapse || old.present !== next.present || old.total !== next.total || carried.has(key)) {
+          result.findings.push({ path: asset.path, field: parts.map(part => part ?? "[]").join("."),
+            field_path: parts, before: old, after: next, verdict: collapse ? "collapse" : "ok" });
+        }
+      }
+    } catch (error) {
+      result.findings.push({ path: asset.path, field: null, before: null, after: null,
+        verdict: "unverified", error: error.message });
     }
+  }
+  result.status = result.findings.some(row => row.verdict === "collapse") ? "alarm"
+    : result.findings.some(row => row.verdict === "unverified") ? "unverified" : "ok";
+  return result;
+}
+
+async function recordComputedCoverage({ family, pointer, manifest, payloads, plane, receipt, stderr }) {
+  const evidenceKey = computedCoverageEvidenceKey(family, receipt.receipt_id);
+  let evidence;
+  try {
+    if (!manifest.assets.some(computedAsset)) return { status: "not_applicable", findings: [] };
+    const stored = await plane.objectStore.get(evidenceKey);
+    if (stored) {
+      evidence = JSON.parse(new TextDecoder().decode(stored));
+      if (!computedCoverageRecordMatches(evidence, { family, generationId: manifest.generation_id, receiptId: receipt.receipt_id })) {
+        throw new Error("stored coverage evidence identity mismatch");
+      }
+    } else {
+      evidence = { schema_version: "computed-coverage/v1", family, generation_id: manifest.generation_id,
+        receipt_id: receipt.receipt_id, source_sha: manifest.source_sha,
+        ...await inspectComputedFieldCoverage({ family, pointer, manifest, payloads, objectStore: plane.objectStore }) };
+      await plane.objectStore.putIfAbsent(evidenceKey, new TextEncoder().encode(JSON.stringify(evidence)));
+    }
+    if (["alarm", "unverified"].includes(evidence.status)) {
+      stderr(`::warning::computed coverage ${evidence.status}; publication continues; ${JSON.stringify(evidence.findings)}`);
+    }
+    return { ...evidence, evidence_key: evidenceKey, persistence: "stored" };
+  } catch (error) {
+    stderr(`::warning::computed coverage evidence unavailable; publication continues: ${error.message}`);
+    return { ...(evidence ?? { status: "unverified", findings: [] }), evidence_key: evidenceKey,
+      persistence: "failed", persistence_error: error.message };
   }
 }
 
@@ -3903,14 +3979,6 @@ export async function runPublisherCli({
         fail("ACTIVE_BASIS_DRIFT", `${args.family} active generation differs from the materialized basis`);
       }
     }
-    // Computed-field coverage is evidence until its alarm path is the only consumer: a collapse or an
-    // unreadable baseline is reported but never blocks a publication. PUBLISH_COMPUTED_COVERAGE=block restores enforcement.
-    try {
-      await assertComputedFieldCoverage({ pointer: livePointer, manifest, payloads, objectStore: plane.objectStore });
-    } catch (error) {
-      if (process.env.PUBLISH_COMPUTED_COVERAGE === "block") throw error;
-      console.error(`::warning::computed field coverage evidence only, publication continues: ${error?.message ?? error}`);
-    }
     const pointerSequenceBefore = livePointer?.sequence ?? 0;
     const resolved = await resolveExpectedPointerSequence({
       pointer: livePointer,
@@ -4098,6 +4166,12 @@ export async function runPublisherCli({
       + ` ${verificationStats.reused_assets} reused)`,
     );
 
+    // Evidence is written only after successful publication/parity. Its failures
+    // never change the publication exit code, including the former block override.
+    const publicationObjectsWritten = publishPlane.objectsWritten();
+    const computedCoverage = await recordComputedCoverage({ family: args.family, pointer: livePointer,
+      manifest: resolved.manifest, payloads, plane, receipt: published.receipt, stderr });
+
     // 5. The preflight measurement already scored the complete planned write
     // as if it had happened. Rewalking the whole account immediately after the
     // write repeated 30+ control-plane calls without changing the safety
@@ -4114,12 +4188,13 @@ export async function runPublisherCli({
         : {}),
       receipt_id: published.receipt.receipt_id,
       receipt_state: published.receipt.state,
+      computed_coverage: computedCoverage,
       pointer_sequence_before: pointerSequenceBefore,
       pointer_sequence_after: published.pointer.sequence,
       ...plan,
-      objects_written: publishPlane.objectsWritten(),
+      objects_written: publicationObjectsWritten,
       ...(objectWritePlan ? { object_write_plan: objectWritePlan, planned_bytes: 2 * objectWritePlan.bytes } : {}),
-      objects_already_present: plan.unique_object_keys - publishPlane.objectsWritten(),
+      objects_already_present: plan.unique_object_keys - publicationObjectsWritten,
       parity: "ok",
       parity_body_verified_assets: verificationStats.body_verified_assets,
       parity_body_verified_objects: verificationStats.body_verified_objects,

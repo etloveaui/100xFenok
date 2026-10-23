@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { deriveWorkflowWatchPolicy, evaluateWorkflow, classifyKpiGenerationStoppage, buildIssueBody } from "./check-pipeline-job-health.mjs";
+import { deriveWorkflowWatchPolicy, evaluateWorkflow, classifyKpiGenerationStoppage, classifyComputedCoverageEvidence, buildIssueBody } from "./check-pipeline-job-health.mjs";
 import { buildAlarmState } from "./emit-alarm-state.mjs";
 import { scheduledSlot } from "../check-external-clock-slot.mjs";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
@@ -69,7 +69,12 @@ export function createProofIncidents() {
   return [
     failures("r2-usage-report.yml", "r2_breach", "R2 measured breach report failures (exit 2)"),
     failures("fenok-edge-daily.yml", "edge", "Edge publication withheld"),
-    failures("coordinate-computed-signals.yml", "computed", "Computed publisher null-collapse rejection"),
+    { ...classifyComputedCoverageEvidence({ schema_version: "computed-coverage/v1", family: "computed-signals",
+        generation_id: "proof-published", receipt_id: "proof-receipt", status: "alarm", findings: [{
+          path: "public/data/computed/signals.json", field: "rows.[].sp500_tracking_similarity",
+          before: { present: 761, total: 763 }, after: { present: 0, total: 763 }, verdict: "collapse",
+        }] }, "computed-signals"), proof: true, proof_case: "computed",
+      label: "[PROOF] Computed coverage collapse; publication continued" },
     { ...member, file: member.workflow, status: "alarm", proof: true, proof_case: "members",
       label: "[PROOF] Member freshness 1461/1495" },
     failures("fetch-yahoo-ticker.yml", "yahoo", "Yahoo external-clock failures", true),

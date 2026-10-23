@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { COMPUTED_COVERAGE_FAMILIES, computedCoverageEvidenceKey, computedCoverageRecordMatches } from "../publish-cloud-data-generation.mjs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
@@ -1074,6 +1075,16 @@ export function buildIssueBody(alarms) {
     "",
   ];
   for (const alarm of alarms) {
+    if (alarm.computed_coverage) {
+      lines.push(`## ${alarm.label}`, `- Alarm reasons: ${alarm.alarm_reasons.join(", ")}`,
+        "- Publication continued; coverage is alarm-only evidence.",
+        `- Generation: ${alarm.computed_coverage.generation_id}; receipt: ${alarm.computed_coverage.receipt_id}`);
+      for (const row of alarm.computed_coverage.findings) {
+        lines.push(`- ${row.path} ${row.field ?? "baseline"}: ${row.before ? `${row.before.present}/${row.before.total}` : "unknown"} -> ${row.after ? `${row.after.present}/${row.after.total}` : "unknown"}; ${row.verdict}${row.error ? ` (${row.error})` : ""}`);
+      }
+      lines.push("");
+      continue;
+    }
     if (alarm.family) {
       lines.push(`## ${alarm.family} family health`);
       lines.push(`- Alarm reasons: ${alarm.alarm_reasons.join(", ")}`);
@@ -1428,8 +1439,9 @@ export async function main() {
   }
   const familyHealth = await fetchEtfFamilyHealth();
   const retentionHealth = await fetchRetentionSweepHealth({token, owner, repo});
+  const computedCoverage = await fetchComputedCoverageHealth();
   const classifiedWorkflows = [...workflows.filter(row => row.file !== "retention-sweep.yml"),
-    retentionHealth, aggregateExternalClockHealth(clockChecks), familyHealth];
+    retentionHealth, aggregateExternalClockHealth(clockChecks), familyHealth, ...computedCoverage];
   const workflowAlarms = classifiedWorkflows.filter((w) => w.status === "alarm");
   const kpiAlarm = dataHealthKpi.status === "alarm"
     ? {
@@ -1501,6 +1513,35 @@ export async function fetchRetentionSweepHealth({token, owner, repo, fetchFn = f
     }
     return classifyRetentionSchedule(JSON.parse(matches[0].body.slice("[retention-schedule-state]\n".length)), {now});
   } catch { return classifyRetentionSchedule(null, {now}); }
+}
+
+export function classifyComputedCoverageEvidence(record, family) {
+  const base = { file: `computed-coverage:${family}`, label: `Computed coverage (${family})`, alarm_reasons: [] };
+  if (!record) return { ...base, status: "unknown", message: "Current publication coverage evidence is unavailable" };
+  const reasons = [];
+  if (record.findings.some(row => row.verdict === "collapse")) reasons.push("computed_field_null_collapse");
+  if (record.status === "unverified" || record.findings.some(row => row.verdict === "unverified")) reasons.push("computed_coverage_unverified");
+  return { ...base, status: reasons.length ? "alarm" : "ok", alarm_reasons: reasons,
+    computed_coverage: record };
+}
+
+// Follow the existing family's active receipt, so a retry cannot clear a collapse
+// merely by comparing the already-published null generation against itself.
+export async function fetchComputedCoverageHealth({ env = process.env, families = COMPUTED_COVERAGE_FAMILIES,
+  createPlane = family => createDefaultMaterializePlane({ family, accountId: env.CLOUDFLARE_ACCOUNT_ID,
+    token: env.CLOUDFLARE_API_TOKEN, endpoint: env.DATA_PLANE_ENDPOINT, writeKey: env.DATA_PLANE_WRITE_KEY }) } = {}) {
+  return Promise.all(families.map(async family => {
+    try {
+      const plane = createPlane(family);
+      const pointer = await plane.pointerStore.get();
+      if (!pointer?.active || !pointer.prepared_receipt_id) return classifyComputedCoverageEvidence(null, family);
+      const bytes = await plane.objectStore.get(computedCoverageEvidenceKey(family, pointer.prepared_receipt_id));
+      const record = bytes ? JSON.parse(new TextDecoder().decode(bytes)) : null;
+      if (!computedCoverageRecordMatches(record, { family, generationId: pointer.active.generation_id,
+        receiptId: pointer.prepared_receipt_id })) return classifyComputedCoverageEvidence(null, family);
+      return classifyComputedCoverageEvidence(record, family);
+    } catch { return classifyComputedCoverageEvidence(null, family); }
+  }));
 }
 
 export async function fetchEtfFamilyHealth({ env = process.env, bucket = null, now = Date.now() } = {}) {

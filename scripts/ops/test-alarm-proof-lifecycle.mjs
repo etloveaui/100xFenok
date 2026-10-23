@@ -18,6 +18,8 @@ assert.equal(new Set(incidents.map(row => row.proof_case)).size, 7);
 assert.ok(incidents.every(row => row.proof === true && row.status === "alarm"));
 assert.ok(incidents.find(row => row.proof_case === "a1").alarm_reasons.includes("a1_consecutive_failures"));
 assert.ok(incidents.find(row => row.proof_case === "members").alarm_reasons.includes("member_ratio_low"));
+assert.deepEqual(incidents.find(row => row.proof_case === "computed").alarm_reasons, ["computed_field_null_collapse"]);
+assert.match(incidents.find(row => row.proof_case === "computed").label, /publication continued/);
 const trigger = applyProofPhase({ health: real, phase: "trigger", incidents });
 assert.deepEqual(real, saved, "trigger must not mutate detector input");
 assert.deepEqual(trigger.health.workflows.filter(row => !row.proof), real.workflows);
