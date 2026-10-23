@@ -288,7 +288,7 @@ async function buildProbeSetup(scenario: ProbeScenario, activityMode: ActivityMo
     ...DEFAULT_COACH_CONFIG,
     tester: "owner" as const,
   };
-  const { setup } = await buildLiveSetup("mona", {
+  const { setup } = await buildLiveSetup("fenok", {
     lowVoice: true,
     voiceName: "Achernar",
     responseStyle: "concise",
@@ -374,7 +374,7 @@ function buildProbeRunContext(scenario: ProbeScenario, sessionId: string): Probe
     toolContext: {
       sessionId,
       coachSessionKey: sessionId,
-      mode: scenario === "coach-flow" ? "mona" : "fenok",
+      mode: "fenok",
       coachConfig,
       coachSessionState: null,
       noPersist: true,
