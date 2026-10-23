@@ -63,6 +63,7 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
   // working, but top level wins because that is what the producer emits.
   const openIncidents = workflowAlarms.map((w) => ({
     workflow: w.file ?? null,
+    ...(w.proof === true ? { proof: true, proof_case: w.proof_case } : {}),
     label: w.label ?? w.name ?? w.file ?? null,
     streak: typeof w.streak === "number" ? w.streak : null,
     failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,
@@ -142,6 +143,7 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     status,
     open_incident_count: openIncidents.length,
     open_incidents: openIncidents,
+    ...(health?.proof_context ? { proof_context: { real_incidents_before: health.proof_context.real_incidents_before } } : {}),
     watched_workflows: watchedWorkflows,
     excluded_workflows: excludedWorkflows,
     unknown_workflows: unknownWorkflows,
@@ -173,6 +175,7 @@ const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
   "queue_evicted_run_count",
   "queue_evicted_workflows",
   "last_resolved_at",
+  "proof_context",
 ]);
 
 function significantAlarmState(state) {
@@ -216,6 +219,7 @@ function incidentIdentityProjection(state) {
     ? state.open_incidents
       .map((incident) => ({
         workflow: incident?.workflow ?? null,
+        ...(incident?.proof === true ? { proof: true, proof_case: incident.proof_case } : {}),
         alarm_reasons: Array.isArray(incident?.alarm_reasons)
           ? [...new Set(incident.alarm_reasons)].sort()
           : [],

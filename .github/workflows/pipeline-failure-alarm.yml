@@ -9,6 +9,12 @@ on:
     types: [completed]
   workflow_dispatch:
     inputs:
+      proof_phase:
+        description: 'Live alarm-path proof; synthetic incidents are explicitly tagged'
+        required: false
+        default: none
+        type: choice
+        options: [none, trigger, clear]
       external_clock:
         description: 'Automatic clock marker; leave empty for human dispatch'
         required: false
@@ -119,9 +125,17 @@ jobs:
             exit 2
           fi
 
+      - name: Apply dispatch-only alarm proof
+        id: proof
+        if: ${{ always() && steps.baseline.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.proof_phase != '' && inputs.proof_phase != 'none' }}
+        env:
+          PROOF_PHASE: ${{ inputs.proof_phase }}
+          PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
+        run: node scripts/ops/alarm-proof-lifecycle.mjs
+
       - name: Emit alarm state
         id: alarm_state
-        if: ${{ always() && steps.baseline.outcome == 'success' }}
+        if: ${{ always() && steps.baseline.outcome == 'success' && steps.proof.outcome != 'failure' }}
         env:
           PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
         run: node scripts/ops/emit-alarm-state.mjs
@@ -137,7 +151,7 @@ jobs:
       # run red and blocks both reporting and persistence, so the next run
       # retries from the prior canonical state.
       - name: Prepare issue body
-        if: steps.pipeline.outcome == 'failure'
+        if: ${{ steps.pipeline.outcome == 'failure' || steps.proof.outputs.alarming == 'true' || (github.event_name == 'workflow_dispatch' && inputs.proof_phase == 'clear') }}
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -147,10 +161,11 @@ jobs:
           NODE
 
       - name: Open or update OPS issue
-        if: steps.pipeline.outcome == 'failure'
+        if: ${{ steps.pipeline.outcome == 'failure' || steps.proof.outputs.alarming == 'true' || (github.event_name == 'workflow_dispatch' && inputs.proof_phase == 'clear') }}
         env:
           GH_TOKEN: ${{ github.token }}
           INCIDENT_CHANGED: ${{ steps.alarm_state.outputs.incident_changed }}
+          PROOF_PHASE: ${{ github.event_name == 'workflow_dispatch' && inputs.proof_phase || 'none' }}
         run: |
           set -euo pipefail
           title="$(cat pipeline-job-health-title.txt)"
@@ -166,10 +181,10 @@ jobs:
             # roughly a month. The comment stays gated on the transition, which
             # is what the 2026-07-22 anti-spam change actually protected.
             gh issue edit "$existing" --body-file pipeline-job-health-issue.md
-            if [ "$INCIDENT_CHANGED" != "false" ]; then
+            if [ "$PROOF_PHASE" != clear ] && [ "$INCIDENT_CHANGED" != "false" ]; then
               gh issue comment "$existing" --body-file pipeline-job-health-issue.md
             fi
-          else
+          elif [ "$PROOF_PHASE" != clear ]; then
             gh issue create --title "$title" --body-file pipeline-job-health-issue.md
           fi
 
@@ -177,24 +192,36 @@ jobs:
       # can both happen before main receives either state, so a stale canonical
       # clear state must not suppress closing an issue that is actually open.
       - name: Post all-clear on the OPS issue
-        if: steps.pipeline.outcome == 'success'
+        if: ${{ steps.pipeline.outcome == 'success' || (github.event_name == 'workflow_dispatch' && inputs.proof_phase == 'clear') }}
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PROOF_PHASE: ${{ github.event_name == 'workflow_dispatch' && inputs.proof_phase || 'none' }}
+          PROOF_ISSUE_TITLE: ${{ steps.proof.outputs.issue_title }}
         run: |
           set -euo pipefail
           state="$(node -p "JSON.parse(require('fs').readFileSync('data/admin/alarm-state.json', 'utf8')).status")"
-          if [ "$state" != clear ]; then
+          if [ "$state" != clear ] && [ "$PROOF_PHASE" != clear ]; then
             echo "detector state is $state; no all-clear"
             exit 0
           fi
-          title="100xFenok pipeline job failure alarm"
+          title="${PROOF_ISSUE_TITLE:-100xFenok pipeline job failure alarm}"
           existing="$(gh api --paginate \
             "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
             --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
             | sort -n | sed -n '1p')"
           if [ -z "$existing" ]; then
             echo "no open OPS issue; nothing to clear"
+            exit 0
+          fi
+          if [ "$PROOF_PHASE" = clear ]; then
+            if [ "$state" = clear ]; then
+              gh issue comment "$existing" --body "[all-clear] Proof incidents cleared; the detector is clear. Observed by: $RUN_URL"
+              gh issue close "$existing" --reason completed
+            else
+              gh issue comment "$existing" --body "[all-clear] Proof incidents cleared. Real detector state is $state; this issue remains open. Observed by: $RUN_URL"
+              echo "Proof incidents removed; real detector state $state keeps the issue open." >> "$GITHUB_STEP_SUMMARY"
+            fi
             exit 0
           fi
           gh issue comment "$existing" --body "$(printf '%s\n' \
