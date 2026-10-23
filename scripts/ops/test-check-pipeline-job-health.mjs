@@ -28,6 +28,34 @@ import {
   parseWorkflowRunsPayload,
 } from "./check-pipeline-job-health.mjs";
 
+// A permitted UNVERIFIED publication must not make a sustained cost-measurement
+// outage invisible. Exercise the existing report shell and detector together.
+{
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const report = fs.readFileSync(path.join(root, ".github/workflows/r2-usage-report.yml"), "utf8");
+  const body = report.split("        run: |\n").at(-1).split("\n").map(line => line.replace(/^          /, "")).join("\n");
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "r2-report-alarm-"));
+  try {
+    for (const code of [0, 1, 2, 3]) {
+      const script = body.replace("node scripts/check-r2-free-tier-usage.mjs --json > usage.json",
+        `printf '%s\\n' '{"verdict":"${code === 3 ? "unverified" : code === 2 ? "fail" : "ok"}"}' > usage.json; (exit ${code})`);
+      const result = spawnSync("bash", ["-c", script], { cwd: temp, env: { ...process.env, GITHUB_STEP_SUMMARY: path.join(temp, "summary") }, encoding: "utf8" });
+      assert.equal(result.status, code <= 1 ? 0 : code, result.stderr);
+    }
+    const workflow = deriveWorkflowWatchPolicy().watched.find(row => row.file === "r2-usage-report.yml");
+    assert.ok(workflow, "the existing report must be watched on its declared schedule");
+    assert.equal(workflow.failure_streak_threshold, 2);
+    const run = (id, conclusion) => ({ id, event: "schedule", status: "completed", conclusion,
+      created_at: `2026-10-23T${id}:43:00Z`, run_started_at: `2026-10-23T${id}:43:00Z` });
+    const options = { now: Date.parse("2026-10-23T12:45:00Z") };
+    assert.equal(evaluateWorkflow(workflow, [run(12, "failure"), run(11, "success")], options).status, "ok");
+    const repeated = evaluateWorkflow(workflow, [run(12, "failure"), run(11, "failure")], options);
+    assert.equal(repeated.status, "alarm");
+    assert.match(buildIssueBody([repeated]), /Exit 3 means UNVERIFIED/);
+    assert.equal(evaluateWorkflow(workflow, [run(12, "success"), run(11, "failure")], options).status, "ok");
+  } finally { fs.rmSync(temp, { recursive: true, force: true }); }
+}
+
 // Marked A1 dispatches are automatic slots, including failures and evictions.
 {
   const workflow = { file: "fetch-yahoo-ticker.yml", label: "Yahoo ticker", events: ["schedule"],

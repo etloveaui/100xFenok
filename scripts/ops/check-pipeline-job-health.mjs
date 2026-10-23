@@ -1137,6 +1137,10 @@ export function buildIssueBody(alarms) {
         + " is still being served, then whether the workflow is disabled.");
     }
     if (reasons.includes("failure_streak")) {
+      if (alarm.file === "r2-usage-report.yml") {
+        lines.push("- R2 measurement reports failed repeatedly. Exit 3 means UNVERIFIED; exit 2 means a measured breach. Read each report summary for the exact verdict.");
+        lines.push("- UNVERIFIED still permits data publication under the 2026-10-23 owner decision; this incident reports the measurement outage independently.");
+      }
       lines.push(`- Consecutive failures: ${alarm.streak}`);
       lines.push(`- Paging threshold: ${alarm.failure_streak_threshold}`);
       lines.push(

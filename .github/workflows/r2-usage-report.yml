@@ -1,12 +1,13 @@
 name: R2 Usage Report
 
-# The cost gate that blocks publication prints a verdict and nothing else, so
-# "warn" carries no number and the owner cannot tell whether the estate is at
-# 71% or 89% of the free allowance. This workflow runs the same measurement in
-# report mode and prints it. It never blocks anything: the gate's exit code is
-# captured and echoed rather than failing the run.
+# Owner decision 2026-10-23: UNVERIFIED publication is allowed, but a sustained
+# measurement outage must reach the existing pipeline alarm. This existing
+# report exposes failed measurements as failed report runs; it never gates a
+# data publication. The hourly cadence uses the detector's two-run noise bound.
 
 on:
+  schedule:
+    - cron: '43 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -42,14 +43,21 @@ jobs:
           node scripts/check-r2-free-tier-usage.mjs --json > usage.json
           code=$?
           set -e
-          echo "gate exit code: $code (0=ok 1=warn 2=fail/unreadable)"
+          echo "gate exit code: $code (0=ok 1=warn 2=measured-breach 3=unverified)"
           cat usage.json
           {
             echo "### R2 free-tier usage"
             echo ""
-            echo "gate exit code: \`$code\` (0=ok 1=warn 2=fail/unreadable)"
+            echo "gate exit code: \`$code\` (0=ok 1=warn 2=measured-breach 3=unverified)"
             echo ""
             echo '```json'
             cat usage.json
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          case "$code" in
+            0|1) exit 0 ;;
+            3)
+              echo "::warning::R2 measurement UNVERIFIED; publication remains allowed. Repeated failed reports reach the pipeline alarm."
+              exit 3 ;;
+            *) exit "$code" ;;
+          esac
