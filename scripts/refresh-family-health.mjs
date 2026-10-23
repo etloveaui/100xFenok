@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Prepare outside the family lock; commit only rechecks identity and writes.
-// No provider calls, payload reads from R2, listings, pointer changes or Git writes.
+// Prepare pinned metadata outside the family lock; re-prepare under the lock
+// when publication overtakes it. No provider calls, listings or pointer writes.
 import fs from "node:fs/promises";
 import path from "node:path";
 import { execFileSync, spawn } from "node:child_process";
@@ -9,7 +9,7 @@ import { once } from "node:events";
 import { FAMILIES, resolveSourceAsOf } from "./publish-cloud-data-generation.mjs";
 import { createDefaultMaterializePlane, readActiveFamilyIdentity } from "./materialize-cloud-data-plane-family.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
-import { sha256Bytes, sha256Canonical, validateActivePointer, validateGenerationManifest } from "./lib/cloud-data-plane-generation.mjs";
+import { readGenerationAssetBytes, runBoundedAsyncPool, sha256Bytes, sha256Canonical, validateActivePointer, validateGenerationManifest } from "./lib/cloud-data-plane-generation.mjs";
 import { ETF_FAMILY, healthKey, validateFamilyHealth, buildFamilyHealth, etfSourceMembers, buildDetailRefreshCadence } from "./lib/family-health.mjs";
 import { DATA_SUPPLY_POLICY_REGISTRY } from "./data-supply-policy-registry.mjs";
 
@@ -98,21 +98,55 @@ export async function readCanonicalReference({ root = ROOT, ref = "origin/main" 
   }
 }
 
-export async function readActiveReference({ plane, root = ROOT }) {
-  const { pointer, manifest } = await readActiveFamilyIdentity({ plane, family: ETF_FAMILY });
+export async function readActiveReference({ plane, cataloguePlane, yahooPlane, identity, root = ROOT,
+  now = new Date().toISOString() }) {
+  const { pointer, manifest } = identity ?? await readActiveFamilyIdentity({ plane, family: ETF_FAMILY });
+  // Read immutable objects named by this manifest, never working files hydrated
+  // before a later pointer read. Detail payload hashes already live in it.
+  const readJson = async (source, asset) => {
+    if (!asset) throw new Error("HEALTH_METADATA_MISSING");
+    return JSON.parse(Buffer.from(await readGenerationAssetBytes({ asset, objectStore: source.objectStore })));
+  };
   const relative = "data/computed/data-supply/etf-detail/index.json";
-  const asset = manifest.assets.find(row => row.path === relative);
-  const bytes = await fs.readFile(path.join(root, relative));
-  if (!asset || sha256Bytes(bytes) !== asset.sha256 || bytes.length !== asset.bytes) {
-    throw new Error("HEALTH_PROJECTION_GENERATION_CHANGED");
-  }
-  const servedIndex = JSON.parse(bytes);
+  const servedIndex = await readJson(plane, manifest.assets.find(row => row.path === relative));
   const cadence = servedIndex.detail_refresh_cadence;
   const { fresh_ttl_hours, emergency_lkg_ttl_days } = DATA_SUPPLY_POLICY_REGISTRY.domains.etf_detail;
   const sourcePolicy = { fresh_ttl_hours, emergency_lkg_ttl_days };
   const assets = manifest.assets.filter(row => row.path.startsWith(`${PREFIX}/`));
-  const lifecycle = JSON.parse(execFileSync("python3", [path.join(ROOT, "scripts/stockanalysis_etf_lifecycle.py"),
-    "--root", root], { encoding: "utf8", timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }));
+  const tickers = assets.map(row => path.basename(row.path, ".json"));
+  const files = {};
+  const statePaths = new Set(tickers.map(ticker => `data/admin/stockanalysis-recovery/states/etf/${ticker}.json`));
+  await runBoundedAsyncPool(manifest.assets.filter(row => statePaths.has(row.path)), async asset => {
+    files[asset.path] = await readJson(plane, asset);
+  });
+  const { manifest: catalogue } = await readActiveFamilyIdentity({ plane: cataloguePlane, family: "stockanalysis-catalogue" });
+  for (const name of ["etf_universe.json", "surfaces/etf_screener.json"]) {
+    files[`data/stockanalysis/${name}`] = await readJson(cataloguePlane,
+      catalogue.assets.find(row => row.path === `public/data/stockanalysis/${name}`));
+  }
+  const { manifest: yahoo } = await readActiveFamilyIdentity({ plane: yahooPlane, family: "yahoo-finance" });
+  const observations = await readJson(yahooPlane,
+    yahoo.assets.find(row => row.path === "data/yf/_acquisition-state.json"));
+  if (observations.schema_version !== "yahoo-generation-observations/v1") throw new Error("HEALTH_YAHOO_OBSERVATIONS_INVALID");
+  for (const ticker of tickers) {
+    const saved = observations.tickers?.[ticker];
+    if (saved?.terminal) files[`data/admin/yahoo-batch-quote-history/tickers/${ticker}.json`] = {
+      ...saved, schema_version: "yahoo-batch-quote-history-state/v1", ticker,
+      resolution_state: "terminal_provider_unsupported",
+    };
+  }
+  // Reuse the lifecycle classifier with frozen metadata, as its Git reader does.
+  // It needs member names and observations, not 900 MB of ETF/Yahoo price data.
+  const lifecycle = JSON.parse(execFileSync("python3", ["-c", `
+import json, sys
+from types import SimpleNamespace
+sys.path.insert(0, sys.argv[1])
+from stockanalysis_etf_lifecycle import membership
+data = json.load(sys.stdin)
+inputs = SimpleNamespace(detail_tickers=set(data["tickers"]), read=data["files"].get)
+print(json.dumps(membership(inputs, sys.argv[2])))
+`, path.join(root, "scripts"), now], { input: JSON.stringify({ tickers, files }),
+    encoding: "utf8", timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }));
   return { kind: "active_generation", generation_id: manifest.generation_id,
     manifest_sha256: pointer.active.manifest_sha256, prefix: PREFIX,
     total_bytes: assets.reduce((sum, row) => sum + row.bytes, 0), assets, lifecycle,
@@ -145,8 +179,8 @@ function validateSnapshot(snapshot, { runId, runAttempt, now }) {
     || !Array.isArray(snapshot.reference.lifecycle?.live_catalogue_gaps)) throw new Error("HEALTH_LIFECYCLE_REFERENCE_INVALID");
 }
 
-export async function prepareHealth({ plane, reference, runId, runAttempt, now = new Date().toISOString() }) {
-  const { pointer, manifest } = await readActiveFamilyIdentity({ plane, family: ETF_FAMILY });
+export async function prepareHealth({ plane, reference, identity, runId, runAttempt, now = new Date().toISOString() }) {
+  const { pointer, manifest } = identity ?? await readActiveFamilyIdentity({ plane, family: ETF_FAMILY });
   const snapshot = { schema_version: SNAPSHOT_SCHEMA, family: ETF_FAMILY, run_id: runId,
     run_attempt: runAttempt, observed_at: now, pointer, manifest, reference };
   snapshot.digest = sha256Canonical(snapshot);
@@ -188,21 +222,41 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     try { record = await readHealthRecord(bucket); } catch { record = null; }
     const needed = record?.observed_at.slice(0, 10) !== new Date().toISOString().slice(0, 10);
     if (env.GITHUB_OUTPUT) await fs.appendFile(env.GITHUB_OUTPUT, `needed=${needed}\n`);
-    console.log(JSON.stringify({ needed }));
+    console.log(JSON.stringify({ needed, observed_at: record?.observed_at ?? null,
+      generation_id: record?.plane?.generation_id ?? null }));
     return;
   }
   const plane = createDefaultMaterializePlane(config);
   const binding = { runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT };
+  const prepare = async () => {
+    const identity = await readActiveFamilyIdentity({ plane, family: ETF_FAMILY });
+    const now = new Date().toISOString();
+    const reference = await readActiveReference({ plane, identity, now,
+      cataloguePlane: createDefaultMaterializePlane({ ...config, family: "stockanalysis-catalogue" }),
+      yahooPlane: createDefaultMaterializePlane({ ...config, family: "yahoo-finance" }) });
+    return prepareHealth({ plane, reference, identity, ...binding, now });
+  };
   if (mode === "prepare") {
-    const reference = await readActiveReference({ plane });
-    const snapshot = await prepareHealth({ plane, reference, ...binding });
+    const snapshot = await prepare();
     await fs.mkdir(path.dirname(filename), { recursive: true });
     await fs.writeFile(filename, JSON.stringify(snapshot));
-    console.log(JSON.stringify({ result: "prepared", members: reference.assets.length, generation_id: reference.generation_id, digest: snapshot.digest }));
+    console.log(JSON.stringify({ result: "prepared", members: snapshot.reference.assets.length, generation_id: snapshot.reference.generation_id, digest: snapshot.digest }));
   } else {
-    const snapshot = JSON.parse(await fs.readFile(filename, "utf8"));
-    console.log(JSON.stringify(await commitHealth({ plane, bucket, snapshot,
-      cycle: env.HEALTH_PUBLICATION_CYCLE || null, ...binding })));
+    let snapshot = JSON.parse(await fs.readFile(filename, "utf8"));
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        console.log(JSON.stringify(await commitHealth({ plane, bucket, snapshot,
+          cycle: env.HEALTH_PUBLICATION_CYCLE || null, ...binding })));
+        return;
+      } catch (error) {
+        if (attempt === 3 || !["HEALTH_POINTER_CHANGED_REPREPARE", "HEALTH_NEWER_OBSERVATION_PRESENT"].includes(error.message)) throw error;
+        console.log(JSON.stringify({ result: "repreparing", reason: error.message, attempt }));
+        // This job holds the same family concurrency lock as its publisher.
+        // Keep the fence: rebuild from the new snapshot instead of publishing
+        // stale observations or waiting for tomorrow's daily admission.
+        snapshot = await prepare();
+      }
+    }
   }
 }
 
