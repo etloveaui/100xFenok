@@ -499,7 +499,8 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             out = root / "data/stockanalysis"
             state_root = root / "data/admin/data-supply-state/v1"
             canonical = out / "etfs/VYMI.json"
-            self.fetcher.write_json(canonical, {**payload, "source_as_of": "2026-07-14T00:00:00Z"})
+            self.fetcher.write_json(canonical, {**payload, "source_as_of": "2026-07-14T00:00:00Z",
+                                               "raw": {"quote": {"td": "2026-07-14"}}})
             store = self.fetcher.StockAnalysisRecoveryStateStore(root / "data/admin/stockanalysis-recovery", root)
             store.record_failure("etf", "VYMI", "HTTP 503", {"run_id": "failure", "run_attempt": 1,
                                  "event_name": "workflow_dispatch", "observed_at": stamp})
@@ -512,7 +513,7 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
                 result = self.fetcher.run_one("etf", "VYMI", 1, False, collection_origin="manual",
                     recovery_store=store, recovery_run={"run_id": "901", "run_attempt": 1,
                     "event_name": "workflow_dispatch", "natural": False, "observed_at": stamp})
-            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["status"], "ok", result.get("error"))
             self.assertEqual(json.loads(canonical.read_text())["source_as_of"], "2026-07-15T00:00:00Z")
             rows = [json.loads(line) for path in (state_root / "history/observations").glob("*.jsonl")
                     for line in path.read_text().splitlines()]
@@ -1262,7 +1263,7 @@ module.main()
         self.assertTrue(unexpected_state["retry"])
         self.assertIn("TypeError: controlled uncaught schema branch", unexpected_state["latest_failure"]["error"])
 
-    def test_endpoint_canary_failure_emits_non_ready_r4_producer_failure(self) -> None:
+    def test_endpoint_canary_failure_stops_collection_for_blocked_probe(self) -> None:
         original_canary = self.fetcher.run_endpoint_canary
         original_write = self.fetcher.write_payload
         original_run = self.fetcher.subprocess.run
@@ -1276,6 +1277,8 @@ module.main()
         self.fetcher.run_endpoint_canary = lambda *_args, **_kwargs: {
             "status": "blocked",
             "counts": {"ready": 0, "probes": 1, "blocked": 1},
+            "results": [{"ticker": "SPY", "surface": "overview", "status": "blocked",
+                         "reason_code": "svelte_contract_drift"}],
         }
         self.fetcher.write_payload = lambda *_args, **_kwargs: None
         self.fetcher.subprocess.run = fake_run
@@ -3675,7 +3678,7 @@ module.main()
         self.assertEqual(policy["quota_policy"]["pending_retry_reserved"], 1)
         self.assertEqual(rows[2]["age_hours"], 240, "the selector must not rewrite source ages")
 
-    def test_natural_tiers_first_pass_precedes_recurring_deadline(self) -> None:
+    def test_natural_tiers_recurring_deadline_precedes_first_pass(self) -> None:
         now = datetime(2026, 10, 20, tzinfo=timezone.utc)
         rows = [{"ticker": name, "age_hours": age * 24, "reason": "fresh",
                  "prior_failures": 0, "priority": 1, "reason_priority": 99,
@@ -3686,8 +3689,12 @@ module.main()
         with patch.object(self.fetcher, "NATURAL_GENERAL_TIER2_SIZE", 1):
             selected, _ = self.fetcher.select_natural_general_incremental_candidates(
                 rows, contexts, now_dt=now, limit=1)
-            self.assertEqual(selected[0]["ticker"], "FIRST")
-            self.assertIn("first_pass", selected[0]["selection_reason"])
+            self.assertEqual(selected[0]["ticker"], "RECUR")
+            self.assertIn("source_deadline", selected[0]["selection_reason"])
+            selected, _ = self.fetcher.select_natural_general_incremental_candidates(
+                rows, contexts, now_dt=now, limit=2)
+            self.assertEqual([row["ticker"] for row in selected], ["RECUR", "FIRST"])
+            self.assertIn("first_pass", selected[1]["selection_reason"])
             rows[0]["last_attempt_utc"] = now.isoformat()
             selected, _ = self.fetcher.select_natural_general_incremental_candidates(
                 rows, contexts, now_dt=now, limit=1)
@@ -5903,8 +5910,14 @@ module.main()
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
                 detail_path = self.fetcher.OUT_DIR / "etfs" / "VYMI.json"
                 detail_path.parent.mkdir(parents=True)
-                original_bytes = b'{"source":"stockanalysis","ticker":"VYMI","fetched_at":"2026-07-09T00:00:00Z"}\n'
-                detail_path.write_bytes(original_bytes)
+                self.fetcher.write_json(detail_path, {
+                    "schema_version": self.fetcher.SCHEMA_VERSION,
+                    "source": "stockanalysis", "asset_type": "etf", "ticker": "VYMI",
+                    "source_as_of": "2026-07-09T00:00:00Z", "fetched_at": "2026-07-09T23:00:00Z",
+                    "normalized": {"overview": {"aum": 1}},
+                    "raw": {"quote": {"td": "2026-07-09"}},
+                })
+                original_bytes = detail_path.read_bytes()
                 self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": self.fetcher.SCHEMA_VERSION,
                     "source": "stockanalysis",
@@ -6197,20 +6210,21 @@ module.main()
                     public.write_bytes(finance.read_bytes())
                     return [path.read_bytes() for path in paths]
 
-                seed()
-                self.fetcher.publish_yahoo_etf_fallback_pair(
-                    ticker, candidate_provider, candidate_detail, mirror_public=True
-                )
-                self.assertEqual(json.loads(finance.read_bytes()), candidate_provider)
-                self.assertEqual(json.loads(detail.read_bytes()), candidate_detail)
-                self.assertEqual(public.read_bytes(), finance.read_bytes())
+                for profile in ("daily", "etf", "full"):
+                    with self.subTest(profile=profile):
+                        seed({**existing, "profile": profile})
+                        self.fetcher.publish_yahoo_etf_fallback_pair(
+                            ticker, candidate_provider, candidate_detail, mirror_public=True
+                        )
+                        self.assertEqual(json.loads(finance.read_bytes()), candidate_provider)
+                        self.assertEqual(json.loads(detail.read_bytes()), candidate_detail)
+                        self.assertEqual(public.read_bytes(), finance.read_bytes())
 
                 cases = {
                     "wrong source": {**existing, "source": "other"},
                     "wrong schema": {**existing, "schema_version": "yf-finance/v1"},
                     "unsupported profile": {**existing, "profile": "other"},
                     "core snapshot": {**existing, "profile": "core"},
-                    "full snapshot": {**existing, "profile": "full"},
                     "wrong symbol": {**existing, "data": data(old_quote, old_dates) | {
                         "info": {**old_data["info"], "symbol": "WRONG"}}},
                     "wrong kind": {**existing, "data": data(old_quote, old_dates) | {
