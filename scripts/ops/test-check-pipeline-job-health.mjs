@@ -46,14 +46,20 @@ import {
     const workflow = deriveWorkflowWatchPolicy().watched.find(row => row.file === "r2-usage-report.yml");
     assert.ok(workflow, "the existing report must be watched on its declared schedule");
     assert.equal(workflow.failure_streak_threshold, 2);
+    assert.deepEqual(workflow.crons, ["43 */6 * * *"]);
     const run = (id, conclusion) => ({ id, event: "schedule", status: "completed", conclusion,
-      created_at: `2026-10-23T${id}:43:00Z`, run_started_at: `2026-10-23T${id}:43:00Z` });
+      created_at: `2026-10-23T${String(id).padStart(2, "0")}:43:00Z`, run_started_at: `2026-10-23T${String(id).padStart(2, "0")}:43:00Z` });
     const options = { now: Date.parse("2026-10-23T12:45:00Z") };
-    assert.equal(evaluateWorkflow(workflow, [run(12, "failure"), run(11, "success")], options).status, "ok");
-    const repeated = evaluateWorkflow(workflow, [run(12, "failure"), run(11, "failure")], options);
+    assert.equal(evaluateWorkflow(workflow, [run(12, "failure"), run(6, "success")], options).status, "ok");
+    const repeated = evaluateWorkflow(workflow, [run(12, "failure"), run(6, "failure")], options);
     assert.equal(repeated.status, "alarm");
     assert.match(buildIssueBody([repeated]), /Exit 3 means UNVERIFIED/);
-    assert.equal(evaluateWorkflow(workflow, [run(12, "success"), run(11, "failure")], options).status, "ok");
+    assert.equal(evaluateWorkflow(workflow, [run(12, "success"), run(6, "failure")], options).status, "ok");
+    const healthy = [run(0, "success")];
+    assert.equal(evaluateWorkflow(workflow, healthy, { now: Date.parse("2026-10-23T06:45:00Z") }).status, "ok",
+      "one missed six-hour slot stays quiet");
+    const absent = evaluateWorkflow(workflow, healthy, { now: Date.parse("2026-10-23T12:45:00Z") });
+    assert.ok(absent.alarm_reasons.includes("missed_schedule_window"), "two missed six-hour slots alarm");
   } finally { fs.rmSync(temp, { recursive: true, force: true }); }
 }
 

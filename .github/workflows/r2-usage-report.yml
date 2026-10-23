@@ -3,11 +3,11 @@ name: R2 Usage Report
 # Owner decision 2026-10-23: UNVERIFIED publication is allowed, but a sustained
 # measurement outage must reach the existing pipeline alarm. This existing
 # report exposes failed measurements as failed report runs; it never gates a
-# data publication. The hourly cadence uses the detector's two-run noise bound.
+# data publication. The six-hour cadence retains the detector's two-run noise bound.
 
 on:
   schedule:
-    - cron: '43 * * * *'
+    - cron: '43 */6 * * *'
   workflow_dispatch:
 
 permissions:
