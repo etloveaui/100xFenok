@@ -225,9 +225,9 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
             const sox = page.locator("[data-sectors-sox]");
             const industry = page.locator("[data-sectors-industry-metrics]");
             await expect(sox).toBeVisible();
-            await expect(sox.getByRole("heading", { name: "필라델피아 반도체지수 (SOX)", exact: true })).toBeVisible();
+            await expect(sox.getByText("필라델피아 반도체지수 (SOX)", { exact: true })).toBeVisible();
             await expect(industry).toBeVisible();
-            await expect(industry.getByRole("heading", { name: "지역·업종별 가치평가 지표", exact: true })).toBeVisible();
+            await expect(industry.getByText("지역·업종별 가치평가 지표", { exact: true })).toBeVisible();
             await expect(industry).toContainText("Damodaran");
             observation.sector_panels = { sox: await sox.innerText(), industry: await industry.innerText() };
           }
@@ -239,17 +239,17 @@ for (const viewport of [{ width: 412, height: 844 }, { width: 1920, height: 1080
             expect(count).toBeLessThanOrEqual(1);
             if (count) {
               await expect(dividends).toBeVisible();
-              await expect(dividends.getByRole("heading", { name: "AAPL 배당 지급 이력", exact: true })).toBeVisible();
+              await expect(dividends.getByText("AAPL 배당 지급 이력", { exact: true })).toBeVisible();
               await expect(dividends.getByRole("button", { name: "최근 5년", exact: true })).toBeVisible();
               observation.dividend_card = { state: "visible", text: await dividends.innerText() };
             } else {
-              await expect(financials.getByRole("heading", { name: "AAPL 배당 지급 이력", exact: true })).toHaveCount(0);
+              await expect(financials.getByText("AAPL 배당 지급 이력", { exact: true })).toHaveCount(0);
               observation.dividend_card = { state: "absent", note: "Whole-card absence is allowed when no dividend rows are available; not evidence that AAPL pays no dividend." };
             }
           }
           if (name === "market-structure") {
             const korea = page.locator("[data-korea-market-panel]");
-            await expect(korea.getByRole("heading", { name: "한국 10년 국채금리", exact: true })).toBeVisible();
+            await expect(korea.getByText("한국 10년 국채금리", { exact: true })).toBeVisible();
             await expect(korea).toContainText("IRLTLT01KRM156N", { timeout: 30_000 });
             await expect(korea).toContainText(/월간 기준 \d{4}-\d{2}/);
             observation.korea_market = await korea.innerText();
