@@ -681,6 +681,15 @@ const surfaces = [
     { as_of: screenerAsOf, ...sourceStamp(productStampEvidence.screener.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.screener },
   ),
   surface(
+    "brief_digest",
+    "/brief/digest/[date]",
+    "데일리 다이제스트",
+    "Briefing",
+    [familySourceCheck("briefing", "브리핑 발행 신선도")],
+    "브리핑 제품군의 최신 발행 기준으로 다이제스트 경로 상태를 측정합니다.",
+    sourceStamp(familyHealth.get("briefing")?.oldest_source_date),
+  ),
+  surface(
     "admin_data_lab",
     "/admin/data-lab",
     "Admin Data Lab",

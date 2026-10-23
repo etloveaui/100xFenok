@@ -10,6 +10,9 @@ import sys
 import time
 
 AGE_SECONDS = 7 * 86400
+# Isolated Actions runner clones from GitHub into its own work dir. The lead's
+# read-only audit found no gitlinks or alternates referencing our work copies.
+EXCLUDED_RUNNER_ROOT = Path("/data/fenok-update")
 SCRIPT_SUFFIXES = {".py", ".sh", ".mjs", ".js", ".cjs", ".service", ".timer"}
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__", "site-packages"}
 
@@ -31,6 +34,8 @@ def no_links(path):
 
 
 def allowed(path):
+    if path == EXCLUDED_RUNNER_ROOT or EXCLUDED_RUNNER_ROOT in path.parents:
+        return False
     if not no_links(path) or Path("/data") not in path.parents:
         return False
     relative = path.relative_to("/data")
@@ -75,15 +80,19 @@ def reference_roots():
              Path("/usr/lib/systemd/system"), home / ".local/bin", home / ".local/lib",
              Path("/etc/cron.d"), Path("/etc/cron.daily"), Path("/etc/cron.weekly")]
     for root in Path("/data").iterdir():
-        if root.name != "lost+found" and root.is_dir() and no_links(root):
+        if root != EXCLUDED_RUNNER_ROOT and root.name != "lost+found" and root.is_dir() and no_links(root):
             roots.extend([root / "scripts", root / "ops"])
     return [root for root in roots if root.is_dir()]
+
+
+def scan_error(error):
+    raise error
 
 
 def reference_corpus():
     contents = []
     for root in reference_roots():
-        for base, dirs, files in os.walk(root, followlinks=False):
+        for base, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
             dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not (Path(base) / d).is_symlink()]
             for name in files:
                 path = Path(base) / name
@@ -101,7 +110,7 @@ def reference_corpus():
 def scan_copies(root):
     if not root.is_dir() or not no_links(root):
         return
-    for base, dirs, files in os.walk(root, followlinks=False):
+    for base, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
         here = Path(base)
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not (here / d).is_symlink()]
         if (here / ".git").exists():
@@ -159,11 +168,13 @@ def main():
     repo = args.repo
     if sys.platform != "linux" or not no_links(repo) or not product_origin(repo):
         raise RuntimeError("A1 product checkout is required")
+    print(json.dumps({"path": str(EXCLUDED_RUNNER_ROOT), "action": "skip",
+                      "reason": "isolated_actions_runner"}), flush=True)
     before = shutil.disk_usage("/data")
     registered = worktrees(repo)
     candidates = {p for p in registered if allowed(p)}
     for parent in Path("/data").iterdir():
-        if parent.name == "lost+found" or not no_links(parent) or not parent.is_dir():
+        if parent == EXCLUDED_RUNNER_ROOT or parent.name == "lost+found" or not no_links(parent) or not parent.is_dir():
             continue
         candidates.update(scan_copies(parent / "_tmp"))
         if parent.name.startswith("wt-"):

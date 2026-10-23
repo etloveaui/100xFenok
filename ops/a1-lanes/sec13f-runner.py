@@ -274,25 +274,28 @@ def main():
         args.converter_root = args.converter_root.resolve()
     elif LANE_ID == "sec_13f":
         parser.error("SEC 13F requires --converter-root")
-    if sys.platform != "linux":
-        raise RuntimeError("This producer runs on the authorized A1 Linux host")
-    if git(args.repo, "status", "--porcelain"):
-        raise RuntimeError("Collector checkout is dirty; preserve it and stop")
-    if git(args.repo, "remote", "get-url", "origin") != "git@github-100xf-a1:etloveaui/100xFenok.git":
-        raise RuntimeError("Collector is not bound to the existing A1 product remote")
-    # The collector owns this checkout and is serialized by the service flock.
-    # Provider files are ignored runtime inputs after the generation cutover.
-    git(args.repo, "fetch", "origin", "main")
-    git(args.repo, "merge", "--ff-only", "origin/main")
     runtime = args.state_root / "runs" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     runtime.mkdir(parents=True)
     env = dict(os.environ, RUNNER_TEMP=str(runtime))
     reconciled = reconcile_state(read_json(args.repo / STATUS_PATH, {}),
                                  read_json(args.state_root / "last-run.json", {}))
     outcome, error, generation = "failed", None, None
-    served_clock = (None, None)
+    previous_run = reconciled.get("last_run") or {}
+    served_clock = (previous_run.get("source_quarter"), previous_run.get("source_as_of"))
     collected_clock = served_clock
+    status_publish_allowed = False
     try:
+        if sys.platform != "linux":
+            raise RuntimeError("This producer runs on the authorized A1 Linux host")
+        if git(args.repo, "remote", "get-url", "origin") != "git@github-100xf-a1:etloveaui/100xFenok.git":
+            raise RuntimeError("Collector is not bound to the existing A1 product remote")
+        # Status-only publication uses a temporary index and preserves dirty files.
+        status_publish_allowed = True
+        if git(args.repo, "status", "--porcelain"):
+            raise RuntimeError("Collector checkout is dirty; preserve it and stop")
+        git(args.repo, "fetch", "origin", "main")
+        git(args.repo, "merge", "--ff-only", "origin/main")
+        reconciled = reconcile_state(reconciled, read_json(args.repo / STATUS_PATH, {}))
         if LANE_ID == "fdic_tier1":
             basis = json.loads(command(["node", "scripts/materialize-cloud-data-plane-family.mjs",
                                         "--family", family, "--manifest-prefix", "public/data/macro",
@@ -330,10 +333,11 @@ def main():
         outcome, error = "failed", str(exc)
     finished = _now()
     state = build_state(outcome, error, collected_clock, served_clock, reconciled, 0,
-                        finished, args.publish, publication="published" if args.publish else "none")
+                        finished, args.publish,
+                        publication="published" if args.publish and status_publish_allowed else "none")
     state["last_run"]["generation_id"] = generation
     write_json(args.state_root / "last-run.json", state)
-    if args.publish:
+    if args.publish and status_publish_allowed:
         try:
             publication = publish_status_only(args, state, runtime / "status.index")
             state["last_run"]["status_publication"] = publication
