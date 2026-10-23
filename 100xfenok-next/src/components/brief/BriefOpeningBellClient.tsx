@@ -65,9 +65,21 @@ export default function BriefOpeningBellClient({ date }: { date: string }) {
     Promise.all([
       fetchJsonOrNull<unknown>(briefOpeningBellDataUrl(date)),
       fetch(BRIEF_OPENING_BELL_PACK_URL).then((r) => (r.ok ? r.text() : null)).catch(() => null),
-    ]).then(([doc, pack]) => {
+    ]).then(async ([doc, pack]) => {
       if (cancelled) return;
-      setPage(pack && isOpeningBell(doc, date) ? bindOpeningBellPack(pack, doc) : null);
+      if (!pack || !isOpeningBell(doc, date)) {
+        setPage(null);
+        return;
+      }
+      const follows = (doc as BriefDigest & { follows?: { url?: string } }).follows;
+      let available = false;
+      if (follows?.url) {
+        available = await fetch(follows.url, { method: "HEAD", signal: AbortSignal.timeout(5000) })
+          .then((r) => r.status === 200).catch(() => false);
+      }
+      // A published JSON anchor can precede its page deployment. Keep its text while the page is held.
+      const readable = follows && !available ? { ...doc, follows: { ...follows, url: "" } } : doc;
+      if (!cancelled) setPage(bindOpeningBellPack(pack, readable));
     });
     return () => {
       cancelled = true;
