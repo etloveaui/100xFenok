@@ -1,6 +1,7 @@
 "use client";
 
 import EarningsOverview from "@/components/earnings/EarningsOverview";
+import dynamic from "next/dynamic";
 
 import { Fragment, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
@@ -25,14 +26,14 @@ import {
   deriveProfitabilityEstimates,
 } from "@/app/screener/StockDetailPanel";
 import type { F13Entry } from "@/app/screener/StockDetailPanel";
-import EdgarSummaryClient from "@/components/filings/EdgarSummaryClient";
 import {
   loadEdgarKoreanSummariesForTicker,
   edgarFilingsForTicker,
   type EdgarKoreanSummaryFilingEntry,
 } from "@/lib/edgarKoreanSummaries";
-import { renderYfTab, loadIndustryBenchmarks, resolveIndustryBench, formatMoney, formatCompactMoney, yfFinanceForDisplay, latestYfRecommendation } from "./StockTabs";
-import type { IndustryBench } from "./StockTabs";
+import { loadIndustryBenchmarks, resolveIndustryBench, yfFinanceForDisplay, latestYfRecommendation } from "./StockTabData";
+import { formatMoney, formatCompactMoney } from "@/lib/format";
+import type { IndustryBench } from "./StockTabData";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
 import { formatDateish, formatSignedPercent } from "@/lib/format";
@@ -72,6 +73,14 @@ import {
   parseEtfDataSupply,
   type EtfDataSupply,
 } from "@/lib/data-supply-etf-ui";
+
+// Tab content downloads when selected; direct tab URLs retain server rendering.
+const YfTab = dynamic(() => import("./StockTabs").then(module => module.YfTab), {
+  loading: SkeletonSection,
+});
+const EdgarSummaryClient = dynamic(() => import("@/components/filings/EdgarSummaryClient"), {
+  loading: SkeletonSection,
+});
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -3347,7 +3356,7 @@ export default function StockDetailClient({
         {activeStockTab === "financials" && <EarningsOverview ticker={symbol} />}
         {yfAvailable ? (
           <section className="panel stock-tab-panel">
-            <div className="panel-b">{renderYfTab(activeStockTab, yfData, industryBench, displayPrice)}</div>
+            <div className="panel-b"><YfTab tab={activeStockTab} data={yfData} industry={industryBench} quotePrice={displayPrice} /></div>
           </section>
         ) : null}
         {showTabSkeleton ? (
@@ -3523,7 +3532,7 @@ export default function StockDetailClient({
                 {yfAvailable ? (
                   <div data-stock-tab-card="financials-yf">
                     <h3 className="cp-stock-tab-card__subheading">Yahoo Finance 재무제표 상세</h3>
-                    {renderYfTab("financials", yfData, industryBench)}
+                    <YfTab tab="financials" data={yfData} industry={industryBench} />
                   </div>
                 ) : null}
                 <div data-stock-tab-card="financial-candidate">
@@ -3605,7 +3614,7 @@ export default function StockDetailClient({
                 <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
               </summary>
               <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
-                {yfAvailable ? renderYfTab("statistics", yfData, industryBench) : <p className="text-sm text-slate-500">Yahoo Finance 데이터가 아직 준비되지 않았습니다.</p>}
+                {yfAvailable ? <YfTab tab="statistics" data={yfData} industry={industryBench} /> : <p className="text-sm text-slate-500">Yahoo Finance 데이터가 아직 준비되지 않았습니다.</p>}
               </div>
             </details>
           </>
@@ -3659,7 +3668,7 @@ export default function StockDetailClient({
                 {yfAvailable ? (
                   <div>
                     <h3 className="cp-stock-tab-card__subheading">Yahoo Finance 애널리스트 추정치 상세</h3>
-                    {renderYfTab("estimates", yfData, industryBench, displayPrice)}
+                    <YfTab tab="estimates" data={yfData} industry={industryBench} quotePrice={displayPrice} />
                   </div>
                 ) : null}
               </div>
@@ -3704,7 +3713,7 @@ export default function StockDetailClient({
                   <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
                 </summary>
                 <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
-                  {renderYfTab("ownership", yfData, industryBench)}
+                  <YfTab tab="ownership" data={yfData} industry={industryBench} />
                 </div>
               </details>
             ) : null}
