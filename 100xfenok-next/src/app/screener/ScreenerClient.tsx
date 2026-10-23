@@ -37,6 +37,7 @@ import ScreenerDetailSheet from "./ScreenerDetailSheet";
 import ScreenerFilterSheet from "./ScreenerFilterSheet";
 import ScreenerDiscover from "./ScreenerDiscover";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
+import ScreenerAnalysisTools from "./ScreenerAnalysisTools";
 import { SCREENER_QUESTION_CARDS, type QuestionCardDef, type QuestionCardId } from "@/lib/screener/question-cards";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import { holdingChangeFor, loadGuruHoldersIndex } from "@/lib/superinvestors/ticker-evidence";
@@ -1813,8 +1814,6 @@ export default function ScreenerClient({
     const target = snapshot.scrollY;
     let frame: number | null = null;
     let finished = false;
-    let observer: ResizeObserver | null = null;
-    let timeout: number | undefined;
     const inputEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     const cleanup = () => {
       finished = true;
@@ -1853,9 +1852,9 @@ export default function ScreenerClient({
     const schedule = () => {
       if (!finished && frame === null) frame = window.requestAnimationFrame(() => restore());
     };
-    observer = new ResizeObserver(schedule);
+    const observer = new ResizeObserver(schedule);
+    const timeout = window.setTimeout(() => restore(true), 2_000);
     observer.observe(document.body);
-    timeout = window.setTimeout(() => restore(true), 2_000);
     for (const event of inputEvents) window.addEventListener(event, cancel, { passive: true });
     schedule();
     return cleanup;
@@ -3351,6 +3350,15 @@ export default function ScreenerClient({
           </div>
         </div>
       </section>
+
+      {dataReady ? (
+        <ScreenerAnalysisTools
+          stocks={sorted}
+          selectedStocks={selectedRows}
+          sourceDate={sourceDate}
+          marketFactsDate={marketFactsDate}
+        />
+      ) : null}
 
       {/* Filter bar — the toggle lives in the toolbar row; the deck opens under it. */}
       {canvasPlusPreview ? (filterDeckOpen || activeFilterChips.length > 0 ? (
