@@ -96,7 +96,6 @@ export async function GET() {
         enabledToolIds: DEFAULT_LIVE_ENABLED_TOOL_IDS,
         enabledToolIdsByMode: {
           fenok: getDefaultLiveEnabledToolIds("fenok"),
-          mona: getDefaultLiveEnabledToolIds("mona"),
         },
         registry: getLiveToolMetadata(),
         searchSelectionPolicy: LIVE_SEARCH_SELECTION_POLICY,
