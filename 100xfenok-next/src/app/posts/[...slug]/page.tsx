@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AppShell from "@/components/shell/AppShell";
 import ShellChromeOff from "@/components/shell/ShellChromeOff";
+import NativePost from "@/components/posts/NativePost";
 import RouteEmbedFrame from "@/components/RouteEmbedFrame";
 import { ROUTES } from "@/lib/routes";
 import { getDesignVersionFromSearchParams } from "@/lib/design/version";
@@ -75,6 +76,16 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
   const post = await readPostMetadataBySlug(slug);
   if (!post) {
     notFound();
+  }
+
+  if (post.nativePostId) {
+    const article = <NativePost id={post.nativePostId} />;
+    if (version === "v1") return <ShellChromeOff>{article}</ShellChromeOff>;
+    return <AppShell active="posts" title={post.title} backHref={ROUTES.posts}>
+      <div data-posts-detail-surface data-posts-detail-route-owner="native-post" className="min-w-0">
+        {article}
+      </div>
+    </AppShell>;
   }
 
   const frame = (

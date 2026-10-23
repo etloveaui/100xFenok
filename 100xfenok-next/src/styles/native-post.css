@@ -1,0 +1,72 @@
+/* Article-specific styles stay inside the native post surface. */
+.native-post { min-width: 0; overflow-wrap: anywhere; }
+.native-post img { max-width: 100%; }
+
+        .native-post-playbook {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .native-post-playbook .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .native-post-playbook .chart-container {
+                height: 350px;
+            }
+        }
+
+        .native-post-playbook .flow-arrow {
+            font-size: 2rem;
+            line-height: 1;
+            color: #FF6B6B;
+        }
+
+        .native-post-playbook .flow-box {
+            border: 2px solid #4ECDC4;
+            background-color: #F7FFF7;
+        }
+
+        .native-post-playbook .flow-box-alt {
+            border: 2px solid #FF6B6B;
+            background-color: #FFF5F5;
+        }
+
+        .native-post-playbook .indicator-card {
+            background-color: white;
+            border-left: 5px solid #FFC300;
+        }
+
+        .native-post-playbook .scenario-card {
+            background-color: #ffffff;
+            border-top: 5px solid;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .native-post-playbook .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .native-post-playbook .scenario-bull {
+            border-color: #4ECDC4;
+        }
+
+        /* Green for Bull */
+        .native-post-playbook .scenario-base {
+            border-color: #4A90E2;
+        }
+
+        /* Blue for Base */
+        .native-post-playbook .scenario-bear {
+            border-color: #FF6B6B;
+        }
+
+        /* Red for Bear */
+    

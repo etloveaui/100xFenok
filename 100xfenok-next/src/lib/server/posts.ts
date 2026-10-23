@@ -13,6 +13,15 @@ export type PostCatalogEntry = {
   badgeClass: string;
 };
 
+const NATIVE_POSTS = {
+  "/posts-raw/2025-06-22_playbook.html": "playbook",
+} as const;
+export type NativePostId = typeof NATIVE_POSTS[keyof typeof NATIVE_POSTS];
+
+function nativePostId(publicPath: string): NativePostId | null {
+  return NATIVE_POSTS[publicPath as keyof typeof NATIVE_POSTS] ?? null;
+}
+
 const POST_PUBLIC_ROOT = "/posts-raw";
 const POST_HTML_FILE_SET = new Set<string>(POST_HTML_FILES);
 
@@ -159,5 +168,6 @@ export async function readPostMetadataBySlug(slug: string[]) {
     title,
     description,
     publicPath,
+    nativePostId: nativePostId(publicPath),
   };
 }
