@@ -42,6 +42,7 @@ import { readPriceTargets } from "@/lib/stock/price-target";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { derivedBetaLabel } from "@/lib/derived-beta";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
+import StockDividendsCard from "./StockDividendsCard";
 import StockConnectionsRail from "./StockConnectionsRail";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import { estimateCompletenessFromSeries, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
@@ -3489,6 +3490,7 @@ export default function StockDetailClient({
     return (
       <div className="cp-stock-tab-financials" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
         <EarningsOverview ticker={symbol} />
+        <StockDividendsCard key={symbol} ticker={symbol} />
         {showSkeleton ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
