@@ -156,6 +156,8 @@ jobs:
           const { readFile } = await import('node:fs/promises');
           const signals = JSON.parse(await readFile(path.join(repoRoot, 'data/computed/fenok_signals.json'), 'utf8'));
           const tickers = new Set(signals.rows.filter(row => row.market_scope === 'us').map(row => String(row.ticker).toUpperCase()));
+          // The tracking benchmark is an input even though the universe contains stocks only.
+          tickers.add('SPY');
           for (const [inputFamily, includeAsset] of [
             ['gdelt-news-tone', asset => asset.path === 'data/computed/fenok_news_tone_proxy.json'],
             ['yahoo-finance', asset => asset.privacy_class === 'public' && asset.path.startsWith('public/data/yf/finance/')
