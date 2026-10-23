@@ -1,8 +1,8 @@
 import { defineConfig } from "@playwright/test";
 import fs from "node:fs";
-import { liveRequestHeaders } from "../scripts/lib/live-request-headers.mjs";
 
 const isCI = Boolean(process.env.CI);
+const isLiveObservation = process.env.SUITE === "live";
 const visualPort = process.env.QA_VISUAL_PORT ?? process.env.PORT ?? "3107";
 const baseURL = process.env.QA_BASE_URL ?? `http://127.0.0.1:${visualPort}`;
 const shouldStartServer = !process.env.QA_BASE_URL;
@@ -10,14 +10,18 @@ const localChromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google C
 const chromiumExecutablePath =
   process.env.QA_CHROME_PATH ?? (!isCI && fs.existsSync(localChromePath) ? localChromePath : undefined);
 
-export default defineConfig({
+// Load the existing ESM helper natively; Playwright's CJS transform cannot
+// evaluate its import.meta CLI guard through a static TS import.
+export default (async () => {
+const { liveRequestHeaders } = await import("../scripts/lib/live-request-headers.mjs");
+return defineConfig({
   testDir: "tests/visual",
   timeout: 45_000,
   outputDir: "test-results/visual",
-  preserveOutput: "failures-only",
+  preserveOutput: isLiveObservation ? "always" : "failures-only",
   fullyParallel: false,
   forbidOnly: isCI,
-  retries: isCI ? 1 : 0,
+  retries: isLiveObservation ? 0 : isCI ? 1 : 0,
   failOnFlakyTests: isCI,
   workers: 1,
   reporter: [
@@ -41,10 +45,10 @@ export default defineConfig({
     locale: "en-US",
     timezoneId: "UTC",
     colorScheme: "light",
-    reducedMotion: "reduce",
+    contextOptions: { reducedMotion: "reduce" },
     serviceWorkers: "block",
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    trace: isLiveObservation ? "off" : "retain-on-failure",
+    screenshot: isLiveObservation ? "off" : "only-on-failure",
     video: "off",
     extraHTTPHeaders: liveRequestHeaders(),
     launchOptions: {
@@ -52,9 +56,14 @@ export default defineConfig({
       ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),
     },
   },
-  projects: [
+  projects: isLiveObservation ? [{
+    name: "live-observation",
+    testMatch: "live-observation.spec.ts",
+    use: { browserName: "chromium", deviceScaleFactor: 1 },
+  }] : [
     {
       name: "desktop-1440",
+      testIgnore: "live-observation.spec.ts",
       use: {
         browserName: "chromium",
         viewport: { width: 1440, height: 900 },
@@ -63,6 +72,7 @@ export default defineConfig({
     },
     {
       name: "mobile-390",
+      testIgnore: "live-observation.spec.ts",
       use: {
         browserName: "chromium",
         viewport: { width: 390, height: 844 },
@@ -84,3 +94,4 @@ export default defineConfig({
       }
     : undefined,
 });
+})();

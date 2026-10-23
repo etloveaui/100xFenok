@@ -15,6 +15,7 @@ on:
         options:
           - all
           - journey
+          - live
 
 concurrency:
   group: qa-visual-${{ github.ref }}
@@ -38,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [desktop-1440, mobile-390]
+        project: ${{ fromJSON(inputs.suite == 'live' && '["live-observation"]' || '["desktop-1440","mobile-390"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -64,6 +65,18 @@ jobs:
         run: |
           case "$SUITE" in
             all) npm run qa:visual -- --project="$PROJECT";;
+            live) npm run qa:visual -- --project="$PROJECT";;
             journey) npm run qa:visual -- tests/visual/journey.spec.ts --project="$PROJECT";;
             *) echo "unsupported visual suite" >&2; exit 64;;
           esac
+
+      - name: Upload visual observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-visual-${{ matrix.project }}-${{ github.run_id }}
+          path: |
+            100xfenok-next/test-results/visual/
+            100xfenok-next/playwright-report/visual/
+          if-no-files-found: warn
+          retention-days: 7
