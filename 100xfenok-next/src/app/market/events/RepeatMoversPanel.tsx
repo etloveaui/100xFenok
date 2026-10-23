@@ -34,7 +34,7 @@ function parseSummary(value: unknown): RepeatMovers | null {
 }
 
 export default function RepeatMoversPanel() {
-  const [state, setState] = useState<{ doc: RepeatMovers | null; loaded: boolean; failed: boolean }>({ doc: null, loaded: false, failed: false });
+  const [state, setState] = useState<{ doc: RepeatMovers | null; loaded: boolean; failed: boolean; checkedAt: string | null }>({ doc: null, loaded: false, failed: false, checkedAt: null });
   const [attempt, retry] = useState(0);
   useEffect(() => {
     let active = true;
@@ -42,7 +42,7 @@ export default function RepeatMoversPanel() {
       void fetchJsonOrNull<unknown>(URL, { force }).then(value => {
         if (!active) return;
         const doc = parseSummary(value);
-        setState(previous => ({ doc: doc ?? previous.doc, loaded: true, failed: !doc }));
+        setState(previous => ({ doc: doc ?? previous.doc, loaded: true, failed: !doc, checkedAt: new Date().toISOString() }));
       });
     };
     load(attempt > 0);
@@ -51,11 +51,9 @@ export default function RepeatMoversPanel() {
   }, [attempt]);
 
   return (
-    <Panel loading={!state.loaded} empty={state.loaded && !state.doc}
-      emptyReason="반복 등락 종목 집계를 불러오지 못했습니다" emptyActionLabel="다시 시도"
-      onEmptyAction={() => retry(value => value + 1)}>
+    <Panel loading={!state.loaded}>
       <PanelHeader eyebrow="SlickCharts" title="반복 등락 종목" />
-      {state.doc ? <div className="space-y-4 p-4" data-repeat-movers>
+      {state.doc ? <div className="space-y-4 p-4" data-repeat-movers data-repeat-movers-state="ready">
         <p className="text-xs text-slate-500">{state.doc.window_start}~{state.doc.window_end} · 양쪽 자료가 있는 {state.doc.observed_days}일 · 일별 상승·하락 TOP {state.doc.top_per_day} 등장 횟수</p>
         {state.failed ? <button type="button" onClick={() => retry(value => value + 1)} className="min-h-11 text-sm text-slate-600 underline">갱신 실패 · 이전 집계 표시 · 다시 시도</button> : null}
         <div className="grid gap-4 md:grid-cols-2">
@@ -76,6 +74,13 @@ export default function RepeatMoversPanel() {
           ))}
         </div>
         <p className="text-xs text-slate-500">SlickCharts 수집 목록 안의 빈도입니다. 누적 수익률이나 연속 상승·하락 일수를 뜻하지 않습니다.</p>
+      </div> : state.loaded ? <div className="space-y-3 p-4" data-repeat-movers data-repeat-movers-state="unavailable">
+        <div role="status" className="space-y-1 text-sm text-slate-600">
+          <p>반복 등락 종목 집계를 아직 확인할 수 없습니다.</p>
+          <p>확인 시각 <time dateTime={state.checkedAt ?? undefined}>{state.checkedAt?.replace("T", " ").replace(/\.\d{3}Z$/, " UTC")}</time> · 자료 기준일 미확인</p>
+          <p>집계 자료가 없어 상승·하락 반복 횟수를 표시하지 않습니다.</p>
+        </div>
+        <button type="button" onClick={() => retry(value => value + 1)} className="min-h-11 text-sm text-slate-600 underline">다시 시도</button>
       </div> : null}
     </Panel>
   );
