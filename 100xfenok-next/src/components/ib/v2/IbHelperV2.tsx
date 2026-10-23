@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import "@/styles/ib-guide.css";
+const IbGuideTab = dynamic(() => import("./IbGuideTab"));
 import IbNav from "./IbNav";
 import ProfileSheet from "./ProfileSheet";
 import StrategyCard from "./StrategyCard";
@@ -15,6 +18,17 @@ import { useIbHelperV2LiveData } from "./useIbHelperV2LiveData";
  * IB Helper V2 composer — responsive (mobile-first + desktop grid).
  */
 export default function IbHelperV2() {
+  const [tab, setTab] = useState<"strategy" | "guide">("strategy");
+  const [guideOpened, setGuideOpened] = useState(false);
+  const chooseTab = (next: "strategy" | "guide") => {
+    setTab(next); if (next === "guide") setGuideOpened(true);
+    window.history.replaceState(window.history.state, "", next === "guide" ? "#guide" : "#strategy");
+  };
+  useEffect(() => {
+    const sync = () => { const guide = window.location.hash === "#guide"; setTab(guide ? "guide" : "strategy"); if (guide) setGuideOpened(true); };
+    sync(); window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -49,7 +63,12 @@ export default function IbHelperV2() {
         onRefresh={refresh}
         isRefreshing={isLoading}
       />
+      <div className="ib-section-tabs" role="tablist" aria-label="IB Helper 화면">
+        <button type="button" role="tab" aria-selected={tab === "strategy"} aria-controls="ib-strategy-panel" onClick={() => chooseTab("strategy")}>내 전략</button>
+        <button type="button" role="tab" aria-selected={tab === "guide"} aria-controls="ib-guide-panel" onClick={() => chooseTab("guide")}>가이드 · 계산기</button>
+      </div>
       <div className={`ib-scroll${isDesktop ? " ib-scroll--desk" : ""}`}>
+        <div id="ib-strategy-panel" hidden={tab !== "strategy"}>
         {sCount === 0 ? (
           <ZeroState />
         ) : isDesktop ? (
@@ -89,8 +108,10 @@ export default function IbHelperV2() {
             <CashCard alertState={alertState} skeleton={skeleton} profile={profile} cash={cash} />
           </>
         )}
+        </div>
+        <div id="ib-guide-panel" hidden={tab !== "guide"}>{guideOpened ? <IbGuideTab /> : null}</div>
       </div>
-      {!isDesktop ? <FootNav active="strategy" /> : null}
+      {!isDesktop ? <FootNav active={tab} onGuide={() => chooseTab("guide")} onStrategy={() => chooseTab("strategy")} /> : null}
       <ProfileSheet
         open={sheetOpen}
         profiles={profiles}
