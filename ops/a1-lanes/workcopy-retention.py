@@ -99,14 +99,23 @@ def reference_corpus():
 
 
 def scan_copies(root):
-    if not root.is_dir() or not no_links(root):
-        return
-    for base, dirs, files in os.walk(root, followlinks=False):
-        here = Path(base)
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not (here / d).is_symlink()]
-        if (here / ".git").exists():
-            yield here
-            dirs[:] = []
+    def scan_error(error):
+        if not isinstance(error, PermissionError):
+            raise error
+        print(json.dumps({"path": str(error.filename or root), "action": "skip",
+                          "reason": "permission_denied"}))
+
+    try:
+        if not root.is_dir() or not no_links(root):
+            return
+        for base, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
+            here = Path(base)
+            dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not (here / d).is_symlink()]
+            if (here / ".git").exists():
+                yield here
+                dirs[:] = []
+    except PermissionError as error:
+        scan_error(error)
 
 
 def eligible(path, repo, registered, handles, references):
