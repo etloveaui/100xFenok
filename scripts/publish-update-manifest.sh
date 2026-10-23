@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs in the disposable Update Manifest Actions checkout.
 set -euo pipefail
+rebuild_projection_inputs() {
 mkdir -p 100xfenok-next/public/data
 # Restore the active derived state before rebuilding so KPI history, metadata
 # and membership deltas start from the promoted generation.
@@ -42,16 +43,36 @@ stockanalysis_basis="$(node scripts/materialize-cloud-data-plane-family.mjs --hy
 # The projection runner hydrates the remaining macro/index families before
 # its S3 materialization validates every required source.
 bash scripts/update-manifest-projections.sh
-# Retain the existing source-generation fence without restoring a Git LKG tree.
-node --input-type=module - "$stockanalysis_basis" <<'JS'
+}
+# A source promotion while the projection runs is a normal writer race. Rehydrate
+# and rebuild from the new inputs rather than publishing stale projections or
+# treating the first race as a broken producer. Other errors still stop at once.
+for attempt in 1 2 3; do
+  rebuild_projection_inputs
+  if node --input-type=module - "$stockanalysis_basis" <<'JS'
 import {createDefaultMaterializePlane, readActiveFamilyIdentity} from './scripts/materialize-cloud-data-plane-family.mjs';
 const basis=JSON.parse(process.argv[2]), e=process.env;
 for (const [key,family] of [['etf','stockanalysis-etf-detail'],['catalogue','stockanalysis-catalogue']]) {
   const plane=createDefaultMaterializePlane({family,accountId:e.CLOUDFLARE_ACCOUNT_ID,token:e.CLOUDFLARE_API_TOKEN,endpoint:e.DATA_PLANE_ENDPOINT,writeKey:e.DATA_PLANE_WRITE_KEY});
   const {identity}=await readActiveFamilyIdentity({plane,family});
-  if (identity.generation_id!==basis[key]) throw new Error(`Projection source generation changed: ${family}`);
+  if (identity.generation_id!==basis[key]) {
+    console.warn(`Projection source generation changed: ${family} (${basis[key]} -> ${identity.generation_id})`);
+    process.exitCode=75;
+  }
 }
 JS
+  then
+    break
+  else
+    status=$?
+    if [ "$status" -ne 75 ]; then exit "$status"; fi
+    if [ "$attempt" -eq 3 ]; then
+      echo "::error::Projection sources changed during all three rebuilds; no generation published" >&2
+      exit 75
+    fi
+    echo "::notice::Projection inputs advanced; rehydrating and rebuilding (attempt $((attempt + 1))/3)"
+  fi
+done
 basis="$RUNNER_TEMP/update-manifest-platform-projections.json"
 export PUBLISH_EXPECTED_ACTIVE_GENERATION_ID="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation_id"])' "$basis")"
 export PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["manifest_sha256"])' "$basis")"

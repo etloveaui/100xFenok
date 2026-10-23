@@ -150,4 +150,77 @@ assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before
 fs.rmSync(stubBin, { recursive: true, force: true });
 fs.rmSync(mktempDir, { recursive: true, force: true });
 
+// Run the real publication wrapper against isolated input/publisher fixtures.
+// The logged incident was an input generation advancing during the rebuild.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "umr-source-race-"));
+  try {
+    fs.mkdirSync(path.join(root, "scripts"));
+    fs.mkdirSync(path.join(root, "run"));
+    fs.writeFileSync(path.join(root, "scripts/materialize-cloud-data-plane-family.mjs"), `
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+const record = value => fs.appendFileSync('calls.log', value + '\\n');
+const count = () => fs.existsSync('build-count') ? Number(fs.readFileSync('build-count', 'utf8')) : 0;
+const catalogueGeneration = () => process.env.TEST_MODE === 'always-moving' ? 'catalogue-' + count()
+  : process.env.TEST_MODE === 'moves-once' && count() > 0 ? 'catalogue-new' : 'stable';
+export const createDefaultMaterializePlane = options => options;
+export async function materializeCloudDataPlaneFamily(options) { return { output_root: options.outputRoot }; }
+export async function installMaterializedTree() {}
+export async function readActiveFamilyIdentity({family}) {
+  if (process.env.TEST_MODE === 'read-error') throw new Error('identity unavailable');
+  return { identity: { generation_id: family === 'stockanalysis-catalogue' ? catalogueGeneration() : 'stable' } };
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  if (process.argv.includes('--hydrate-stockanalysis')) {
+    record('hydrate-stockanalysis');
+    console.log(JSON.stringify({ etf: 'stable', catalogue: catalogueGeneration() }));
+  } else if (process.argv.includes('--family')) {
+    const family = process.argv[process.argv.indexOf('--family') + 1];
+    record('hydrate-' + family);
+    console.log(JSON.stringify({ generation_id: 'basis-' + count(), manifest_sha256: 'hash-' + count() }));
+  }
+}
+`);
+    fs.writeFileSync(path.join(root, "scripts/update-manifest-projections.sh"), `#!/usr/bin/env bash
+set -e
+count=0
+if [ -f build-count ]; then count="$(cat build-count)"; fi
+printf '%s' "$((count + 1))" > build-count
+printf 'rebuild\\n' >> calls.log
+if [ "$TEST_MODE" = build-error ]; then exit 13; fi
+`);
+    fs.writeFileSync(path.join(root, "scripts/publish-cloud-data-generation.mjs"), `
+import fs from 'node:fs';
+fs.appendFileSync('calls.log', 'publish:' + process.env.PUBLISH_EXPECTED_ACTIVE_GENERATION_ID + ':' + process.env.PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256 + '\\n');
+`);
+    const wrapper = path.join(repoRoot, "scripts/publish-update-manifest.sh");
+    for (const [mode, expectedExit, builds, publishes] of [
+      ["stable", 0, 1, 1],
+      ["moves-once", 0, 2, 1],
+      ["always-moving", 75, 3, 0],
+      ["build-error", 13, 1, 0],
+      ["read-error", 1, 1, 0],
+    ]) {
+      for (const file of ["calls.log", "build-count"]) fs.rmSync(path.join(root, file), { force: true });
+      const result = spawnSync("bash", [wrapper], {
+        cwd: root, encoding: "utf8",
+        env: { ...process.env, RUNNER_TEMP: path.join(root, "run"), TEST_MODE: mode },
+      });
+      assert.equal(result.status, expectedExit, `${mode}: ${result.stderr}`);
+      const calls = fs.readFileSync(path.join(root, "calls.log"), "utf8").trim().split("\n");
+      assert.equal(calls.filter(call => call === "rebuild").length, builds, mode);
+      assert.equal(calls.filter(call => call === "hydrate-stockanalysis").length, builds, mode);
+      assert.equal(calls.filter(call => call === "hydrate-platform-projections").length, builds, mode);
+      assert.equal(calls.filter(call => call.startsWith("publish:")).length, publishes, mode);
+      if (publishes) assert.equal(calls.at(-1), `publish:basis-${builds - 1}:hash-${builds - 1}`, "publish must use refreshed CAS basis");
+      if (mode === "moves-once") assert.match(result.stdout, /rehydrating and rebuilding/);
+      if (mode === "always-moving") assert.match(result.stderr, /no generation published/);
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 console.log("test-update-manifest-runner: ok");
