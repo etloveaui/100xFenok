@@ -105,8 +105,16 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           QUEUE_OUTCOME: ${{ steps.queue.outcome }}
         run: |
+          set -euo pipefail
           QUEUE_STATE_TITLE="100xFenok global-writer queue state"
-          existing="$(gh issue list --state open --search "$QUEUE_STATE_TITLE in:title" --json number --jq '.[0].number // empty')"
+          # Search indexing can omit the existing rolling issue. Enumerate the
+          # repository issues directly and keep the oldest exact-title match,
+          # including when a prior search miss already created a duplicate.
+          # pipefail prevents an API error from becoming permission to create.
+          existing="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
+            --jq '.[] | select(.pull_request == null and .title == "100xFenok global-writer queue state") | .number' \
+            | sort -n | sed -n '1p')"
           if [ -z "$existing" ]; then
             # `gh issue create` has no --json; it prints the issue URL, whose last
             # path segment is the number.
