@@ -148,7 +148,7 @@ const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mj
 // a stalled measurement from holding the publish (and its writer lock) forever.
 const GATE_TIMEOUT_MS = (() => {
   const raw = Number(process.env.PUBLISH_GATE_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : 600_000;
+  return Number.isFinite(raw) && raw > 0 ? raw : 330_000;
 })();
 const R2_BUCKET = "fenok-data-plane";
 const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
@@ -3745,6 +3745,11 @@ export async function runPublisherCli({
       env,
     });
     evidenceLog(`cost gate done: family=${args.family} verdict=${gateVerdict(gateBefore)} elapsed_ms=${Date.now() - gateBeforeStartedAt}`);
+    if (args.json) {
+      for (const line of gateBefore.stdout.split("\n").filter(line => line.startsWith("  inventory bucket="))) {
+        evidenceLog(line.trim());
+      }
+    }
     if (!args.json && gateBefore.stdout.trim()) {
       stderr(gateBefore.stdout.trim());
     }

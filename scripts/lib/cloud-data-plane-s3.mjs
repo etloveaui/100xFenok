@@ -341,26 +341,34 @@ export function createR2S3Client({
   return {
     bucket,
 
-    async listAllObjects({ deadline } = {}) {
+    async listAllObjects({ deadline, onPage } = {}) {
       const entries = [];
       let token = null;
       let pages = 0;
       const tokens = new Set();
-      do {
-        if (++pages > 100 || (token && tokens.has(token))) fail("S3_LIST_BUDGET", "listing exceeds declared budget or repeats cursor");
-        if (token) tokens.add(token);
-        const query = {
-          "list-type": "2",
-          "max-keys": String(S3_LIST_PAGE_MAX_KEYS),
-          ...(token ? { "continuation-token": token } : {}),
-        };
-        const { response, body } = await request({ method: "GET", key: "", query, deadline });
-        if (!response.ok) fail("S3_HTTP", `list http ${response.status}: ${errorSnippet(body)}`);
-        const page = parseListObjectsV2Xml(new TextDecoder().decode(body));
-        entries.push(...page.entries);
-        token = page.isTruncated ? page.nextContinuationToken : null;
-        if (page.isTruncated && !token) fail("S3_XML_INVALID", "truncated list page without a continuation token");
-      } while (token);
+      try {
+        do {
+          if (++pages > 100 || (token && tokens.has(token))) fail("S3_LIST_BUDGET", "listing exceeds declared budget or repeats cursor");
+          if (token) tokens.add(token);
+          const query = {
+            "list-type": "2",
+            "max-keys": String(S3_LIST_PAGE_MAX_KEYS),
+            ...(token ? { "continuation-token": token } : {}),
+          };
+          const { response, body } = await request({ method: "GET", key: "", query, deadline });
+          if (!response.ok) fail("S3_HTTP", `list http ${response.status}: ${errorSnippet(body)}`);
+          const page = parseListObjectsV2Xml(new TextDecoder().decode(body));
+          entries.push(...page.entries);
+          onPage?.({ objects: page.entries.length });
+          token = page.isTruncated ? page.nextContinuationToken : null;
+          if (page.isTruncated && !token) fail("S3_XML_INVALID", "truncated list page without a continuation token");
+        } while (token);
+      } catch (error) {
+        // An incomplete listing is still an error. Its observed prefix can
+        // prove a storage breach, but must never be treated as a full listing.
+        error.partialObjects = entries;
+        throw error;
+      }
       return entries;
     },
 
