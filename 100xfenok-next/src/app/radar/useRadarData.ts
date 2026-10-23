@@ -124,7 +124,7 @@ export function useRadarData(): RadarData {
       const stableSeries: SeriesPoint[] = (Array.isArray(stable?.series) ? stable.series : [])
         .map((row) => ({ date: row?.date ?? "", val: Number(row.val) }))
         .filter((row) => row.date.length === 10 && Number.isFinite(row.val));
-      setHistory({ M2SL: m2, WALCL: fredSeries(fredMacro, "WALCL"), RRPONTSYD: fredSeries(fredMacro, "RRPONTSYD"), tga: tgaSeries.slice().sort((a, b) => a.date.localeCompare(b.date)), stablecoins: stableSeries.slice().sort((a, b) => a.date.localeCompare(b.date)) });
+      setHistory({ SOFR: fredSeries(fredMacro, "SOFR"), IORB: fredSeries(fredMacro, "IORB"), WRESBAL: fredSeries(fredMacro, "WRESBAL"), GDP: fredSeries(fredMacro, "GDP"), M2SL: m2, WALCL: fredSeries(fredMacro, "WALCL"), RRPONTSYD: fredSeries(fredMacro, "RRPONTSYD"), tga: tgaSeries.slice().sort((a, b) => a.date.localeCompare(b.date)), stablecoins: stableSeries.slice().sort((a, b) => a.date.localeCompare(b.date)) });
       const stableCurrent = Number(stable?.current);
       if (!m2.length && !fedBs.length && !tgaSeries.length) {
         setFlow({ state: reached ? "missing" : "failed", snapshot: null });
