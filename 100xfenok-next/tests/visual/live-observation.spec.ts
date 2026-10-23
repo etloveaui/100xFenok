@@ -31,22 +31,30 @@ test.beforeAll(async ({ request }) => {
   } catch (error) { indexError = String(error); }
 });
 
-test("removed public development documents return 404", async ({ request }, testInfo) => {
-  const paths = [
-    "/tools/stock_analyzer/CLAUDE.md",
-    "/ib/ib-helper/DEV.md",
-    "/tools/macro-monitor/DEV.md",
+test("retired analyzer routes redirect and removed development documents return 404", async ({ request }, testInfo) => {
+  const cases = [
+    { path: "/tools/stock_analyzer/CLAUDE.md", expectedStatus: 308 },
+    { path: "/tools/stock-analyzer", expectedStatus: 308 },
+    { path: "/tools/stock-analyzer/native", expectedStatus: 308 },
+    { path: "/ib/ib-helper/DEV.md", expectedStatus: 404 },
+    { path: "/tools/macro-monitor/DEV.md", expectedStatus: 404 },
   ];
-  const statuses = await Promise.all(paths.map(async path => {
+  const statuses = await Promise.all(cases.map(async ({ path, expectedStatus }) => {
     const response = await request.get(path, {
       headers: verificationHeaders, timeout: 30_000, maxRedirects: 0,
     });
-    return { path, status: response.status() };
+    return { path, expectedStatus, status: response.status(), location: response.headers().location ?? null, url: response.url() };
   }));
   await testInfo.attach("observation", {
     body: Buffer.from(JSON.stringify(statuses, null, 2)), contentType: "application/json",
   });
-  for (const { path, status } of statuses) expect(status, path).toBe(404);
+  for (const { path, expectedStatus, status, location, url } of statuses) {
+    expect(status, path).toBe(expectedStatus);
+    if (expectedStatus === 308) {
+      expect(location, `${path} Location`).toBeTruthy();
+      expect(new URL(location!, url).href, `${path} redirect target`).toBe(new URL("/screener", url).href);
+    }
+  }
 });
 
 const radarDetail = (path: string, legacy = false) => `/radar?${legacy ? "legacy=1&" : ""}path=${encodeURIComponent(`tools/macro-monitor/details/${path}`)}`;
