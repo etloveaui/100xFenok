@@ -120,13 +120,6 @@ const PRODUCT_LITERAL_ALLOWLIST = [
   { file: "src/components/dashboard/RiskAppetiteCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (sentiment-signal), not a bare nav route" },
   { file: "src/components/dashboard/StressMonitorCard.tsx", literal: "/radar", reason: "radar deep-link query sentinel (liquidity-stress), not a bare nav route" },
 
-  // Design-studio preview files — excluded from SSOT enforcement
-  { file: "src/components/HomeDesignPreview.tsx", literal: "/", reason: "design-studio preview, excluded from route SSOT" },
-  { file: "src/components/HomeDesignPreview.tsx", literal: "/market-valuation", reason: "design-studio preview, excluded from route SSOT" },
-  { file: "src/components/HomeDesignPreview.tsx", literal: "/sectors", reason: "design-studio preview, excluded from route SSOT" },
-  { file: "src/components/HomeDesignPreview.tsx", literal: "/ib", reason: "design-studio preview, excluded from route SSOT" },
-  { file: "src/components/HomeDesignPreview.tsx", literal: "/vr", reason: "design-studio preview, excluded from route SSOT" },
-
   // Design version toggle query params
   { file: "src/components/chrome/v2/NavbarV2.tsx", literal: "/", reason: "design-version toggle (/?v2=1), all hrefs point to home with query param" },
   { file: "src/components/chrome/v3/NavbarV3.tsx", literal: "/", reason: "design-version toggle (/?v3=1), all hrefs point to home with query param" },

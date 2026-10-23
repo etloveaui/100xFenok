@@ -9,8 +9,8 @@ import {
 } from "@/lib/quote-contract";
 import { addMinutesIso } from "@/lib/data-state";
 
-const YAHOO_BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/";
-const WORKER_TICKER_BASE = "https://ticker-api.etloveaui.workers.dev/api/ticker";
+const YAHOO_BASE_URL = (process.env.FENOK_YAHOO_CHART_BASE_URL?.trim() || "https://query1.finance.yahoo.com/v8/finance/chart").replace(/\/+$/, "");
+const WORKER_TICKER_BASE = (process.env.FENOK_TICKER_API_BASE_URL?.trim() || "https://ticker-api.etloveaui.workers.dev/api/ticker").replace(/\/+$/, "");
 const FETCH_TIMEOUT_MS = 5000;
 
 type TradingPeriodWindow = {
@@ -294,7 +294,7 @@ async function fetchJsonWithTimeout(url: string) {
 }
 
 async function fetchYahooQuote(symbol: string): Promise<TickerQuote> {
-  const url = `${YAHOO_BASE_URL}${encodeURIComponent(symbol)}?interval=1d&range=5d&includePrePost=true`;
+  const url = `${YAHOO_BASE_URL}/${encodeURIComponent(symbol)}?interval=1d&range=5d&includePrePost=true`;
   const payload = await fetchJsonWithTimeout(url);
   const result = (payload as YahooPayload).chart?.result?.[0];
   if (!result) {
