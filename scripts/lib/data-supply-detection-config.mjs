@@ -441,7 +441,7 @@ const config = {
     lane({
       id: "fred_yardeni",
       label: "FRED Yardeni model",
-      members: [registryMember("fred_yardeni", ["0 10 * * 6"], [
+      members: [registryMember("fred_yardeni", ["0 10 * * 3", "0 10 * * 6"], [
         artifact("fred_yardeni_model", "data/yardney/yardney_model.json", {
           schemaVersion: schemaVersion("/meta/public_schema_version", "yardney_model_public_v1"),
           sourceSelector: pointerSource("/meta/last_update/last_public_date", "date"),

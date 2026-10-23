@@ -7,7 +7,14 @@ run-name: ${{ inputs.external_clock == 'a1-v1' && format('external-clock/a1/v1 f
 
 on:
   schedule:
-    # UTC Saturday 10:00 = KST Saturday 19:00, after the weekly FRED print.
+    # FRED posts a Friday WAAA/WBAA observation only after the Monday H.15
+    # release (Tuesday when Monday is a holiday), and the owner's weekly
+    # benchmark file lands Monday KST. A Saturday-only run therefore served a
+    # Friday that was already 8 days old and aged to 14-15 days before the next
+    # run, past the 13-day owner-weekly bound every Friday. Wednesday 10:00 UTC
+    # is the first run after both inputs exist, holiday weeks included; Saturday
+    # stays as the retry. A run with no strictly newer Friday is a no-op.
+    - cron: '0 10 * * 3'
     - cron: '0 10 * * 6'
   workflow_dispatch:
     inputs:
