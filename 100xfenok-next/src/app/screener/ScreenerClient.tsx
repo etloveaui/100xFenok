@@ -209,7 +209,7 @@ const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] 
 const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 신호 · Short/Long 별도 점수";
 const FENOK_SIGNAL_DISCLOSURE = "Fenok 파생 신호 · 투자 조언이 아닙니다";
 const FENOK_HORIZON_FILTER_DISCLOSURE = "Long Edge와 Short Edge는 서로 다른 기간의 독립 진단입니다 · 투자 조언이 아닙니다";
-const FENOK_SHORT_EDGE_METHODOLOGY = "Short Edge · 20/60 trading-day 진단 프록시 · N/3–5 입력 · 장외거래는 참고축이며 평균에서 제외";
+const FENOK_SHORT_EDGE_METHODOLOGY = "Short Edge · 축별 기간이 다른 진단 프록시(기술축 12개월 입력 포함) · N/3–5 입력 · 장외거래는 참고축이며 평균에서 제외";
 const FENOK_LONG_EDGE_METHODOLOGY = "Long Edge · 5개 방향성 축 평균 · present N/5 · 동종군 유사도는 참고축";
 
 export function passesFenokEdgeFilters(

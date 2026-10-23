@@ -78,7 +78,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   technicalFlow: makeDefaultEntry(
     "technicalFlow",
     "기술·자금",
-    "가격 모멘텀과 자금 흐름의 기술적 상태를 종합한 Fenok 파생 신호입니다.",
+    "12개월·연간 수익률과 모멘텀의 일관성을 종합한 Fenok 파생 신호입니다. 자금 유입·유출 데이터는 사용하지 않습니다. 해당 입력이 없으면 전일 종가 대비 현재가 변화를 제한적으로 사용합니다.",
   ),
   upsideDownside: {
     key: "upsideDownside",
@@ -117,7 +117,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   marketSimilarity: makeDefaultEntry(
     "marketSimilarity",
     "동종군 유사도",
-    "동종 섹터·산업군의 대표 종목들과 움직임이 얼마나 비슷한지 산출한 Fenok 파생 참고축입니다. Long Edge 평균에서는 제외합니다.",
+    "시가총액·가치평가·수익성·성장·모멘텀 등 7개 지표 프로필을 비교해 가장 가까운 최대 3개 종목과의 유사도를 평균한 참고축입니다. 같은 시장·섹터를 우선하며 비교 종목이 부족하면 범위를 넓힙니다. 주가 상관관계가 아니며 Long Edge 평균에서는 제외합니다.",
   ),
   sp500TrackingSimilarity: makeDefaultEntry(
     "sp500TrackingSimilarity",

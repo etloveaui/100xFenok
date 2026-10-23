@@ -809,6 +809,7 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       tooltipNote: config.tooltipNote ?? null,
       coverage,
       invertedDisplay: Boolean(config.invertScore),
+      referenceOnly: Boolean(config.referenceOnly),
       meta,
     };
   });

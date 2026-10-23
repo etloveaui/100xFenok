@@ -101,7 +101,7 @@ export const METRIC_GLOSSARY = {
   },
   marketSimilarity: {
     label: "동종군 유사도",
-    description: "같은 업종의 대표 종목들과 주가가 얼마나 비슷하게 움직였는지를 나타냅니다. 높을수록 개별 재료보다 업종 흐름을 따라간다는 뜻입니다.",
+    description: "시가총액·가치평가·수익성·성장·모멘텀 등 7개 지표 프로필을 비교해 가장 가까운 최대 3개 종목과의 유사도를 평균합니다. 주가 움직임의 상관관계가 아니라 기업 특성의 유사도입니다.",
   },
   momentum: {
     label: "모멘텀",
@@ -193,7 +193,7 @@ export const METRIC_GLOSSARY = {
   },
   relativeStrength: {
     label: "상대 강도",
-    description: "시장 지수(예: S&P500)와 비교해 개별 종목이 더 강하게 움직였는지를 나타냅니다. 높을수록 시장을 앞선다는 뜻입니다.",
+    description: "시장 지수(예: S&P500) 대비 종목의 수익률이 얼마나 강했는지를 나타냅니다. Short Edge에서는 SPY 대비 20·60거래일 수익률을 비교하며, 과열·과매도를 나타내는 RSI와는 다른 지표입니다.",
   },
 } as const;
 
