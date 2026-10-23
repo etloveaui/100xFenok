@@ -608,7 +608,7 @@ export function readLaneAttempt(lane, context = {}) {
     const rows = editions.map(edition => {
       if (typeof edition.path !== "string" || edition.path.startsWith("/") || edition.path.split("/").includes("..")) return null;
       const document = readJson(path.join(normalized.repoRoot, "data/briefing", edition.path));
-      const epoch = Date.parse(document?.edition_date === edition.edition_date ? briefingPublishedAt(document) : null);
+      const epoch = Date.parse(briefingPublishedAt(document, edition.edition_date));
       return Number.isFinite(epoch) ? { observed_at: new Date(epoch).toISOString(), outcome: "success" } : null;
     }).filter(Boolean);
     return normalizeAttempt(latestAttempt(rows));

@@ -84,11 +84,13 @@ function validCalendarDate(value) {
     && parsed.getUTCDate() === day;
 }
 
-export function briefingPublishedAt(document) {
-  if (!validCalendarDate(document?.edition_date)) return null;
+export function briefingPublishedAt(document, expectedEditionDate) {
+  const editionDate = document?.schema === "daily-digest/v1" ? document.date : document?.edition_date;
+  if (!validCalendarDate(editionDate)
+    || (expectedEditionDate !== undefined && editionDate !== expectedEditionDate)) return null;
   const clock = document?.published_kst;
   const value = typeof clock === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(clock)
-    ? `${document.edition_date}T${clock}:00+09:00` : clock;
+    ? `${editionDate}T${clock}:00+09:00` : clock;
   return dateOnly(value) ? new Date(value).toISOString() : null;
 }
 
@@ -258,7 +260,7 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
       const edition = (index?.editions ?? []).find(row => row.product === product.id
         && row.edition_date === index?.latest?.[product.id]);
       const document = edition?.path ? readOptionalJson(dataRoot, `briefing/${edition.path}`) : null;
-      return memberDate(document?.edition_date === edition?.edition_date ? briefingPublishedAt(document) : null,
+      return memberDate(briefingPublishedAt(document, edition?.edition_date),
         "source", product.id);
     });
     return { members, totalMembers: members.length };

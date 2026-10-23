@@ -7,7 +7,7 @@ import path from "node:path";
 import { buildKpiDocuments, advanceOutcomeState } from "./build-fenok-data-health-kpi.mjs";
 import { validateKpiDocuments } from "./check-fenok-data-health-kpi.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
-import { summarizeDataSetFreshness } from "./lib/fenok-data-health-freshness.mjs";
+import { briefingPublishedAt, summarizeDataSetFreshness } from "./lib/fenok-data-health-freshness.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const attemptRow = (at, source = "2026-09-20", outcome = "retained") => ({
@@ -262,11 +262,33 @@ try {
   ))?.id;
   assert.ok(missingEvidenceId, "fixture registry must include a data set without source-date evidence");
 
+  // Both live briefing schemas supply a real edition date and KST clock.
+  writeJson(dataRoot, "briefing/index.json", {
+    products: [{ id: "morning", status: "live" }, { id: "digest", status: "live" }],
+    latest: { morning: "2026-09-28", digest: "2026-09-28" },
+    editions: ["morning", "digest"].map(product => ({
+      product, edition_date: "2026-09-28", path: `${product}/2026-09-28.json`,
+    })),
+  });
+  writeJson(dataRoot, "briefing/morning/2026-09-28.json", {
+    schema: "briefing-morning/v1", edition_date: "2026-09-28", published_kst: "06:13",
+  });
+  const digest = { schema: "daily-digest/v1", date: "2026-09-28", published_kst: "11:14" };
+  writeJson(dataRoot, "briefing/digest/2026-09-28.json", digest);
+  assert.equal(briefingPublishedAt(digest, "2026-09-28"), "2026-09-28T02:14:00.000Z");
+  assert.equal(briefingPublishedAt(digest, "2026-09-27"), null);
+  assert.equal(briefingPublishedAt({ ...digest, published_kst: null }), null);
+
   // K3: one source date and one freshness-policy status per set.
   const { rootDoc, publicDoc } = buildKpiDocuments(now, {
     dataRoot: path.join(root, "data"), publicDataRoot,
   });
   assert.ok(Array.isArray(rootDoc.sets) && rootDoc.sets.length > 0);
+  const briefing = rootDoc.sets.find(set => set.set === "briefing");
+  assert.equal(briefing.total_members, 2);
+  assert.equal(briefing.fresh_members, 2);
+  assert.equal(briefing.source_health.counts.unknown, 0);
+  assert.equal(briefing.latest_attempt.observed_at, "2026-09-28T02:14:00.000Z");
   const row = rootDoc.sets.find((set) => set.set === "fred_macro");
   assert.ok(row, "FRED fixture must appear as one data set");
   assert.equal(row.served_path, "data/macro/fred-macro.json");
