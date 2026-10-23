@@ -5,7 +5,7 @@ import EarningsOverview from "@/components/earnings/EarningsOverview";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
-import { edgeAxisSpokeLabel } from "@/lib/fenok-signals/edge-axis-labels.mjs";
+import { edgeAxisSpokeLabel, edgeAxisFullLabel, edgeAxisTooltip } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 import { getDisplaySignalHelpBands, lookupBand } from "@/lib/fenok-signals/signal-help-config";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
@@ -113,7 +113,7 @@ export function SharedEdgePanel({
   const renderRows = (rows: SharedEdgeAxisRow[]) =>
     rows.map((row) => (
       <Row key={row.key}>
-        <span className="truncate text-[12px] text-[var(--c-ink-2)]">{row.label}{row.referenceOnly ? " · 참고" : ""}</span>
+        <span className="truncate text-[12px] text-[var(--c-ink-2)]">{row.label}</span>
         <Bar value={row.score ?? 0} aria-label={`${row.label} ${row.score !== null ? Math.round(row.score) : "대기"}점`} />
         <span className="flex items-center justify-end gap-2">
           {row.score !== null ? <EdgeMark score={row.score} size={16} showValue={false} /> : null}
@@ -628,55 +628,46 @@ export function rankFenokEdgeAxes<T extends { score: number | null; referenceOnl
 
 interface DetailLongTermAxisConfig {
   key: string;
-  fullLabel: string;
   scoreKey: keyof ScreenerStock;
   directionKey?: keyof ScreenerStock;
   coverageKey?: keyof ScreenerStock;
   helpKey: FenokSignalHelpKey;
   invertScore?: boolean;
-  tooltipNote?: string;
   referenceOnly?: boolean;
 }
 
 const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "profitability",
-    fullLabel: "수익성",
     scoreKey: "profitabilityScore",
     directionKey: "profitabilityDirection",
     helpKey: "profitability",
   },
   {
     key: "growth",
-    fullLabel: "성장",
     scoreKey: "growthScore",
     directionKey: "growthDirection",
     helpKey: "growth",
   },
   {
     key: "upsidePotential",
-    fullLabel: "상승 잠재력",
     scoreKey: "upsidePotentialScore",
     helpKey: "upsidePotential",
   },
   {
     key: "downsidePressure",
-    fullLabel: "하락 압력 완화",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
     invertScore: true,
-    tooltipNote: "하락 압력을 뒤집어 표시한 점수, 높을수록 위험 낮음",
   },
   {
     key: "marketSimilarity",
-    fullLabel: "동종군 유사도",
     scoreKey: "marketSimilarityScore",
     helpKey: "marketSimilarity",
     referenceOnly: true,
   },
   {
     key: "durabilityProfitability",
-    fullLabel: "내구 수익성",
     scoreKey: "durabilityProfitabilityScore",
     coverageKey: "durabilityProfitabilityCoverage",
     helpKey: "durabilityProfitability",
@@ -686,49 +677,38 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
 const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "technicalFlow",
-    fullLabel: "기술·자금 흐름",
     scoreKey: "technicalFlowScore",
     directionKey: "technicalFlowDirection",
     helpKey: "technicalFlow",
   },
   {
     key: "volumeLiquidityTrend",
-    fullLabel: "거래량·유동성 추세",
     scoreKey: "volumeLiquidityTrendScore",
     directionKey: "volumeLiquidityTrendDirection",
     helpKey: "volumeLiquidityTrend",
-    tooltipNote: "가격·거래량 데이터 기반 프록시, 실제 주문 흐름 아님",
   },
   {
     key: "shortTermRelativeStrength",
-    fullLabel: "단기 상대 강도",
     scoreKey: "shortTermRelativeStrengthScore",
     directionKey: "shortTermRelativeStrengthDirection",
     helpKey: "shortTermRelativeStrength",
-    tooltipNote: "20일/60일 SPY 대비 상대 강도 프록시",
   },
   {
     key: "netOptionsProxy",
-    fullLabel: "옵션 활동 프록시",
     scoreKey: "netOptionsProxyScore",
     helpKey: "netOptionsProxy",
-    tooltipNote: "미국 옵션청산회사(OCC) 공개 거래량으로 옵션 쏠림을 추정합니다. 실제 주문 흐름을 뜻하지 않습니다.",
   },
   {
     key: "offExchangeActivityProxy",
-    fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
-    tooltipNote: "미국 금융산업규제청(FINRA) 공개 장외 거래 데이터로 만든 보조 신호입니다. 방향성 확정 신호가 아닙니다.",
     referenceOnly: true,
   },
   {
     key: "shortPressureProxy",
-    fullLabel: "숏압력 완화",
     scoreKey: "shortPressureProxyScore",
     helpKey: "shortPressureProxy",
     invertScore: true,
-    tooltipNote: "숏 볼륨 압력을 뒤집어 표시한 점수, 높을수록 압력 낮음",
   },
 ];
 
@@ -767,12 +747,12 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
     return {
       key: config.key,
       label: requireSpokeLabel(config.scoreKey),
-      fullLabel: config.fullLabel,
+      fullLabel: edgeAxisFullLabel(config.scoreKey, Boolean(config.invertScore)),
       score,
       direction: explicitDirection ?? meta.direction,
       tier: meta.tier,
       helpKey: config.helpKey,
-      tooltipNote: config.tooltipNote ?? null,
+      tooltipNote: edgeAxisTooltip(config.scoreKey, Boolean(config.invertScore)),
       coverage,
       invertedDisplay: Boolean(config.invertScore),
       referenceOnly: Boolean(config.referenceOnly),
@@ -801,12 +781,12 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
     return {
       key: config.key,
       label: requireSpokeLabel(config.scoreKey),
-      fullLabel: config.fullLabel,
+      fullLabel: edgeAxisFullLabel(config.scoreKey, Boolean(config.invertScore)),
       score,
       direction: explicitDirection ?? meta.direction,
       tier: meta.tier,
       helpKey: config.helpKey,
-      tooltipNote: config.tooltipNote ?? null,
+      tooltipNote: edgeAxisTooltip(config.scoreKey, Boolean(config.invertScore)),
       coverage,
       invertedDisplay: Boolean(config.invertScore),
       referenceOnly: Boolean(config.referenceOnly),

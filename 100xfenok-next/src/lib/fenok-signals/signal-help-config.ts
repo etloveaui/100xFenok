@@ -1,3 +1,5 @@
+import { edgeAxisFullLabel, edgeAxisTooltip } from "./edge-axis-labels.mjs";
+
 export type FenokSignalHelpKey =
   | "profitability"
   | "growth"
@@ -67,18 +69,18 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
 > = {
   profitability: makeDefaultEntry(
     "profitability",
-    "수익성",
-    "기업의 이익 창출 능력과 자본 효율성을 종합한 Fenok 파생 신호입니다.",
+    edgeAxisFullLabel("profitabilityScore"),
+    edgeAxisTooltip("profitabilityScore"),
   ),
   growth: makeDefaultEntry(
     "growth",
-    "성장",
-    "향후 매출·이익 성장 잠재력을 종합한 Fenok 파생 신호입니다.",
+    edgeAxisFullLabel("growthScore"),
+    edgeAxisTooltip("growthScore"),
   ),
   technicalFlow: makeDefaultEntry(
     "technicalFlow",
-    "기술·자금",
-    "12개월·연간 수익률과 모멘텀의 일관성을 종합한 Fenok 파생 신호입니다. 자금 유입·유출 데이터는 사용하지 않습니다. 해당 입력이 없으면 전일 종가 대비 현재가 변화를 제한적으로 사용합니다.",
+    edgeAxisFullLabel("technicalFlowScore"),
+    edgeAxisTooltip("technicalFlowScore"),
   ),
   upsideDownside: {
     key: "upsideDownside",
@@ -94,19 +96,18 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   },
   durabilityProfitability: makeDefaultEntry(
     "durabilityProfitability",
-    "내구 수익성",
-    "수익성의 지속 가능성과 재무적 내구력을 종합한 Fenok 파생 신호입니다.",
+    edgeAxisFullLabel("durabilityProfitabilityScore"),
+    edgeAxisTooltip("durabilityProfitabilityScore"),
   ),
   upsidePotential: makeDefaultEntry(
     "upsidePotential",
-    "상승 잠재력",
-    "Fenok 파생 신호로 산출한 상대적 상승 잠재력입니다.",
+    edgeAxisFullLabel("upsidePotentialScore"),
+    edgeAxisTooltip("upsidePotentialScore"),
   ),
   downsidePressure: {
     key: "downsidePressure",
-    label: "하락 압력",
-    interpretation:
-      "Fenok 파생 신호로 산출한 상대적 하락 압력 축입니다. 점수가 높을수록 위험이 큽니다.",
+    label: edgeAxisFullLabel("downsidePressureScore"),
+    interpretation: edgeAxisTooltip("downsidePressureScore"),
     bands: [
       { min: 81, max: 100, label: "위험", tone: "down" },
       { min: 61, max: 80, label: "주의", tone: "warn" },
@@ -116,8 +117,8 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   },
   marketSimilarity: makeDefaultEntry(
     "marketSimilarity",
-    "동종군 유사도",
-    "시가총액·가치평가·수익성·성장·모멘텀 등 7개 지표 프로필을 비교해 가장 가까운 최대 3개 종목과의 유사도를 평균한 참고축입니다. 같은 시장·섹터를 우선하며 비교 종목이 부족하면 범위를 넓힙니다. 주가 상관관계가 아니며 Long Edge 평균에서는 제외합니다.",
+    edgeAxisFullLabel("marketSimilarityScore"),
+    edgeAxisTooltip("marketSimilarityScore"),
   ),
   sp500TrackingSimilarity: makeDefaultEntry(
     "sp500TrackingSimilarity",
@@ -131,19 +132,18 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   ),
   netOptionsProxy: makeDefaultEntry(
     "netOptionsProxy",
-    "옵션 프록시",
-    "미국 옵션청산회사(OCC)가 공개하는 옵션 거래량 조회 데이터의 콜·풋 거래량만 이용한 Fenok 파생 프록시입니다. 실제 옵션 자금 흐름이나 옵션 가격 통합 데이터(OPRA), 매수·매도 주체 방향은 아닙니다.",
+    edgeAxisFullLabel("netOptionsProxyScore"),
+    edgeAxisTooltip("netOptionsProxyScore"),
   ),
   offExchangeActivityProxy: makeDefaultEntry(
     "offExchangeActivityProxy",
-    "장외거래",
-    "미국 금융산업규제청(FINRA) 계열 공개 데이터에서 파생한 장외거래 활동 참고 프록시입니다. Short Edge 평균에서는 제외하며, 실시간 다크풀 의도 신호로 해석하면 안 됩니다.",
+    edgeAxisFullLabel("offExchangeActivityProxyScore"),
+    edgeAxisTooltip("offExchangeActivityProxyScore"),
   ),
   shortPressureProxy: {
     key: "shortPressureProxy",
-    label: "숏 압력",
-    interpretation:
-      "공개된 공매도 거래량·공매도 활동 데이터를 이용한 Fenok 파생 압력 축입니다. 점수가 높을수록 공매도 관련 압력이 큰 쪽입니다.",
+    label: edgeAxisFullLabel("shortPressureProxyScore"),
+    interpretation: edgeAxisTooltip("shortPressureProxyScore"),
     bands: [
       { min: 81, max: 100, label: "높음", tone: "down" },
       { min: 61, max: 80, label: "주의", tone: "warn" },
@@ -158,13 +158,13 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   ),
   volumeLiquidityTrend: makeDefaultEntry(
     "volumeLiquidityTrend",
-    "거래량·유동성",
-    "로컬 시가·고가·저가·종가·거래량(OHLCV) 데이터에서 파생한 거래량·유동성 추세 프록시입니다. 실제 주문 흐름은 아닙니다.",
+    edgeAxisFullLabel("volumeLiquidityTrendScore"),
+    edgeAxisTooltip("volumeLiquidityTrendScore"),
   ),
   shortTermRelativeStrength: makeDefaultEntry(
     "shortTermRelativeStrength",
-    "상대 강도",
-    "20/60 trading-day diagnostic proxy로 로컬 수익률과 S&P500 ETF(SPY) 대비 상대 강도를 이용한 Fenok 파생 프록시입니다. 예측 신호가 아닙니다.",
+    edgeAxisFullLabel("shortTermRelativeStrengthScore"),
+    edgeAxisTooltip("shortTermRelativeStrengthScore"),
   ),
 };
 
@@ -186,24 +186,14 @@ export function getDisplaySignalLabel(
   key: FenokSignalHelpKey,
   invertedDisplay = false,
 ): string {
-  if (invertedDisplay && key === "downsidePressure") return "하락 압력 완화";
-  if (invertedDisplay && key === "shortPressureProxy") return "숏압력 완화";
-  return getSignalHelpEntry(key).label;
+  return edgeAxisFullLabel(`${key}Score`, invertedDisplay) ?? getSignalHelpEntry(key).label;
 }
 
 export function getDisplaySignalInterpretation(
   key: FenokSignalHelpKey,
   invertedDisplay = false,
 ): string {
-  const entry = getSignalHelpEntry(key);
-  if (!invertedDisplay) return entry.interpretation;
-  if (key === "downsidePressure") {
-    return "화면 점수는 하락 압력 원점수를 뒤집어 표시한 점수입니다. 높을수록 하락 위험이 낮다는 뜻입니다.";
-  }
-  if (key === "shortPressureProxy") {
-    return "화면 점수는 공매도 거래량 압력 원점수를 뒤집어 표시한 점수입니다. 높을수록 공매도 압력이 낮다는 뜻입니다.";
-  }
-  return entry.interpretation;
+  return edgeAxisTooltip(`${key}Score`, invertedDisplay) ?? getSignalHelpEntry(key).interpretation;
 }
 
 export function lookupBand(

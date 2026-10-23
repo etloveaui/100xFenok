@@ -1,4 +1,23 @@
+import { edgeAxisFullLabel, edgeAxisTooltip } from "./fenok-signals/edge-axis-labels.mjs";
+
 export const METRIC_GLOSSARY = {
+  downsideSafety: {
+    label: edgeAxisFullLabel("downsidePressureScore", true),
+    description: edgeAxisTooltip("downsidePressureScore", true),
+  },
+  technicalFlow: {
+    label: edgeAxisFullLabel("technicalFlowScore"),
+    description: edgeAxisTooltip("technicalFlowScore"),
+  },
+  netOptionsProxy: {
+    label: edgeAxisFullLabel("netOptionsProxyScore"),
+    description: edgeAxisTooltip("netOptionsProxyScore"),
+  },
+  shortPressureRelief: {
+    label: edgeAxisFullLabel("shortPressureProxyScore", true),
+    description: edgeAxisTooltip("shortPressureProxyScore", true),
+  },
+
   fy1: {
     label: "내년(FY+1)",
     description: "다음 회계연도에 시장이 예상하는 수치입니다. 지금 실적이 아니라 1년 뒤 전망치를 뜻합니다.",
@@ -73,7 +92,7 @@ export const METRIC_GLOSSARY = {
   },
   shortEdge: {
     label: "단기",
-    description: "20/60 거래일 기준 단기 진단 점수입니다. 높을수록 단기 방향성이 강하다는 뜻이며 투자 조언이 아닙니다.",
+    description: "가격 모멘텀·거래량·상대 강도·옵션·공매도 축을 종합한 단기 진단 점수입니다. 축마다 입력 기간이 다릅니다. 높을수록 단기 방향성이 강하다는 뜻이며 투자 조언이 아닙니다.",
   },
   longEdge: {
     label: "장기",
@@ -88,20 +107,20 @@ export const METRIC_GLOSSARY = {
     description: "종목을 판단하는 데 필요한 데이터가 얼마나 갖춰졌는지를 보여 주는 비율입니다. 낮으면 근거가 부족해 신뢰도가 떨어집니다.",
   },
   durability: {
-    label: "내구 수익성",
-    description: "지금의 수익성이 앞으로도 얼마나 오래 유지될 수 있는지를 보는 관점입니다. 재무 체력과 이익의 안정성을 함께 반영합니다.",
+    label: edgeAxisFullLabel("durabilityProfitabilityScore"),
+    description: edgeAxisTooltip("durabilityProfitabilityScore"),
   },
   upsidePotential: {
-    label: "상승 잠재력",
-    description: "현재 가격 대비 앞으로 오를 여지가 상대적으로 얼마나 있는지를 나타냅니다. 확정된 예측이 아니라 종목 간 상대 비교값입니다.",
+    label: edgeAxisFullLabel("upsidePotentialScore"),
+    description: edgeAxisTooltip("upsidePotentialScore"),
   },
   downsidePotential: {
-    label: "하락 위험",
-    description: "현재 가격에서 앞으로 떨어질 위험이 상대적으로 얼마나 큰지를 나타냅니다. 확정된 예측이 아니라 종목 간 상대 비교값입니다.",
+    label: edgeAxisFullLabel("downsidePressureScore"),
+    description: edgeAxisTooltip("downsidePressureScore"),
   },
   marketSimilarity: {
-    label: "동종군 유사도",
-    description: "시가총액·가치평가·수익성·성장·모멘텀 등 7개 지표 프로필을 비교해 가장 가까운 최대 3개 종목과의 유사도를 평균합니다. 주가 움직임의 상관관계가 아니라 기업 특성의 유사도입니다.",
+    label: edgeAxisFullLabel("marketSimilarityScore"),
+    description: edgeAxisTooltip("marketSimilarityScore"),
   },
   momentum: {
     label: "모멘텀",
@@ -140,8 +159,8 @@ export const METRIC_GLOSSARY = {
     description: "아직 되갚지 않고 남아 있는 공매도 물량입니다. 많을수록 주가 하락에 베팅한 자금이 크다는 뜻입니다.",
   },
   offExchange: {
-    label: "장외 거래",
-    description: "정규 거래소가 아닌 곳에서 체결된 거래입니다. 다크풀 등 거래소 밖 물량의 크기를 가늠하는 데 씁니다.",
+    label: edgeAxisFullLabel("offExchangeActivityProxyScore"),
+    description: edgeAxisTooltip("offExchangeActivityProxyScore"),
   },
   putCallRatio: {
     label: "풋/콜 비율",
@@ -192,8 +211,8 @@ export const METRIC_GLOSSARY = {
     description: "하루 거래 중 공매도로 체결된 거래량입니다. 남아 있는 공매도 잔고와 달리 그날의 매도 압력을 봅니다.",
   },
   relativeStrength: {
-    label: "상대 강도",
-    description: "시장 지수(예: S&P500) 대비 종목의 수익률이 얼마나 강했는지를 나타냅니다. Short Edge에서는 SPY 대비 20·60거래일 수익률을 비교하며, 과열·과매도를 나타내는 RSI와는 다른 지표입니다.",
+    label: edgeAxisFullLabel("shortTermRelativeStrengthScore"),
+    description: edgeAxisTooltip("shortTermRelativeStrengthScore"),
   },
 } as const;
 
@@ -226,7 +245,11 @@ const KEY_HINTS: Array<[RegExp, MetricGlossaryKey]> = [
   [/fenoklongtermscore|^장기$/i, "longEdge"],
   [/^sector$|섹터/i, "sector"],
   [/marketsimilarity|동종군\s*유사|유사도/i, "marketSimilarity"],
-  [/momentum|모멘텀/i, "momentum"],
+  [/technicalflow|가격\s*모멘텀/i, "technicalFlow"],
+  [/netoptionsproxy|옵션\s*콜·풋\s*쏠림/i, "netOptionsProxy"],
+  [/하락\s*안정도|하방안정/i, "downsideSafety"],
+  [/공매도\s*부담\s*완화/i, "shortPressureRelief"],
+  [/momentum|^모멘텀$/i, "momentum"],
   [/factortilt|팩터\s*틸트|팩터\s*기울/i, "factorTilt"],
   [/\bocc\b|옵션청산회사/i, "occ"],
   [/finra|금융산업규제청/i, "finra"],

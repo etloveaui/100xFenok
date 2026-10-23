@@ -61,6 +61,7 @@ import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill, Empt
 import { fetchJsonOrNull } from "@/lib/client/data-fetch";
 import {
   edgeAxisSpokeLabel,
+  edgeAxisFullLabel,
 } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import { commonBasisSignalSummaryView } from "@/lib/fenok-signals/common-basis-signal-summary";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
@@ -2534,21 +2535,21 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
 
 interface EdgeAxisRow { key: string; label: string; spokeLabel: string; score: number | null; inverted: boolean; group: "short" | "long"; referenceOnly?: boolean }
 
-const EDGE_SHORT_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean; referenceOnly?: boolean }> = [
-  { key: "technicalFlowScore", label: "기술·자금 흐름" },
-  { key: "volumeLiquidityTrendScore", label: "거래량·유동성" },
-  { key: "shortTermRelativeStrengthScore", label: "단기 상대강도" },
-  { key: "netOptionsProxyScore", label: "옵션 활동" },
-  { key: "offExchangeActivityProxyScore", label: "장외거래", referenceOnly: true },
-  { key: "shortPressureProxyScore", label: "숏압력 완화", inverted: true },
+const EDGE_SHORT_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; inverted?: boolean; referenceOnly?: boolean }> = [
+  { key: "technicalFlowScore" },
+  { key: "volumeLiquidityTrendScore" },
+  { key: "shortTermRelativeStrengthScore" },
+  { key: "netOptionsProxyScore" },
+  { key: "offExchangeActivityProxyScore", referenceOnly: true },
+  { key: "shortPressureProxyScore", inverted: true },
 ];
-const EDGE_LONG_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean; referenceOnly?: boolean }> = [
-  { key: "profitabilityScore", label: "수익성" },
-  { key: "growthScore", label: "성장" },
-  { key: "upsidePotentialScore", label: "상승 잠재력" },
-  { key: "downsidePressureScore", label: "하락 압력(안정)", inverted: true },
-  { key: "marketSimilarityScore", label: "동종군 유사성", referenceOnly: true },
-  { key: "durabilityProfitabilityScore", label: "내구 수익성" },
+const EDGE_LONG_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; inverted?: boolean; referenceOnly?: boolean }> = [
+  { key: "profitabilityScore" },
+  { key: "growthScore" },
+  { key: "upsidePotentialScore" },
+  { key: "downsidePressureScore", inverted: true },
+  { key: "marketSimilarityScore", referenceOnly: true },
+  { key: "durabilityProfitabilityScore" },
 ];
 
 function buildEdgeAxes(record: FenokSignalsSummaryRecord, config: typeof EDGE_SHORT_AXES, group: "short" | "long"): EdgeAxisRow[] {
@@ -2562,7 +2563,7 @@ function buildEdgeAxes(record: FenokSignalsSummaryRecord, config: typeof EDGE_SH
     }
     return {
       key: c.key as string,
-      label: c.label,
+      label: edgeAxisFullLabel(c.key, Boolean(c.inverted)),
       spokeLabel,
       score,
       inverted: Boolean(c.inverted),

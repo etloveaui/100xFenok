@@ -1,5 +1,6 @@
 "use client";
 
+import { edgeAxisFullLabel, edgeAxisTooltip } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -169,12 +170,12 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   // label and the sort semantics (sorts by the Short value, Long shown
   // separately) live in the column tooltip.
   { key: "fenokConvictionScore", label: "컨빅션", align: "right" },
-  { key: "profitabilityScore", label: "수익성", align: "right" },
-  { key: "growthScore", label: "성장", align: "right" },
-  { key: "technicalFlowScore", label: "기술/자금", align: "right" },
-  { key: "durabilityProfitabilityScore", label: "내구 수익성", align: "right" },
-  { key: "upsidePotentialScore", label: "상방", align: "right" },
-  { key: "downsidePressureScore", label: "하방", align: "right" },
+  { key: "profitabilityScore", label: edgeAxisFullLabel("profitabilityScore"), align: "right" },
+  { key: "growthScore", label: edgeAxisFullLabel("growthScore"), align: "right" },
+  { key: "technicalFlowScore", label: edgeAxisFullLabel("technicalFlowScore"), align: "right" },
+  { key: "durabilityProfitabilityScore", label: edgeAxisFullLabel("durabilityProfitabilityScore"), align: "right" },
+  { key: "upsidePotentialScore", label: edgeAxisFullLabel("upsidePotentialScore"), align: "right" },
+  { key: "downsidePressureScore", label: edgeAxisFullLabel("downsidePressureScore"), align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "예상 PER", align: "right" },
   { key: "epsForward", label: "예상 EPS", align: "right" },
@@ -740,7 +741,7 @@ function renderCell(
       return (
         <ScoreCell
           score={score}
-          title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
+          title={`${columnLabel(key)} · ${edgeAxisTooltip("downsidePressureScore")} · ${FENOK_SIGNAL_DISCLOSURE}`}
           ariaLabel={`${columnLabel(key)} ${score ?? "정보 없음"}`}
         />
       );

@@ -31,6 +31,8 @@ const rendererPath = resolve(
 
 const {
   EDGE_AXIS_SPOKE_LABELS,
+  edgeAxisFullLabel,
+  edgeAxisTooltip,
   EDGE_RADAR_GEOMETRY,
   approximateTextWidth,
   sideAxisLineBudget,
@@ -41,6 +43,20 @@ const failures = [];
 const check = (ok, message) => {
   if (!ok) failures.push(message);
 };
+
+// Raw risk columns and inverted safety axes must never share a direction label.
+check(edgeAxisFullLabel("downsidePressureScore") === "하락 위험", "raw downside label");
+check(edgeAxisFullLabel("downsidePressureScore", true) === "하락 안정도", "inverted downside label");
+check(edgeAxisFullLabel("shortPressureProxyScore", true) === "공매도 부담 완화", "inverted short pressure label");
+check(edgeAxisTooltip("downsidePressureScore", true).includes("높을수록 하락 위험이 낮다"), "inverted downside interpretation");
+for (const [key, label] of Object.entries({
+  technicalFlowScore: "가격 모멘텀",
+  netOptionsProxyScore: "옵션 콜·풋 쏠림",
+  marketSimilarityScore: "동종군 유사도(참고)",
+  offExchangeActivityProxyScore: "장외거래 비중(참고)",
+})) check(edgeAxisFullLabel(key) === label, `${key}: shared full label`);
+check(EDGE_AXIS_SPOKE_LABELS.downsidePressureScore === "하방안정", "downside spoke");
+check(EDGE_AXIS_SPOKE_LABELS.technicalFlowScore === "모멘텀", "momentum spoke");
 
 // 1. The budget is derived, and the geometry it derives from is the shipped one.
 const budget = sideAxisLineBudget();
