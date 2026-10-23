@@ -11,6 +11,7 @@ import {
   screenerSortValue,
 } from "../src/lib/screener/common-basis-short-term";
 import { commonBasisSignalSummaryView } from "../src/lib/fenok-signals/common-basis-signal-summary";
+import { edgeAxisFullLabel } from "../src/lib/fenok-signals/edge-axis-labels.mjs";
 import {
   parseScreenerFilterState,
   serializeScreenerFilterState,
@@ -212,11 +213,20 @@ const panelSource = fs.readFileSync(path.join(appRoot, "src/app/screener/StockDe
 assert.match(panelSource, /shortRows=\{toSharedRows\(shortTermAxes\)\}/, "the standard panel must use shared Short rows");
 assert.match(panelSource, /const toSharedRows[\s\S]*?referenceOnly: axis\.referenceOnly/, "shared Short rows must retain reference-only identity");
 assert.match(panelSource, /shortRows=\{shortTermAxes\.map[\s\S]*?referenceOnly: axis\.referenceOnly/, "the preview panel must also retain reference-only identity");
+// Item 13 puts the reference marker in the canonical full labels; the renderer
+// must preserve them without appending the retired second marker.
+const offExchangeLabel = edgeAxisFullLabel("offExchangeActivityProxyScore");
+const peerSimilarityLabel = edgeAxisFullLabel("marketSimilarityScore");
+assert.equal(offExchangeLabel, "장외거래 비중(참고)");
+assert.equal(peerSimilarityLabel, "동종군 유사도(참고)");
 const referenceHtml = renderToStaticMarkup(createElement(SharedEdgePanel, {
   title: "Reference-axis regression", shortScore: 61, longScore: null,
-  shortRows: [{ key: "off-exchange", label: "장외거래", score: 99, referenceOnly: true }], longRows: [],
+  shortRows: [{ key: "off-exchange", label: offExchangeLabel, score: 99, referenceOnly: true }],
+  longRows: [{ key: "market-similarity", label: peerSimilarityLabel, score: 72, referenceOnly: true }],
 }));
-assert.ok(referenceHtml.includes("장외거래 · 참고"), "a reference axis must remain visibly distinct from directional inputs");
+assert.ok(referenceHtml.includes(offExchangeLabel), "the Short reference axis must retain its canonical marker");
+assert.ok(referenceHtml.includes(peerSimilarityLabel), "the Long reference axis must retain its canonical marker");
+assert.ok(!referenceHtml.includes("(참고) · 참고"), "canonical reference labels must not gain a duplicate marker");
 assert.match(panelSource, /function rankFenokEdgeAxes[\s\S]*!axis\.referenceOnly/, "Short ranking helper must exclude reference-only axes");
 assert.match(panelSource, /shortTermBasis\.sourceInputCount[\s\S]*?\/3–5/, "Panel must disclose Short N/3–5 inputs");
 assert.match(panelSource, /shortTermBasis\.exclusionNote|장외거래 참고축\(평균 제외\)/, "Panel must disclose off-exchange exclusion from Short averaging");
