@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 import time
@@ -223,6 +224,40 @@ def _call_agy(attempt: dict, system: str, user: str, edition: str) -> tuple[dict
     return parse_reply(text), meta
 
 
+def _call_command(attempt: dict, system: str, user: str, edition: str) -> tuple[dict, dict]:
+    """One local command that reads {"system", "user"} JSON on stdin and prints {"ok", "text", ...} JSON.
+
+    On the owner's machines it is feno_llm's `feno_claude.py` (key order, expiry, failover and the credit
+    ledger are feno_llm's). Anywhere else the command is missing, the attempt fails and the next one runs."""
+    argv = [os.path.expanduser(a) for a in attempt["argv"]]
+    if shutil.which(argv[0]) is None or not Path(argv[1]).is_file():
+        raise WriterError(f"command {argv[:2]} missing")
+    t0 = time.time()
+    try:
+        proc = subprocess.run(argv, input=json.dumps({"system": system, "user": user}), capture_output=True,
+                              text=True, timeout=attempt.get("timeout_s", 900))
+    except subprocess.TimeoutExpired:
+        raise WriterError(f"command timed out after {attempt.get('timeout_s', 900)} s") from None
+    secs = round(time.time() - t0, 1)
+    try:
+        out = json.loads(proc.stdout)
+    except ValueError:
+        raise WriterError(f"command exit {proc.returncode}: {proc.stderr.strip()[:200]}") from None
+    if not out.get("ok"):
+        err = out.get("error") or {}
+        raise WriterError(f"command {err.get('code')}: {str(err.get('message'))[:200]}")
+    if out.get("stop_reason") != "end_turn":
+        raise WriterError(f"stop_reason={out.get('stop_reason')}")
+    usage = out.get("usage") or {}
+    row = ledger.append(attempt["model"], "morning_article", usage, edition, served_by=out.get("model"), seconds=secs,
+                        stop_reason=out["stop_reason"], request_id=out.get("request_id"))
+    meta = {"model": attempt["model"], "served_by": out.get("model"), "id": out.get("request_id"), "seconds": secs,
+            "stop_reason": out["stop_reason"], "input_tokens": usage.get("input_tokens"),
+            "output_tokens": usage.get("output_tokens"), "usd": row["usd"], "key_env": out.get("key_env"),
+            "text": out["text"]}
+    return parse_reply(out["text"]), meta
+
+
 def write(edition: str, session: str, today: str, prev: str, cards: list, pack: dict) -> tuple[dict, dict]:
     """Return (raw article, meta). Tries each configured attempt in order; raises WriterError when all fail."""
     system, user = system_prompt(), user_message(edition, session, today, prev, cards, pack)
@@ -241,6 +276,8 @@ def write(edition: str, session: str, today: str, prev: str, cards: list, pack: 
                 except AgyTimeout:
                     agy_slow = True
                     raise
+            elif engine == "command":
+                raw, meta = _call_command(attempt, system, user, edition)
             else:
                 key_env = attempt.get("key_env", W["api_key_env"])
                 if not os.environ.get(key_env):

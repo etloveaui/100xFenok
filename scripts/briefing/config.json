@@ -7,10 +7,10 @@
     "attempts": [
       {"engine": "agy", "model": "claude-opus-5-5-medium", "timeout_s": 240},
       {"engine": "agy2", "model": "claude-opus-5-5-medium", "timeout_s": 240},
+      {"engine": "command", "model": "claude-opus-5-5", "timeout_s": 900, "argv": ["python3", "~/agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/products/llm-runtime/scripts/feno_claude.py", "sel_anthropic_opus", "--effort", "medium", "--max-tokens", "64000", "--server-fallbacks", "default", "--label", "100x:morning_article"]},
+      {"engine": "command", "model": "claude-sonnet-5-5", "timeout_s": 900, "argv": ["python3", "~/agents-workspace/00_my_data/01_El_Fenomeno/00_Project/claude-code-hub/docs/products/llm-runtime/scripts/feno_claude.py", "sel_anthropic_sonnet", "--effort", "medium", "--max-tokens", "64000", "--server-fallbacks", "default", "--label", "100x:morning_article"]},
       {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY", "model": "claude-opus-5-5", "effort": "medium", "max_tokens": 64000},
-      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY", "model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000},
-      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY", "model": "claude-opus-5-5", "effort": "medium", "max_tokens": 64000},
-      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_PROFILE2_API_KEY", "model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000}
+      {"engine": "api", "key_env": "ANTHROPIC_PLAN_CREDIT_API_KEY", "model": "claude-sonnet-5-5", "effort": "medium", "max_tokens": 64000}
     ],
     "server_side_fallback": {"beta": "server-side-fallback-2026-07-01", "fallbacks": "default", "models": ["claude-opus-5-5", "claude-sonnet-5-5"]},
     "prompt_movers_limit": 25,
