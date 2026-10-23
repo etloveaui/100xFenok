@@ -31,6 +31,24 @@ test.beforeAll(async ({ request }) => {
   } catch (error) { indexError = String(error); }
 });
 
+test("removed public development documents return 404", async ({ request }, testInfo) => {
+  const paths = [
+    "/tools/stock_analyzer/CLAUDE.md",
+    "/ib/ib-helper/DEV.md",
+    "/tools/macro-monitor/DEV.md",
+  ];
+  const statuses = await Promise.all(paths.map(async path => {
+    const response = await request.get(path, {
+      headers: verificationHeaders, timeout: 30_000, maxRedirects: 0,
+    });
+    return { path, status: response.status() };
+  }));
+  await testInfo.attach("observation", {
+    body: Buffer.from(JSON.stringify(statuses, null, 2)), contentType: "application/json",
+  });
+  for (const { path, status } of statuses) expect(status, path).toBe(404);
+});
+
 const radarDetail = (path: string, legacy = false) => `/radar?${legacy ? "legacy=1&" : ""}path=${encodeURIComponent(`tools/macro-monitor/details/${path}`)}`;
 
 const routes = [
