@@ -62,6 +62,19 @@ function independentScopeFiles(roots) {
   return files.sort((left, right) => left.localeCompare(right));
 }
 
+assert.equal(assertPublicationAuthorization().authorized, Object.keys(FAMILIES).length, "every declared family must have registry authorization");
+assert.throws(
+  () => assertPublicationAuthorization({ families: { [FAMILY_NAME]: FAMILY }, bindings: {} }),
+  /FAMILY_NOT_AUTHORIZED.*global-scouter/,
+);
+
+// Hosted code-only checkouts deliberately omit the owner export. A present but
+// incomplete export must still fail the full assertions below.
+if (!fs.existsSync(path.join(REPO_ROOT, "data/global-scouter"))) {
+  console.log("SKIP Global Scouter data contract: data/global-scouter is absent (code-only checkout); authorization assertions passed");
+  process.exit(0);
+}
+
 const roots = registryLaneById("global_scouter").roots.canonical_outputs;
 const expectedFiles = independentScopeFiles(roots);
 const MEASURED_ASSETS = expectedFiles.length;
@@ -181,10 +194,5 @@ assert.equal(dryRunLines[0].enrolled.length, MEASURED_ASSETS);
 assert.equal(dryRunLines[0].enrolled[0].path, built.manifest.assets[0].path);
 assert.equal(dryRunLines[0].enrolled.at(-1).path, built.manifest.assets.at(-1).path);
 
-assert.equal(assertPublicationAuthorization().authorized, 27, "default registry authorization includes Global Scouter, bounded earnings and briefing");
-assert.throws(
-  () => assertPublicationAuthorization({ families: { [FAMILY_NAME]: FAMILY }, bindings: {} }),
-  /FAMILY_NOT_AUTHORIZED.*global-scouter/,
-);
 
 console.log("Global Scouter publisher/reader contract ok (exact roots, source date, public payload refusal, dry-run and authorization)");

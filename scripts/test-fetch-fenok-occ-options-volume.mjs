@@ -635,13 +635,19 @@ assert.equal(retainedAgain.stats.collections.rows.pruned, 0);
 assert.throws(() => retainLatestTickerSourceDates({ rows: [{ ticker: "A", source_date: "20260231" }] }),
   /invalid source_date/);
 
-const allEligiblePlan = await build(parseArgs(["--all-eligible", "--plan-only"]));
+// Batch-size and budget semantics must not depend on the collected universe.
+{
+const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-plan-universe-"));
+try {
+  const eligibleManifest = path.join(fixtureRoot, "eligible.json");
+  fs.writeFileSync(eligibleManifest, JSON.stringify(Array.from({ length: 61 }, (_, i) => `TEST${String(i).padStart(3, "0")}`)));
+const allEligiblePlan = await build(parseArgs(["--all-eligible", "--eligible-manifest", eligibleManifest, "--plan-only"]));
 assert.equal(allEligiblePlan.collection_mode, "all_eligible_batched");
 assert.ok(allEligiblePlan.eligible_count > allEligiblePlan.selected_tickers);
 assert.equal(allEligiblePlan.selected_tickers, 50);
 assert.equal(allEligiblePlan.request_budget.max_requests, 200);
 assert.equal(allEligiblePlan.request_budget.status, "within_budget");
-const finraOnlyPlan = await build(parseArgs(["--all-eligible", "--plan-only"]), {
+const finraOnlyPlan = await build(parseArgs(["--all-eligible", "--eligible-manifest", eligibleManifest, "--plan-only"]), {
   eventName: "workflow_dispatch",
   controlledFailureLanes: "finra_short_volume",
 });
@@ -651,19 +657,19 @@ const incompatibleInjectionOptions = {
   controlledFailureLanes: "occ_options_volume",
 };
 await assert.rejects(
-  () => build(parseArgs(["--all-eligible", "--plan-only"]), incompatibleInjectionOptions),
+  () => build(parseArgs(["--all-eligible", "--eligible-manifest", eligibleManifest, "--plan-only"]), incompatibleInjectionOptions),
   /OCC controlled failure is incompatible with: --plan-only/,
 );
 await assert.rejects(
-  () => build(parseArgs(["--all-eligible", "--no-fetch", "--plan-only"]), incompatibleInjectionOptions),
+  () => build(parseArgs(["--all-eligible", "--eligible-manifest", eligibleManifest, "--no-fetch", "--plan-only"]), incompatibleInjectionOptions),
   /--no-fetch/,
 );
 await assert.rejects(
-  () => build(parseArgs(["--all-eligible", "--no-write", "--plan-only"]), incompatibleInjectionOptions),
+  () => build(parseArgs(["--all-eligible", "--eligible-manifest", eligibleManifest, "--no-write", "--plan-only"]), incompatibleInjectionOptions),
   /--no-write/,
 );
 await assert.rejects(
-  () => build(parseArgs(["--all-eligible", "--date", "20260715", "--plan-only"]), incompatibleInjectionOptions),
+  () => build(parseArgs(["--all-eligible", "--eligible-manifest", eligibleManifest, "--date", "20260715", "--plan-only"]), incompatibleInjectionOptions),
   /--date/,
 );
 await assert.rejects(
@@ -674,7 +680,7 @@ await assert.rejects(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-controlled-deferred-"));
   let requests = 0;
   const deferred = await build(parseArgs([
-    "--all-eligible",
+    "--all-eligible", "--eligible-manifest", eligibleManifest,
     "--batch-size", "1",
     "--batch-index", "0",
   ]), {
@@ -703,7 +709,7 @@ await assert.rejects(
 }
 
 const overBudgetPlan = await build(parseArgs([
-  "--all-eligible",
+  "--all-eligible", "--eligible-manifest", eligibleManifest,
   "--date",
   "20260705",
   "--batch-size",
@@ -716,13 +722,22 @@ assert.equal(overBudgetPlan.selected_tickers, 51);
 assert.equal(overBudgetPlan.request_budget.estimated_max_live_requests, 102);
 assert.equal(overBudgetPlan.request_budget.status, "blocked_over_budget");
 
+} finally {
+  fs.rmSync(fixtureRoot, { recursive: true, force: true });
+}
+}
+
 const s0OccMissing = loadS0OccMissingUniverse();
 const s0OccDefaultBatchSize = Math.min(50, s0OccMissing.length);
 assert.ok(s0OccMissing.every((ticker) => /^[A-Z][A-Z0-9]{0,11}$/.test(ticker)));
 assert.ok(!s0OccMissing.includes("BRK-A"));
 
 const s0OccClassShare = loadS0OccClassShareUniverse();
-assert.deepEqual(s0OccClassShare, ["BRK.A", "BRK.B"]);
+if (fs.existsSync(new URL("../data/computed/fenok_signals.json", import.meta.url))) {
+  assert.deepEqual(s0OccClassShare, ["BRK.A", "BRK.B"]);
+} else {
+  console.log("SKIP collected S0 class-share membership: data/computed/fenok_signals.json is absent; empty-universe plan assertions still run");
+}
 
 const s0OccPartialMissing = loadS0OccPartialMissingUniverse();
 const knownS0OccPartialMissingCandidates = [
@@ -763,7 +778,7 @@ assert.equal(s0OccClassSharePlan.collection_mode, "s0_occ_class_share_accepted_f
 assert.equal(s0OccClassSharePlan.eligible_count, s0OccClassShare.length);
 assert.equal(s0OccClassSharePlan.selected_tickers, s0OccClassShare.length);
 assert.deepEqual(s0OccClassSharePlan.sample, s0OccClassShare);
-assert.equal(s0OccClassSharePlan.request_budget.estimated_max_live_requests, 4);
+assert.equal(s0OccClassSharePlan.request_budget.estimated_max_live_requests, s0OccClassShare.length * 2);
 assert.equal(s0OccClassSharePlan.request_budget.status, "within_budget");
 
 const s0OccPartialMissingPlan = await build(parseArgs([

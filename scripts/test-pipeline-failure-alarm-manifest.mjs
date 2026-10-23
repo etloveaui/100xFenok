@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import crypto from "node:crypto";
+
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -64,32 +64,62 @@ const workflows = Object.fromEntries(Object.entries(files).map(([key, file]) => 
   return [key, { file, source, jobs: parseJobs(source) }];
 }));
 
-// Execute the exact transfer shell with unchanged, changed, first-state and
-// missing-state inputs. Only a real prepared difference can enter persistence.
-{
-  const transfer = workflows.pipeline.jobs.find((j) => j.name === "check").steps
-    .find((s) => s.name === "Prepare alarm state for persistence");
-  const shell = transfer.raw.split("        run: |\n")[1].split("\n")
-    .map((line) => line.replace(/^          /, "")).join("\n");
-  for (const kind of ["unchanged", "changed", "first", "missing"]) {
-    const temp = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-transfer-"));
-    try {
-      fs.mkdirSync(path.join(temp, "data/admin"), { recursive: true });
-      fs.mkdirSync(path.join(temp, "pipeline-alarm-state-transfer"));
-      const state = '{"status":"clear"}\n';
-      if (kind !== "missing") fs.writeFileSync(path.join(temp, "data/admin/alarm-state.json"), state);
-      const fingerprint = kind === "unchanged" ? crypto.createHash("sha256").update(state).digest("hex")
-        : kind === "first" ? "missing" : "a".repeat(64);
-      fs.writeFileSync(path.join(temp, "pipeline-alarm-state-transfer/base.sha256"), fingerprint + "\n");
-      const output = path.join(temp, "outputs");
-      const run = () => execFileSync("bash", ["-c", shell], { cwd: temp, env: { ...process.env, GITHUB_OUTPUT: output }, stdio: "pipe" });
-      if (kind === "missing") { assert.throws(run, "missing emitted state must fail before persistence"); continue; }
-      run();
-      const changed = kind !== "unchanged";
-      assert.equal(fs.readFileSync(output, "utf8"), `changed=${changed}\n`);
-      assert.equal(fs.existsSync(path.join(temp, "pipeline-alarm-state-transfer/alarm-state.json")), changed);
-    } finally { fs.rmSync(temp, { recursive: true, force: true }); }
+// The alarm now hydrates and publishes one plane generation in the check job.
+const check = workflows.pipeline.jobs.find(job => job.name === "check");
+assert.ok(check, "alarm check job must exist");
+const step = name => {
+  const found = check.steps.find(item => item.name === name);
+  assert.ok(found, `missing alarm step: ${name}`);
+  return found;
+};
+const baseline = step("Hydrate active alarm transition state");
+const detector = step("Check pipeline job health");
+const proof = step("Apply dispatch-only alarm proof");
+const emitter = step("Emit alarm state");
+const issue = step("Open or update OPS issue");
+const clear = step("Post all-clear on the OPS issue");
+const publish = step("Publish alarm transition state");
+const ordered = [baseline, detector, proof, emitter, issue, clear, publish].map(item => check.steps.indexOf(item));
+assert.deepEqual(ordered, [...ordered].sort((a, b) => a - b));
+assert.equal(detector.bestEffort, true, "detection failures must reach reporting");
+for (const item of [baseline, proof, emitter, issue, clear, publish]) assert.equal(item.bestEffort, false, item.name);
+assert.match(baseline.raw, /--family pipeline-alarm-state/);
+assert.match(publish.raw, /--family=pipeline-alarm-state/);
+assert.match(publish.raw, /PUBLISH_EXPECTED_ACTIVE_GENERATION_ID:.*steps\.baseline\.outputs\.generation/);
+assert.match(publish.raw, /PUBLISH_EXPECTED_ACTIVE_MANIFEST_SHA256:.*steps\.baseline\.outputs\.manifest/);
+assert.match(workflows.pipeline.source, /options: \[none, trigger, clear\]/);
+assert.match(proof.condition, /github\.event_name == 'workflow_dispatch'/);
+assert.match(proof.condition, /inputs\.proof_phase != 'none'/);
+assert.match(proof.condition, /steps\.baseline\.outcome == 'success'/);
+assert.match(proof.raw, /node scripts\/ops\/alarm-proof-lifecycle\.mjs/);
+assert.match(emitter.condition, /steps\.baseline\.outcome == 'success'/);
+assert.match(emitter.condition, /steps\.proof\.outcome != 'failure'/);
+assert.match(issue.condition, /steps\.proof\.outputs\.alarming == 'true'/);
+assert.match(clear.condition, /inputs\.proof_phase == 'clear'/);
+assert.match(clear.raw, /Proof clear requires the exact proof issue title/);
+assert.equal(publish.condition, undefined, "normal success gating prevents promotion after reporting failures");
+
+// Execute the shipped detector shell without network calls. Either failed
+// detector must leave a failure outcome for the continue-on-error step.
+const shell = detector.raw.split("        run: |\n")[1].split("\n")
+  .map(line => line.replace(/^          /, "")).join("\n");
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-detector-"));
+try {
+  fs.writeFileSync(path.join(temp, "node"), `#!/bin/sh
+case "$1" in
+  *check-pipeline-job-health.mjs) exit "$PIPELINE_EXIT" ;;
+  *check-a1-lane-health.mjs) exit "$A1_EXIT" ;;
+  *) exit 99 ;;
+esac
+`, { mode: 0o755 });
+  for (const [pipeline, a1] of [[0, 0], [2, 0], [0, 2], [2, 2]]) {
+    const run = () => execFileSync("bash", ["-c", shell], {
+      cwd: temp, stdio: "pipe",
+      env: { ...process.env, PATH: `${temp}:${process.env.PATH}`, PIPELINE_EXIT: String(pipeline), A1_EXIT: String(a1) },
+    });
+    if (pipeline || a1) assert.throws(run, error => error.status === 2);
+    else run();
   }
-}
+} finally { fs.rmSync(temp, { recursive: true, force: true }); }
 
 console.log("test-pipeline-failure-alarm-manifest: ok");
