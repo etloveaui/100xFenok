@@ -529,6 +529,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Premarket is deliberately dormant until its edition, final pack and hub are released.
+  // Remove this hold at go-live; page-level notFound() can be too late for HTTP status.
+  if (pathname.startsWith("/brief/premarket/")) {
+    return withNoindexHeader(new NextResponse("발행된 프리마켓 브리프가 없습니다.", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    }));
+  }
+
   // Ahead of any bridge response: a safe, known-missing post must leave with
   // a real 404 rather than a 200 carrying a not-found body.
   const postsNotFoundRewrite = getPostsNotFoundRewrite(request);

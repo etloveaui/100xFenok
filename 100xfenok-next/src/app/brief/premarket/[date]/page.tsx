@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import BriefPremarketClient from "@/components/brief/BriefPremarketClient";
 import AppShell from "@/components/shell/AppShell";
 import { BRIEF_DATE_RE, briefPremarketDataUrl, dateline } from "@/lib/brief/brief";
@@ -20,8 +21,11 @@ async function readEditionSummary(date: string): Promise<{ headline: string; lea
   try {
     const result = await readDataAsset(briefPremarketDataUrl(date));
     if (result.kind !== "ok") return null;
-    const doc = JSON.parse(result.raw) as { date?: unknown; headline?: unknown; lead?: unknown };
-    if (doc.date !== date || typeof doc.headline !== "string" || typeof doc.lead !== "string") return null;
+    const doc = JSON.parse(result.raw) as {
+      schema?: unknown; product_name?: unknown; date?: unknown; headline?: unknown; lead?: unknown;
+    };
+    if (doc.schema !== "daily-digest/v1" || doc.product_name !== "프리마켓 브리프" || doc.date !== date ||
+        typeof doc.headline !== "string" || typeof doc.lead !== "string") return null;
     return { headline: doc.headline, lead: doc.lead };
   } catch {
     return null;
@@ -46,6 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BriefPremarketPage({ params }: Props) {
   const { date } = await params;
+  if (!(await readEditionSummary(date))) notFound();
   return (
     <AppShell active="brief" title="프리마켓 브리프">
       <BriefPremarketClient date={date} />
