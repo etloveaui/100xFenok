@@ -82,7 +82,9 @@ function proveAlarmTransition(label, openHealth, clearHealth, body, expected) {
   assert.deepEqual(result.outcome_alarms[0].reasons, ["member_ratio_low"], "one expired member alarms despite 99% fresh");
   const recovery = classify(row(1482, 1494));
   proveAlarmTransition("ETF detail band recovery", { status: "alarm", data_health_kpi: result },
-    { status: "ok", data_health_kpi: recovery }, buildIssueBody([{ kpi_outcome_alarms: result.outcome_alarms }]), /member_ratio_low/);
+    { status: "ok", data_health_kpi: recovery }, buildIssueBody([{
+      kpi_stopped_sets: result.stopped_sets, kpi_outcome_alarms: result.outcome_alarms,
+    }]), /member_ratio_low/);
 }
 
 {
