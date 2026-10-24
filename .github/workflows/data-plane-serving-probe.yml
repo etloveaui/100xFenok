@@ -73,7 +73,8 @@ jobs:
     if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
     needs: clock-admission
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Full pass (10m), one 3m wait and a bounded sequential recheck (10m).
+    timeout-minutes: 30
     steps:
       - name: Checkout probe scripts
         uses: actions/checkout@v7
@@ -107,9 +108,9 @@ jobs:
         run: |
           set -euo pipefail
           title="100xFenok data-plane serving probe alarm"
-          # Keep the full report in the run log, but persist only failing rows
-          # and their reasons. Repeating every OK row made one issue exceed a
-          # megabyte without adding evidence.
+          # Persist first-failure/recheck evidence, including recovered rows,
+          # when another asset still requires an incident. Repeating every OK
+          # row made one issue exceed a megabyte without adding evidence.
           # A crashed probe writes no report at all. Letting awk die on the
           # missing file turned 15 consecutive module-load crashes into silence
           # and left this issue stale from 2026-08-16. A probe that could not
@@ -124,7 +125,7 @@ jobs:
             } > probe-issue.md
           else
             awk '
-              /^- FAIL / { emit=1; print; next }
+              /^- (FAIL|RECOVERED) / { emit=1; print; next }
               /^- / { emit=0 }
               emit && /^  - / { print }
             ' probe-report.md > probe-failures.md

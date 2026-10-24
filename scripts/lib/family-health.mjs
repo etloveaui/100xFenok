@@ -60,6 +60,10 @@ export function etfSourceMembers(index, policy, cadence = index?.detail_refresh_
       refresh_policy: detailSourcePolicy(member, cadence, policy.emergency_lkg_ttl_days) }));
 }
 
+export function sourceRatioBelowBand(fresh, total) {
+  return total > 0 && fresh / total < 0.8;
+}
+
 export function summarizeSourceHealth(members, now, policy) {
   const rows = members.map(row => ({ ...row,
     source_freshness: sourceFreshness(row.source_as_of, now,
@@ -68,7 +72,6 @@ export function summarizeSourceHealth(members, now, policy) {
   for (const row of rows) counts[row.source_freshness] += 1;
   const dated = rows.filter(row => row.source_freshness !== "unknown")
     .sort((a, b) => Date.parse(a.source_as_of) - Date.parse(b.source_as_of) || a.member.localeCompare(b.member));
-  const ratio = rows.length ? counts.fresh / rows.length : 0;
   const bounds = rows.map(row => row.refresh_policy).filter(Boolean);
   return { observed_at: now, scope: "detail", policy: bounds.length ? {
     basis: "member_rotation", interval_days: [...new Set(bounds.map(p => p.interval_days))].sort((a,b)=>a-b),
@@ -76,7 +79,7 @@ export function summarizeSourceHealth(members, now, policy) {
     fresh_bound_days: [...new Set(bounds.map(p => p.fresh_ttl_hours / 24))].sort((a,b)=>a-b),
     expired_bound_days: [...new Set(bounds.map(p => p.emergency_lkg_ttl_days))].sort((a,b)=>a-b),
   } : { fresh_ttl_hours: policy.fresh_ttl_hours, emergency_lkg_ttl_days: policy.emergency_lkg_ttl_days },
-    status: !rows.length ? "unknown" : counts.fresh === rows.length ? "fresh" : ratio >= 0.8 ? "degraded" : "stopped",
+    status: !rows.length ? "unknown" : counts.fresh === rows.length ? "fresh" : sourceRatioBelowBand(counts.fresh, rows.length) ? "stopped" : "degraded",
     reason: !rows.length ? "members_unavailable" : counts.fresh === rows.length ? null : "member_ratio_low",
     total_members: rows.length, fresh_members: counts.fresh, counts,
     oldest_source_date: dated[0]?.source_as_of ?? null,

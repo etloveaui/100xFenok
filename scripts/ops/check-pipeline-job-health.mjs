@@ -6,7 +6,7 @@ import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 import { createR2RestBucket } from "../lib/cloud-data-plane-r2-rest.mjs";
 import { createDefaultMaterializePlane, readActiveFamilyIdentity } from "../materialize-cloud-data-plane-family.mjs";
 import { sha256Bytes, validateGenerationManifest } from "../lib/cloud-data-plane-generation.mjs";
-import { classifyFamilyHealth, healthKey } from "../lib/family-health.mjs";
+import { classifyFamilyHealth, healthKey, sourceRatioBelowBand } from "../lib/family-health.mjs";
 import { STATE_TITLE as RETENTION_STATE_TITLE, classifyRetentionSchedule } from "./retention-schedule.mjs";
 import { EXTERNAL_CLOCK_CRONS, EXTERNAL_CLOCK_ADMITTED_AT, externalClockCrons, externalClockSlot, externalClockEvent, clockCronMatches } from "../../ops/a1-lanes/external-clock.mjs";
 // The same declared-slot derivation the admission check uses, so a scheduled
@@ -470,10 +470,13 @@ function kpiGenerationStatuses(generation) {
 // not manufacture an outage. Rebuilt KPI envelopes are not new attempts.
 function sourceOutcomeAlarms(latest, previous) {
   const prior = new Map(previous.sets.map(row => [row.set, row]));
-  const breached = row => ["delayed", "stopped"].includes(row?.status);
+  const detailBreach = row => row?.source_health?.counts?.expired > 0
+    || sourceRatioBelowBand(row?.fresh_members, row?.total_members);
+  const breached = row => ["delayed", "stopped"].includes(row?.status)
+    && (row.set !== "stockanalysis_etf_detail" || detailBreach(row));
   const lowRatio = row => Number.isSafeInteger(row?.total_members) && row.total_members > 0
     && Number.isSafeInteger(row.fresh_members) && row.fresh_members >= 0
-    && row.fresh_members < row.total_members;
+    && (row.set === "stockanalysis_etf_detail" ? detailBreach(row) : row.fresh_members < row.total_members);
   return latest.sets.flatMap(row => {
     const old = prior.get(row.set);
     if (!breached(row) || !breached(old)) return [];

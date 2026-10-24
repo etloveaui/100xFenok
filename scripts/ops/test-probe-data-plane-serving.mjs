@@ -18,6 +18,7 @@ import {
   parseRequestTimeoutMs,
   parseTotalProbeDeadlineMs,
   probeAll,
+  recheckTransportFailures,
   resolvePublishedAgeDays,
   resolveSourceAgeDays,
 } from "./probe-data-plane-serving.mjs";
@@ -1231,6 +1232,78 @@ for (const universeCase of ["valid", "stale", "malformed"]) {
   });
   assert.equal(results.find((row) => row.path === "/data/slickcharts/stocks/AVB.json").ok,
     universeCase === "valid", universeCase);
+}
+
+// Only 5xx/timeouts get one delayed, spaced pass. A 200 response must still
+// satisfy metadata/freshness; deterministic failures never spend retry traffic.
+{
+  const retryPaths = ["/data/macro/fred-macro.json", "/data/sentiment/vix.json", "/data/slickcharts/gainers.json"];
+  const first = retryPaths.map(path => evaluateProbeResponse({ path, family: ENROLLED_PATHS.get(path), status: 503 }));
+  first[1] = { ...first[1], failures: ["fetch timed out after 15000 ms (no response within bound)"] };
+  const metadata = { path: "/data/macro/tga.json", family: "treasury-tga", ok: false, failures: ["invalid generation header"] };
+  const notFound = evaluateProbeResponse({ path: "/data/missing.json", family: "fixture", status: 404 });
+  const waits = [], fetched = [];
+  let calls = 0, active = 0, maximum = 0;
+  const results = await recheckTransportFailures([...first, metadata, notFound], {
+    baseUrl: "https://example.test", nowIso: NOW,
+    waitFn: async ms => { waits.push(ms); },
+    probeFn: async options => {
+      calls++;
+      assert.deepEqual(options.paths, retryPaths);
+      assert.equal(options.concurrency, 1);
+      assert.equal(options.requestTimeoutMs, DEFAULT_REQUEST_TIMEOUT_MS);
+      return probeAll(options);
+    },
+    requestTimeoutMs: DEFAULT_REQUEST_TIMEOUT_MS,
+    fetchFn: async url => {
+      const path = new URL(url).pathname, family = ENROLLED_PATHS.get(path);
+      fetched.push(path);
+      active++; maximum = Math.max(maximum, active);
+      await Promise.resolve(); active--;
+      return new Response(null, { status: path === retryPaths[1] ? 503 : 200, headers: {
+        "x-data-plane-generation": path === retryPaths[2] ? "wrong-family" : `${family}-fixture`,
+        "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
+        "x-data-plane-published-at": hoursAgo(1),
+      } });
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(maximum, 1);
+  // probeAll keeps the enrollment order, not caller-provided order.
+  assert.deepEqual([...fetched].sort(), [...retryPaths].sort());
+  assert.deepEqual(waits, [180000, 1000, 1000]);
+  assert.equal(results[0].ok, true);
+  assert.equal(results[1].ok, false);
+  assert.equal(results[2].ok, false, "invalid metadata after HTTP recovery still alarms");
+  assert.equal(results[3].recheck, null);
+  assert.equal(results[4].recheck, null);
+  const report = buildReport(results);
+  assert.equal(report.failingCount, 4);
+  assert.match(report.body, /- RECOVERED .*fred-macro/);
+  assert.match(report.body, /First pass: HTTP 503/);
+  assert.match(report.body, /Recheck: OK/);
+  assert.match(report.body, /Recheck: HTTP 503/);
+  assert.match(report.body, /not required \(non-transport failure\)/);
+  assert.equal(buildReport([results[0]]).ok, true, "recovered transients do not open an issue");
+  assert.equal(buildReport([results[1]]).ok, false, "persistent transport failure still opens an issue");
+  await recheckTransportFailures([metadata, notFound], {
+    waitFn: async () => assert.fail("no transport failure: no wait"),
+    probeFn: async () => assert.fail("no transport failure: no recheck"),
+  });
+}
+
+{
+  const path = "/data/slickcharts/stocks/AVB.json";
+  const first = evaluateProbeResponse({ path, family: "slickcharts", status: 503 });
+  const results = await recheckTransportFailures([first], {
+    baseUrl: "https://example.test", nowIso: NOW, waitFn: async () => {},
+    sourceContext: { activeSlickchartsSymbols: new Set(["AAPL"]) },
+    fetchFn: async () => new Response(null, { headers: {
+      "x-data-plane-generation": "slickcharts-fixture",
+      "x-data-plane-source-as-of": "2026-01-09", "x-data-plane-published-at": hoursAgo(1),
+    } }),
+  });
+  assert.equal(results[0].ok, true, "recheck retains the first sweep's validated retirement context");
 }
 
 console.log("probe-data-plane-serving tests passed");

@@ -26,6 +26,7 @@ import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worke
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-config.mjs";
 import { matchesDayWeekday } from "../lib/schedule-day-weekday.mjs";
 import { performance } from "node:perf_hooks";
+import { setTimeout as delay } from "node:timers/promises";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
@@ -316,7 +317,8 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
   const failures = [];
   if (status !== 200) {
     failures.push(`HTTP ${status} (expected 200)`);
-    return { path, family, ok: false, mode: "strict", failures };
+    return { path, family, ok: false, mode: "strict", failures,
+      ...(status >= 500 && status < 600 ? { transportFailure: true } : {}) };
   }
   const nowMs = Date.parse(nowIso ?? "");
   const nowIsValid = Number.isFinite(nowMs);
@@ -461,17 +463,21 @@ export async function probeAll({
   totalDeadlineMs = DEFAULT_TOTAL_PROBE_DEADLINE_MS,
   concurrency = DEFAULT_PROBE_CONCURRENCY,
   monotonicNowFn = () => performance.now(),
+  paths,
+  sourceContext = {},
+  beforeRequest = async () => {},
 }) {
   const effectiveTimeoutMs = parseRequestTimeoutMs(requestTimeoutMs);
   const effectiveTotalDeadlineMs = parseTotalProbeDeadlineMs(totalDeadlineMs);
   const effectiveConcurrency = parseProbeConcurrency(concurrency);
   const probeStartedAtMs = monotonicNowFn();
   const remainingTotalMs = () => effectiveTotalDeadlineMs - (monotonicNowFn() - probeStartedAtMs);
-  const enrolledEntries = [...ENROLLED_PATHS];
+  const selectedPaths = paths === undefined ? null : new Set(paths);
+  const enrolledEntries = [...ENROLLED_PATHS].filter(([path]) => selectedPaths === null || selectedPaths.has(path));
   const results = new Array(enrolledEntries.length);
   let nextIndex = 0;
   let totalDeadlineReached = false;
-  let activeSlickchartsSymbols = null;
+  let activeSlickchartsSymbols = sourceContext.activeSlickchartsSymbols ?? null;
   const stockHistoryChecks = new Map();
   // This enumerates exact ENROLLED_PATHS only. Prefix-enrolled EDGAR policy is
   // defined above but has no live probe coverage here; adding representative
@@ -484,6 +490,7 @@ export async function probeAll({
       const index = nextIndex;
       nextIndex += 1;
       const [path, family] = enrolledEntries[index];
+      await beforeRequest();
       const remainingBeforeRequestMs = remainingTotalMs();
       if (remainingBeforeRequestMs <= 0) return;
       let response;
@@ -514,6 +521,7 @@ export async function probeAll({
           ok: false,
           mode: "strict",
           failures: [error?.code === "REQUEST_TIMEOUT" ? error.message : `fetch failed: ${error?.message ?? error}`],
+          ...(error?.code === "REQUEST_TIMEOUT" ? { transportFailure: true } : {}),
         };
         continue;
       }
@@ -539,7 +547,10 @@ export async function probeAll({
         && universePayload.uniqueCount === universePayload.stocks.length
         && universePayload.stocks.every((row) => typeof row.symbol === "string" && row.symbol.length > 0)) {
         const symbols = new Set(universePayload.stocks.map((row) => row.symbol));
-        if (symbols.size === universePayload.uniqueCount) activeSlickchartsSymbols = symbols;
+        if (symbols.size === universePayload.uniqueCount) {
+          activeSlickchartsSymbols = symbols;
+          sourceContext.activeSlickchartsSymbols = symbols;
+        }
       }
     }
   }
@@ -560,11 +571,36 @@ export async function probeAll({
   return results;
 }
 
+// One delayed, sequential pass over transport failures only. Reuse the full
+// sweep's validated membership when checking a retired stock's source age.
+export async function recheckTransportFailures(firstResults, {
+  probeFn = probeAll, waitFn = delay, ...options
+} = {}) {
+  const failed = firstResults.filter(row => !row.ok && row.transportFailure);
+  let rechecked = [];
+  if (failed.length) {
+    await waitFn(3 * 60_000);
+    let started = false;
+    rechecked = await probeFn({ ...options, paths: failed.map(row => row.path), concurrency: 1,
+      beforeRequest: async () => {
+        if (started) await waitFn(1000);
+        started = true;
+      } });
+  }
+  const byPath = new Map(rechecked.map(row => [row.path, row]));
+  return firstResults.map(firstPass => firstPass.ok ? firstPass : {
+    ...(byPath.get(firstPass.path) ?? firstPass), firstPass,
+    recheck: byPath.get(firstPass.path) ?? null,
+  });
+}
+
 export function buildReport(results) {
   const failing = results.filter((r) => !r.ok);
   const lines = [];
   for (const r of results) {
-    if (r.ok) {
+    if (r.ok && r.firstPass) {
+      lines.push(`- RECOVERED ${r.path} (${r.family})`);
+    } else if (r.ok) {
       if (r.mode === "fallback-allowed") {
         lines.push(`- FALLBACK-ALLOWED ${r.path} (${r.family})`);
       } else {
@@ -572,7 +608,12 @@ export function buildReport(results) {
       }
     } else {
       lines.push(`- FAIL ${r.path} (${r.family})`);
-      for (const failure of r.failures) lines.push(`  - ${failure}`);
+      if (!r.firstPass) for (const failure of r.failures) lines.push(`  - ${failure}`);
+    }
+    if (r.firstPass) {
+      lines.push(`  - First pass: ${r.firstPass.failures.join("; ")}`);
+      lines.push(`  - Recheck: ${r.recheck ? r.recheck.ok ? "OK" : r.recheck.failures.join("; ")
+        : "not required (non-transport failure)"}`);
     }
   }
   return { ok: failing.length === 0, failingCount: failing.length, body: lines.join("\n") };
@@ -584,14 +625,19 @@ async function main() {
   const requestTimeoutMs = parseRequestTimeoutMs(process.env.PROBE_REQUEST_TIMEOUT_MS);
   const totalDeadlineMs = parseTotalProbeDeadlineMs(process.env.PROBE_TOTAL_DEADLINE_MS);
   const concurrency = parseProbeConcurrency(process.env.PROBE_CONCURRENCY);
-  const results = await probeAll({
+  const options = {
     baseUrl,
     fetchFn: fetch,
     maxAgeDays,
     requestTimeoutMs,
     totalDeadlineMs,
     concurrency,
-  });
+    sourceContext: {},
+  };
+  const firstResults = await probeAll(options);
+  // Log the first pass before the delay so an interrupted job retains it.
+  console.log("First pass\n" + buildReport(firstResults).body);
+  const results = await recheckTransportFailures(firstResults, options);
   const report = buildReport(results);
   const outPath = process.env.PROBE_REPORT_PATH;
   if (outPath) {
@@ -599,6 +645,12 @@ async function main() {
     writeFileSync(outPath, `${report.body}\n`);
   }
   console.log(report.body);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const firstFailures = firstResults.filter(row => !row.ok).length;
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+      `## Serving probe\n\nFirst pass: ${firstResults.length} assets, ${firstFailures} failures. Final: ${report.failingCount} failures.\n\n`
+      + buildReport(results.filter(row => row.firstPass)).body + "\n");
+  }
   if (!report.ok) {
     console.error(`[alarm] ${report.failingCount} enrolled asset(s) failing the serving probe.`);
     process.exit(1);

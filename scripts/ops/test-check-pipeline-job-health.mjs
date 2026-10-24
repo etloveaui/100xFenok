@@ -8,6 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { summarizeSourceHealth, detailSourcePolicy } from "../lib/family-health.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
@@ -45,6 +46,43 @@ function proveAlarmTransition(label, openHealth, clearHealth, body, expected) {
     assert.match(fs.readFileSync(outputPath, "utf8"), /incident_resolved=true/);
     console.log(`PROOF ${label} open: ${JSON.stringify(open.open_incidents)} / clear: ${clear.status} incident_resolved=true`);
   } finally { fs.rmSync(temp, { recursive: true, force: true }); }
+}
+
+// ETF rotation lag is in-band until the shared 80% floor or a member's
+// existing expiry bound is breached. BLSG must not disappear in the ratio.
+{
+  const priorAt = "2026-10-24T10:00:00Z", latestAt = "2026-10-24T11:00:00Z";
+  const row = (fresh, total, expired = 0) => ({ set: "stockanalysis_etf_detail", status: "delayed",
+    fresh_members: fresh, total_members: total, source_health: { counts: { expired } },
+    newest_source_date: "2026-10-23", latest_attempt: { observed_at: priorAt, outcome: "retained" },
+    outcome_state: { attempt_at: priorAt, source_as_of: "2026-10-23", consecutive_retained: 3, unchanged_source_attempts: 3 } });
+  const classify = value => classifyKpiGenerationStoppage([
+    { generated_at: latestAt, sets: [value] }, { generated_at: priorAt, sets: [value] },
+  ], { now: Date.parse("2026-10-24T11:01:00Z"), crons: ["0 10,11 * * *"] });
+  assert.equal(classify(row(1482, 1494)).status, "ok", "12 stale members are inside the existing band");
+  assert.equal(classify(row(80, 100)).status, "ok", "80% is in-band, including retained/unchanged attempts");
+  assert.ok(classify(row(79, 100)).outcome_alarms[0].reasons.includes("member_ratio_low"));
+
+  const policy = detailSourcePolicy("BLSG", { schema_version: "etf-detail-rotation/v1",
+    core_tickers: ["BLSG"], tier2_tickers: [] }, 14);
+  const source = "2026-10-16T00:00:00Z";
+  const expiry = Date.parse(source) + policy.emergency_lkg_ttl_days * 86400_000;
+  const members = [{ member: "BLSG", source_as_of: source, refresh_policy: policy },
+    ...Array.from({ length: 99 }, (_, i) => ({ member: `F${i}`, source_as_of: new Date(expiry).toISOString(), refresh_policy: policy }))];
+  const within = summarizeSourceHealth(members, new Date(expiry).toISOString(), policy);
+  const expired = summarizeSourceHealth(members, new Date(expiry + 1).toISOString(), policy);
+  assert.equal(within.counts.expired, 0);
+  assert.equal(expired.counts.expired, 1);
+  assert.equal(expired.oldest_source_member, "BLSG");
+  const snapshot = at => ({ generated_at: at, sets: [{ set: "stockanalysis_etf_detail", status: "delayed",
+    fresh_members: expired.fresh_members, total_members: expired.total_members, source_health: expired }] });
+  const result = classifyKpiGenerationStoppage([
+    snapshot(new Date(expiry + 2000).toISOString()), snapshot(new Date(expiry + 1000).toISOString()),
+  ], { now: expiry + 3000, crons: ["0 0 * * *"] });
+  assert.deepEqual(result.outcome_alarms[0].reasons, ["member_ratio_low"], "one expired member alarms despite 99% fresh");
+  const recovery = classify(row(1482, 1494));
+  proveAlarmTransition("ETF detail band recovery", { status: "alarm", data_health_kpi: result },
+    { status: "ok", data_health_kpi: recovery }, buildIssueBody([{ kpi_outcome_alarms: result.outcome_alarms }]), /member_ratio_low/);
 }
 
 {
