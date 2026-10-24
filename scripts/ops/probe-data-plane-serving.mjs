@@ -54,6 +54,28 @@ const UNDATED_SOURCE_PATHS = new Set([
 const SLICKCHARTS_UNIVERSE_PATH = "/data/slickcharts/universe.json";
 
 export const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
+export const SERVING_PROOF_ASSET = "/data/macro/fred-macro.json";
+
+// Dispatch-only proof shares the real evaluator/recheck path, with one named
+// injected response and one real control. It never changes the serving Worker.
+export function servingProofOptions(phase = "none", eventName, fetchFn = fetch) {
+  if (!["none", "transient", "persistent", "clear"].includes(phase)) throw new Error(`Invalid serving proof phase: ${phase}`);
+  if (phase === "none") return { fetchFn };
+  if (eventName !== "workflow_dispatch") throw new Error("Serving proof is dispatch-only");
+  let targetReads = 0;
+  return {
+    paths: [SERVING_PROOF_ASSET, "/data/macro/stablecoins.json"], concurrency: 1,
+    fetchFn: async (url, init) => {
+      if (new URL(url).pathname === SERVING_PROOF_ASSET) {
+        targetReads++;
+        if (phase === "persistent" || (phase === "transient" && targetReads === 1)) {
+          return new Response('{"proof":true,"error":"SYNTHETIC_HTTP_503"}', { status: 503 });
+        }
+      }
+      return fetchFn(url, init);
+    },
+  };
+}
 // Milliseconds a single enrolled URL may take to answer before it is cut off
 // and recorded as FAIL. Immutable default; the env override (and the probeAll
 // argument) can only tighten behavior, never remove the bound.
@@ -620,6 +642,10 @@ export function buildReport(results) {
 }
 
 async function main() {
+  const proofPhase = process.env.PROOF_PHASE || "none";
+  const proofOptions = servingProofOptions(proofPhase, process.env.GITHUB_EVENT_NAME);
+  const notice = proofPhase === "none" ? ""
+    : `[PROOF] Synthetic serving-probe lifecycle check: ${proofPhase}; target ${SERVING_PROOF_ASSET}.\n\n`;
   const baseUrl = process.env.PROBE_BASE_URL || DEFAULT_BASE_URL;
   const maxAgeDays = parseLegacySourceAgeCap(process.env.PROBE_MAX_SOURCE_AGE_DAYS);
   const requestTimeoutMs = parseRequestTimeoutMs(process.env.PROBE_REQUEST_TIMEOUT_MS);
@@ -633,22 +659,23 @@ async function main() {
     totalDeadlineMs,
     concurrency,
     sourceContext: {},
+    ...proofOptions,
   };
   const firstResults = await probeAll(options);
   // Log the first pass before the delay so an interrupted job retains it.
-  console.log("First pass\n" + buildReport(firstResults).body);
+  console.log(notice + "First pass\n" + buildReport(firstResults).body);
   const results = await recheckTransportFailures(firstResults, options);
   const report = buildReport(results);
   const outPath = process.env.PROBE_REPORT_PATH;
   if (outPath) {
     const { writeFileSync } = await import("node:fs");
-    writeFileSync(outPath, `${report.body}\n`);
+    writeFileSync(outPath, `${notice}${report.body}\n`);
   }
   console.log(report.body);
   if (process.env.GITHUB_STEP_SUMMARY) {
     const firstFailures = firstResults.filter(row => !row.ok).length;
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-      `## Serving probe\n\nFirst pass: ${firstResults.length} assets, ${firstFailures} failures. Final: ${report.failingCount} failures.\n\n`
+      `## Serving probe\n\n${notice}First pass: ${firstResults.length} assets, ${firstFailures} failures. Final: ${report.failingCount} failures.\n\n`
       + buildReport(results.filter(row => row.firstPass)).body + "\n");
   }
   if (!report.ok) {

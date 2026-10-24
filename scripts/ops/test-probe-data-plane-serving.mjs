@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import {
   DEFAULT_ABORT_CLEANUP_GRACE_MS,
   DEFAULT_MAX_PUBLISHED_AGE_DAYS,
@@ -11,6 +12,7 @@ import {
   FAMILY_SOURCE_AGE_DAYS,
   PATH_SOURCE_AGE_DAYS,
   SOURCE_AGE_UNBOUNDED_FAMILIES,
+  SERVING_PROOF_ASSET,
   buildReport,
   evaluateProbeResponse,
   parseLegacySourceAgeCap,
@@ -21,6 +23,7 @@ import {
   recheckTransportFailures,
   resolvePublishedAgeDays,
   resolveSourceAgeDays,
+  servingProofOptions,
 } from "./probe-data-plane-serving.mjs";
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
 
@@ -1304,6 +1307,52 @@ for (const universeCase of ["valid", "stale", "malformed"]) {
     } }),
   });
   assert.equal(results[0].ok, true, "recheck retains the first sweep's validated retirement context");
+}
+
+// Live proof uses the real production evaluator and 3-minute recheck; its
+// injection is dispatch-only and its scope cannot become a full fleet sweep.
+{
+  assert.throws(() => servingProofOptions("persistent", "schedule"), /dispatch-only/);
+  assert.throws(() => servingProofOptions("invalid", "workflow_dispatch"), /Invalid/);
+  const untouched = async () => {};
+  assert.deepEqual(servingProofOptions("none", "schedule", untouched), { fetchFn: untouched });
+  for (const phase of ["transient", "persistent", "clear"]) {
+    const realReads = [], waits = [];
+    const options = { baseUrl: "https://example.test", nowIso: NOW, sourceContext: {},
+      ...servingProofOptions(phase, "workflow_dispatch", async url => {
+        const path = new URL(url).pathname, family = ENROLLED_PATHS.get(path);
+        realReads.push(path);
+        return new Response(null, { headers: {
+          "x-data-plane-generation": `${family}-fixture`,
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
+          "x-data-plane-published-at": hoursAgo(1),
+        } });
+      }),
+    };
+    const first = await probeAll(options);
+    assert.equal(first.length, 2);
+    assert.equal(first.filter(row => !row.ok).length, phase === "clear" ? 0 : 1);
+    const final = await recheckTransportFailures(first, { ...options, waitFn: async ms => waits.push(ms) });
+    const report = buildReport(final);
+    assert.equal(report.ok, phase !== "persistent");
+    assert.deepEqual(waits, phase === "clear" ? [] : [180000]);
+    if (phase === "transient") {
+      assert.match(report.body, /RECOVERED \/data\/macro\/fred-macro.json/);
+      assert.match(report.body, /First pass: HTTP 503/);
+      assert.match(report.body, /Recheck: OK/);
+    } else if (phase === "persistent") {
+      assert.match(report.body, /First pass: HTTP 503/);
+      assert.match(report.body, /Recheck: HTTP 503/);
+      assert.equal(realReads.includes(SERVING_PROOF_ASSET), false);
+    }
+    assert.ok(realReads.every(path => options.paths.includes(path)));
+    assert.equal(realReads.length, phase === "persistent" ? 1 : 2);
+  }
+  const workflow = fs.readFileSync(new URL("../../.github/workflows/data-plane-serving-probe.yml", import.meta.url), "utf8");
+  assert.match(workflow, /options: \[none, transient, persistent, clear\]/);
+  assert.match(workflow, /\[PROOF\] 100xFenok data-plane serving probe alarm/);
+  assert.equal((workflow.match(/title="\$PROBE_ISSUE_TITLE"/g) ?? []).length, 2, "both open and clear use the isolated issue selector");
+  assert.match(workflow, /family-health:\n.*inputs\.proof_phase == 'none'/);
 }
 
 console.log("probe-data-plane-serving tests passed");

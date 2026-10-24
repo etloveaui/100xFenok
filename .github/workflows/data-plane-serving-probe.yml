@@ -16,6 +16,12 @@ on:
     - cron: '41 */6 * * *'
   workflow_dispatch:
     inputs:
+      proof_phase:
+        description: 'Bounded live alarm-path proof; synthetic failures use an isolated [PROOF] issue'
+        required: false
+        default: none
+        type: choice
+        options: [none, transient, persistent, clear]
       external_clock:
         description: 'Automatic clock marker; leave empty for human dispatch'
         required: false
@@ -30,6 +36,11 @@ on:
 permissions:
   contents: read
   issues: write
+
+# A proof can never select the real incident title, including a crashed probe.
+env:
+  PROOF_PHASE: ${{ github.event_name == 'workflow_dispatch' && inputs.proof_phase || 'none' }}
+  PROBE_ISSUE_TITLE: ${{ github.event_name == 'workflow_dispatch' && inputs.proof_phase != '' && inputs.proof_phase != 'none' && '[PROOF] 100xFenok data-plane serving probe alarm' || '100xFenok data-plane serving probe alarm' }}
 
 concurrency:
   group: data-plane-serving-probe
@@ -60,7 +71,7 @@ jobs:
         run: node scripts/check-external-clock-slot.mjs data-plane-serving-probe.yml
 
   family-health:
-    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' }}
+    if: ${{ needs.clock-admission.result == 'success' && needs.clock-admission.outputs.skip != 'true' && (inputs.proof_phase == '' || inputs.proof_phase == 'none') }}
     needs: clock-admission
     uses: ./.github/workflows/refresh-family-health.yml
     with:
@@ -107,7 +118,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          title="100xFenok data-plane serving probe alarm"
+          title="$PROBE_ISSUE_TITLE"
           # Persist first-failure/recheck evidence, including recovered rows,
           # when another asset still requires an incident. Repeating every OK
           # row made one issue exceed a megabyte without adding evidence.
@@ -117,6 +128,7 @@ jobs:
           # run is itself the alert.
           if [ ! -s probe-report.md ]; then
             {
+              if [ "$PROOF_PHASE" != none ]; then printf '%s\n\n' "[PROOF] Synthetic serving-probe lifecycle check: $PROOF_PHASE; not a real incident."; fi
               printf '%s\n\n' '[alert] The data-plane serving probe could not produce a report.'
               printf '%s\n' 'The probe step failed before writing probe-report.md, so no asset was actually'
               printf '%s\n' 'checked. Read the "Probe enrolled assets" step log: this is a probe fault,'
@@ -131,7 +143,11 @@ jobs:
             ' probe-report.md > probe-failures.md
             test -s probe-failures.md
             {
-              printf '%s\n\n' '[alert] An enrolled data-plane asset is not healthy on the live Worker.'
+              if [ "$PROOF_PHASE" = none ]; then
+                printf '%s\n\n' '[alert] An enrolled data-plane asset is not healthy on the live Worker.'
+              else
+                printf '%s\n\n' "[PROOF] Synthetic serving-probe lifecycle check: $PROOF_PHASE; not a real incident."
+              fi
               cat probe-failures.md
               printf '\n%s\n' "Observed by: $RUN_URL"
             } > probe-issue.md
@@ -156,13 +172,18 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          title="100xFenok data-plane serving probe alarm"
+          title="$PROBE_ISSUE_TITLE"
           existing="$(gh api --paginate \
             "repos/${GITHUB_REPOSITORY}/issues?state=open&per_page=100&sort=created&direction=asc" \
             --jq ".[] | select(.pull_request == null and .title == \"$title\") | .number" \
             | sort -n | sed -n '1p')"
           [ -n "$existing" ] || exit 0
-          gh issue comment "$existing" --body "[all-clear] Every enrolled asset is served from its published generation and meets its source-date and publication-heartbeat policy. Observed by: $RUN_URL"
+          if [ "$PROOF_PHASE" = none ]; then
+            message='Every enrolled asset is served from its published generation and meets its source-date and publication-heartbeat policy.'
+          else
+            message='[PROOF] The bounded serving assets are healthy; synthetic incident cleared. This is not a full-fleet observation.'
+          fi
+          gh issue comment "$existing" --body "[all-clear] $message Observed by: $RUN_URL"
           gh issue close "$existing" --reason completed
 
       # The run's conclusion is probe-machinery health, not incident state: an
