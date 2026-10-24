@@ -8,11 +8,11 @@
  */
 
 import fs from "node:fs";
-import { dateOnly } from "../100xfenok-next/src/lib/freshness-policy.mjs";
+import { dateOnly, freshnessVerdict, policyToday, resolveSourcePolicy } from "../100xfenok-next/src/lib/freshness-policy.mjs";
 import path from "node:path";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { businessDayAge, isRealCalendarDate } from "./lib/market-calendar.mjs";
-import { readEtfSourceHealth, readDetectionFloorRows, summarizeDataSetFreshness, DETECTION_CALENDARS } from "./lib/fenok-data-health-freshness.mjs";
+import { briefingPublishedAt, readEtfSourceHealth, readDetectionFloorRows, summarizeDataSetFreshness, DETECTION_CALENDARS } from "./lib/fenok-data-health-freshness.mjs";
 import {
   PRODUCT_SURFACE_DATELESS_REASON,
   PRODUCT_SURFACE_COVERAGE_SCHEMA_VERSION,
@@ -365,6 +365,26 @@ function familySourceCheck(laneId, label, sourceAsOf = null) {
   hasSource ? `${health.fresh_members} / ${health.total_members}개 기준 이내` : "원천 기준일 확인 대기",
   { source_health: health, as_of: hasSource ? health.oldest_source_date : null });
 }
+
+function briefingEditionSurface(product, label, productName = null) {
+  const index = readJson("briefing/index.json");
+  const editionDate = index?.latest?.[product];
+  const document = isRealCalendarDate(editionDate) ? readJson(`briefing/${product}/${editionDate}.json`) : null;
+  // Match the edition reader: a dated file with another product's content is
+  // not evidence that this route can serve its latest edition.
+  const contentValid = typeof document?.headline === "string"
+    && (product === "morning" ? typeof document.thesis === "string" : typeof document.lead === "string")
+    && (!productName || (document.schema === "daily-digest/v1" && document.product_name === productName));
+  const publishedAt = contentValid ? briefingPublishedAt(document, editionDate) : null;
+  const policy = resolveSourcePolicy({ laneId: "briefing", cadence: "daily" });
+  const verdict = freshnessVerdict(publishedAt, policy, policyToday(generatedAt, policy), { calendars: DETECTION_CALENDARS });
+  return surface(`brief_${product.replaceAll("-", "_")}`, `/brief/${product}/[date]`, label, "Briefing", [
+    check(`${label} 발행 신선도`, verdict.state === "unknown" ? "pending" : verdict.state === "fresh" ? "ready" : "stale",
+      publishedAt ? `발행 ${publishedAt}` : "최신 발행 원천 확인 대기", {
+        family: "briefing", product, as_of: publishedAt, source_health: verdict,
+      }),
+  ], "이 경로가 읽는 최신 판의 발행 원천과 기준일로 상태를 측정합니다.", sourceStamp(dateOnly(publishedAt, policy)));
+}
 // Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
 // carry genuine nested source dates get a real stamp; the rest stay null until
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).
@@ -681,14 +701,15 @@ const surfaces = [
     { as_of: screenerAsOf, ...sourceStamp(productStampEvidence.screener.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.screener },
   ),
   surface(
-    "brief_digest",
-    "/brief/digest/[date]",
-    "데일리 다이제스트",
-    "Briefing",
+    "brief_hub", "/brief", "브리핑", "Briefing",
     [familySourceCheck("briefing", "브리핑 발행 신선도")],
-    "브리핑 제품군의 최신 발행 기준으로 다이제스트 경로 상태를 측정합니다.",
+    "인덱스가 안내하는 브리핑 제품군의 발행 원천으로 상태를 측정합니다.",
     sourceStamp(familyHealth.get("briefing")?.oldest_source_date),
   ),
+  briefingEditionSurface("morning", "모닝 브리프"),
+  briefingEditionSurface("digest", "데일리 다이제스트"),
+  briefingEditionSurface("premarket", "프리마켓 브리프", "프리마켓 브리프"),
+  briefingEditionSurface("opening-bell", "오프닝 벨", "오프닝 벨"),
   surface(
     "admin_data_lab",
     "/admin/data-lab",

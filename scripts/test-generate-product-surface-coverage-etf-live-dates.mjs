@@ -241,6 +241,51 @@ try {
   const midnightOutput = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "data", "admin", "product-surface-coverage.json"), "utf8"));
   assert.equal(midnightOutput.surfaces.find((row) => row.id === "stock_detail").checks.find((row) => row.label === "가격 원천 기준일").age_days, 0,
     "US Sunday evening must not accrue a UTC Monday trading day");
+  // All briefing edition routes have real, independent publication checks.
+  // A stale/missing premarket edition must not borrow opening-bell freshness.
+  const products = ["morning", "digest", "premarket", "opening-bell"];
+  const latest = Object.fromEntries(products.map(product => [product, "2026-10-23"]));
+  latest.premarket = "2026-10-16";
+  const briefingIndex = { products: products.map(id => ({ id, status: "live" })), latest,
+    editions: products.map(product => ({ product, edition_date: latest[product], path: `${product}/${latest[product]}.json` })) };
+  writeJson("briefing/index.json", briefingIndex);
+  const clocks = { morning: "06:13", digest: "11:14", premarket: "18:00", "opening-bell": "23:00" };
+  for (const product of products) writeJson(`briefing/${product}/${latest[product]}.json`, {
+    schema: product === "morning" ? "briefing-morning/v1" : "daily-digest/v1",
+    ...(product === "morning" ? { edition_date: latest[product], thesis: "fixture" } : { date: latest[product], lead: "fixture" }),
+    headline: "fixture", published_kst: clocks[product],
+    product_name: product === "premarket" ? "프리마켓 브리프" : product === "opening-bell" ? "오프닝 벨" : "fixture",
+  });
+  const generateBriefing = () => {
+    execFileSync("node", [path.join(ROOT, "scripts", "generate-product-surface-coverage.mjs"), "--data-root", fixtureRoot],
+      { env: { ...process.env, PS_GENERATED_AT: "2026-10-24T02:00:00Z" }, stdio: ["ignore", "pipe", "pipe"] });
+    return JSON.parse(fs.readFileSync(path.join(fixtureRoot, "data", "admin", "product-surface-coverage.json"), "utf8"));
+  };
+  const briefing = generateBriefing();
+  for (const route of ["/brief", ...products.map(product => `/brief/${product}/[date]`)]) {
+    const row = briefing.surfaces.find(item => item.route === route);
+    assert.ok(row.checks.length > 0, route);
+    assert.notEqual(row.status, "not_covered", route);
+    assert.equal(briefing.surfaces.filter(item => item.route === route).length, 1, route);
+  }
+  const byProduct = product => briefing.surfaces.find(item => item.route === `/brief/${product}/[date]`);
+  assert.equal(byProduct("opening-bell").status, "ready");
+  assert.equal(byProduct("opening-bell").source_as_of, "2026-10-23");
+  assert.equal(byProduct("opening-bell").checks[0].as_of, "2026-10-23T14:00:00.000Z");
+  assert.equal(byProduct("premarket").status, "stale");
+  assert.equal(byProduct("premarket").source_as_of, "2026-10-16");
+  assert.equal(byProduct("morning").source_as_of, "2026-10-22", "use the real KST publication clock in the briefing policy zone");
+  // Missing payload and wrong-product content stay measured but pending.
+  latest.premarket = "2026-10-23";
+  writeJson("briefing/index.json", { ...briefingIndex, latest });
+  let missing = generateBriefing().surfaces.find(item => item.id === "brief_premarket");
+  assert.equal(missing.status, "pending");
+  assert.equal(missing.source_as_of, null);
+  writeJson("briefing/premarket/2026-10-23.json", { schema: "daily-digest/v1", date: "2026-10-23",
+    headline: "fixture", lead: "fixture", product_name: "오프닝 벨", published_kst: "18:00" });
+  missing = generateBriefing().surfaces.find(item => item.id === "brief_premarket");
+  assert.equal(missing.status, "pending");
+  assert.equal(missing.source_as_of, null);
   console.log("test-generate-product-surface-coverage-etf-live-dates: ok");
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
