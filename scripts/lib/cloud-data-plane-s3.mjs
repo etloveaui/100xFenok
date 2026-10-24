@@ -360,6 +360,7 @@ export function createR2S3Client({
         let pages = 0;
         let previousKey = startAfter;
         const tokens = new Set();
+        const seenKeys = new Set();
         do {
           if (++pages > 100 || (token && tokens.has(token))) fail("S3_LIST_BUDGET", "listing range exceeds declared budget or repeats cursor");
           if (token) tokens.add(token);
@@ -372,13 +373,25 @@ export function createR2S3Client({
           const { response, body } = await request({ method: "GET", key: "", query, deadline });
           if (!response.ok) fail("S3_HTTP", `list http ${response.status}: ${errorSnippet(body)}`);
           const page = parseListObjectsV2Xml(new TextDecoder().decode(body));
+          // A complete unsplit first page contains the entire bucket. R2 can
+          // return child keys before their parent key on this page; normalize
+          // that wire order while retaining duplicate and missing-key checks.
+          // Paginated and split scans still require monotonic range progress.
+          if (pages === 1 && !page.isTruncated && startAfter === null && endAt === null
+              && page.entries.every(object => typeof object.key === "string" && object.key)) {
+            page.entries.sort((a, b) => compare(a.key, b.key));
+          }
           // Reject ignored start-after, duplicate or unordered keys instead of
           // certifying an overlapping/incomplete range as a full inventory.
           for (const object of page.entries) {
-            if (typeof object.key !== "string" || !object.key
-                || (previousKey !== null && compare(object.key, previousKey) <= 0)) {
-              fail("S3_XML_INVALID", "listing keys are missing, repeated or out of order");
+            if (typeof object.key !== "string" || !object.key) {
+              fail("S3_XML_INVALID", "listing key is missing");
             }
+            if (seenKeys.has(object.key)) fail("S3_XML_INVALID", "listing key is duplicated");
+            if (previousKey !== null && compare(object.key, previousKey) <= 0) {
+              fail("S3_XML_INVALID", "listing keys are out of order or do not advance start-after");
+            }
+            seenKeys.add(object.key);
             previousKey = object.key;
           }
           const owned = page.entries.filter(object => endAt === null || compare(object.key, endAt) <= 0);

@@ -554,6 +554,32 @@ try {
     assert.throws(() => parseListObjectsV2Xml(listXml.replace("</ListBucketResult>", "")), /S3_XML_INVALID/);
     assert.throws(() => parseListObjectsV2Xml(listXml.replace("<KeyCount>1", "<KeyCount>2")), /S3_XML_INVALID/);
 
+    // R2 returned child-before-parent order in one complete 19-key bucket.
+    // Only a whole-bucket single page may normalize that order; ranged and
+    // paginated scans must still prove monotonic progress and unique keys.
+    const listingPage = (keys, token = null) => '<ListBucketResult>'
+      + `<KeyCount>${keys.length}</KeyCount><IsTruncated>${token !== null}</IsTruncated>`
+      + (token === null ? '' : `<NextContinuationToken>${token}</NextContinuationToken>`)
+      + keys.map(key => `<Contents>${key === null ? '' : `<Key>${key}</Key>`}<Size>1</Size></Contents>`).join('')
+      + '</ListBucketResult>';
+    const listingClient = pages => createR2S3Client({
+      endpoint: 'https://acct.r2.cloudflarestorage.com', accessKeyId: 'fixture',
+      secretAccessKey: 'fixture', bucket: 'fixture',
+      fetchImpl: async () => {
+        assert.ok(pages.length, 'unexpected extra listing request');
+        return new Response(pages.shift());
+      },
+    });
+    const complete = await listingClient([listingPage(['diary/read-aloud-v1', 'diary'])]).listAllObjects();
+    assert.deepEqual(complete.map(object => object.key), ['diary', 'diary/read-aloud-v1']);
+    await assert.rejects(listingClient([listingPage(['a', 'a'])]).listAllObjects(), /listing key is duplicated/);
+    await assert.rejects(listingClient([listingPage([null])]).listAllObjects(), /listing key is missing/);
+    await assert.rejects(listingClient([listingPage(['b', 'a'], 'T1')]).listAllObjects(), /out of order/);
+    await assert.rejects(listingClient([listingPage(['b'], 'T1'), listingPage(['a'])]).listAllObjects(), /out of order/);
+    await assert.rejects(listingClient([listingPage(['a'], 'T1'), listingPage(['a'])]).listAllObjects(), /duplicated/);
+    await assert.rejects(listingClient([listingPage(['a'], 'T1'), listingPage(['b'], 'T1')]).listAllObjects(), /repeats cursor/);
+    await assert.rejects(listingClient([listingPage(['b', 'a'])]).listAllObjects({ splitKeys: ['z'] }), /out of order/);
+
     const ok = parseDeleteObjectsXml(
       '<DeleteResult><Deleted><Key>a&amp;b</Key></Deleted></DeleteResult>',
       ["a&b"],

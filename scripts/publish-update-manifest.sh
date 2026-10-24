@@ -6,7 +6,7 @@ mkdir -p 100xfenok-next/public/data
 # Restore the active derived state before rebuilding so KPI history, metadata
 # and membership deltas start from the promoted generation.
 for family in platform-projections slickcharts damodaran yahoo-ticker-macro earnings-overview edgar-korean-summaries krx-daily yahoo-private-options; do
-  output="$RUNNER_TEMP/update-manifest-$family"
+  output="$RUNNER_TEMP/update-manifest-$family-attempt-$attempt"
   node scripts/materialize-cloud-data-plane-family.mjs --family "$family" \
     --privacy-class public --manifest-prefix public/data --private-manifest-prefix data \
     --output-root "$output" > "$RUNNER_TEMP/update-manifest-$family.json"
@@ -18,7 +18,7 @@ for family in apewisdom-attention finra-short-volume; do
 done
 # The KPI/detection floor reads these producer clocks and recovery indexes.
 # Only their exact inputs are needed; raw histories stay in the active plane.
-node --input-type=module <<'JS'
+node --input-type=module - "$attempt" <<'JS'
 import path from 'node:path';
 import { createDefaultMaterializePlane, materializeCloudDataPlaneFamily, installMaterializedTree } from './scripts/materialize-cloud-data-plane-family.mjs';
 const env = process.env, repoRoot = process.cwd();
@@ -34,7 +34,7 @@ for (const [family, privacyClass, files] of [
   const receipt = await materializeCloudDataPlaneFamily({ plane, family, repoRoot, env,
     privacyClass, manifestPrefix: privacyClass === 'public' ? 'public/data' : 'data',
     privateManifestPrefix: privacyClass === 'public' ? 'data' : null,
-    outputRoot: path.join(env.RUNNER_TEMP, `update-manifest-health-${family}`),
+    outputRoot: path.join(env.RUNNER_TEMP, `update-manifest-health-${family}-attempt-${process.argv[2]}`),
     canonicalReuseRoot: repoRoot, includeAsset: asset => wanted.has(asset.path) });
   await installMaterializedTree(receipt.output_root, path.join(repoRoot, 'data'), { env });
 }
