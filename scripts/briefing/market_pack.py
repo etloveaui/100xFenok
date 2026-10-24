@@ -8,7 +8,9 @@ from __future__ import annotations
 import datetime as dt
 import json
 import logging
+import math
 import re
+from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
@@ -86,6 +88,13 @@ def next_trading_day(d: dt.date) -> dt.date:
     return n
 
 
+def previous_trading_day(d: dt.date) -> dt.date:
+    p = d - dt.timedelta(days=1)
+    while not is_us_trading_day(p):
+        p -= dt.timedelta(days=1)
+    return p
+
+
 # --- price statistics ---------------------------------------------------------------------------
 
 def daily_stats(close: pd.Series, vol: pd.Series | None, session: str, long_close: pd.Series | None = None):
@@ -124,6 +133,62 @@ def daily_stats(close: pd.Series, vol: pd.Series | None, session: str, long_clos
         lc = lc[lc.index.strftime("%Y-%m-%d") <= session]
         out["record_close"], out["record_date"] = round(float(lc.max()), 2), lc.idxmax().strftime("%Y-%m-%d")
         out["from_record_pct"] = round((c / lc.max() - 1) * 100, 2)
+    return out
+
+
+def archived_indices(session: str) -> dict:
+    """An edition's own session close can repair a missing Yahoo daily bar."""
+    edition = (dt.date.fromisoformat(session) + dt.timedelta(days=1)).isoformat()
+    path = Path(__file__).resolve().parents[2] / CFG["repo"]["data_dir"] / "morning" / f"{edition}.json"
+    try:
+        doc = json.loads(path.read_text()) if path.exists() else json.loads(
+            http_get(CFG["site"]["base_url"] + CFG["site"]["data_path"].format(date=edition)))
+        pack = doc.get("pack") or {}
+        if doc.get("market_date") == session and pack.get("session") == session:
+            return pack.get("indices") or {}
+    except Exception as e:  # noqa: BLE001
+        log.warning("index archive %s unavailable: %s", session, str(e)[:120])
+    return {}
+
+
+def index_stats(close: pd.Series, symbol: str, session: str, archives: dict):
+    """Repair the 20-session window, never label a multi-session move as one day."""
+    s = close.dropna().copy()
+    s = s[s.index.strftime("%Y-%m-%d") <= session]
+    if s.empty or s.index[-1].strftime("%Y-%m-%d") != session:
+        return None
+    dates = [dt.date.fromisoformat(session)]
+    for _ in range(19):
+        dates.append(previous_trading_day(dates[-1]))
+    present = set(s.index.strftime("%Y-%m-%d"))
+    for day in reversed(dates[1:]):
+        key = day.isoformat()
+        if key in present:
+            continue
+        if key not in archives:
+            archives[key] = archived_indices(key)
+        quote = next((q for q in archives[key].values() if q.get("symbol") == symbol), {})
+        value = quote.get("close")
+        if isinstance(value, (int, float)) and math.isfinite(value) and value > 0:
+            stamp = pd.Timestamp(day)
+            if s.index.tz is not None:
+                stamp = stamp.tz_localize(s.index.tz)
+            s.loc[stamp] = value
+            present.add(key)
+    s = s.sort_index()
+    out = daily_stats(s, None, session, long_close=s)
+    if out is None:
+        return None
+    if dates[1].isoformat() not in present:
+        out["chg_pct"], out["prev_date"] = None, None
+        log.warning("%s %s missing_prior_session_bar %s", symbol, session, dates[1])
+    # A line joins adjacent trading sessions only; stop at the first unfilled gap.
+    contiguous = []
+    for day in dates:
+        if day.isoformat() not in present:
+            break
+        contiguous.append(day.isoformat())
+    out["spark20"] = [round(float(v), 2) for v in s[s.index.strftime("%Y-%m-%d").isin(contiguous)].values] if len(contiguous) > 1 else []
     return out
 
 
@@ -243,8 +308,9 @@ def build_pack(session: str, brief: str, cards: list, sec_known: set[str], bread
     idx_syms = list(MKT["indices"])
     idx_long = yf.download(idx_syms, period="max", interval="1d", progress=False, auto_adjust=False)
     pack["indices"] = {}
+    archives: dict = {}
     for sym, name in MKT["indices"].items():
-        st = daily_stats(idx_long["Close"][sym], None, session, long_close=idx_long["Close"][sym])
+        st = index_stats(idx_long["Close"][sym], sym, session, archives)
         if st:
             pack["indices"][name] = {"symbol": sym, **st}
     if "S&P 500" not in pack["indices"]:
