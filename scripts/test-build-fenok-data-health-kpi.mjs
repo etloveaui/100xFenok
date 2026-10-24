@@ -279,6 +279,37 @@ try {
   assert.equal(briefingPublishedAt(digest, "2026-09-27"), null);
   assert.equal(briefingPublishedAt({ ...digest, published_kst: null }), null);
 
+  // #140: a published KST digest must not become a future UTC day when
+  // the briefing policy still observes Friday in New York.
+  const briefingClockRoot = path.join(root, "briefing-clock");
+  const briefingLane = LANE_REGISTRY.lanes.find(lane => lane.id === "briefing");
+  const clockProducts = ["morning", "digest", "premarket"];
+  const clockDates = { morning: "2026-10-24", digest: "2026-10-24", premarket: "2026-10-23" };
+  writeJson(briefingClockRoot, "briefing/index.json", {
+    products: clockProducts.map(id => ({ id, status: "live" })), latest: clockDates,
+    editions: clockProducts.map(product => ({
+      product, edition_date: clockDates[product], path: `${product}/${clockDates[product]}.json`,
+    })),
+  });
+  writeJson(briefingClockRoot, "briefing/morning/2026-10-24.json", {
+    schema: "briefing-morning/v1", edition_date: "2026-10-24", published_kst: "06:13",
+  });
+  writeJson(briefingClockRoot, "briefing/digest/2026-10-24.json", {
+    schema: "daily-digest/v1", date: "2026-10-24", published_kst: "11:15",
+  });
+  writeJson(briefingClockRoot, "briefing/premarket/2026-10-23.json", {
+    schema: "daily-digest/v1", date: "2026-10-23", published_kst: "23:06",
+  });
+  for (const observedAt of ["2026-10-24T02:37:21Z", "2026-10-24T04:01:00Z", "2026-10-26T12:00:00Z"]) {
+    const health = summarizeDataSetFreshness(briefingLane, null, observedAt, undefined, briefingClockRoot);
+    assert.equal(health.status, "fresh", `${observedAt}: current editions survive the US date/weekend boundary`);
+    assert.equal(health.source_health.fresh_members, 3);
+    assert.equal(health.newest_source_date, "2026-10-23");
+  }
+  const missedEditions = summarizeDataSetFreshness(briefingLane, null, "2026-10-29T16:00:00Z", undefined, briefingClockRoot);
+  assert.equal(missedEditions.status, "stopped", "missed weekday editions beyond the existing bound still alarm");
+  assert.equal(missedEditions.source_health.fresh_members, 0);
+
   // K3: one source date and one freshness-policy status per set.
   const { rootDoc, publicDoc } = buildKpiDocuments(now, {
     dataRoot: path.join(root, "data"), publicDataRoot,

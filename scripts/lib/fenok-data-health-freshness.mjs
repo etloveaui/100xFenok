@@ -256,11 +256,14 @@ function sourceMembersForLane(lane, floorRow, dataRoot) {
   if (dataRoot && lane.id === "briefing") {
     const index = readOptionalJson(dataRoot, "briefing/index.json");
     const products = (index?.products ?? []).filter(row => row.status === "live");
+    const policy = resolveSourcePolicy({ laneId: lane.id, cadence: laneCadence(lane) });
     const members = products.map(product => {
       const edition = (index?.editions ?? []).find(row => row.product === product.id
         && row.edition_date === index?.latest?.[product.id]);
       const document = edition?.path ? readOptionalJson(dataRoot, `briefing/${edition.path}`) : null;
-      return memberDate(briefingPublishedAt(document, edition?.edition_date),
+      // Normalize publication instants in the same market zone as policyToday;
+      // a KST morning/digest can already be tomorrow in UTC but not New York.
+      return memberDate(dateOnly(briefingPublishedAt(document, edition?.edition_date), policy),
         "source", product.id);
     });
     return { members, totalMembers: members.length };
